@@ -13,10 +13,20 @@ from weibo.model import *
 from time_utils import ts2datetime
 
 def whole_followers_results(top_n, topic_id, w):
-    return []
+    window_date = ts2datetime(time.time())
+    users = db.session.query(User).order_by(User.followersCount.desc()).limit(top_n)
+    sorted_uids = []
+    for user in users:
+        sorted_uids.append(user.id)
+    return sorted_uids
 
 def burst_comments_results(top_n, topic_id, w):
-    return []
+    window_date = ts2datetime(time.time())
+    users = db.session.query(User).order_by(User.followersCount.desc()).limit(top_n)
+    sorted_uids = []
+    for user in users:
+        sorted_uids.append(user.id)
+    return sorted_uids
 
 def area_pagerank_results(top_n, topic_id, w):
     data = []

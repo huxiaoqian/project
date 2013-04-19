@@ -1,7 +1,44 @@
 {% extends "index/base.html" %}
 {% block title %}主页{% endblock %}
 {% block content %}
-<div class="container">
-  Home
-</div>
+    <div class="container">
+      <header class="jumbotron subhead" id="overview">
+        <h1>面向**的**及**系统</h1>
+      </header>
+
+      <ul class="thumbnails child-sites">
+        <li class="span3">
+          <a class="thumbnail" href="#" target="_blank">
+            <img src="/static/img/home_thumbnail/1.png" alt="敏感博主识别" width="260" height="200">
+          </a>
+          <h3>敏感博主识别</h3>
+          <p>该模块用于找到微博中给定话题或领域下的敏感用户，并将得到的敏感用户列表进行排 序、更新、跟踪以及可视化展示。</p>
+          <p><a class="btn" href="#">查看详情 »</a></p>
+        </li>
+        <li class="span3">
+          <a class="thumbnail" href="#" target="_blank">
+            <img src="/static/img/home_thumbnail/2.png" alt="情绪" width="260" height="200">
+          </a>
+          <h3>网民情绪监测和预警</h3>
+          <p>该模块主要实现网民情绪的实时监测和精确预警，主要包括如下功能：1）微博全民情绪监控；2）全民情绪的拐点计算、标识和事件预警；3）敏感话题的情绪分类；4）话题情绪的拐点计算、标识和话题子事件预警。</p>
+          <p><a class="btn" href="#">查看详情 »</a></p>
+        </li>
+        <li class="span3">
+          <a class="thumbnail" href="/profile/search.html" target="_blank">
+            <img src="/static/img/home_thumbnail/3.png" alt="画像" width="260" height="200">
+          </a>
+          <h3>网民画像</h3>
+          <p>该模块主要识别各类热点舆情传播的关键人物，提供其全特征数据，可以为网民的定点监控和干预提供策略建议。</p>
+          <p><a class="btn" href="/profile/search.html">查看详情 »</a></p>
+        </li>
+        <li class="span3">
+          <a class="thumbnail" href="#" target="_blank">
+            <img src="/static/img/home_thumbnail/4.png" alt="信息传播" width="260" height="200">
+          </a>
+          <h3>微博信息传播分析</h3>
+          <p>该模块用于找到给定话题下的一条或几条敏感微博中的关键用户，并将结果可视化展示。</p>
+          <p><a class="btn" href="#">查看详情 »</a></p>
+        </li>
+      </ul>
+    </div>
 {% endblock %}

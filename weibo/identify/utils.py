@@ -10,6 +10,7 @@ from weibo.model import *
 
 from time_utils import ts2datetime, window2time
 from demo_utils import demo_results
+from hadoop_utils import hadoop_results
 
 def acquire_id(name, value):
     if not value:
@@ -34,29 +35,6 @@ def acquire_value(name, id):
         return getattr(item, '%sName' % name.lower(), None)
     else:
         return None
-
-def prepare_data(field, topic):
-    tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    tmp_file = emulate(tmp_file)
-    tmp_file.flush()
-    return tmp_file
-
-def emulate(tmp_file):
-    import networkx as nx
-    g = nx.DiGraph(nx.powerlaw_cluster_graph(1000, 3, 0.001))
-    N = len(g.nodes())
-    for node in g.nodes():
-        outlinks = g.out_edges(nbunch=[node])
-        outlinks = map(str, [n2 for n1, n2 in outlinks])
-        if not outlinks:
-            value = 'pr_results,%s,%s' % (1.0/N, N)
-            tmp_file.write('%s\t%s\n' % (node, value))
-        else:
-            outlinks_str = ','.join(outlinks)
-            value = 'pr_results,%s,%s,' % (1.0/N, N)
-            value += outlinks_str
-            tmp_file.write('%s\t%s\n' % (node, value))
-    return tmp_file
 
 def read_previous_results(topic_id, top_n, r='area', m='PageRank', w=1):
     data = []
@@ -111,27 +89,30 @@ def read_current_results(topic_id, top_n, r='area', m='PageRank', w=1, demo=Fals
     else:
         if demo:
             sorted_pr = demo_results(topic_id, top_n, r, m, w)
-            rank = 1
-            for uid, pr in sorted_pr:
-                user = db.session.query(User).filter_by(id=uid).first()
-                if not user:
-                    continue
-                name = user.userName
-                location = user.location
-                followers = user.followersCount
-                friends = user.friendsCount
-                #read from external knowledge database
-                status = 1
-                previous_rank = find_user_previous_rank(topic_id, uid, r=r, m=m, w=w)
-                comparison = rank_comparison(previous_rank, rank)
-                row = (rank, uid, name, location, followers, friends, comparison, status)
-                data.append(row)
-                item = UserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyRange='area',identifyDate=current_date, identifyWindow=1, identifyMethod='PageRank')
-                db.session.add(item)
-                rank += 1
-            db.session.commit()
         else:
-            pass
+            sorted_pr = hadoop_results(topic_id, top_n)
+            if sorted_pr == 'results_not_prepared':
+                return sorted_pr
+
+        rank = 1
+        for uid, pr in sorted_pr:
+            user = db.session.query(User).filter_by(id=uid).first()
+            if not user:
+                continue
+            name = user.userName
+            location = user.location
+            followers = user.followersCount
+            friends = user.friendsCount
+            #read from external knowledge database
+            status = 1
+            previous_rank = find_user_previous_rank(topic_id, uid, r=r, m=m, w=w)
+            comparison = rank_comparison(previous_rank, rank)
+            row = (rank, uid, name, location, followers, friends, comparison, status)
+            data.append(row)
+            item = UserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyRange='area',identifyDate=current_date, identifyWindow=1, identifyMethod='PageRank')
+            db.session.add(item)
+            rank += 1
+        db.session.commit()
 
     return data
 

@@ -11,9 +11,9 @@ except ImportError:
 from flask import Blueprint, url_for, render_template, request, abort, flash
 
 from weibo.extensions import db
-from utils import acquire_id, acquire_value, prepare_data, \
+from utils import acquire_id, acquire_value, \
     read_current_results, read_previous_results
-from hadoop_utils import generate_job_id, monitor, read_hadoop_results
+from hadoop_utils import generate_job_id, monitor, prepare_data
 
 mod = Blueprint('identify', __name__, url_prefix='/identify')
 
@@ -65,13 +65,13 @@ def area():
                 abort(404)
 
         #Hadoop
-        job_id = generate_job_id(field_id, topic_id)
+        job_id = generate_job_id(topic_id)
         iter_count = 3
         if action == 'check':
             #check Hadoop Job Status
             status = monitor(job_id)
             if status == 'finished':
-                data = read_hadoop_results(job_id, top_n)
+                data = read_current_results(topic_id, top_n)
                 if data == 'results_not_prepared':
                     return json.dumps({'status': 'results_not_prepared'})
                 return json.dumps({'status': status, 'data': data})
@@ -82,9 +82,8 @@ def area():
             if not keywords:
                 flash(u'请输入关键词！')
                 return render_template('identify/area.html', from_external=True)
+
             #prepare for network data
-            field = acquire_value('Field', field_id)
-            topic = acquire_value('Topic', topic_id)
             tmp_file = prepare_data(field, topic)
             input_tmp_path = tmp_file.name
 

@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import time
-
 try:
     from hat.fs import HadoopFS
 except ImportError:
     print 'Hadoop module is not installed.'
 
-def unix2date(ts):
-    return time.strftime('%Y_%m_%d', time.localtime(ts))
-
-def generate_job_id(field_id, topic_id):
-    date = unix2date(time.time())
-    job_id = '%s_%s_%s' % (date, field_id, topic_id)
+def generate_job_id(topic_id):
+    date = unix2hadoop_date(time.time())
+    job_id = '%s_%s' % (date, topic_id)
     return job_id
 
 def monitor(job_id):
@@ -35,8 +30,9 @@ def monitor(job_id):
     else:
         return 'finished'
 
-def read_hadoop_results(job_id, top_n, page_num):
+def hadoop_results(topic_id, top_n):
     data = []
+    job_id = generate_job_id(topic_id)
     fs = HadoopFS()
     outputs = fs.cat('%s/hat_results/*' % job_id)
     if not outputs:
@@ -44,19 +40,34 @@ def read_hadoop_results(job_id, top_n, page_num):
     if len(outputs) > top_n:
         outputs = outputs[-top_n:]
     outputs.reverse()
-    rank = 1
+    sorted_pr = []
     for line in outputs:
         name, pr = line.strip().split('\t')
-        uid = name
-        location = u'北京'
-        followers = 10000
-        friends = 100
-        comparison = 1
-        status = 1
-        row = (rank, uid, name, location, followers, friends, comparison, status)
-        data.append(row)
-        rank += 1
-    return data
+        sorted_pr.append((name, pr))
+    return sorted_pr
+
+def prepare_data(field, topic):
+    tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    tmp_file = emulate(tmp_file)
+    tmp_file.flush()
+    return tmp_file
+
+def emulate(tmp_file):
+    import networkx as nx
+    g = nx.DiGraph(nx.powerlaw_cluster_graph(1000, 3, 0.001))
+    N = len(g.nodes())
+    for node in g.nodes():
+        outlinks = g.out_edges(nbunch=[node])
+        outlinks = map(str, [n2 for n1, n2 in outlinks])
+        if not outlinks:
+            value = 'pr_results,%s,%s' % (1.0/N, N)
+            tmp_file.write('%s\t%s\n' % (node, value))
+        else:
+            outlinks_str = ','.join(outlinks)
+            value = 'pr_results,%s,%s,' % (1.0/N, N)
+            value += outlinks_str
+            tmp_file.write('%s\t%s\n' % (node, value))
+    return tmp_file
 
 def main():
     job_id = '2013_04_11_-1_1'

@@ -5,6 +5,8 @@ try:
 except ImportError:
     print 'Hadoop module is not installed.'
 
+from time_utils import unix2hadoop_date
+
 def generate_job_id(topic_id):
     date = unix2hadoop_date(time.time())
     job_id = '%s_%s' % (date, topic_id)

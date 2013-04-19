@@ -182,7 +182,7 @@
 	    <legend>本期排序结果</legend>
 	    {% if not from_external %}
 	    <div>
-	      {% if demo %}
+	      {% if not hadoop %}
 	      <div id="loading_current_data" class="alert alert-info">
 		计算中...
 	      </div>
@@ -236,10 +236,10 @@
 {% endblock %}
 {% block script %}
     {% if not from_external %}
-      {% if not demo %}
+      {% if hadoop %}
       <script src="{{ url_for('static', filename='js/area_identify.js') }}"></script>
       {% else %}
-      <script src="{{ url_for('static', filename='js/area_identify_demo.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/area_identify_common.js') }}"></script>
       {% endif %}
     {% endif %}
 {% endblock %}

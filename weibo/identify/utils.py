@@ -9,8 +9,7 @@ import weibo.model
 from weibo.model import *
 
 from time_utils import ts2datetime, window2time
-from demo_utils import demo_results
-from hadoop_utils import hadoop_results
+from common_utils import common_results
 
 def acquire_id(name, value):
     if not value:
@@ -36,9 +35,8 @@ def acquire_value(name, id):
     else:
         return None
 
-def read_previous_results(topic_id, top_n, r='area', m='PageRank', w=1):
+def read_previous_results(top_n, topic_id=None, r='area', m='pagerank', w=1):
     data = []
-    #change to seconds
     window_time = window2time(w)
     previous_date = ts2datetime(time.time()-window_time)
     items = db.session.query(UserIdentification).filter_by(topicId=topic_id, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=previous_date).order_by(UserIdentification.rank.asc())
@@ -63,7 +61,7 @@ def read_previous_results(topic_id, top_n, r='area', m='PageRank', w=1):
             count += 1
     return data
 
-def read_current_results(topic_id, top_n, r='area', m='PageRank', w=1, demo=False):
+def read_current_results(top_n, topic_id=None, r='area', m='pagerank', w=1):
     data = []
     current_date = ts2datetime(time.time())
     items = db.session.query(UserIdentification).filter_by(topicId=topic_id, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=current_date).order_by(UserIdentification.rank.asc())
@@ -87,15 +85,9 @@ def read_current_results(topic_id, top_n, r='area', m='PageRank', w=1, demo=Fals
             data.append(row)
             count += 1
     else:
-        if demo:
-            sorted_pr = demo_results(topic_id, top_n, r, m, w)
-        else:
-            sorted_pr = hadoop_results(topic_id, top_n)
-            if sorted_pr == 'results_not_prepared':
-                return sorted_pr
-
+        sorted_uids = common_results(topic_id, top_n, r, m, w)
         rank = 1
-        for uid, pr in sorted_pr:
+        for uid in sorted_uids:
             user = db.session.query(User).filter_by(id=uid).first()
             if not user:
                 continue
@@ -109,7 +101,7 @@ def read_current_results(topic_id, top_n, r='area', m='PageRank', w=1, demo=Fals
             comparison = rank_comparison(previous_rank, rank)
             row = (rank, uid, name, location, followers, friends, comparison, status)
             data.append(row)
-            item = UserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyRange='area',identifyDate=current_date, identifyWindow=1, identifyMethod='PageRank')
+            item = UserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyRange=r,identifyDate=current_date, identifyWindow=w, identifyMethod=m)
             db.session.add(item)
             rank += 1
         db.session.commit()
@@ -128,7 +120,7 @@ def rank_comparison(previous, current):
         comparison = 1
     return comparison
 
-def find_user_previous_rank(topic_id, uid, r='area', m='PageRank', w=1):
+def find_user_previous_rank(topic_id, uid, r='area', m='pagerank', w=1):
     #read from previous window record
     window_time = window2time(w)
     previous_date = ts2datetime(time.time()-window_time)

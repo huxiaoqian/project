@@ -1,0 +1,339 @@
+{% extends "identify/base.html" %}
+{% block title %}全网博主识别{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row-fluid">
+    <div class="span2">
+      <div class="well sidebar-nav">
+        <ul class="nav nav-list">
+	  <li class="nav-header">博主识别范围</li>
+	  <li><a href="/identify/">主页</a></li>
+	  <li class="active"><a href="/identify/whole/">全网识别</a></li>
+	  <li><a href="/identify/area/">领域识别</a></li>
+	  <li><a href="/identify/burst/">突发识别</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="span9">
+      <legend>全网博主识别</legend>
+      <div>
+      	<form class="form-inline">
+      	  排序标准:
+	  <div class="btn-group">
+	    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	      粉丝数量
+	      <span class="caret"></span>
+	    </a>
+	    <ul class="dropdown-menu">
+	      <li><a href="#" data-toggle="tab">粉丝数量</a></li>
+      	      <li><a href="#" data-toggle="tab">活跃程度</a></li>
+      	      <li><a href="#" data-toggle="tab">重要程度</a></li>
+	    </ul>
+	  </div>
+
+      	  时间范围:
+	  <div class="btn-group">
+	    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	      1天
+	      <span class="caret"></span>
+	    </a>
+	    <ul class="dropdown-menu">
+	      <li><a href="#" data-toggle="tab">1天</a></li>
+      	      <li><a href="#" data-toggle="tab">1周</a></li>
+      	      <li><a href="#" data-toggle="tab">1个月</a></li>
+	      <li><a href="#" data-toggle="tab">3个月</a></li>
+	    </ul>
+	  </div>
+
+	  前<input type="text" value="500" class="span1">
+	  条结果
+
+	  每页<input type="text" value="20" class="span1">
+	  条结果
+	  <a href="/whole/" type="submit" class="btn btn-primary">识别<i class="icon-search"></i></a>
+      	</form>
+      </div>
+
+      <hr>
+
+      <div class="well">
+	<legend>本期排序结果</legend>
+	<div>
+	  <p>
+	    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
+	    <a class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
+	    <a class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+	  </p>
+	</div>
+	<div>
+	  <table class="table table-bordered">
+	    <thead>
+	      <tr>
+		<th>排名</th>
+		<th>博主ID</th>
+		<th>博主昵称</th>
+		<th>博主地域</th>
+		<th>粉丝数</th>
+		<th>关注数</th>
+		<th>同比</th>
+		<th>敏感状态</th>
+		<th>全选<input type="checkbox"></th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      <tr>
+		<td><span class="label label-important">1</span></td>
+		<td>001</td>
+		<td>薛蛮子</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-arrow-up"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">2</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-arrow-up"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">3</span></td>
+		<td>003</td>
+		<td>潘石屹</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-arrow-down"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">4</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-arrow-down"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">5</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-arrow-down"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">6</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-minus"></i></td>
+		<td><i class="icon-remove"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">7</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-arrow-up"></i></td>
+		<td><i class="icon-remove"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">8</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-minus"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">9</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-minus"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">10</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-minus"></i></td>
+		<td><i class="icon-ok"></i></td>
+		<td><input type="checkbox"></td>
+	      </tr>
+	    </tbody>
+          </table>
+	  <div class="pagination pagination-centered">
+	    <ul>
+	      <li class="disabled"><a href="#">«</a></li>
+	      <li class="active"><a href="#">1</a></li>
+	      <li><a href="#">2</a></li>
+	      <li><a href="#">3</a></li>
+	      <li><a href="#">4</a></li>
+	      <li><a href="#">5</a></li>
+	      <li><a href="#">»</a></li>
+	    </ul>
+	  </div>
+	</div>
+      </div>
+
+
+      <div class="well">
+	<legend>上期排序结果</legend>
+	<div>
+	  <p>
+	    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
+	  </p>
+	</div>
+	<div>
+	  <table class="table table-bordered">
+	    <thead>
+	      <tr>
+		<th>排名</th>
+		<th>博主ID</th>
+		<th>博主昵称</th>
+		<th>博主地域</th>
+		<th>粉丝数</th>
+		<th>关注数</th>
+		<th>敏感状态</th>
+	      </tr>
+	    </thead>
+	    <tbody>
+	      <tr>
+		<td><span class="label label-important">1</span></td>
+		<td>003</td>
+		<td>潘石屹</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">2</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">3</span></td>
+		<td>001</td>
+		<td>薛蛮子</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">4</span></td>
+		<td>003</td>
+		<td>潘石屹</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">5</span></td>
+		<td>002</td>
+		<td>任志强</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">6</span></td>
+		<td>001</td>
+		<td>薛蛮子</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">7</span></td>
+		<td>001</td>
+		<td>薛蛮子</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">8</span></td>
+		<td>001</td>
+		<td>薛蛮子</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-remove"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">9</span></td>
+		<td>001</td>
+		<td>薛蛮子</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-remove"></i></td>
+	      </tr>
+	      <tr>
+		<td><span class="label label-important">10</span></td>
+		<td>001</td>
+		<td>薛蛮子</td>
+		<td>北京</td>
+		<td>1000000</td>
+		<td>100</td>
+		<td><i class="icon-ok"></i></td>
+	      </tr>
+	    </tbody>
+          </table>
+	  <div class="pagination pagination-centered">
+	    <ul>
+	      <li class="disabled"><a href="#">«</a></li>
+	      <li class="active"><a href="#">1</a></li>
+	      <li><a href="#">2</a></li>
+	      <li><a href="#">3</a></li>
+	      <li><a href="#">4</a></li>
+	      <li><a href="#">5</a></li>
+	      <li><a href="#">»</a></li>
+	    </ul>
+	  </div>
+	</div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

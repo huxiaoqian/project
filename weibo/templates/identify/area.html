@@ -1,0 +1,243 @@
+{% extends "identify/base.html" %}
+{% block title %}领域博主识别{% endblock %}
+{% block head %}
+    {{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.css') }}" media="screen" />
+    <script>
+      {% if keywords %}
+      var keywords = '{{ keywords }}';
+      {% else %}
+      var keywords = '';
+      {% endif %}
+
+      {% if field %}
+      var field = '{{ field }}';
+      {% else %}
+      var field = '';
+      {% endif %}
+
+      $(document).ready(function(){
+        $("#networkModal").click(function(){
+          $.fancybox({
+            'href':'/static/html/retweetmap.xhtml',
+            'width': '75%',
+            'height': '90%',
+            'autoScale': false,
+            'transitionIn': 'none',
+            'transitionOut': 'fade',
+            'type': 'iframe',
+            'onClosed': function(){},
+          });
+        });
+      });
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span2">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+	      <li class="nav-header">博主识别范围</li>
+	      <li><a href="/identify/">主页</a></li>
+	      <li><a href="/identify/whole/">全网识别</a></li>
+	      <li class="active"><a href="/identify/area/">领域识别</a></li>
+	      <li><a href="/identify/burst/">突发识别</a></li>
+            </ul>
+          </div>
+        </div>
+	<div class="span9">
+      	  <legend>领域博主识别</legend>
+	  <div>
+      	    <form class="form-inline">
+	      {% if keywords %}
+      	      <input type="text" value="{{ keywords }}" class="span2 search-query" placeholder="子领域、话题">
+	      {% else %}
+	      <input type="text" class="span2 search-query" placeholder="子领域、话题">
+	      {% endif %}
+      	      时间范围:
+      	      <div class="btn-group">
+      		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+      		  1天
+      		  <span class="caret"></span>
+      		</a>
+      		<ul class="dropdown-menu">
+      		  <li><a href="#" data-toggle="tab">1天</a></li>
+      		  <li><a href="#" data-toggle="tab">1周</a></li>
+      		  <li><a href="#" data-toggle="tab">1个月</a></li>
+      		  <li><a href="#" data-toggle="tab">3个月</a></li>
+      		</ul>
+      	      </div>
+
+      	      前<input type="text" value="500" class="span1">
+      	      条结果
+
+      	      每页<input type="text" value="20" class="span1">
+      	      条结果
+      	      <a href="/identify/area/" type="submit" class="btn btn-primary">识别 <i class="icon-search"></i></a>
+      	    </form>
+      	    <ul id="myTab" class="nav nav-tabs">
+              <li class="active"><a href="#area_1" data-toggle="tab">政务</a></li>
+              <li><a href="#area_2" data-toggle="tab">经济</a></li>
+      	      <li><a href="#area_3" data-toggle="tab">体育</a></li>
+      	      <li><a href="#area_4" data-toggle="tab">互联网</a></li>
+      	      <li><a href="#add_area_modal" data-toggle="modal"><i class="icon-plus"></i></a></li>
+            </ul>
+      	    <div id="myTabContent" class="tab-content">
+              <div class="tab-pane fade active in" id="area_1">
+		<ul class="inline">
+      		  <li>
+      		    <input type="checkbox"> 政府
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 司法
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 外交
+      		  </li>
+		</ul>
+              </div>
+              <div class="tab-pane fade" id="area_2">
+		<ul class="inline">
+      		  <li>
+      		    <input type="checkbox"> 理财
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 期货
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 股票
+      		  </li>
+		</ul>
+              </div>
+              <div class="tab-pane fade" id="area_3">
+		<ul class="inline">
+      		  <li>
+      		    <input type="checkbox"> 篮球
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 足球
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 排球
+      		  </li>
+		</ul>
+              </div>
+              <div class="tab-pane fade" id="area_4">
+		<ul class="inline">
+      		  <li>
+      		    <input type="checkbox"> 软件
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 通信
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 电子商务
+      		  </li>
+		</ul>
+              </div>
+      	    </div>
+
+      	    <!-- Modal -->
+      	    <div id="add_area_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      	      <div class="modal-header">
+      		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+      		<h3 id="myModalLabel">手工添加领域关键词</h3>
+      	      </div>
+      	      <div class="modal-body">
+      		<form class="form-inline">
+      		  <label>
+      		    领域: <input type="text" class="span2">
+      		  </label>
+      		  <label>
+      		    关键词: <input type="text" class="span4">
+      		  </label>
+      		</form>
+      	      </div>
+      	      <div class="modal-footer">
+      		<button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
+      		<button class="btn btn-primary">保存结果</button>
+      	      </div>
+      	    </div>
+	  </div>
+
+	  <hr>
+
+	  <div class="well">
+	    <legend>网络呈现</legend>
+	    <form class="form-inline">
+	      <img src="{{ url_for('static', filename='img/network.png') }}" class="img-polaroid">
+	      <label>
+		<input type="checkbox"> 动画演示
+	      </label>
+	      <label>
+		<input type="checkbox"> 标注关键节点
+	      </label>
+	      <a id="networkModal" href="javascript: void(0);" class="btn btn-danger"><i class="icon-picture"></i>生成并查看网络</a>
+	    </form>
+	  </div>
+
+	  <div class="well">
+	    <legend>本期排序结果</legend>
+	    {% if not from_external %}
+	    <div>
+	      {% if demo %}
+	      <div id="loading_current_data" class="alert alert-info">
+		计算中...
+	      </div>
+	      {% else %}
+	      <div id="loading_current_data" class="alert alert-info">
+		数据装载中...
+	      </div>
+	      {% endif %}
+	      <label>
+		进度条:
+		<div id="pr_bar" class="progress progress-striped active">
+		  <div id="pr_process" class="bar" style="width: 0%;"></div>
+		</div>
+	      </label>
+	    </div>
+	    {% endif %}
+	    <div>
+	      <p>
+		<a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
+		<a class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
+		<a class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+	      </p>
+	    </div>
+	    <div id="rank_table">
+	      <table class="table table-bordered">
+	      </table>
+	    </div>
+	  </div>
+
+	  <hr>
+
+	  <div class="well">
+	    <legend>上期排序结果</legend>
+	    <div>
+	      <div id="loading_previous_data" class="alert alert-info">
+		上期结果装载中...
+	      </div>
+	      <p>
+	  	<a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
+	      </p>
+	    </div>
+	    <div id="previous_rank_table">
+	      <table class="table table-bordered">
+	      </table>
+	    </div>
+	  </div>
+
+	</div>
+      </div>
+    </div>
+    {% if not from_external %}
+      {% if not demo %}
+      <script src="{{ url_for('static', filename='js/area_identify.js') }}"></script>
+      {% else %}
+      <script src="{{ url_for('static', filename='js/area_identify_demo.js') }}"></script>
+      {% endif %}
+    {% endif %}
+{% endblock %}

@@ -1,9 +1,9 @@
-{% extends "master.html" %}
+{% extends "identify/base.html" %}
 {% block title %}领域博主识别{% endblock %}
 {% block head %}
     {{ super() }}
-<script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.css') }}" media="screen" />
+    <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.css') }}" media="screen" />
     <script>
       {% if keywords %}
       var keywords = '{{ keywords }}';
@@ -167,7 +167,7 @@
 	  <div class="well">
 	    <legend>网络呈现</legend>
 	    <form class="form-inline">
-	      <img src="{{ url_for('static', filename='img/network.png') }}" class="img-polaroid">
+	      <img src="{{ url_for('static', filename='img/identify/network.png') }}" class="img-polaroid">
 	      <label>
 		<input type="checkbox"> 动画演示
 	      </label>
@@ -182,7 +182,7 @@
 	    <legend>本期排序结果</legend>
 	    {% if not from_external %}
 	    <div>
-	      {% if demo %}
+	      {% if not hadoop %}
 	      <div id="loading_current_data" class="alert alert-info">
 		计算中...
 	      </div>
@@ -233,11 +233,13 @@
 	</div>
       </div>
     </div>
+{% endblock %}
+{% block script %}
     {% if not from_external %}
-      {% if not demo %}
+      {% if hadoop %}
       <script src="{{ url_for('static', filename='js/area_identify.js') }}"></script>
       {% else %}
-      <script src="{{ url_for('static', filename='js/area_identify_demo.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/area_identify_common.js') }}"></script>
       {% endif %}
     {% endif %}
 {% endblock %}

@@ -13,6 +13,9 @@
 	    var data = data["data"];
 	    CreateTable(data, 20, 9);
 	}
+	else if(status == 'run') {
+	    $("#loading_data").text("启动中...");
+	}
 	else if(status == 'data_not_prepared') {
 	    $("#loading_data").text("数据装载中...");
 	}

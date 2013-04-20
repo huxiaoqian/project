@@ -1,4 +1,4 @@
-{% extends "master.html" %}
+{% extends "identify/base.html" %}
 {% block title %}全网博主识别{% endblock %}
 {% block content %}
 <div class="container-fluid">
@@ -55,9 +55,21 @@
       </div>
 
       <hr>
-
       <div class="well">
 	<legend>本期排序结果</legend>
+	{% if not from_external %}
+	<div>
+	  <div id="loading_current_data" class="alert alert-info">
+	    计算中...
+	  </div>
+	  <label>
+	    进度条:
+	    <div id="pr_bar" class="progress progress-striped active">
+	      <div id="pr_process" class="bar" style="width: 0%;"></div>
+	    </div>
+	  </label>
+	</div>
+	{% endif %}
 	<div>
 	  <p>
 	    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
@@ -65,275 +77,37 @@
 	    <a class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
 	  </p>
 	</div>
-	<div>
+	<div id="rank_table">
 	  <table class="table table-bordered">
-	    <thead>
-	      <tr>
-		<th>排名</th>
-		<th>博主ID</th>
-		<th>博主昵称</th>
-		<th>博主地域</th>
-		<th>粉丝数</th>
-		<th>关注数</th>
-		<th>同比</th>
-		<th>敏感状态</th>
-		<th>全选<input type="checkbox"></th>
-	      </tr>
-	    </thead>
-	    <tbody>
-	      <tr>
-		<td><span class="label label-important">1</span></td>
-		<td>001</td>
-		<td>薛蛮子</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-arrow-up"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">2</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-arrow-up"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">3</span></td>
-		<td>003</td>
-		<td>潘石屹</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-arrow-down"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">4</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-arrow-down"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">5</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-arrow-down"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">6</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-minus"></i></td>
-		<td><i class="icon-remove"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">7</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-arrow-up"></i></td>
-		<td><i class="icon-remove"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">8</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-minus"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">9</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-minus"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">10</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-minus"></i></td>
-		<td><i class="icon-ok"></i></td>
-		<td><input type="checkbox"></td>
-	      </tr>
-	    </tbody>
-          </table>
-	  <div class="pagination pagination-centered">
-	    <ul>
-	      <li class="disabled"><a href="#">«</a></li>
-	      <li class="active"><a href="#">1</a></li>
-	      <li><a href="#">2</a></li>
-	      <li><a href="#">3</a></li>
-	      <li><a href="#">4</a></li>
-	      <li><a href="#">5</a></li>
-	      <li><a href="#">»</a></li>
-	    </ul>
-	  </div>
+	  </table>
 	</div>
       </div>
 
+      <hr>
 
       <div class="well">
 	<legend>上期排序结果</legend>
 	<div>
+	  <div id="loading_previous_data" class="alert alert-info">
+	    上期结果装载中...
+	  </div>
 	  <p>
 	    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
 	  </p>
 	</div>
-	<div>
+	<div id="previous_rank_table">
 	  <table class="table table-bordered">
-	    <thead>
-	      <tr>
-		<th>排名</th>
-		<th>博主ID</th>
-		<th>博主昵称</th>
-		<th>博主地域</th>
-		<th>粉丝数</th>
-		<th>关注数</th>
-		<th>敏感状态</th>
-	      </tr>
-	    </thead>
-	    <tbody>
-	      <tr>
-		<td><span class="label label-important">1</span></td>
-		<td>003</td>
-		<td>潘石屹</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">2</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">3</span></td>
-		<td>001</td>
-		<td>薛蛮子</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">4</span></td>
-		<td>003</td>
-		<td>潘石屹</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">5</span></td>
-		<td>002</td>
-		<td>任志强</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">6</span></td>
-		<td>001</td>
-		<td>薛蛮子</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">7</span></td>
-		<td>001</td>
-		<td>薛蛮子</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">8</span></td>
-		<td>001</td>
-		<td>薛蛮子</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-remove"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">9</span></td>
-		<td>001</td>
-		<td>薛蛮子</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-remove"></i></td>
-	      </tr>
-	      <tr>
-		<td><span class="label label-important">10</span></td>
-		<td>001</td>
-		<td>薛蛮子</td>
-		<td>北京</td>
-		<td>1000000</td>
-		<td>100</td>
-		<td><i class="icon-ok"></i></td>
-	      </tr>
-	    </tbody>
-          </table>
-	  <div class="pagination pagination-centered">
-	    <ul>
-	      <li class="disabled"><a href="#">«</a></li>
-	      <li class="active"><a href="#">1</a></li>
-	      <li><a href="#">2</a></li>
-	      <li><a href="#">3</a></li>
-	      <li><a href="#">4</a></li>
-	      <li><a href="#">5</a></li>
-	      <li><a href="#">»</a></li>
-	    </ul>
-	  </div>
+	  </table>
 	</div>
       </div>
+
     </div>
   </div>
+</div>
+{% endblock %}
+
+{% block script %}
+    {% if not from_external %}
+      <script src="{{ url_for('static', filename='js/whole_identify.js') }}"></script>
+    {% endif %}
 {% endblock %}

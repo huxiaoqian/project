@@ -7,7 +7,7 @@ import model
 from extensions import db, admin
 from model_view import SQLModelView
 
-from weibo.index.views import mod as indexModule
+from weibo.root.views import mod as rootModule
 from weibo.identify.views import mod as identifyModule
 from weibo.moodlens.views import mod as moodlensModule
 
@@ -17,7 +17,7 @@ def create_app():
     app.config.from_object('config')
 
     # Create modules
-    app.register_blueprint(indexModule)
+    app.register_blueprint(rootModule)
     app.register_blueprint(identifyModule)
     app.register_blueprint(moodlensModule)
 

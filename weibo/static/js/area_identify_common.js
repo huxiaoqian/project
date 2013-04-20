@@ -103,9 +103,9 @@
 
     function identify_request() {
 	// previous results
-	$.post("/identify/area/", {'action': 'previous_rank', 'demo': 1, 'field': field, 'keywords': keywords}, request_callback, "json");
+	$.post("/identify/area/", {'action': 'previous_rank', 'field': field, 'keywords': keywords}, request_callback, "json");
 	// current results
-	$.post("/identify/area/", {'action': 'rank', 'demo': 1, 'field': field, 'keywords': keywords}, request_callback, "json");
+	$.post("/identify/area/", {'action': 'rank', 'field': field, 'keywords': keywords}, request_callback, "json");
     }
 
     identify_request();

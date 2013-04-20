@@ -13,5 +13,5 @@ def help():
     return render_template('index/help.html')
 
 @mod.route('/about/')
-def contactxs():
+def contacts():
     return render_template('index/about.html')

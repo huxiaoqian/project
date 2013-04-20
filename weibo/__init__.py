@@ -9,6 +9,8 @@ from model_view import SQLModelView
 
 from weibo.index.views import mod as indexModule
 from weibo.identify.views import mod as identifyModule
+from weibo.moodlens.views import mod as moodlensModule
+
 
 def create_app():
     app = Flask(__name__)
@@ -17,6 +19,7 @@ def create_app():
     # Create modules
     app.register_blueprint(indexModule)
     app.register_blueprint(identifyModule)
+    app.register_blueprint(moodlensModule)
 
     # Create database
     db.init_app(app)

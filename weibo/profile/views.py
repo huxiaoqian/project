@@ -17,6 +17,7 @@ from weibo.model import *
 from utils import hot_uid_by_word, last_week, last_month
 from flask.ext.sqlalchemy import Pagination
 
+
 COUNT_PER_PAGE = 20
 
 def getStaticInfo():

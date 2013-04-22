@@ -1,0 +1,659 @@
+{% extends 'profile/profile_layout.html' %}
+{% block title %}网民多维特征搜索{% endblock %}
+{% block head %}
+<style>
+  body{
+    padding-top: 41px;
+  }
+  /*returnTop*/
+  p#back-to-top{
+          position:fixed;
+          display:none;
+          bottom:100px;
+          right:35px;
+  }
+  p#back-to-top a{
+          text-align:center;
+          text-decoration:none;
+          color:#d1d1d1;
+          display:block;
+          width:80px;
+          /*使用CSS3中的transition属性给跳转链接中的文字添加渐变效果*/
+          -moz-transition:color 1s;
+          -webkit-transition:color 1s;
+          -o-transition:color 1s;
+  }
+  p#back-to-top a:hover{
+          color:#979797;
+  }
+  p#back-to-top a span{
+          background:transparent url({{url_for('static', filename='img/backtotop.gif')}}) no-repeat;
+          border-radius:6px;
+          display:block;
+          height:45px;
+          width:35px;
+          margin:0 auto 5px auto;
+          
+          /*使用CSS3中的transition属性给<span>标签背景颜色添加渐变效果*/
+          -moz-transition:background 1s;
+          -webkit-transition:background 1s;
+          -o-transition:background 1s;
+  }
+  #back-to-top a:hover span{
+          background:transparent url({{url_for('static', filename='img/backtotop.gif')}}) no-repeat;
+  }
+
+  /** page ajax Loader **/
+  #loader {
+    height: 16px;
+    text-align: center;
+    padding: 25px 0 25px 0;
+  }
+    
+  #loaderCircle {
+    width: 16px;
+    height: 16px;
+    margin: 0 auto;
+    background-image: url({{url_for('static', filename='img/ajax-loader.gif')}});
+  }
+  /*shadow_nav style*/
+  #shadow_nav .wrapper {
+      position: relative;
+      margin: 0 auto;
+      border: 0;
+  }
+  #shadow_nav .closed {
+    padding-bottom: 0;
+    height: 0;
+  }
+  #shadow_nav {
+    background: url({{url_for('static', filename='img/profile/subnav_bg.png')}}) 0 0 repeat;
+    padding-bottom: 0px;
+    box-shadow: insert 0 -3px 5px rgba(0,0,0,.02),0 1px 0 rgba(255,255,255,.9);
+    overflow: hidden;
+    height: 260px;
+    -webkit-transition: height .2s linear;
+    
+  }
+  #shadow_nav .tent {
+      background: #fff;
+      box-shadow: 0 1px 0 white inset,0 1px 3px rgba(0,0,0,.15);
+  }
+  #shadow_nav .clearfix::before, #shadow_nav .clearfix::after {
+      content: "";
+      display: table;
+  }
+  #shadow_nav .clearfix::after {
+    clear: both;
+  }
+
+  #shadow_nav .idec-shadow-nav .unit {
+    width: 50%;
+    float: left;
+    height: 122px;
+    text-align: center;
+  }
+  #shadow_nav .idec-shadow-nav .border {
+    height: 100px;
+    border-right: 1px solid #F2F2F2;
+    margin-left: -1px;
+    float: left;
+  }
+  #shadow_nav .idec-shadow-nav .line {
+    width: 100%;
+    border-top: 1px solid #F2F2F2;
+    float: left;
+    font-size: 0;
+  }
+
+  #shadow_nav .attr{
+      height: 99%;
+      width: 99%;
+  }
+  
+  #shadow_nav .attr::after,#shadow_nav .attr::before,#shadow_nav .attr ul::after,#shadow_nav .attr ul::before {
+    display: table;
+    content: "";
+    overflow: hidden;
+    clear: both;
+  }
+  #shadow_nav .attrKey {
+    padding-top: 9px;
+    float: left;
+    padding: 7px 0 0 0;
+    width: 10%;
+    color: #B0A59F;
+    text-indent: 0px;
+  }
+  #shadow_nav .attrKey,#shadow_nav .attrKey a {
+    display: block;
+    height: 16px;
+    line-height: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #shadow_nav .attrValues {
+    padding-top: 6px;
+  }
+  #shadow_nav .attrValues {
+    position: relative;
+    float: left;
+    background-color: #FFF;
+    width: 90%;
+    padding: 4px 0 0;
+    overflow: hidden;
+  }
+  #shadow_nav .av-collapse {
+    overflow: hidden;
+    max-height: 6em;
+    _height: expression(function(el){if(/msie 6/i.test(navigator.userAgent))el.style.height =(el.scrollHeight>60) ? '60px':'auto';}(this));
+    }
+  #shadow_nav .av-collapse li.active a{
+    color: #0088cc;
+  }
+  #shadow_nav .attrValues ul {
+      position: relative;
+      margin-right: 0px;
+      margin-left: 25px;
+    }
+  #shadow_nav .attrValues li {
+      margin: 0 8px 8px 0;
+      float: left;
+      height: 22px;
+      line-height: 22px;
+  }
+  #shadow_nav .attrValues li a {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      position: relative;
+      color: #806F66;
+      display: inline-block;
+      padding: 1px 4px 1px 4px;
+      line-height: 20px;
+      height: 20px;
+      white-space: nowrap;
+  }
+  #shadow_nav .attrValues li a:hover{
+      background: #4598D2;
+      color: #fff;
+  }
+  #shadow_nav .attr a {
+    outline: none;
+    }
+  
+  #shadow_nav .attr a:link,#shadow_nav a:visited {
+      text-decoration: none;
+      list-style: none;
+  }
+  #shadow_nav .attr li{
+    display: inline;
+  }
+
+  /* panel style*/
+  .panel{
+    background-color: white;
+    width: 236px;
+    border: 1px solid #dedede;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    display: none;
+  }
+
+  /*thumbnail grid style*/
+  #thumbnail{
+    position:relative;
+    padding-bottom: 10px;
+  }
+  #thumbnail .grid{
+    width:188px;
+    min-height:100px;
+    padding: 15px;
+    background:#fff;
+    margin:8px;
+    font-size:12px;
+    float:left;
+    box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+    -moz-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+    -webkit-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+    
+    -webkit-transition: top 1s ease, left 1s ease;
+    -moz-transition: top 1s ease, left 1s ease;
+    -o-transition: top 1s ease, left 1s ease;
+    -ms-transition: top 1s ease, left 1s ease;
+  }
+  
+  #thumbnail .grid strong {
+    border-bottom:1px solid #ccc;
+    margin:10px 0;
+    display:block;
+    padding:0 0 5px;
+    font-size:17px;
+  }
+  #thumbnail .grid .meta{
+    text-align:right;
+    color:#777;
+    font-style:italic;
+  }
+  #thumbnail .grid .imgholder img{
+    max-width:100%;
+    background:#ccc;
+    display:block;
+  }
+
+  #thumbnail .options {
+    opacity: 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    -moz-transition: opacity 0.15s ease-out;
+    -o-transition: opacity 0.15s ease-out;
+    -webkit-transition: opacity 0.15s ease-out;
+    -ms-transition: opacity 0.15s ease-out;
+    transition: opacity 0.15s ease-out;
+    background-color: white;
+    height: 50px;
+    width: 50%;
+    z-index: 10;
+    border-bottom: 1px solid #e8e7e3;
+  }
+  #thumbnail .options em{
+    width: 18px;
+    height: 18px;
+    display: block;
+    margin: 9px auto 1px auto;
+  }
+  #thumbnail .options span{
+    text-align: center;
+    width: 100%;
+    display: inline-block;
+    font-size: 9px;
+    color: #0088cc;
+    line-height: 9px;
+    margin: 2px 0 0 0;
+  }
+  #thumbnail .options .add {
+    border-left: 1px solid #dedede;
+  }
+  #thumbnail .options .detail, #thumbnail .options .add{
+    cursor: pointer;
+    position: relative;/*absolute;*/
+    float: left;
+    top: 0px;
+    width: 45%;
+    height: 50px;
+    -moz-transition: opacity 0.15s ease-out;
+    -o-transition: opacity 0.25s ease-out;
+    -webkit-transition: opacity 0.25s ease-out;
+    -ms-transition: opacity 0.25s ease-out;
+    transition: opacity 0.25s ease-out;
+  }
+  #thumbnail .options a {
+    display: block;
+    padding-bottom: 8px;
+  }
+</style>
+{% endblock head %}
+{% block top_navbar_active %}
+    <li><a href="/profile/person">单个网民画像</a></li>
+    <li><a href="/profile/group">网民群体画像</a></li>
+    <li class="active"><a href="/profile/search">网民特征搜索与分类展示</a></li>
+{% endblock top_navbar_active %}
+
+{% block content %}
+    <a name="top"></a>
+    <p id="back-to-top"><a href="#top"><span></span>返回顶部</a></p>
+
+    <div id="shadow_nav">
+        <div class="wrapper" style="width: 1170px;">
+            <div class="tent">
+                <div class="idec-shadow-nav clearfix">
+                  <form action="#">
+                      <div class="unit">
+                        <div class="attr">
+                          <div class="attrKey">微博数</div>
+                          <div class="attrValues">
+                              <ul class="av-collapse">
+                                {% if statuscount %}
+                                  {% for item in statuscount %}
+                                    {% if model == item.upBound %}
+                                      <li class="active"><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% else %}
+                                      <li><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% endif %}
+                                  {% endfor %}
+                                {% endif %}
+                              </ul>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="border"></div>
+                      <div class="unit">
+                          <div class="attr">
+                          <div class="attrKey">关注数</div>
+                          <div class="attrValues">
+                              <ul class="av-collapse">
+                                {% if friendscount %}
+                                  {% for item in friendscount %}
+                                    {% if model == item.upBound %}
+                                      <li class='active'><a href="/profile/search/friends?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% else %}
+                                      <li><a href="/profile/search/friends?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% endif %}
+                                  {% endfor %}
+                                {% endif %}
+                              </ul>
+                          </div>
+                        </div>
+                      </div>                   
+                      
+                      <div class="unit">
+                          <div class="attr">
+                          <div class="attrKey">粉丝数</div>
+                          <div class="attrValues">
+                              <ul class="av-collapse">
+                                {% if followerscount %}
+                                  {% for item in followerscount %}
+                                    {% if model == item.upBound %}
+                                      <li class='active'><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% else %}
+                                      <li><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% endif %}
+                                  {% endfor %}
+                                {% endif %}
+                              </ul>
+                          
+                          </div>
+                           
+                        </div>
+                      </div>
+                      <div class="border"></div>
+
+                      <div class="unit">
+                         <div class="attr">
+                          <div class="attrKey">所在地</div>
+                          <div class="attrValues">
+                              <ul class="av-collapse">
+                              {% if location %}
+                                {% for item in location %}
+                                  {% if model == item.province %}
+                                    <li class='active'><a href="/profile/search/province?province={{ item.province }}">{{ item.province }}</a></li>
+                                  {% else %}
+                                    <li><a href="/profile/search/province?province={{ item.province }}">{{ item.province }}</a></li>
+                                  {% endif %}
+                                  
+                                {% endfor %}
+                              {% endif %}
+                              </ul>
+                          </div>
+                        </div>
+                      </div>
+                  </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span2 panel">
+          <ul class="nav nav-list">
+             <li class="nav-header">精彩内容</li>
+              {% if model == 'hotest' %}
+                <li class="active"><a href="/profile/search/hotest">热门</a></li>
+              {% else %}
+                <li><a href="/profile/search/hotest">热门</a></li>
+              {% endif %}
+              {% if model == 'newest' %}
+                <li class="active"><a href="/profile/search/newest">最新</a></li>
+              {% else %}
+                <li><a href="/profile/search/newest">最新</a></li>
+              {% endif %}
+            <li class="nav-header">领域</li>
+            {% if field %}
+              {% for f in field %}
+                {% if f.fieldEnName == model %}
+                  <li class="active"><a href="/profile/search/{{ f.fieldEnName }}">{{ f.fieldZhName }}</a></li>
+                {% else %}
+                  <li><a href="/profile/search/{{ f.fieldEnName }}">{{ f.fieldZhName }}</a></li>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            <li class="nav-header">领域管理</li>
+              <li class=""><a href="#typeahead">增加领域</a></li>
+              <li class=""><a href="#typeahead">删除领域</a></li>
+            <li class="divider"></li>
+            <li><a href="#">帮助</a></li>
+          </ul>
+        </div>
+        <div class="span9">
+          <div id="thumbnail">
+            {% if result %}
+              {% for user in result %}
+                <div class="grid">
+                    <div class="options">
+                      <div class="detail opt" title="画像详情"><a href="/profile/person/{{user.id}}" target="_blank"><em><i class="icon-search"></i></em><span>详情</span></a></div>
+                      <div class="add opt" title="添加到画像"><a href="#"><em><i class="icon-plus-sign"></i></em><span>关注</span></a></div>
+                    </div>
+                    <div class="imgholder">
+                        <a href="/profile/person/{{user.id}}" target="_blank"><img src="{{user.profileImageUrl}}" /></a>
+                    </div>
+                    <strong>{{user.userName}}</strong>
+                    <p>微博数：{{user.statusesCount}}</p>
+                    <p>关注数：{{user.friendsCount}}</p>
+                    <p>粉丝数：{{user.followersCount}}</p>
+                    <p>个人描述：{{user.description}}</p>
+                    <div class="meta"><a href="http://weibo.com/u/{{user.id}}" target="_blank">weibo.com/u/{{user.id}}</a></div>
+                </div>
+              {% endfor %}
+            {% endif %}
+         </div><!--div thumbnail-->
+        <div id="loader">
+          <div id="loaderCircle"></div>
+        </div>
+
+        </div>
+      </div>
+    </div>
+{% endblock content %}
+
+{% block script %}
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script> 
+<script type="text/javascript" src="/static/js/profile/jquery.wookmark.js"></script>
+<script type="text/javascript" src="/static/js/profile/blocksit.min.js"></script>
+<script>
+  var options = {
+      numOfCol: 5,
+      offsetX: 8,
+      offsetY: 8
+  };
+  
+  //blocksit define
+  
+  $(window).load( function() {
+    $('#thumbnail').BlocksIt(options);
+  });
+  
+  //window resize
+  var currentWidth = 1100;
+  $(window).resize(function() {
+    var winWidth = $(window).width();
+    var conWidth;
+    if(winWidth < 660) {
+      conWidth = 440;
+      col = 2
+    } else if(winWidth < 880) {
+      conWidth = 660;
+      col = 3
+    } else if(winWidth < 1100) {
+      conWidth = 880;
+      col = 4;
+    } else {
+      conWidth = 1100;
+      col = 5;
+    }
+    
+    if(conWidth != currentWidth) {
+      currentWidth = conWidth;
+      $('#thumbnail').width(conWidth);
+      $('#thumbnail').BlocksIt({
+        numOfCol: col,
+        offsetX: 8,
+        offsetY: 8
+      });
+    }
+  });
+  
+  // Capture scroll event.
+  $(document).bind('scroll', onScroll);
+      
+  // Load first data from the API.
+  
+  var handler = null;
+  var page = 1;
+  var isLoading = true;
+  var apiURL = "/profile/search/{{model}}" ;
+  var dataparams = {page: page};
+  /**
+   * When scrolled all the way to the bottom, add more tiles.
+   */
+  function onScroll(event) {
+    // Only check when we're not still waiting for data.
+    if(!isLoading) {
+      // Check if we're within 100 pixels of the bottom edge of the broser window.
+      var closeToBottom = ($(window).scrollTop() + $(window).height() > $(document).height() - 100);
+      if(closeToBottom) {
+        loadData();
+      }
+    }
+  };
+  
+  /**
+     * Refreshes the layout.
+     */
+    function applyLayout() {
+      // Clear our previous layout handler.
+      //if(handler) handler.wookmarkClear();
+      
+      // Create a new layout handler.
+    
+      handler = $('#thumbnail');
+      handler.BlocksIt(options);
+    };
+  
+  /**
+     * Loads data from the API.
+     */
+    function loadData() {
+      isLoading = true;
+      $('#loaderCircle').show();
+      
+      $.ajax({
+        url: apiURL,
+        type: 'POST',
+        dataType: 'json',
+        data: dataparams, // Page parameter to make sure we load new data
+        success: onLoadData
+      });
+    };
+    
+    /**
+     * Receives data from the API, creates HTML for images and updates the layout
+     */
+    function onLoadData(data) {
+      isLoading = false;
+      $('#loaderCircle').hide();
+      
+      // Increment page index for future calls.
+      page++;
+      
+      // Create HTML for the images.
+      var html = '';
+      var i=0, length=data.length, item;
+      for(; i<length; i++) {
+        item = data[i];
+    
+        html += "<div class=\"grid\"><div class=\"options\"><div class=\"detail opt\" title=\"画像详情\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><em><i class=\"icon-search\"></i></em><span>详情</span></a></div><div class=\"add opt\" title=\"添加到画像\"><a href=\"#\"><em><i class=\"icon-plus-sign\"></i></em><span>关注</span></a></div></div>";
+        html += "<div class=\"imgholder\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><img src=\"" + item.profileImageUrl + "\" /></a></div>";
+        html += "<strong>" + item.userName + "</strong>";
+        html += "<p>微博数：" + item.statusesCount + "</p>";
+        html += "<p>关注数：" + item.friendsCount + "</p>";
+        html += "<p>粉丝数：" + item.followersCount + "</p>";
+        html += "<p>个人描述：" + item.description + "</p>";
+        html += "<div class=\"meta\"><a href=\"http://weibo.com/u/" + item.id + "\" target=\"_blank\">weibo.com/u/" + item.id + "</a></div></div>";
+      }
+      
+      // Add image HTML to the page.
+      $('#thumbnail').append(html);
+      
+      // Apply layout.
+      applyLayout();
+
+      refresh_grid();
+  }
+
+function refresh_grid(){
+  $("#thumbnail > div.grid").each(function(){
+    $(this).hover(
+      function(){
+        $(this).addClass("gridHover").children("div.options").css("opacity", "1");
+      },
+      function(){
+        $(this).removeClass("gridHover").children("div.options").css("opacity", "0");
+      });
+  });
+  $("#thumbnail > div.grid > div.options > div.opt").each(function(){
+    $(this).hover(
+      function(){
+        $(this).css("background-color", "#0088cc");
+        $(this).find("span").css("color", "#ffffff");
+        $(this).find("i").addClass("icon-white");
+      },
+      function(){
+        $(this).css("background-color", "#ffffff");
+        $(this).find("span").css("color", "#0088cc");
+        $(this).find("i").removeClass("icon-white");
+      });
+  });
+}
+
+function backToTop(){
+  //当滚动条的位置处于距顶部100像素以下时，跳转链接出现，否则消失
+  $(function () {
+    $(window).scroll(function(){
+      if ($(window).scrollTop()>100){
+        $("#back-to-top").fadeIn(1500);
+      }
+      else
+      {
+        $("#back-to-top").fadeOut(1500);
+      }
+    });
+
+    //当点击跳转链接后，回到页面顶部位置
+
+    $("#back-to-top").click(function(){
+      $('body,html').animate({scrollTop:0},1000);
+      return false;
+    });
+  });
+}
+
+$(document).ready(function(){
+  loadData();
+  backToTop();  
+});
+</script>
+{% endblock script %}
+
+
+     
+    
+
+ 
+            

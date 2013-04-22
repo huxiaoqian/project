@@ -10,6 +10,7 @@ from model_view import SQLModelView
 from weibo.root.views import mod as rootModule
 from weibo.identify.views import mod as identifyModule
 from weibo.moodlens.views import mod as moodlensModule
+from weibo.profile.views import mod as profileModule
 
 
 def create_app():
@@ -20,6 +21,7 @@ def create_app():
     app.register_blueprint(rootModule)
     app.register_blueprint(identifyModule)
     app.register_blueprint(moodlensModule)
+    app.register_blueprint(profileModule)
 
     # Create database
     db.init_app(app)

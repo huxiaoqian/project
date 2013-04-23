@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from extensions import db
+import json
 
-__all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship', 'UserIdentification']
+__all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship',
+           'UserIdentification', 'RangeCount', 'Province', 'Words', 'PersonalBurstWords',
+           'FieldProfile', 'UserField']
 
 class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -28,6 +31,7 @@ class Topic(db.Model):
     def __repr__(self):
         return self.topicName
 
+
 class User(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
     userName = db.Column(db.String(30))
@@ -49,6 +53,26 @@ class User(db.Model):
 
     def __repr__(self):
         return self.userName
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'id' : self.id,
+            'userName' : self.userName,
+            'location' : self.location,
+            'gender' : self.gender,
+            'profileImageUrl' : self.profileImageUrl,
+            'description' : self.description,
+            'createdAt' : self.createdAt.isoformat(),
+            'verified' : self.verified,
+            'verifiedType' : self.verifiedType,
+            'statusesCount' : self.statusesCount,
+            'followersCount' : self.followersCount,
+            'friendsCount' : self.friendsCount,
+            'biFollowersCount' : self.biFollowersCount
+        }
+
 
 class Status(db.Model):
     id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
@@ -101,6 +125,8 @@ class FollowRelationship(db.Model):
 
 class UserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    fieldId = db.Column(db.Integer, db.ForeignKey('field.id'))
+    field = db.relationship('Field', primaryjoin='Field.id==UserIdentification.fieldId')
     topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
     topic = db.relationship('Topic', primaryjoin='Topic.id==UserIdentification.topicId')
     rank = db.Column(db.Integer)
@@ -119,5 +145,83 @@ class UserIdentification(db.Model):
         return self.id
 
 
+'''以下是模块3新增的表
+'''
+class RangeCount(db.Model):
+    index = db.Column(db.Integer, primary_key=True)
+    countType = db.Column(db.String(10), primary_key=True)
+    upBound = db.Column(db.BigInteger(20, unsigned=True))
+    lowBound = db.Column(db.BigInteger(20, unsigned=True))
 
+    @classmethod
+    def _name(cls):
+        return u'微博或关注或粉丝数量范围'
 
+    def __repr__(self):
+        return self.index
+
+class Province(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    province = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'省份'
+
+    def __repr__(self):
+        return self.id
+
+class Words(db.Model):
+    id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
+    uid = db.Column(db.BigInteger(11, unsigned=True))
+    postDate = db.Column(db.DateTime)
+    textWord = db.Column(db.String(400))
+    retweetedMid = db.Column(db.BigInteger(20, unsigned=True))
+
+    @classmethod
+    def _name(cls):
+        return u'词语'
+
+    def __repr__(self):
+        return self.id
+
+class PersonalBurstWords(db.Model):
+    uid = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    windowSize = db.Column(db.BigInteger(20, unsigned=True), primary_key=True) 
+    startDate = db.Column(db.Date, primary_key=True)
+    endDate = db.Column(db.Date, primary_key=True)
+    word = db.Column(db.String(20), primary_key=True)
+    burst = db.Column(db.Float(10,4))
+    freq = db.Column(db.BigInteger(20, unsigned=True))
+    
+    @classmethod
+    def _name(cls):
+        return u'突发词'
+
+    def __repr__(self):
+        return self.startdate
+
+class FieldProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fieldEnName = db.Column(db.String(20), unique=True)
+    fieldZhName = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'画像用领域'
+
+    def __repr__(self):
+        return self.id
+
+class UserField(db.Model):
+    uid = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    updateTime = db.Column(db.Date, primary_key=True)
+    fieldFirst = db.Column(db.String(20))
+    fieldSecond = db.Column(db.String(20))
+    
+    @classmethod
+    def _name(cls):
+        return u'领域博主'
+
+    def __repr__(self):
+        return self.uid

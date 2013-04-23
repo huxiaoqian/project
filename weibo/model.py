@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from extensions import db
-import json
 
 __all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship',
            'UserIdentification', 'RangeCount', 'Province', 'Words', 'PersonalBurstWords',
@@ -31,7 +30,6 @@ class Topic(db.Model):
     def __repr__(self):
         return self.topicName
 
-
 class User(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
     userName = db.Column(db.String(30))
@@ -57,6 +55,9 @@ class User(db.Model):
     @property
     def serialize(self):
         """Return object data in easily serializeable format"""
+        createdAt = None
+        if self.createdAt:
+            createdAt = self.createdAt.isoformat()
         return {
             'id' : self.id,
             'userName' : self.userName,
@@ -64,7 +65,7 @@ class User(db.Model):
             'gender' : self.gender,
             'profileImageUrl' : self.profileImageUrl,
             'description' : self.description,
-            'createdAt' : self.createdAt.isoformat(),
+            'createdAt' : createdAt,
             'verified' : self.verified,
             'verifiedType' : self.verifiedType,
             'statusesCount' : self.statusesCount,
@@ -72,7 +73,6 @@ class User(db.Model):
             'friendsCount' : self.friendsCount,
             'biFollowersCount' : self.biFollowersCount
         }
-
 
 class Status(db.Model):
     id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
@@ -125,8 +125,6 @@ class FollowRelationship(db.Model):
 
 class UserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fieldId = db.Column(db.Integer, db.ForeignKey('field.id'))
-    field = db.relationship('Field', primaryjoin='Field.id==UserIdentification.fieldId')
     topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
     topic = db.relationship('Topic', primaryjoin='Topic.id==UserIdentification.topicId')
     rank = db.Column(db.Integer)
@@ -144,9 +142,6 @@ class UserIdentification(db.Model):
     def __repr__(self):
         return self.id
 
-
-'''以下是模块3新增的表
-'''
 class RangeCount(db.Model):
     index = db.Column(db.Integer, primary_key=True)
     countType = db.Column(db.String(10), primary_key=True)

@@ -27,6 +27,49 @@ user_keys = ['_id', 'name', 'gender', 'location',
              'statuses_count', 'friends_count', 'profile_image_url',
              'bi_followers_count', 'created_at']
 
+def load_user():
+    result = db.session.query(User.id).all()
+    uids = set([user[0] for user in result])
+    
+    cursor = db_master_timeline.master_timeline_user.find({}, timeout=False)
+
+    hit_count = 0
+    count = 0
+
+    for user in cursor:
+        try:
+            uid = user['_id']
+        except KeyError,e:
+            continue
+        if uid not in uids:
+            uids.add(uid)
+            user_item = []
+            for k in user_keys:
+                try:
+                    item = user[k]
+                except KeyError, e:
+                    item = None
+                user_item.append(item)
+            if not user_item[11]:
+                createdDt = None
+            else:
+                createdDt = local2datetime(user_item[11])
+            user_ = User(id=user_item[0], userName=user_item[1], statusesCount=user_item[7], followersCount=user_item[6],
+                        friendsCount=user_item[8], location=user_item[3], profileImageUrl=user_item[9],
+                        description=user_item[4].encode('utf-8'), verified=user_item[5], biFollowersCount=user_item[10], gender=user_item[2],
+                        createdAt=createdDt)
+            
+            db.session.add(user_)
+            
+            if hit_count % 10000 == 0:
+                db.session.commit()
+                print '%s commits' % hit_count
+            hit_count += 1
+        if count % 10000 == 0:
+            print '%s count' % count
+        count += 1
+    db.session.commit()
+
 
 def load_user_by_uid(uidnumber):
     if db.session.query(User).filter_by(id=uidnumber).count():
@@ -230,10 +273,17 @@ def load_province():
      (31, '新疆'),
      (32, '广西'),
      (33, '宁夏'),
-     (34, '西藏')
+     (34, '西藏'),
+     (35, '海外')
     )
+    from sqlalchemy import create_engine, MetaData, Table
+
+    engine = create_engine('mysql+mysqldb://root:@localhost/weibo?charset=utf8', echo=False, encoding='utf-8')
+    metadata = MetaData(bind=engine)
     con = engine.connect()
     Province = Table('province', metadata, autoload=True)
+    if con.execute('select count(*) from province').first()[0] > 0:
+        con.execute(Province.delete())
     for index, province_name in province_list:
         con.execute(Province.insert(), id=index, province=province_name)
     con.close()
@@ -254,6 +304,18 @@ def load_count_range(nrange=10):
     max_statuses = result_statuses[0]
     max_friends = result_friends[0]
     max_followers = result_followers[0]
+    if max_statuses <= 10000000:
+        max_statuses = 10000000 * 2
+    else:
+        max_statuses = (max_statuses / 10000000) * 10000000 + 10000000
+    if max_friends <= 3000:
+        max_friends = 3000 + 1000
+    else:
+        max_friends = (max_friends / 1000) * 1000 + 1000
+    if max_followers <= 10000000:
+        max_followers = 10000000 * 2
+    else:
+        max_followers = (max_followers / 10000000) * 10000000 + 10000000
 
     statuses_range = calculate_interval(max_statuses, nrange)
     friends_range = calculate_interval(max_friends, nrange)
@@ -384,6 +446,7 @@ def main():
     pass
     #load_province()
     #load_count_range()
+    load_user()
     #load_word()
     #load_word_by_time("2013-03-01", "2013-04-20")
     #load_word_by_time("2013-01-01", "2013-03-01")
@@ -394,10 +457,10 @@ def main():
     #load_repost_relation()
     #load_personal_burst_word('2013-04-08','2013-04-15')
     #load_personal_burst_word('2013-04-01','2013-04-08')
-    load_personal_burst_word('2013-03-25','2013-04-01')
-    load_personal_burst_word('2013-03-18','2013-03-25')
-    load_personal_burst_word('2013-03-11','2013-04-18')
-    load_personal_burst_word('2013-03-04','2013-04-11')
+    #load_personal_burst_word('2013-03-25','2013-04-01')
+    #load_personal_burst_word('2013-03-18','2013-03-25')
+    #load_personal_burst_word('2013-03-11','2013-03-18')
+    #load_personal_burst_word('2013-03-04','2013-03-11')
     
 if __name__ == '__main__': main()
             

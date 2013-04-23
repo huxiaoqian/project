@@ -146,7 +146,8 @@
   }
   #shadow_nav .av-collapse {
     overflow: hidden;
-    max-height: 6em;
+    max-height: 10em;
+    margin-bottom: -2px;
     _height: expression(function(el){if(/msie 6/i.test(navigator.userAgent))el.style.height =(el.scrollHeight>60) ? '60px':'auto';}(this));
     }
   #shadow_nav .av-collapse li.active a{
@@ -320,10 +321,10 @@
                               <ul class="av-collapse">
                                 {% if statuscount %}
                                   {% for item in statuscount %}
-                                    {% if model == item.upBound %}
-                                      <li class="active"><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% if up == item.upBound and model == 'statuses'%}
+                                      <li class="active"><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000 }}-{{item.upBound / 10000}}万</a></li>
                                     {% else %}
-                                      <li><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                      <li><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000}}-{{item.upBound / 10000}}万</a></li>
                                     {% endif %}
                                   {% endfor %}
                                 {% endif %}
@@ -339,7 +340,7 @@
                               <ul class="av-collapse">
                                 {% if friendscount %}
                                   {% for item in friendscount %}
-                                    {% if model == item.upBound %}
+                                    {% if up == item.upBound and model == 'friends' %}
                                       <li class='active'><a href="/profile/search/friends?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
                                     {% else %}
                                       <li><a href="/profile/search/friends?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
@@ -358,10 +359,10 @@
                               <ul class="av-collapse">
                                 {% if followerscount %}
                                   {% for item in followerscount %}
-                                    {% if model == item.upBound %}
-                                      <li class='active'><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                    {% if up == item.upBound and model == 'followers'%}
+                                      <li class='active'><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000}}-{{item.upBound / 10000}}万</a></li>
                                     {% else %}
-                                      <li><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
+                                      <li><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000}}-{{item.upBound / 10000}}万</a></li>
                                     {% endif %}
                                   {% endfor %}
                                 {% endif %}
@@ -380,12 +381,11 @@
                               <ul class="av-collapse">
                               {% if location %}
                                 {% for item in location %}
-                                  {% if model == item.province %}
+                                  {% if model == 'province' and item.province == province %}
                                     <li class='active'><a href="/profile/search/province?province={{ item.province }}">{{ item.province }}</a></li>
                                   {% else %}
                                     <li><a href="/profile/search/province?province={{ item.province }}">{{ item.province }}</a></li>
                                   {% endif %}
-                                  
                                 {% endfor %}
                               {% endif %}
                               </ul>
@@ -518,7 +518,7 @@
   var page = 1;
   var isLoading = true;
   var apiURL = "/profile/search/{{model}}" ;
-  var dataparams = {page: page};
+  var dataparams;
   /**
    * When scrolled all the way to the bottom, add more tiles.
    */
@@ -552,7 +552,16 @@
     function loadData() {
       isLoading = true;
       $('#loaderCircle').show();
-      
+      {% if model == 'person' %}
+        $(document).unbind('scroll');
+        dataparams = {page: page, nickname: '{{nickname}}'};
+      {% elif model in ['statuses', 'friends', 'followers'] %}
+        dataparams = {page: page, low: {{low}}, up:{{up}}};
+      {% elif model == 'province' %}
+        dataparams = {page: page, province: '{{province}}'};
+      {% else %}  
+        dataparams = {page: page};
+      {% endif %}
       $.ajax({
         url: apiURL,
         type: 'POST',
@@ -560,6 +569,7 @@
         data: dataparams, // Page parameter to make sure we load new data
         success: onLoadData
       });
+      
     };
     
     /**

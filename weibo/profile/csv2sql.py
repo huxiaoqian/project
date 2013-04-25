@@ -4,9 +4,13 @@ import time
 import csv
 import json
 import sys
+import re
 from datetime import datetime
 from datetime import date
 from utils import local2datetime, ts2datetime, time2ts
+from bs_input import KeyValueBSONInput
+
+BSON_FILEPATH = "/opt/backup/mongodump/20130401/master_timeline/master_timeline_weibo.bson"
 
 try:
     from xapian_weibo.utils import load_scws, cut
@@ -27,7 +31,96 @@ user_keys = ['_id', 'name', 'gender', 'location',
              'statuses_count', 'friends_count', 'profile_image_url',
              'bi_followers_count', 'created_at']
 
-def load_user():
+weibo_keys = ['_id', 'text', 'geo', 'source', 'created_at', 'user', 'retweeted_status', 'reposts_count', 'comments_count', 'attitudes_count']
+retweeted_weibo_keys = ['id', 'text', 'geo', 'source', 'created_at', 'user', 'retweeted_status', 'reposts_count', 'comments_count', 'attitudes_count']
+
+def load_bs(bs_filepath=BSON_FILEPATH):
+    print 'bson file mode: 从备份的BSON文件中 %s 加载数据' % (bs_filepath)
+    bs_input = KeyValueBSONInput(open(bs_filepath, 'rb'))
+    return bs_input
+
+def parseWeibo(weibo):
+    weibo_item = []
+    if '_id' not in weibo and 'id' in weibo:
+        for key in retweeted_weibo_keys:
+            try:
+                item = weibo[key]
+                if key == 'id' and item:
+                    item = long(item)
+                if key == 'source' and item:
+                    item = re.match('<.*?>(.*)<.*?>', item).group(1)
+                if key == 'geo' and item:
+                    #[x_coor, y_coor]
+                    item = '%s, %s' % tuple(item['coordinates'])
+                if key == 'created_at' and item:
+                    item = local2datetime(item)
+                if key == 'user' and item:
+                    item = item['id']
+                if key == 'retweeted_status' and item:
+                    item = item['mid']
+            except KeyError, e:
+                item = None
+            weibo_item.append(item)
+    if '_id' in weibo:
+        for key in weibo_keys:
+            try:
+                item = weibo[key]
+                if key == 'source' and item:
+                    item = re.match('<.*?>(.*)<.*?>', item).group(1)
+                if key == 'geo' and item:
+                    #[x_coor, y_coor]
+                    item = '%s, %s' % tuple(item['coordinates'])
+                if key == 'created_at' and item:
+                    item = local2datetime(item)
+                if key == 'user' and item:
+                    item = item['id']
+                if key == 'retweeted_status' and item:
+                    item = item['mid']
+            except KeyError, e:
+                item = None
+            weibo_item.append(item)
+    status = Status(id=weibo_item[0], text=weibo_item[1], geo=weibo_item[2], sourcePlatform=weibo_item[3], postDate=weibo_item[4], uid=weibo_item[5], retweetedMid=weibo_item[6], repostsCount=weibo_item[7], commentsCount=weibo_item[8], attitudesCount=weibo_item[9])
+    return status
+
+def load_weibo_from_bs():
+    bs_input = load_bs()
+    count = 0
+    hit_count = 0
+    mids = set()
+    result = db.session.query(Status.id).all()
+    mids = set([weibo[0] for weibo in result])
+    print len(mids)
+    for _id, weibo in bs_input.reads():
+        if count % 10000 == 0:
+            print '%s count' % count
+            print '%s hit count' % hit_count
+            db.session.commit()
+        count += 1
+        if _id not in mids:
+            mids.add(_id)
+            hit_count += 1
+            status = parseWeibo(weibo)
+            db.session.add(status)
+            retweeted_mid = status.retweetedMid
+            if retweeted_mid:
+                retweeted_mid = long(retweeted_mid)
+                if retweeted_mid not in mids:
+                    mids.add(retweeted_mid)
+                    hit_count += 1
+                    retweeted_weibo = weibo['retweeted_status']
+                    retweeted_status = parseWeibo(retweeted_weibo)
+                    db.session.add(retweeted_status)
+            else:
+                continue
+        else:
+            continue
+        
+
+        
+    bs_input.close()
+    db.session.commit()
+    
+def load_user_from_mongo():
     result = db.session.query(User.id).all()
     uids = set([user[0] for user in result])
     
@@ -446,7 +539,7 @@ def main():
     pass
     #load_province()
     #load_count_range()
-    load_user()
+    load_weibo_from_bs()
     #load_word()
     #load_word_by_time("2013-03-01", "2013-04-20")
     #load_word_by_time("2013-01-01", "2013-03-01")

@@ -55,6 +55,9 @@ class User(db.Model):
     @property
     def serialize(self):
         """Return object data in easily serializeable format"""
+        createdAt = None
+        if self.createdAt:
+            createdAt = self.createdAt.isoformat()
         return {
             'id' : self.id,
             'userName' : self.userName,
@@ -62,7 +65,7 @@ class User(db.Model):
             'gender' : self.gender,
             'profileImageUrl' : self.profileImageUrl,
             'description' : self.description,
-            'createdAt' : self.createdAt.isoformat(),
+            'createdAt' : createdAt,
             'verified' : self.verified,
             'verifiedType' : self.verifiedType,
             'statusesCount' : self.statusesCount,

@@ -11,7 +11,6 @@ except ImportError:
 from flask import Blueprint, url_for, render_template, request, abort, flash
 
 from weibo.extensions import db
-import weibo.model
 from weibo.model import *
 
 from utils import hot_uid_by_word, last_week, last_month
@@ -24,7 +23,7 @@ def getStaticInfo():
     statuscount = db.session.query(RangeCount).filter(RangeCount.countType=='statuses').all()
     friendscount = db.session.query(RangeCount).filter(RangeCount.countType=='friends').all()
     followerscount = db.session.query(RangeCount).filter(RangeCount.countType=='followers').all()
-    province = db.session.query(Province).all()
+    province = db.session.query(Province).order_by(Province.id).all()
     field = db.session.query(FieldProfile).all()
     return statuscount, friendscount, followerscount, province, field
 
@@ -38,13 +37,21 @@ def profile_search(model='hotest'):
     if request.method == 'GET':
         statuscount, friendscount, followerscount, province, field = getStaticInfo()
         if model == 'person':
-##            nickname = urllib2.unquote(request.form['nickname'])
-##            print nickname
-            user = User.query.filter(User.userName=='薛蛮子').all()
+            nickname = urllib2.unquote(request.args.get('nickname'))
             return render_template('profile/profile_search.html',statuscount=statuscount,
                                    friendscount=friendscount, followerscount=followerscount,
-                                   location=province, field=field, model=model, result=user)
-
+                                   location=province, field=field, model=model, result=None, nickname=nickname)
+        elif model in ['statuses', 'friends', 'followers']:
+            low = int(request.args.get('low'))
+            up = int(request.args.get('up'))
+            return render_template('profile/profile_search.html',statuscount=statuscount,
+                                   friendscount=friendscount, followerscount=followerscount,
+                                   location=province, field=field, model=model, result=None, low=low, up=up)
+        elif model == 'province':
+            province = request.args.get('province')
+            return render_template('profile/profile_search.html',statuscount=statuscount,
+                                   friendscount=friendscount, followerscount=followerscount,
+                                   location=province, field=field, model=model, result=None, province=province)
         else:
         
             return render_template('profile/profile_search.html',statuscount=statuscount,
@@ -72,12 +79,25 @@ def profile_search(model='hotest'):
             page = int(request.form['page'])
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])
-##        elif db.session.query(RangeCount).filter(RangeCount.countType==model).count():
-##            pass
         elif model == 'person':
             nickname = urllib2.unquote(request.form['nickname'])
-            print nickname
-            basequery = User.query.filter(User.userName==nickname).all()
+            users = User.query.filter(User.userName==nickname).all()
+            return json.dumps([i.serialize for i in users])
+        elif model in ['statuses', 'friends', 'followers']:
+            low = int(request.form['low'])
+            up = int(request.form['up'])
+            if model == 'statuses':
+                basequery = User.query.filter(User.statusesCount>low, User.statusesCount<up).order_by(User.statusesCount.desc())
+            if model == 'friends':
+                basequery = User.query.filter(User.friendsCount>low, User.friendsCount<up).order_by(User.friendsCount.desc())
+            if model == 'followers':
+                basequery = User.query.filter(User.followersCount>low, User.followersCount<up).order_by(User.followersCount.desc())
+            page = int(request.form['page'])
+            users = basequery.paginate(page, COUNT_PER_PAGE, False).items
+            return json.dumps([i.serialize for i in users])
+        elif model == 'province':
+            province = request.form['province']
+            basequery = User.query.filter(User.location.startswith(province)).order_by(User.followersCount.desc())
             page = int(request.form['page'])
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])

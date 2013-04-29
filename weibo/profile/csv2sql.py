@@ -4,9 +4,13 @@ import time
 import csv
 import json
 import sys
+import re
 from datetime import datetime
 from datetime import date
 from utils import local2datetime, ts2datetime, time2ts
+from bs_input import KeyValueBSONInput
+
+BSON_FILEPATH = "/opt/backup/mongodump/20130401/master_timeline/master_timeline_weibo.bson"
 
 try:
     from xapian_weibo.utils import load_scws, cut
@@ -26,6 +30,138 @@ user_keys = ['_id', 'name', 'gender', 'location',
              'description', 'verified', 'followers_count',
              'statuses_count', 'friends_count', 'profile_image_url',
              'bi_followers_count', 'created_at']
+
+weibo_keys = ['_id', 'text', 'geo', 'source', 'created_at', 'user', 'retweeted_status', 'reposts_count', 'comments_count', 'attitudes_count']
+retweeted_weibo_keys = ['id', 'text', 'geo', 'source', 'created_at', 'user', 'retweeted_status', 'reposts_count', 'comments_count', 'attitudes_count']
+
+def load_bs(bs_filepath=BSON_FILEPATH):
+    print 'bson file mode: 从备份的BSON文件中 %s 加载数据' % (bs_filepath)
+    bs_input = KeyValueBSONInput(open(bs_filepath, 'rb'))
+    return bs_input
+
+def parseWeibo(weibo):
+    weibo_item = []
+    if '_id' not in weibo and 'id' in weibo:
+        for key in retweeted_weibo_keys:
+            try:
+                item = weibo[key]
+                if key == 'id' and item:
+                    item = long(item)
+                if key == 'source' and item:
+                    item = re.match('<.*?>(.*)<.*?>', item).group(1)
+                if key == 'geo' and item:
+                    #[x_coor, y_coor]
+                    item = '%s, %s' % tuple(item['coordinates'])
+                if key == 'created_at' and item:
+                    item = local2datetime(item)
+                if key == 'user' and item:
+                    item = item['id']
+                if key == 'retweeted_status' and item:
+                    item = item['mid']
+            except KeyError, e:
+                item = None
+            weibo_item.append(item)
+    if '_id' in weibo:
+        for key in weibo_keys:
+            try:
+                item = weibo[key]
+                if key == 'source' and item:
+                    item = re.match('<.*?>(.*)<.*?>', item).group(1)
+                if key == 'geo' and item:
+                    #[x_coor, y_coor]
+                    item = '%s, %s' % tuple(item['coordinates'])
+                if key == 'created_at' and item:
+                    item = local2datetime(item)
+                if key == 'user' and item:
+                    item = item['id']
+                if key == 'retweeted_status' and item:
+                    item = item['mid']
+            except KeyError, e:
+                item = None
+            weibo_item.append(item)
+    status = Status(id=weibo_item[0], text=weibo_item[1], geo=weibo_item[2], sourcePlatform=weibo_item[3], postDate=weibo_item[4], uid=weibo_item[5], retweetedMid=weibo_item[6], repostsCount=weibo_item[7], commentsCount=weibo_item[8], attitudesCount=weibo_item[9])
+    return status
+
+def load_weibo_from_bs():
+    bs_input = load_bs()
+    count = 0
+    hit_count = 0
+    mids = set()
+    result = db.session.query(Status.id).all()
+    mids = set([weibo[0] for weibo in result])
+    print len(mids)
+    for _id, weibo in bs_input.reads():
+        if count % 10000 == 0:
+            print '%s count' % count
+            print '%s hit count' % hit_count
+            db.session.commit()
+        count += 1
+        if _id not in mids:
+            mids.add(_id)
+            hit_count += 1
+            status = parseWeibo(weibo)
+            db.session.add(status)
+            retweeted_mid = status.retweetedMid
+            if retweeted_mid:
+                retweeted_mid = long(retweeted_mid)
+                if retweeted_mid not in mids:
+                    mids.add(retweeted_mid)
+                    hit_count += 1
+                    retweeted_weibo = weibo['retweeted_status']
+                    retweeted_status = parseWeibo(retweeted_weibo)
+                    db.session.add(retweeted_status)
+            else:
+                continue
+        else:
+            continue
+        
+
+        
+    bs_input.close()
+    db.session.commit()
+    
+def load_user_from_mongo():
+    result = db.session.query(User.id).all()
+    uids = set([user[0] for user in result])
+    
+    cursor = db_master_timeline.master_timeline_user.find({}, timeout=False)
+
+    hit_count = 0
+    count = 0
+
+    for user in cursor:
+        try:
+            uid = user['_id']
+        except KeyError,e:
+            continue
+        if uid not in uids:
+            uids.add(uid)
+            user_item = []
+            for k in user_keys:
+                try:
+                    item = user[k]
+                except KeyError, e:
+                    item = None
+                user_item.append(item)
+            if not user_item[11]:
+                createdDt = None
+            else:
+                createdDt = local2datetime(user_item[11])
+            user_ = User(id=user_item[0], userName=user_item[1], statusesCount=user_item[7], followersCount=user_item[6],
+                        friendsCount=user_item[8], location=user_item[3], profileImageUrl=user_item[9],
+                        description=user_item[4].encode('utf-8'), verified=user_item[5], biFollowersCount=user_item[10], gender=user_item[2],
+                        createdAt=createdDt)
+            
+            db.session.add(user_)
+            
+            if hit_count % 10000 == 0:
+                db.session.commit()
+                print '%s commits' % hit_count
+            hit_count += 1
+        if count % 10000 == 0:
+            print '%s count' % count
+        count += 1
+    db.session.commit()
 
 
 def load_user_by_uid(uidnumber):
@@ -230,10 +366,17 @@ def load_province():
      (31, '新疆'),
      (32, '广西'),
      (33, '宁夏'),
-     (34, '西藏')
+     (34, '西藏'),
+     (35, '海外')
     )
+    from sqlalchemy import create_engine, MetaData, Table
+
+    engine = create_engine('mysql+mysqldb://root:@localhost/weibo?charset=utf8', echo=False, encoding='utf-8')
+    metadata = MetaData(bind=engine)
     con = engine.connect()
     Province = Table('province', metadata, autoload=True)
+    if con.execute('select count(*) from province').first()[0] > 0:
+        con.execute(Province.delete())
     for index, province_name in province_list:
         con.execute(Province.insert(), id=index, province=province_name)
     con.close()
@@ -254,6 +397,18 @@ def load_count_range(nrange=10):
     max_statuses = result_statuses[0]
     max_friends = result_friends[0]
     max_followers = result_followers[0]
+    if max_statuses <= 10000000:
+        max_statuses = 10000000 * 2
+    else:
+        max_statuses = (max_statuses / 10000000) * 10000000 + 10000000
+    if max_friends <= 3000:
+        max_friends = 3000 + 1000
+    else:
+        max_friends = (max_friends / 1000) * 1000 + 1000
+    if max_followers <= 10000000:
+        max_followers = 10000000 * 2
+    else:
+        max_followers = (max_followers / 10000000) * 10000000 + 10000000
 
     statuses_range = calculate_interval(max_statuses, nrange)
     friends_range = calculate_interval(max_friends, nrange)
@@ -384,6 +539,7 @@ def main():
     pass
     #load_province()
     #load_count_range()
+    load_weibo_from_bs()
     #load_word()
     #load_word_by_time("2013-03-01", "2013-04-20")
     #load_word_by_time("2013-01-01", "2013-03-01")
@@ -394,10 +550,10 @@ def main():
     #load_repost_relation()
     #load_personal_burst_word('2013-04-08','2013-04-15')
     #load_personal_burst_word('2013-04-01','2013-04-08')
-    load_personal_burst_word('2013-03-25','2013-04-01')
-    load_personal_burst_word('2013-03-18','2013-03-25')
-    load_personal_burst_word('2013-03-11','2013-04-18')
-    load_personal_burst_word('2013-03-04','2013-04-11')
+    #load_personal_burst_word('2013-03-25','2013-04-01')
+    #load_personal_burst_word('2013-03-18','2013-03-25')
+    #load_personal_burst_word('2013-03-11','2013-03-18')
+    #load_personal_burst_word('2013-03-04','2013-03-11')
     
 if __name__ == '__main__': main()
             

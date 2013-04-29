@@ -53,4 +53,4 @@ print daily_count_kv
 batch = leveldb.WriteBatch()
 for k, v in daily_count_kv.iteritems():
     batch.Put(k, str(v))
-weibo_daily_sentiment_count_bucket.Write(batch, sync = True)
+weibo_daily_sentiment_count_bucket.Write(batch, sync=True)

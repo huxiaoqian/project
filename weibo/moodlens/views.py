@@ -10,11 +10,13 @@ import os
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
+
+
 def get_bucket(bucket):
     if bucket in buckets:
         return buckets[bucket]
     buckets[bucket] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_' + bucket),
-                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+                                      block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     return buckets[bucket]
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}

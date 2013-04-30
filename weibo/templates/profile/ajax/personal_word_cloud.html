@@ -1,0 +1,136 @@
+{% extends 'profile/ajax/ajax_layout.html' %}
+
+{% block body %}
+<form class="form-inline">
+    时间范围:
+    <select class="span2" name="interval" id="interval">
+      <option value="oneweek">1周</option>
+      <option value="oneday">1天</option>
+      <option value="onemonth">1个月</option>
+      <option value="threemonth">3个月</option>
+    </select>
+    
+     以<select class="span2" name="sort" id="sort">
+        <option value="freq">词频</option>
+        <option value="burst">突发度</option>
+      </select>
+
+      作为权重显示前<input type="number" name="limit" value="200" min="1" max="1000" class="span2" id="limit">
+      条结果
+      <!--<input type='button' onclick='return false;'>-->
+    <button type="button" class="btn btn-primary" id="generate_cloud" onclick="submit_form();return false;"><i class="icon-search"></i>生成关键词云图</button>
+</form>
+<div id='d3_cloud'></div>
+
+<script src="/static/js/profile/d3.v3.min.js"></script>
+  <script src="/static/js/profile/d3.layout.cloud.js"></script>
+
+  <script>
+function defscale(count, mincount, maxcount, minsize, maxsize){
+  if(maxcount == mincount){
+    return (maxsize + minsize) / 2
+  }else{
+    return minsize + (maxsize - minsize) * Math.pow((count / (maxcount - mincount)), 2)
+  }
+}
+
+function defrotate(count, mincount, maxcount){
+  if(count < (maxcount + mincount) / 2){
+      return 0;
+  }else{
+      return 0;
+  }
+}
+
+function deffillcolor(text){
+  //console.log(new RegExp("#.*?#", "g").test(text));
+  //if())
+}
+
+function display_d3_cloud(data){
+  var widthpixel = 936;
+  var heightpixel = 400;
+  var fill = d3.scale.category20();
+  var FONT_STYLE = "SimHei";//Microsoft YaHei,SimSun,SimHei,STHeiti//Boopee";//"IMPACT"、"Lucida Sans"、"Loved by the King"
+  var wordcounts = data;
+  var counts = new Array();
+  for(var wordcount in wordcounts){
+    counts.push(parseInt(wordcounts[wordcount]["size"]));
+  }
+  var maxcount = Math.max.apply(Math, counts);
+  var mincount = Math.min.apply(Math, counts);
+  var maxsize = 100;
+  var minsize = 15;
+  var wordsize = [];
+  for(var wordcount in wordcounts){
+    var count = parseInt(wordcounts[wordcount]["size"]);
+    var word = wordcounts[wordcount]["text"];
+    var size = defscale(count, mincount, maxcount, minsize, maxsize);
+    var rotate = defrotate(count, mincount, maxcount);
+    //deffillcolor(word);
+    wordsize.push({"text": word, "size": size, "rotate": rotate});
+  }
+
+
+  d3.layout.cloud().size([widthpixel, heightpixel])
+      .words(wordsize)
+      //.rotate(function(d) { return d.rotate;})
+      .rotate(function() { return ~~(Math.random() * 2) * 90; })//随机旋转
+      .font(FONT_STYLE)
+      .fontSize(function(d) { return d.size; })
+      .on("end", draw)
+      .start();
+
+  function draw(words) {
+    d3.select("#d3_cloud").append("svg")
+        .attr("width", widthpixel)
+        .attr("height", heightpixel)
+      .append("g")
+        .attr("transform", "translate(" + [widthpixel >> 1, heightpixel >> 1] + ")")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", FONT_STYLE)
+        .style("fill", function(d, i) { 
+          return fill(i); 
+        })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+
+        })
+        .text(function(d) { return d.text; });
+  }
+}
+
+    $(document).ready(function(){
+      $.ajax({
+          url: "/profile/person_topic/{{uid}}?interval=oneweek&sort=freq&limit=1000",
+          dataType: 'json',   
+          type: "GET",   
+          success: function (data) {
+            display_d3_cloud(data);
+          }
+      });
+          
+      })
+  function submit_form(){
+    var interval_arg = $("#interval")[0].value;
+    var sort_arg = $("#sort")[0].value;
+    var limit_arg = $("#limit")[0].value;
+    $.ajax({
+          url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&sort=" + sort_arg + "&limit=" + limit_arg,
+          dataType: 'json',   
+          type: "GET",   
+          success: function (data) {
+            $("#d3_cloud").empty();
+            display_d3_cloud(data);
+          }
+      });
+  }
+  </script>
+
+{% endblock body %}
+

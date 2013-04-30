@@ -10,7 +10,8 @@ from datetime import date
 from utils import local2datetime, ts2datetime, time2ts
 from bs_input import KeyValueBSONInput
 
-BSON_FILEPATH = "/opt/backup/mongodump/20130401/master_timeline/master_timeline_weibo.bson"
+#BSON_FILEPATH = "/opt/backup/mongodump/20130401/master_timeline/master_timeline_weibo.bson"
+BSON_FILEPATH = "/opt/backup/mongodump/20130129/master_timeline/master_timeline_weibo.bson"
 
 try:
     from xapian_weibo.utils import load_scws, cut
@@ -81,44 +82,129 @@ def parseWeibo(weibo):
             weibo_item.append(item)
     status = Status(id=weibo_item[0], text=weibo_item[1], geo=weibo_item[2], sourcePlatform=weibo_item[3], postDate=weibo_item[4], uid=weibo_item[5], retweetedMid=weibo_item[6], repostsCount=weibo_item[7], commentsCount=weibo_item[8], attitudesCount=weibo_item[9])
     return status
+def load_weibo_from_mongo(starttime="2013-03-01", endtime="2013-04-27"):    
+    cursor = db_master_timeline.master_timeline_weibo.\
+    find({"timestamp": {'$gte': time2ts(starttime),
+                        '$lte': time2ts(endtime)}}, timeout=False)
+
+    result_count = db_master_timeline.master_timeline_weibo.\
+    find({"timestamp": {'$gte': time2ts(starttime),
+                        '$lte': time2ts(endtime)}}).count()
+    print 'hits results from mongodb: ', result_count
+    
+    count = 0
+    hit_count = 0
+
+    result = db.session.query(Status.id).all()
+    mids = set([str(weibo[0]) for weibo in result])
+    print len(mids)
+    for weibo in cursor:
+        '''
+        if count < 70000:
+            count += 1
+            continue
+        '''
+        if count % 10000 == 0:
+            print '%s count' % count
+            print '%s hit count' % hit_count
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+        count += 1
+        mid = weibo['mid']
+        if long(mid) == 9932739023L:
+            print mid
+        mid = str(mid)
+        #print mid
+        if mid == '9932739023':
+            print mid
+        retweeted_mid = None
+        if mid not in mids:
+            mids.add(mid)
+            hit_count += 1
+            status = parseWeibo(weibo)
+            db.session.add(status)
+            retweeted_mid = status.retweetedMid
+        else:
+            continue
+        if retweeted_mid:
+            if long(retweeted_mid) == 9932739023L:
+                print retweeted_mid
+            retweeted_mid = str(retweeted_mid)
+            if retweeted_mid == '9932739023':
+                print retweeted_mid, 'retweeted'
+            if retweeted_mid not in mids:
+                mids.add(retweeted_mid)
+                hit_count += 1
+                retweeted_weibo = weibo['retweeted_status']
+                retweeted_status = parseWeibo(retweeted_weibo)
+                db.session.add(retweeted_status)    
+    bs_input.close()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
 
 def load_weibo_from_bs():
     bs_input = load_bs()
     count = 0
     hit_count = 0
-    mids = set()
+    #problem_items = db.session.query(Status).filter(Status.id.in_([5780633521,9932739023,3013910727,12675775804,8436879023,7293117233,15386117700])).all()
+    problem_items = db.session.query(Status).filter(Status.id.in_([3987812205])).all()
+    for item in problem_items:
+        if item:
+            print 'delete mid %s ' % item.id
+            db.session.delete(item)
+            db.session.commit()
     result = db.session.query(Status.id).all()
-    mids = set([weibo[0] for weibo in result])
+    mids = set([str(weibo[0]) for weibo in result])
     print len(mids)
     for _id, weibo in bs_input.reads():
+        if count < 70000:
+            count += 1
+            continue
         if count % 10000 == 0:
             print '%s count' % count
             print '%s hit count' % hit_count
-            db.session.commit()
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
         count += 1
-        if _id not in mids:
-            mids.add(_id)
+        mid = weibo['mid']
+        if long(mid) == 9932739023L:
+            print mid
+        mid = str(mid)
+        #print mid
+        if mid == '9932739023':
+            print mid
+        retweeted_mid = None
+        if mid not in mids:
+            mids.add(mid)
             hit_count += 1
             status = parseWeibo(weibo)
             db.session.add(status)
             retweeted_mid = status.retweetedMid
-            if retweeted_mid:
-                retweeted_mid = long(retweeted_mid)
-                if retweeted_mid not in mids:
-                    mids.add(retweeted_mid)
-                    hit_count += 1
-                    retweeted_weibo = weibo['retweeted_status']
-                    retweeted_status = parseWeibo(retweeted_weibo)
-                    db.session.add(retweeted_status)
-            else:
-                continue
         else:
             continue
-        
-
-        
+        if retweeted_mid:
+            if long(retweeted_mid) == 9932739023L:
+                print retweeted_mid
+            retweeted_mid = str(retweeted_mid)
+            if retweeted_mid == '9932739023':
+                print retweeted_mid, 'retweeted'
+            if retweeted_mid not in mids:
+                mids.add(retweeted_mid)
+                hit_count += 1
+                retweeted_weibo = weibo['retweeted_status']
+                retweeted_status = parseWeibo(retweeted_weibo)
+                db.session.add(retweeted_status)    
     bs_input.close()
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
     
 def load_user_from_mongo():
     result = db.session.query(User.id).all()
@@ -539,7 +625,8 @@ def main():
     pass
     #load_province()
     #load_count_range()
-    load_weibo_from_bs()
+    #load_weibo_from_bs()
+    load_weibo_from_mongo()
     #load_word()
     #load_word_by_time("2013-03-01", "2013-04-20")
     #load_word_by_time("2013-01-01", "2013-03-01")

@@ -1,0 +1,174 @@
+{% extends 'profile/ajax/ajax_layout.html' %}
+
+{% block body %}
+
+
+<form class="form-inline">
+  时间范围:
+    <div class="btn-group">
+      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1个月<span class="caret"></span></a>
+      <ul class="dropdown-menu">
+        <li><a href="#" data-toggle="tab">1天</a></li>
+        <li><a href="#" data-toggle="tab">1周</a></li>
+        <li class="active"><a href="#" data-toggle="tab">1个月</a></li>
+        <li><a href="#" data-toggle="tab">3个月</a></li>
+      </ul>
+    </div>
+  
+  <button class="btn btn-primary" id="generate_network" onclick="javascript:void();"><i class="icon-search"></i>生成网络结构图</button>
+</form>
+<div id="community"></div>
+<script src="/static/js/profile/d3.v3.min.js"></script>
+<script>
+//除法函数，用来得到精确的除法结果
+//说明：javascript的除法结果会有误差，在两个浮点数相除的时候会比较明显。这个函数返回较为精确的除法结果。
+//调用：accDiv(arg1,arg2)
+//返回值：arg1除以arg2的精确结果
+function accDiv(arg1,arg2){
+    var t1=0,t2=0,r1,r2;
+    try{t1=arg1.toString().split(".")[1].length}catch(e){}
+    try{t2=arg2.toString().split(".")[1].length}catch(e){}
+    with(Math){
+        r1=Number(arg1.toString().replace(".",""))
+        r2=Number(arg2.toString().replace(".",""))
+        return (r1/r2)*pow(10,t2-t1);
+    }
+}
+//给Number类型增加一个div方法，调用起来更加方便。
+Number.prototype.div = function (arg){
+    return accDiv(this, arg);
+}
+
+//乘法函数，用来得到精确的乘法结果
+//说明：javascript的乘法结果会有误差，在两个浮点数相乘的时候会比较明显。这个函数返回较为精确的乘法结果。
+//调用：accMul(arg1,arg2)
+//返回值：arg1乘以arg2的精确结果
+function accMul(arg1,arg2)
+{
+    var m=0,s1=arg1.toString(),s2=arg2.toString();
+    try{m+=s1.split(".")[1].length}catch(e){}
+    try{m+=s2.split(".")[1].length}catch(e){}
+    return Number(s1.replace(".",""))*Number(s2.replace(".",""))/Math.pow(10,m)
+}
+
+//给Number类型增加一个mul方法，调用起来更加方便。
+Number.prototype.mul = function (arg){
+    return accMul(arg, this);
+}
+
+//加法函数，用来得到精确的加法结果
+//说明：javascript的加法结果会有误差，在两个浮点数相加的时候会比较明显。这个函数返回较为精确的加法结果。
+//调用：accAdd(arg1,arg2)
+//返回值：arg1加上arg2的精确结果
+function accAdd(arg1,arg2){
+    var r1,r2,m;
+    try{r1=arg1.toString().split(".")[1].length}catch(e){r1=0}
+    try{r2=arg2.toString().split(".")[1].length}catch(e){r2=0}
+    m=Math.pow(10,Math.max(r1,r2))
+    return (arg1*m+arg2*m)/m
+}
+
+//给Number类型增加一个add方法，调用起来更加方便。
+Number.prototype.add = function (arg){
+    return accAdd(arg,this);
+}
+  function display_community(){
+	var width_1 = 700,
+		height_1 = 394
+	
+	var svg_1 = d3.select("#community").append("svg")
+		.attr("width", width_1)
+		.attr("height", height_1);
+	
+	var force = d3.layout.force()
+		.gravity(.05)
+		.linkDistance([10,10,10,10,100,100,100,100,100,100,100,100,100,100,100])
+		.distance(50)
+		.charge(-420)
+		.size([width_1, height_1]);
+	
+	d3.json("/profile/result.json", function(json) {
+	  force
+		  .nodes(json.nodes)
+		  .links(json.links)
+		  .start();
+	
+	  var link = svg_1.selectAll(".link")
+		  .data(json.links)
+		.enter().append("line")
+		  //.attr("class", "link")
+		  .style("stroke", function(d) {return "#C00"; })
+		  .style("stroke-width", function(d) {return (5).mul((d.value).div(10));});
+	
+	  var node = svg_1.selectAll(".node")
+		  .data(json.nodes)
+		.enter().append("g")
+		  .attr("class", "node")
+		  .call(force.drag);
+	
+	  node.append("image")
+		  .attr("xlink:href", function(d) { return "/static/images/friends_profile_image/" + d.profile_image_url + '.jpg'})
+		  .attr("x", function(d){
+							  if(d.group == 0){return -20;}
+							  else if(d.group == 5){return -8;}
+							  else {return -16};
+							  })
+		  .attr("y", function(d){
+							  if(d.group == 0){return -20;}
+							  else if(d.group == 5){return -8;}
+							  else {return -16};
+							  })
+		  .attr("width", function(d){
+							  if(d.group == 0){return 40;}
+							  else if(d.group == 5){return 16;}
+							  else {return 32};
+							  })
+		  .attr("height", function(d){
+							  if(d.group == 0){return 40;}
+							  else if(d.group == 5){return 16;}
+							  else {return 32};
+							  })
+		  .attr("class", "profile_image");
+	
+	  node.append("text")
+		  .attr("dx", 16)
+		  .attr("dy", 0)
+		  .style("font-size", function(d) { 
+								  if(d.group == 3){return 14 ;}
+								  else if(d.group == 0){return 16;}
+								   else if(d.group == 1){return 14;}
+								    else if(d.group == 2){return 14;}
+									 else if(d.group == 4){return 14;}
+									 else if(d.group == 5){return 12;}
+								  else{ return 14; }})
+		  .text(function(d) { return d.name })
+		  .style("stroke", function(d) { 
+								  if(d.group == 3){return "#219EE2" ;}
+								  else if(d.group == 0){return "#C90000";}
+								   else if(d.group == 1){return "#3C9";}
+								    else if(d.group == 2){return "rgb(193, 213, 47)";}
+									 else if(d.group == 4){return "rgb(24, 0, 204)";}
+									 else if(d.group == 5){return "black";}
+								  else{ return "#C90000"; }});
+	  node.append("text")
+	  	.attr("dx", 16)
+		.attr("dy", 18)
+		.style("font-size", 12)
+	  	.text(function(d) { return d.domain });
+	
+	  force.on("tick", function() {
+		link.attr("x1", function(d) { return d.source.x; })
+			.attr("y1", function(d) { return d.source.y; })
+			.attr("x2", function(d) { return d.target.x; })
+			.attr("y2", function(d) { return d.target.y; });
+	
+		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+	  });
+	});
+}
+$(document).ready(function(){
+	display_community();
+});
+</script>
+{% endblock body %}
+

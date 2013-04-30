@@ -13,13 +13,18 @@
         var seriesOptions = [],
             yAxisOptions = [],
             seriesCounter = 0,
-            names = ['MSFT', 'AAPL', 'GOOG'],
+            names = ['angry', 'sad', 'happy'],
             colors = Highcharts.getOptions().colors;
+
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
 
         $.each(names, function(i, name) {
 
-            $.getJSON('http://www.highcharts.com/samples/data/jsonp.php?filename='+ name.toLowerCase() +'-c.json&callback=?',	function(data) {
-
+            $.getJSON('/moodlens/data/' + name, function(data) {
                 seriesOptions[i] = {
                     name: name,
                     data: data
@@ -44,32 +49,58 @@
                 chart: {
                 },
 
-                rangeSelector: {
-                    selected: 4
+                title : {
+                    text: '微博情绪走势图'
                 },
 
-                yAxis: {
-                    labels: {
-                        formatter: function() {
-                            return (this.value > 0 ? '+' : '') + this.value + '%';
-                        }
-                    },
-                    plotLines: [{
-                        value: 0,
-                        width: 2,
-                        color: 'silver'
+                rangeSelector: {
+                    selected: 4,
+                    inputEnabled: false,
+                    buttons: [{
+                        type: 'week',
+                        count: 1,
+                        text: '1w'
+                    }, {
+                        type: 'month',
+                        count: 1,
+                        text: '1m'
+                    }, {
+                        type: 'month',
+                        count: 3,
+                        text: '3m'
                     }]
                 },
 
-                plotOptions: {
-                    series: {
-                        compare: 'percent'
-                    }
+                yAxis: {
+                    title: {
+                        text: '微 博 条 数'
+                    },
+                    plotLines : [{
+                        value : 1000,
+                        color : 'silver',
+                        dashStyle : 'shortdash',
+                        width : 2,
+                        label : {
+                            text : 'low'
+                        }
+                    }, {
+                        value : 20000,
+                        color : 'red',
+                        dashStyle : 'shortdash',
+                        width : 2,
+                        label : {
+                            text : 'high'
+                        }
+                    }]
                 },
 
                 tooltip: {
-                    pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
-                    valueDecimals: 0
+                    valueDecimals: 0,
+                    xDateFormat: '%Y-%m-%d %H:%M'
+                },
+
+                legend: {
+                    enabled: true
                 },
 
                 series: seriesOptions

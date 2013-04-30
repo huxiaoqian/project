@@ -11,6 +11,45 @@ from sqlalchemy import func
 
 import json
 
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        print '%r %2.2f sec' % (method.__name__, te-ts)
+        return result
+    return timed
+
+@timeit
+def store2riak(get_results):
+    count = 0
+    for r in get_results():
+        # 微博是否为转发微博
+        weibo_is_retweet_status_bucket = client.bucket('lijun_weibo_is_retweet_status')
+        is_retweet_status_bucket = 1 if weibo['retweeted_status'] else 0
+        new_node = weibo_is_retweet_status_bucket.new(weibo['id'], data=is_retweet_status_bucket)
+        new_node.store()
+        count += 1
+
+    print 'total store count:', count
+
+@timeit
+def test_riak_write(test_bucket, n):
+    for i in range(n):
+        test_bucket.new(str(i), data=i).store()
+
+@timeit
+def test_riak_read(test_bucket, n):
+    for i in range(n):
+        r = test_bucket.get(str(i))
+        # stable version
+        # data = r.get_data()
+        # master_version
+        data = r.data
+
+        if data != i:
+            raise
+            
 def local2datetime(time_str):
     time_format = '%a %b %d %H:%M:%S +0800 %Y'
     return datetime.fromtimestamp(int(time.mktime(time.strptime(time_str, time_format))))
@@ -35,13 +74,15 @@ def hot_uid_by_word(starttime, endtime, count=50):
         uids.add(uid)
     return uids
 
-def last_week():
+def last_week(weeks=1, interval=1):
     '''计算当前日期的上一周起止日期（从上周一到本周一）
+        weeks为从本周往前回溯的周数
+        interval为间隔的周数
     '''
     now_weekday = datetime.now().weekday()
     now_date = date.today()
-    this_monday = now_date - timedelta(days=now_weekday)
-    last_monday = this_monday - timedelta(days=7)
+    this_monday = now_date - timedelta(days=now_weekday) - timedelta(days=7*(weeks-1))
+    last_monday = this_monday - timedelta(days=7*interval)
     return last_monday.isoformat(), this_monday.isoformat()
 
 def last_month():
@@ -50,49 +91,6 @@ def last_month():
     now_date = date.today()
     last_date = now_date - timedelta(days=30)
     return last_date.isoformat(), now_date.isoformat()
-
-class Serializer(object):
-  __public__ = None
-  "Must be implemented by implementors"
-
-  def to_serializable_dict(self):
-    dict = {}
-    for public_key in self.__public__:
-      value = getattr(self, public_key)
-      if value:
-        dict[public_key] = value
-    return dict
-
-class SWEncoder(json.JSONEncoder):
-  def default(self, obj):
-    if isinstance(obj, Serializer):
-      return obj.to_serializable_dict()
-    if isinstance(obj, (datetime)):
-      return obj.isoformat()
-    return json.JSONEncoder.default(self, obj)
-
-
-def SWJsonify(*args, **kwargs):
-  return current_app.response_class(json.dumps(dict(*args, **kwargs), cls=SWEncoder, indent=None if request.is_xhr else 2), mimetype='application/json')
-  # stolen from https://github.com/mitsuhiko/flask/blob/master/flask/helpers.py
-
-##from sqlalchemy.ext.declarative import DeclarativeMeta
-##class AlchemyEncoder(json.JSONEncoder):
-##    def default(self, obj):
-##        if isinstance(obj.__class__, DeclarativeMeta):
-##            # an SQLAlchemy class
-##            fields = {}
-##            for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
-##                data = obj.__getattribute__(field)
-##                try:
-##                    json.dumps(data) # this will fail on non-encodable values, like other classes
-##                    fields[field] = data
-##                except TypeError:
-##                    fields[field] = None
-##            # a json-encodable dict
-##            return fields
-##
-##        return json.JSONEncoder.default(self, obj)
     
 def main():
     last_week()

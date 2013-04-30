@@ -1,0 +1,101 @@
+{% extends 'profile/ajax/ajax_layout.html' %}
+
+{% block body %}
+
+  <script src="/static/js/profile/highcharts.js"></script>
+  <script src="/static/js/profile/exporting.js"></script>
+  <script src="/static/js/profile/emotion_summary.js"></script>
+  <script>
+
+  function display_emotion_count(){
+    var time_arr = [];
+    var pos_arr = [];
+    var neg_arr = [];
+    dt_arr = emotion_tmline_arr;
+    for (var i=0;i<dt_arr.length;i++) {
+      time_arr.push(dt_arr[i].date);
+      pos_arr.push(dt_arr[i].c0);
+      neg_arr.push(dt_arr[i].c1);
+    }
+      var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chartdiv_emotion',
+            type: 'line',
+            marginRight: 100,
+            marginBottom: 25
+        },
+        title: {
+            text: '情绪趋势',
+            x: -20 //center
+        },
+        
+        xAxis: {
+            categories: time_arr,
+            labels:{
+              step:6,//3就是x轴显示的间隔
+            }
+        },
+        yAxis: {
+            title: {
+                text: '比例'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }]
+        },
+        tooltip: {
+            formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+
+                    this.x +': '+ this.y +'';
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'top',
+            x: -10,
+            y: 100,
+            borderWidth: 0
+        },
+        series: [{
+            name: '积极',
+            data: pos_arr,//[7.0, 9, 9, 14, 18, 21, 25, 26, 23, 18, 13, 9]
+        }, {
+            name: '消极',
+            data: neg_arr,//[2, 8, 5, 11, 17, 22, 24, 24, 20, 14, 8, 2]
+        }]
+    });
+  }
+
+  $(document).ready(function(){
+     display_emotion_count();
+     /*
+    $.ajax({
+        url: "",
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          display_emotion_count(data);
+        }
+    });*/      
+  })
+  </script>
+  <form class="form-inline">
+    时间范围:
+      <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1个月<span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li><a href="#" data-toggle="tab">1周</a></li>
+          <li class="active"><a href="#" data-toggle="tab">1个月</a></li>
+          <li><a href="#" data-toggle="tab">3个月</a></li>
+        </ul>
+      </div>
+    <button class="btn btn-primary"><i class="icon-search"></i>生成情感趋势图</button>
+  </form>
+  <div id="chartdiv_emotion" style="width: 930px; height: 400px;"></div>
+      
+
+{% endblock body %}
+

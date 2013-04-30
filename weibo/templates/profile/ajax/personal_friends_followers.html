@@ -1,0 +1,64 @@
+{% extends 'profile/ajax/ajax_layout.html' %}
+
+{% block body %}     
+
+  <form class="form-inline">
+      时间范围:
+        <div class="btn-group">
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1天<span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li class="active"><a href="#" data-toggle="tab">1天</a></li>
+            <li><a href="#" data-toggle="tab">1周</a></li>
+            <li><a href="#" data-toggle="tab">1个月</a></li>
+            <li><a href="#" data-toggle="tab">3个月</a></li>
+          </ul>
+        </div>
+      <button class="btn btn-primary"><i class="icon-search"></i>计算</button>
+  </form>
+  <div class="btn-group">
+    <button class="active btn">政务<span>20</span></button>
+    <button class="btn btn-primary">体育<span>20</span></button>
+    <button class="btn btn-success">财经<span>10</span></button>
+    <button class="btn btn-info">娱乐<span>4</span></button>
+    <button class="btn btn-warning">传媒<span>2</span></button>
+    <button class="btn btn-inverse">社会<span>1</span></button>
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>昵称</th>
+        <th>微博数</th>
+        <th>粉丝数</th>
+        <th>关注数</th>
+        <th>领域</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in result %}
+        <tr>
+          <td>{{user.id}}</td>
+          <td>{{user.userName}}</td>
+          <td>{{user.statusesCount}}</td>
+          <td>{{user.followersCount}}</td>
+          <td>{{user.friendsCount}}</td>
+          <td>{{user.field}}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="inputAppend"><a class="btn btn-small" href="#"><i class="icon-download-alt"></i> 导出</a></div>
+  <div class="pagination pagination-centered">
+    <ul>
+      <li class="disabled"><a href="#">«</a></li>
+      <li class="active"><a href="#">1</a></li>
+      <li><a href="#">2</a></li>
+      <li><a href="#">3</a></li>
+      <li><a href="#">4</a></li>
+      <li><a href="#">5</a></li>
+      <li><a href="#">»</a></li>
+    </ul>
+  </div>
+
+{% endblock body %}
+

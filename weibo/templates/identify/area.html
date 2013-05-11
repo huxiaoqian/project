@@ -2,36 +2,7 @@
 {% block title %}领域博主识别{% endblock %}
 {% block head %}
     {{ super() }}
-    <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.css') }}" media="screen" />
-    <script>
-      {% if keywords %}
-      var keywords = '{{ keywords }}';
-      {% else %}
-      var keywords = '';
-      {% endif %}
-
-      {% if field %}
-      var field = '{{ field }}';
-      {% else %}
-      var field = '';
-      {% endif %}
-
-      $(document).ready(function(){
-        $("#networkModal").click(function(){
-          $.fancybox({
-            'href':'/static/html/retweetmap.xhtml',
-            'width': '75%',
-            'height': '90%',
-            'autoScale': false,
-            'transitionIn': 'none',
-            'transitionOut': 'fade',
-            'type': 'iframe',
-            'onClosed': function(){},
-          });
-        });
-      });
-    </script>
 {% endblock %}
 {% block content %}
     <div class="container-fluid">
@@ -235,11 +206,33 @@
     </div>
 {% endblock %}
 {% block script %}
-    {% if not from_external %}
-      {% if hadoop %}
-      <script src="{{ url_for('static', filename='js/area_identify.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
+
+    <script>
+      var hadoop = {{ hadoop }};
+      {% if topic_id %}
+      var topic_id = '{{ topic_id }}';
       {% else %}
-      <script src="{{ url_for('static', filename='js/area_identify_common.js') }}"></script>
+      var topic_id = '';
       {% endif %}
+
+      $(document).ready(function(){
+        $("#networkModal").click(function(){
+          $.fancybox({
+            'href':'/static/html/retweetmap.xhtml',
+            'width': '75%',
+            'height': '90%',
+            'autoScale': false,
+            'transitionIn': 'none',
+            'transitionOut': 'fade',
+            'type': 'iframe',
+            'onClosed': function(){},
+          });
+        });
+      });
+    </script>
+
+    {% if not from_external %}
+      <script src="{{ url_for('static', filename='js/identify/area_identify.js') }}"></script>
     {% endif %}
 {% endblock %}

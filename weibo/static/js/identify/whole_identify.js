@@ -103,9 +103,9 @@
 
     function identify_request() {
 	// previous results
-	$.post("/identify/whole/", {'action': 'previous_rank'}, request_callback, "json");
+	$.post("/identify/whole/", {'action': 'previous_rank', 'rank_method': rank_method}, request_callback, "json");
 	// current results
-	$.post("/identify/whole/", {'action': 'rank'}, request_callback, "json");
+	$.post("/identify/whole/", {'action': 'rank', 'rank_method': rank_method}, request_callback, "json");
     }
 
     identify_request();

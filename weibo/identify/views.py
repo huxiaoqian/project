@@ -63,7 +63,7 @@ def whole():
                     previous_data = wholeModule.important_rank(top_n, previous_date, window_size)
             return json.dumps({'status': 'previous finished', 'data': previous_data})
         elif action == 'run':
-            return render_template('identify/whole.html', top_n=top_n, page_num=page_num)
+            return render_template('identify/whole.html', rank_method=rank_method, top_n=top_n, page_num=page_num)
         else:
            abort(404)
     else:

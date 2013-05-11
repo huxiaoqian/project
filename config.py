@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-DEBUG = False
+DEBUG = True
 
 ADMINS = frozenset(['youremail@yourdomain.com'])
 SECRET_KEY = 'SecretKeyForSessionSigning'

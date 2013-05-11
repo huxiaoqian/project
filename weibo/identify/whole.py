@@ -19,7 +19,7 @@ def followers_rank(top_n, post_date, window_size):
 def active_rank(top_n, post_date, window_size):
     end_time = datetime2ts(post_date)
     start_time = end_time - window2time(window_size)
-    users = db.session.query(User).order_by(User.followersCount.desc()).limit(top_n)
+    users = db.session.query(User).order_by(User.statusesCount.desc()).limit(top_n)
     sorted_uids = []
     for user in users:
         sorted_uids.append(user.id)

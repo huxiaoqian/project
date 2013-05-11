@@ -46,6 +46,10 @@ def whole():
             if not data:
                 if rank_method == 'followers':
                     data = wholeModule.followers_rank(top_n, current_date, window_size)
+                elif rank_method == 'active':
+                    data = wholeModule.active_rank(top_n, current_date, window_size)
+                elif rank_method == 'important':
+                    data = wholeModule.important_rank(top_n, current_date, window_size)
             return json.dumps({'status': 'current finished', 'data': data})
         elif action == 'previous_rank':
             previous_date = ts2datetime(time.time()-window2time(window_size))
@@ -53,6 +57,10 @@ def whole():
             if not previous_data:
                 if rank_method == 'followers':
                     previous_data = wholeModule.followers_rank(top_n, previous_date, window_size)
+                elif rank_method == 'active':
+                    previous_data = wholeModule.active_rank(top_n, previous_date, window_size)
+                elif rank_method == 'important':
+                    previous_data = wholeModule.important_rank(top_n, previous_date, window_size)
             return json.dumps({'status': 'previous finished', 'data': previous_data})
         elif action == 'run':
             return render_template('identify/whole.html', top_n=top_n, page_num=page_num)

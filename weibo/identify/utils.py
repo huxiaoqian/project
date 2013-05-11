@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import time
-import tempfile
-
 from weibo.extensions import db
 
 import weibo.model
 from weibo.model import *
 
-from time_utils import ts2datetime, window2time
-from common_utils import common_results
+from time_utils import ts2datetime, datetime2ts, window2time
 
 def acquire_id(name, value):
     if not value:
@@ -35,16 +31,11 @@ def acquire_value(name, id):
     else:
         return None
 
-def read_previous_results(top_n, topic_id=None, r='area', m='pagerank', w=1):
+def read_rank_results(top_n, post_date, topic_id=None, r=None, m=None, w=None, compare=False):
     data = []
-    window_time = window2time(w)
-    previous_date = ts2datetime(time.time()-window_time)
-    items = db.session.query(UserIdentification).filter_by(topicId=topic_id, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=previous_date).order_by(UserIdentification.rank.asc())
+    items = db.session.query(UserIdentification).filter_by(topicId=topic_id, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=post_date).order_by(UserIdentification.rank.asc()).limit(top_n)
     if items.count():
-        count = 0
         for item in items:
-            if count > top_n:
-                break
             rank = item.rank
             uid = item.userId
             user = db.session.query(User).filter_by(id=uid).first()
@@ -55,58 +46,47 @@ def read_previous_results(top_n, topic_id=None, r='area', m='pagerank', w=1):
             followers = user.followersCount
             friends = user.friendsCount
             #read from external knowledge database
-            status = 1
-            row = (rank, uid, name, location, followers, friends, status)
+            status = user_status(uid)
+            if compare:
+                previous_rank = find_user_previous_rank(topic_id, uid, post_date, r=r, m=m, w=w)
+                comparison = rank_comparison(previous_rank, rank)
+                row = (rank, uid, name, location, followers, friends, comparison, status)
+            else:
+                row = (rank, uid, name, location, followers, friends, status)
             data.append(row)
-            count += 1
     return data
 
-def read_current_results(top_n, topic_id=None, r='area', m='pagerank', w=1):
+def save_rank_results(sorted_uids, post_date=None, topic_id=None, r=None, m=None, w=None):
     data = []
-    current_date = ts2datetime(time.time())
-    items = db.session.query(UserIdentification).filter_by(topicId=topic_id, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=current_date).order_by(UserIdentification.rank.asc())
-    if items.count():
-        count = 0
-        for item in items:
-            if count > top_n:
-                break
-            rank = item.rank
-            user = item.user
-            uid = user.id
-            name = user.userName
-            location = user.location
-            followers = user.followersCount
-            friends = user.friendsCount
-            #read from external knowledge database
-            status = 1
-            previous_rank = find_user_previous_rank(topic_id, uid, r=r, m=m, w=w)
-            comparison = rank_comparison(previous_rank, rank)
-            row = (rank, uid, name, location, followers, friends, comparison, status)
-            data.append(row)
-            count += 1
-    else:
-        sorted_uids = common_results(topic_id, top_n, r, m, w)
-        rank = 1
-        for uid in sorted_uids:
-            user = db.session.query(User).filter_by(id=uid).first()
-            if not user:
-                continue
-            name = user.userName
-            location = user.location
-            followers = user.followersCount
-            friends = user.friendsCount
-            #read from external knowledge database
-            status = 1
-            previous_rank = find_user_previous_rank(topic_id, uid, r=r, m=m, w=w)
-            comparison = rank_comparison(previous_rank, rank)
-            row = (rank, uid, name, location, followers, friends, comparison, status)
-            data.append(row)
-            item = UserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyRange=r,identifyDate=current_date, identifyWindow=w, identifyMethod=m)
-            db.session.add(item)
-            rank += 1
-        db.session.commit()
-
+    rank = 1
+    for uid in sorted_uids:
+        user = db.session.query(User).filter_by(id=uid).first()
+        if not user:
+            continue
+        name = user.userName
+        location = user.location
+        followers = user.followersCount
+        friends = user.friendsCount
+        #read from external knowledge database
+        status = user_status(uid)
+        row = (rank, uid, name, location, followers, friends, status)
+        data.append(row)
+        item = UserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyRange=r,identifyDate=post_date, identifyWindow=w, identifyMethod=m)
+        db.session.add(item)
+        rank += 1
+    db.session.commit()
     return data
+
+def find_user_previous_rank(topic_id, uid, post_date, r=None, m=None, w=None):
+    #read from previous window record
+    base_time = datetime2ts(post_date)
+    window_time = window2time(w)
+    previous_date = ts2datetime(base_time-window_time)
+    item = db.session.query(UserIdentification).filter_by(topicId=topic_id, userId=uid, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=previous_date).first()
+    if item:
+        return item.rank
+    else:
+        return None
 
 def rank_comparison(previous, current):
     if previous:
@@ -120,12 +100,5 @@ def rank_comparison(previous, current):
         comparison = 1
     return comparison
 
-def find_user_previous_rank(topic_id, uid, r='area', m='pagerank', w=1):
-    #read from previous window record
-    window_time = window2time(w)
-    previous_date = ts2datetime(time.time()-window_time)
-    item = db.session.query(UserIdentification).filter_by(topicId=topic_id, userId=uid, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=previous_date).first()
-    if item:
-        return item.rank
-    else:
-        return None
+def user_status(uid):
+    return 1

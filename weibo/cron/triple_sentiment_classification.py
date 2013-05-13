@@ -8,10 +8,8 @@ import os
 import datetime
 import random
 import time
-import nltk, re
-import pymongo
-from pymongo import Connection
-import datetime
+import nltk
+import re
 from gensim import corpora, models, similarities
 import math
 import string
@@ -24,7 +22,7 @@ from xapian_weibo.utils import load_scws
 from xapian_weibo.utils import cut
 
 
-xs = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline')
+xs = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo')
 cut_str = load_scws()
 
 ##情绪类标
@@ -113,7 +111,7 @@ query_dict = {
         '$lt': now_ts,
     }
 }
-count, get_results = xs.search(query=query_dict, fields=['id', 'text', 'retweeted_status'])
+count, get_results = xs.search(query=query_dict, fields=['_id', 'text', 'retweeted_status'])
 print count
 
 
@@ -139,18 +137,16 @@ for r in get_results():
         print iter_count, '%s sec' % (te - ts)
         ts = te
     sentiment = 0
-    id_str = str(r['id'])
+    id_str = str(r['_id'])
 
-    # 此处逻辑有待确认
     text = ''
     if_empty_retweet = weibo_empty_retweet_bucket.Get(id_str)
     if if_empty_retweet:
         if_empty_retweet = int(if_empty_retweet)
     if if_empty_retweet == 1:
-        if r['retweeted_status']:
-            mid_id_str = str(r['retweeted_status']['id'])
+        mid_id_str = str(r['retweeted_status'])
     else:
-        mid_id_str=id_str
+        mid_id_str = id_str
 
     if_emoticoned = weibo_emoticoned_bucket.Get(mid_id_str)
     if if_emoticoned:
@@ -165,7 +161,7 @@ for r in get_results():
         text = r['text']
 
     if text != '':
-        entry=cut(cut_str,text)
+        entry = cut(cut_str, text)
         bow = dictionary.doc2bow(entry)
         s = [1, 1, 1]
         for pair in bow:

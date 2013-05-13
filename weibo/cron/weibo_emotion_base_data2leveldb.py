@@ -10,8 +10,21 @@ import opencc
 import re
 
 LEVELDBPATH = '/home/mirage/leveldb'
-s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline')
+s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo')
+cc = opencc.OpenCC('s2t')
+emotions_words = load_emotion_words()
+emotions_words = [unicode(e, 'utf-8') for e in emotions_words]
+t_emotions_words = [cc.convert(e) for e in emotions_words]
+emotions_words.extend(t_emotions_words)
+emotions_words = [w.encode('utf-8') for w in emotions_words]
+emotions_words_set = set(emotions_words)
 
+weibo_is_retweet_status_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo_is_retweet_status'),
+                                                 block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+weibo_emoticoned_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo_emoticoned'),
+                                          block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+weibo_empty_retweet_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo_empty_retweet'),
+                                             block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 def timeit(method):
     def timed(*args, **kw):
@@ -25,7 +38,7 @@ def timeit(method):
 
 @timeit
 def load_weibos_from_xapian():
-    total_days = 89
+    total_days = 90
     today = datetime.datetime.today()
     end_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
     begin_ts = end_ts - total_days * 24 * 3600
@@ -33,31 +46,17 @@ def load_weibos_from_xapian():
     query_dict = {
         'timestamp': {'$gt': begin_ts, '$lt': end_ts},
     }
-    count, get_results = s.search(query=query_dict, fields=['id', 'retweeted_status', 'text'])
+    count, get_results = s.search(query=query_dict, fields=['_id', 'retweeted_status', 'text'])
     print count
     return get_results
 
 
 @timeit
 def store2leveldb(get_results):
-    cc = opencc.OpenCC('s2t')
-    emotions_words = load_emotion_words()
-    emotions_words = [unicode(e, 'utf-8') for e in emotions_words]
-    t_emotions_words = [cc.convert(e) for e in emotions_words]
-    emotions_words.extend(t_emotions_words)
-    emotions_words_set = set(emotions_words)
-
-    weibo_is_retweet_status_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo_is_retweet_status'),
-                                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    weibo_emoticoned_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo_emoticoned'),
-                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    weibo_empty_retweet_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo_empty_retweet'),
-                                                 block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-
     count = 0
     ts = te = time.time()
     for r in get_results():
-        id_str = str(r['id'])
+        id_str = str(r['_id'])
 
         # 微博是否为转发微博
         is_retweet_status = 1 if r['retweeted_status'] else 0
@@ -69,11 +68,11 @@ def store2leveldb(get_results):
         weibo_emoticoned_bucket.Put(id_str, str(is_emoticoned))
 
         # 是否为转发微博几个字
-        is_empty_retweet = 1 if r['text'] in [u'转发微博', u'轉發微博', u'Repost'] else 0
+        is_empty_retweet = 1 if r['retweeted_status'] and r['text'] in [u'转发微博', u'轉發微博', u'Repost'] else 0
         weibo_empty_retweet_bucket.Put(id_str, str(is_empty_retweet))
 
         count += 1
-        if count % 33333 == 0:
+        if count % 100000 == 0:
             te = time.time()
             print count, '%s sec' % (te - ts)
             ts = te

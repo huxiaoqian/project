@@ -99,7 +99,7 @@ with open('/home/mirage/senitmet/triple_sentiment_words_weight.txt') as f:
 
 
 ##利用索引取3个月数据
-total_days = 89
+total_days = 90
 today = datetime.datetime.today()
 now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
 begin_ts = now_ts - total_days * 24 * 3600

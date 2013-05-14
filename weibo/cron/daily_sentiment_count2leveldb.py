@@ -6,7 +6,7 @@ import datetime
 import time
 import os
 
-s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline')
+s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo')
 
 LEVELDBPATH = '/home/mirage/leveldb'
 weibo_multi_sentiment_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'huyue_weibo_multi_sentiment'),
@@ -15,7 +15,7 @@ weibo_daily_sentiment_count_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, '
                                                      block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
-total_days = 89
+total_days = 90
 
 today = datetime.datetime.today()
 now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
@@ -26,7 +26,7 @@ begin_ts = now_ts - total_days * during
 query_dict = {
     'timestamp': {'$gt': begin_ts, '$lt': now_ts},
 }
-count, get_results = s.search(query=query_dict, fields=['id', 'timestamp'])
+count, get_results = s.search(query=query_dict, fields=['_id', 'timestamp'])
 print count
 
 count = 0
@@ -38,7 +38,7 @@ for r in get_results():
         te = time.time()
         print count, '%s sec' % (te - ts)
         ts = te
-    sentiment = weibo_multi_sentiment_bucket.Get(str(r['id']))
+    sentiment = weibo_multi_sentiment_bucket.Get(str(r['_id']))
     if sentiment:
         sentiment = int(sentiment)
     if sentiment in emotions_kv.values():

@@ -18,11 +18,11 @@ from nltk.probability import FreqDist
 import cPickle as pickle
 import leveldb
 from xapian_weibo.xapian_backend import XapianSearch
+from xapian_weibo.xapian_backend_extra import _load_weibos_from_xapian
 from xapian_weibo.utils import load_scws
 from xapian_weibo.utils import cut
 
 
-xs = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo')
 cut_str = load_scws()
 
 ##情绪类标
@@ -82,14 +82,14 @@ with open('4groups.csv') as f:
 
 
 ##读取字典
-f = file('/home/mirage/senitmet/triple_sentiment.pkl', 'r')
+f = file('/home/mirage/sentiment/triple_sentiment.pkl', 'r')
 dictionary = pickle.load(f)
 f.close()
 
 
 ##读取各个词的权重信息
 p_senti = {}
-with open('/home/mirage/senitmet/triple_sentiment_words_weight.txt') as f:
+with open('/home/mirage/sentiment/triple_sentiment_words_weight.txt') as f:
     for l in f:
         try:
             lis = l.rstrip().split()
@@ -99,21 +99,7 @@ with open('/home/mirage/senitmet/triple_sentiment_words_weight.txt') as f:
 
 
 ##利用索引取3个月数据
-total_days = 90
-today = datetime.datetime.today()
-now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
-begin_ts = now_ts - total_days * 24 * 3600
-
-
-query_dict = {
-    'timestamp': {
-        '$gt': begin_ts,
-        '$lt': now_ts,
-    }
-}
-count, get_results = xs.search(query=query_dict, fields=['_id', 'text', 'retweeted_status'])
-print count
-
+get_results = _load_weibos_from_xapian()
 
 ##对3个月的每条微博进行分类
 LEVELDBPATH = '/home/mirage/leveldb'

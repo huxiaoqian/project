@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from xapian_weibo.xapian_backend import XapianSearch
+from xapian_weibo.xapian_backend_extra import _load_weibos_from_xapian
 from xapian_weibo.utils import load_emotion_words
 import os
 import leveldb
@@ -26,6 +27,7 @@ weibo_emoticoned_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo
 weibo_empty_retweet_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_weibo_empty_retweet'),
                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
+
 def timeit(method):
     def timed(*args, **kw):
         ts = time.time()
@@ -37,22 +39,21 @@ def timeit(method):
 
 
 @timeit
-def load_weibos_from_xapian():
-    total_days = 90
-    today = datetime.datetime.today()
-    end_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
-    begin_ts = end_ts - total_days * 24 * 3600
-
+def load_extra_weibos_from_xapian(ids):
     query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+        '$or': [],
     }
-    count, get_results = s.search(query=query_dict, fields=['_id', 'retweeted_status', 'text'])
+    for _id in ids:
+        query_dict['$or'].append({'_id': _id})
+    count, get_results = s.search(query=query_dict, fields=['_id', 'text'])
     print count
     return get_results
 
 
 @timeit
 def store2leveldb(get_results):
+    empty_retweeted_ids = []
+
     count = 0
     ts = te = time.time()
     for r in get_results():
@@ -68,8 +69,31 @@ def store2leveldb(get_results):
         weibo_emoticoned_bucket.Put(id_str, str(is_emoticoned))
 
         # 是否为转发微博几个字
-        is_empty_retweet = 1 if r['retweeted_status'] and r['text'] in [u'转发微博', u'轉發微博', u'Repost'] else 0
+        is_empty_retweet = 1 if r['retweeted_status'] and r['text'] in ['转发微博', '轉發微博', 'Repost'] else 0
         weibo_empty_retweet_bucket.Put(id_str, str(is_empty_retweet))
+        empty_retweeted_ids.append(r['retweeted_status'])
+
+        count += 1
+        if count % 100000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts)
+            ts = te
+
+    print 'empty_retweeted count', len(empty_retweeted_ids)
+    return empty_retweeted_ids
+
+
+@timeit
+def store2leveldb_extra(get_results):
+    count = 0
+    ts = te = time.time()
+    for r in get_results():
+        id_str = str(r['_id'])
+
+        # 微博是否包含指定的表情符号集
+        emotions = re.findall(r'\[(\S+?)\]', r['text'])
+        is_emoticoned = 1 if set(emotions) & emotions_words_set else 0
+        weibo_emoticoned_bucket.Put(id_str, str(is_emoticoned))
 
         count += 1
         if count % 100000 == 0:
@@ -79,5 +103,7 @@ def store2leveldb(get_results):
 
 
 if __name__ == '__main__':
-    get_results = load_weibos_from_xapian()
-    store2leveldb(get_results)
+    get_results = _load_weibos_from_xapian()
+    empty_retweeted_ids = store2leveldb(get_results)
+    get_results = load_extra_weibos_from_xapian(empty_retweeted_ids)
+    store2leveldb_extra(get_results)

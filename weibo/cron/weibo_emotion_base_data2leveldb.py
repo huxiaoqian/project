@@ -49,11 +49,13 @@ def load_extra_weibos_from_xapian(ids):
 
 @timeit
 def store2leveldb(get_results):
-    empty_retweeted_ids = []
+    empty_retweeted_ids = set()
+    weibo_ids = set()
 
     count = 0
     ts = te = time.time()
     for r in get_results():
+        weibo_ids.add(r['_id'])
         id_str = str(r['_id'])
 
         # 微博是否为转发微博
@@ -68,7 +70,7 @@ def store2leveldb(get_results):
         # 是否为转发微博几个字
         is_empty_retweet = 1 if r['retweeted_status'] and r['text'] in ['转发微博', '轉發微博', 'Repost'] else 0
         if is_empty_retweet == 1:
-            empty_retweeted_ids.append(r['retweeted_status'])
+            empty_retweeted_ids.add(r['retweeted_status'])
         weibo_empty_retweet_bucket.Put(id_str, str(is_empty_retweet))
 
         count += 1
@@ -77,9 +79,11 @@ def store2leveldb(get_results):
             print count, '%s sec' % (te - ts)
             ts = te
 
-    print 'empty_retweeted total count', len(empty_retweeted_ids)
-    empty_retweeted_ids = list(set(empty_retweeted_ids))
-    print 'empty_retweeted actual count', len(empty_retweeted_ids)
+    empty_retweeted_ids = list(empty_retweeted_ids)
+    print '去重之后', len(empty_retweeted_ids)
+    empty_retweeted_ids = [i for i in empty_retweeted_ids if i not in weibo_ids]
+    del weibo_ids
+    print '去掉已经建立索引的之后', len(empty_retweeted_ids)
     return empty_retweeted_ids
 
 

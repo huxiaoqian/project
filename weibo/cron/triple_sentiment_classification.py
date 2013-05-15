@@ -65,7 +65,7 @@ zan = set()
 angry = set()
 sad = set()
 
-with open('4groups.csv') as f:
+with open('/home/mirage/sentiment/4groups.csv') as f:
     for l in f:
         pair = l.rstrip().split('\t')
         if pair[1] == '1':

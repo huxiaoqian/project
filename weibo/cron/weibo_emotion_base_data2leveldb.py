@@ -5,7 +5,6 @@ from xapian_weibo.xapian_backend_extra import _load_weibos_from_xapian
 from xapian_weibo.utils import load_emotion_words
 import os
 import leveldb
-import datetime
 import time
 import opencc
 import re
@@ -38,15 +37,13 @@ def timeit(method):
     return timed
 
 
-@timeit
 def load_extra_weibos_from_xapian(ids):
     query_dict = {
         '$or': [],
     }
     for _id in ids:
         query_dict['$or'].append({'_id': _id})
-    count, get_results = s.search(query=query_dict, fields=['_id', 'text'])
-    print count
+    _, get_results = s.search(query=query_dict, fields=['_id', 'text'])
     return get_results
 
 
@@ -70,8 +67,9 @@ def store2leveldb(get_results):
 
         # 是否为转发微博几个字
         is_empty_retweet = 1 if r['retweeted_status'] and r['text'] in ['转发微博', '轉發微博', 'Repost'] else 0
+        if is_empty_retweet == 1:
+            empty_retweeted_ids.append(r['retweeted_status'])
         weibo_empty_retweet_bucket.Put(id_str, str(is_empty_retweet))
-        empty_retweeted_ids.append(r['retweeted_status'])
 
         count += 1
         if count % 100000 == 0:
@@ -79,14 +77,13 @@ def store2leveldb(get_results):
             print count, '%s sec' % (te - ts)
             ts = te
 
-    print 'empty_retweeted count', len(empty_retweeted_ids)
+    print 'empty_retweeted total count', len(empty_retweeted_ids)
+    empty_retweeted_ids = list(set(empty_retweeted_ids))
+    print 'empty_retweeted actual count', len(empty_retweeted_ids)
     return empty_retweeted_ids
 
 
-@timeit
 def store2leveldb_extra(get_results):
-    count = 0
-    ts = te = time.time()
     for r in get_results():
         id_str = str(r['_id'])
 
@@ -95,15 +92,17 @@ def store2leveldb_extra(get_results):
         is_emoticoned = 1 if set(emotions) & emotions_words_set else 0
         weibo_emoticoned_bucket.Put(id_str, str(is_emoticoned))
 
-        count += 1
-        if count % 100000 == 0:
-            te = time.time()
-            print count, '%s sec' % (te - ts)
-            ts = te
-
 
 if __name__ == '__main__':
     get_results = _load_weibos_from_xapian()
     empty_retweeted_ids = store2leveldb(get_results)
-    get_results = load_extra_weibos_from_xapian(empty_retweeted_ids)
-    store2leveldb_extra(get_results)
+    size = 20
+    for i in xrange(len(empty_retweeted_ids) / size):
+        ids = empty_retweeted_ids[i * size: (i + 1) * size]
+        get_results = load_extra_weibos_from_xapian(ids)
+        store2leveldb_extra(get_results)
+    if len(empty_retweeted_ids) % size:
+        idx = len(empty_retweeted_ids) / size
+        ids = empty_retweeted_ids[idx * size:]
+        get_results = load_extra_weibos_from_xapian(ids)
+        store2leveldb_extra(get_results)

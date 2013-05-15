@@ -1,0 +1,47 @@
+{% extends 'profile/ajax/ajax_layout.html' %}
+
+{% block body %}     
+  <script src="/static/js/profile/RGraph.common.core.js"></script>
+  <script src="/static/js/profile/RGraph.bar.js"></script>
+  <script src="/static/js/profile/RGraph.common.dynamic.js"></script>
+  <script src="/static/js/profile/RGraph.common.tooltips.js"></script>
+  <script>
+  function display_active_chart(){
+    var active = new RGraph.Bar('activeCanvas',[2500,1900,1600,1700,1800,1750,1600,1000,800,700,600,400,300,200,100]);
+              active.Set('chart.title','博主活跃度分布');
+        active.Set('chart.labels',['1','2','3','4','5','6','7','8','9','10','11','12','13','13','14+']);       
+              active.Set('chart.strokestyle', 'black');
+        active.Set('labels.above',true);
+        active.Set('chart.tooltips.effect','expand');
+        active.Set('chart.tooltips.event','onmousemove');
+              active.Set('chart.tooltips', ['2500','1900','1600','1700','1800','1750','1600','1000','800','700','600','400','300','200','100']);
+        active.Set('chart.highlight.style','3d');
+        active.Set('chart.colors',['#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858']);
+        active.Set('chart.width',700);
+        active.Set('chart.height',350);
+              active.Set('gutter.left', 120);
+              active.Set('gutter.right', 80);
+        active.Draw();
+  }
+  $(document).ready(function(){
+    display_active_chart();
+  })
+  </script>
+  <form class="form-inline">
+    时间范围:
+      <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1天<span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li class="active"><a href="#" data-toggle="tab">1天</a></li>
+          <li><a href="#" data-toggle="tab">1周</a></li>
+          <li><a href="#" data-toggle="tab">1个月</a></li>
+          <li><a href="#" data-toggle="tab">3个月</a></li>
+        </ul>
+      </div>
+
+    <button class="btn btn-primary"><i class="icon-search"></i>计算</button>
+  </form>
+  <div><canvas id="activeCanvas" width="1000" height="400">[No canvas support]</canvas></div>
+
+{% endblock body %}
+

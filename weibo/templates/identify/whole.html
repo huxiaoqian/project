@@ -21,13 +21,16 @@
       	  排序标准:
 	  <div class="btn-group">
 	    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	      粉丝数量
+	      {% if rank_method == 'follower' %}粉丝数
+	      {% elif rank_method == 'active' %}活跃度
+	      {% elif rank_method == 'important' %}重要度
+	      {% endif %}
 	      <span class="caret"></span>
 	    </a>
 	    <ul class="dropdown-menu">
-	      <li><a href="#" data-toggle="tab">粉丝数量</a></li>
-      	      <li><a href="#" data-toggle="tab">活跃程度</a></li>
-      	      <li><a href="#" data-toggle="tab">重要程度</a></li>
+	      <li><a href="#" data-toggle="tab">粉丝数</a></li>
+      	      <li><a href="#" data-toggle="tab">活跃度</a></li>
+      	      <li><a href="#" data-toggle="tab">重要度</a></li>
 	    </ul>
 	  </div>
 
@@ -108,6 +111,9 @@
 
 {% block script %}
     {% if not from_external %}
-      <script src="{{ url_for('static', filename='js/whole_identify.js') }}"></script>
+      <script>
+        var rank_method = '{{ rank_method }}';
+      </script>
+      <script src="{{ url_for('static', filename='js//identify/whole_identify.js') }}"></script>
     {% endif %}
 {% endblock %}

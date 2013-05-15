@@ -11,7 +11,7 @@
 	}
 	else if (status == 'previous finished') {
 	    if (data.length) {
-		$("#loading_previous_data").text("装载完成!");
+		$("#loading_previous_data").text("计算完成!");
 		create_previous_table(data, 20);
 	    }
 	    else {
@@ -103,9 +103,9 @@
 
     function identify_request() {
 	// previous results
-	$.post("/identify/area/", {'action': 'previous_rank', 'field': field, 'keywords': keywords}, request_callback, "json");
+	$.post("/identify/whole/", {'action': 'previous_rank', 'rank_method': rank_method}, request_callback, "json");
 	// current results
-	$.post("/identify/area/", {'action': 'rank', 'field': field, 'keywords': keywords}, request_callback, "json");
+	$.post("/identify/whole/", {'action': 'rank', 'rank_method': rank_method}, request_callback, "json");
     }
 
     identify_request();

@@ -48,7 +48,7 @@ def hadoop_results(topic_id, top_n):
         sorted_pr.append((name, pr))
     return sorted_pr
 
-def prepare_data(field, topic):
+def prepare_data(topic_id):
     tmp_file = tempfile.NamedTemporaryFile(delete=False)
     tmp_file = emulate(tmp_file)
     tmp_file.flush()

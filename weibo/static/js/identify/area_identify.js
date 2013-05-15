@@ -11,15 +11,13 @@
 	}
 	else if (status == 'previous finished') {
 	    if (data.length) {
-		$("#loading_previous_data").text("装载完成!");
+		$("#loading_previous_data").text("计算完成!");
 		create_previous_table(data, 20);
 	    }
 	    else {
 		$("#loading_previous_data").text("上期结果不存在!");
 	    }
 	}
-	else
-	    return
     }
     
     function create_current_table(data, rowCount) {
@@ -102,10 +100,18 @@
     }
 
     function identify_request() {
-	// previous results
-	$.post("/identify/whole/", {'action': 'previous_rank'}, request_callback, "json");
-	// current results
-	$.post("/identify/whole/", {'action': 'rank'}, request_callback, "json");
+	if (hadoop) {
+	    // previous results
+	    $.post("/identify/area/", {'action': 'previous_rank', 'topic_id': topic_id}, request_callback, "json");
+	    // current results
+	    $.post("/identify/area/", {'action': 'hadoop_rank', 'topic_id': topic_id}, request_callback, "json");
+	}
+	else {
+	    // previous results
+	    $.post("/identify/area/", {'action': 'previous_rank', 'topic_id': topic_id}, request_callback, "json");
+	    // current results
+	    $.post("/identify/area/", {'action': 'simple_rank', 'topic_id': topic_id}, request_callback, "json");
+	}
     }
 
     identify_request();

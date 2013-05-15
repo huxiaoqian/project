@@ -1,5 +1,12 @@
 {% extends "master.html" %}
-{% block module_title %}网民画像{% endblock %} 
+{% block module_title %}网民画像{% endblock %}
+{% block head_css %}
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-responsive.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
+{% endblock %}
 {% block navbar %}
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">

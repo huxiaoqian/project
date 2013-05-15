@@ -4,7 +4,7 @@ from extensions import db
 
 __all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship',
            'UserIdentification', 'RangeCount', 'Province', 'Words', 'PersonalBurstWords',
-           'FieldProfile', 'UserField']
+           'FieldProfile', 'UserField', 'HotStatus', 'Media']
 
 class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -220,3 +220,35 @@ class UserField(db.Model):
 
     def __repr__(self):
         return self.uid
+
+class Media(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    updateTime = db.Column(db.Date, primary_key=True)
+    mediaName = db.Column(db.String(20))
+    
+    @classmethod
+    def _name(cls):
+        return u'主流媒体'
+
+    def __repr__(self):
+        return self.id
+
+class HotStatus(db.Model):
+    id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
+    text = db.Column(db.String(350))
+    geo = db.Column(db.String(50))
+    sourcePlatform = db.Column(db.String(20))
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.BigInteger(11, unsigned=True))
+    retweetedMid = db.Column(db.BigInteger(20, unsigned=True))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    attitudesCount = db.Column(db.Integer)
+    updateTime = db.Column(db.Date, primary_key=True)
+    
+    @classmethod
+    def _name(cls):
+        return u'热门微博'
+
+    def __repr__(self):
+        return self.id

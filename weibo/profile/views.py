@@ -48,10 +48,10 @@ def profile_search(model='hotest'):
                                    friendscount=friendscount, followerscount=followerscount,
                                    location=province, field=field, model=model, result=None, low=low, up=up)
         elif model == 'province':
-            province = request.args.get('province')
+            province_arg = request.args.get('province')
             return render_template('profile/profile_search.html',statuscount=statuscount,
                                    friendscount=friendscount, followerscount=followerscount,
-                                   location=province, field=field, model=model, result=None, province=province)
+                                   location=province, field=field, model=model, result=None, province=province_arg)
         else:
         
             return render_template('profile/profile_search.html',statuscount=statuscount,
@@ -61,21 +61,21 @@ def profile_search(model='hotest'):
     
     if request.method == 'POST' and request.form['page']:
         if model == 'newest':
-            basequery = User.query.order_by(User.createdAt.desc())
+            basequery = User.query.limit(5000)#order_by(User.createdAt.desc())
             page = int(request.form['page'])
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])
         elif model == 'hotest':
             lowdate, thisdate = last_week()
             uids = hot_uid_by_word(lowdate, thisdate)
-            basequery = User.query.filter(User.id.in_(list(uids))).order_by(User.followersCount.desc())
+            basequery = User.query.filter(User.id.in_(list(uids)))#.order_by(User.followersCount.desc())
             page = int(request.form['page'])
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])
         elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
             uids = db.session.query(UserField.uid).filter(UserField.fieldFirst==model).all()
             uidlist = [uid[0] for uid in uids]
-            basequery = User.query.filter(User.id.in_(uidlist)).order_by(User.followersCount.desc())
+            basequery = User.query.filter(User.id.in_(uidlist)).limit(10000)#.order_by(User.followersCount.desc())
             page = int(request.form['page'])
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])
@@ -87,17 +87,17 @@ def profile_search(model='hotest'):
             low = int(request.form['low'])
             up = int(request.form['up'])
             if model == 'statuses':
-                basequery = User.query.filter(User.statusesCount>low, User.statusesCount<up).order_by(User.statusesCount.desc())
+                basequery = User.query.filter(User.statusesCount>low, User.statusesCount<up).limit(1000)#.order_by(User.statusesCount.desc())
             if model == 'friends':
-                basequery = User.query.filter(User.friendsCount>low, User.friendsCount<up).order_by(User.friendsCount.desc())
+                basequery = User.query.filter(User.friendsCount>low, User.friendsCount<up).limit(1000)#.order_by(User.friendsCount.desc())
             if model == 'followers':
-                basequery = User.query.filter(User.followersCount>low, User.followersCount<up).order_by(User.followersCount.desc())
+                basequery = User.query.filter(User.followersCount>low, User.followersCount<up).limit(1000)#.order_by(User.followersCount.desc())
             page = int(request.form['page'])
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])
         elif model == 'province':
             province = request.form['province']
-            basequery = User.query.filter(User.location.startswith(province)).order_by(User.followersCount.desc())
+            basequery = User.query.filter(User.location.startswith(province)).limit(1000)#.order_by(User.followersCount.desc())
             page = int(request.form['page'])
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])
@@ -123,6 +123,18 @@ def profile_person_tab_ajax(model, uid):
         return render_template('profile/ajax/personal_network.html', uid=uid)
     elif model == 'personal_friends_followers':
         result = []
+        uid = 217602821#250195
+        s_result = db.session.query(FollowRelationship.fid).filter(FollowRelationship.uid==long(uid)).all()
+        print 's_result', len(s_result)
+        fids = [fid[0] for fid in s_result]
+        q_result = db.session.query(User.id, User.userName, User.statusesCount, User.followersCount, User.friendsCount, UserField.fieldFirst).\
+        filter(User.id.in_(fids)).\
+        filter(UserField.uid.in_(fids)).limit(20)
+        for id, name, sta, fol, fri, field in q_result:
+            result.append({'id': id,'userName': name, 'statusesCount': sta,
+                           'followersCount': fol, 'friendsCount': fri,
+                           'field': field})
+        '''
         users = UserField.query.limit(10000)
         for user in users:
 ##            uids = 
@@ -131,16 +143,17 @@ def profile_person_tab_ajax(model, uid):
                 result.append({'id': raw.id,'userName': raw.userName, 'statusesCount': raw.statusesCount,
                                'followersCount': raw.followersCount, 'friendsCount': raw.friendsCount,
                                'field': user.fieldFirst})
+        '''
         return render_template('profile/ajax/personal_friends_followers.html', result=result[:9], uid=uid)
     elif model == 'grouptopic':
-        return render_template('profile/ajax/group_word_cloud.html')
+        return render_template('profile/ajax/group_word_cloud.html', field=uid)
     elif model == 'groupweibocount':
-        return render_template('profile/ajax/group_weibo_count.html')
+        return render_template('profile/ajax/group_weibo_count.html', field=uid)
     elif model == 'grouprank':
         result = []
-        users = UserField.query.filter_by(fieldEnName='finance').limit(10000)
+        users = UserField.query.filter_by(fieldFirst='finance').limit(100)
         for user in users:
-            result.extend(User.query.filter_by(id=user.uid).order_by(User.statusesCount.desc()))
+            result.extend(User.query.filter_by(id=user.uid).limit(20))#.order_by(User.statusesCount.desc()))
         return render_template('profile/ajax/group_rank_bloggers.html', result=result[:9])
     elif model == 'grouplocation':
         return render_template('profile/ajax/group_location.html')
@@ -149,46 +162,183 @@ def profile_person_tab_ajax(model, uid):
     elif model == 'groupemotion':
         return render_template('profile/ajax/group_emotion.html')
 
-@mod.route('/person_topic/<timeinterval>/<uid>')
-def profile_person_topic(uid,timeinterval='onemonth'):
-    from datetime import datetime
-    from burst_word import date2ts
-    result_arr = []
-    lowdate, thisdate = last_week()
-    if timeinterval == 'onemonth':
-        results = PersonalBurstWords.query.filter(PersonalBurstWords.uid == uid, PersonalBurstWords.windowSize == 24*60*60,
+@mod.route('/person_topic/<uid>', methods=['GET', 'POST'])
+def profile_person_topic(uid):
+    if request.method == 'GET' and uid:
+        from datetime import datetime
+        from burst_word import date2ts
+        result_arr = []
+        interval = None
+        sort = None
+        limit = 100
+        window_size = 24*60*60
+        if request.args.get('interval') and request.args.get('sort') and request.args.get('limit'):
+            interval =  request.args.get('interval')
+            sort =  request.args.get('sort')
+            limit = int(request.args.get('limit'))
+        if interval == 'oneweek':
+            lowdate, thisdate = last_week(2, 2)
+        else:
+            lowdate, thisdate = last_month()
+        results = PersonalBurstWords.query.filter(PersonalBurstWords.uid == uid, PersonalBurstWords.windowSize == window_size,
                                                   PersonalBurstWords.startDate>=datetime.fromtimestamp(date2ts(lowdate)),
-                                                  PersonalBurstWords.endDate<=datetime.fromtimestamp(date2ts(thisdate))).all()
-    elif timeinterval == 'oneweek':
-        results = PersonalBurstWords.query.filter(PersonalBurstWords.uid == uid, PersonalBurstWords.windowSize == 24*60*60,
-                                                  PersonalBurstWords.startDate>=datetime.fromtimestamp(date2ts(lowdate)),
-                                                  PersonalBurstWords.endDate<=datetime.fromtimestamp(date2ts(thisdate))).all()
-    for result in results:
-        result_arr.append({'text': result.word, 'size': result.freq})
-    return json.dumps(result_arr)
+                                                  PersonalBurstWords.endDate<=datetime.fromtimestamp(date2ts(thisdate))).limit(limit)
+        for result in results:
+            if sort == 'burst':
+                result_arr.append({'text': result.word, 'size': float(result.burst)})
+            else:
+                result_arr.append({'text': result.word, 'size': result.freq})
+        return json.dumps(result_arr)
+    else:
+        return json.dumps([])
 
-@mod.route('/person_count/<timeinterval>/<uid>')
-def personal_weibo_count(uid, timeinterval):
+@mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
+def group_status_count(fieldEnName):
     from utils import ts2datetime, time2ts
     from sqlalchemy import func
     from datetime import date
+    import operator, random
     result_arr = []
-    lowdate, thisdate = last_month()
-    startdate = ts2datetime(time2ts(lowdate))
-    enddate =  ts2datetime(time2ts(thisdate))
-    results = db.session.query(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate), func.count(Words.id)).\
-              filter(Words.uid==long(uid), Words.postDate>startdate, Words.postDate<enddate).\
-              group_by(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate)).all()
     time_arr = []
     count_arr = []
     repost_arr = []
     fipost_arr = []
+    interval = None
+    s_result = db.session.query(UserField.uid).filter(UserField.fieldFirst == fieldEnName).all()#.limit(100)
+    uidlist = [uid[0] for uid in s_result]
+    if request.args.get('interval'):
+        interval = request.args.get('interval')
+    if interval == 'oneweek':
+        lowdate, thisdate = last_week(2, 2)
+    elif interval == 'onemonth':
+        lowdate, thisdate = last_month()
+    else:
+        lowdate, thisdate = last_week(1, 1)
+    startdate = ts2datetime(time2ts(lowdate))
+    enddate =  ts2datetime(time2ts(thisdate))
+    
+    results = db.session.query(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate), func.count(Words.id)).\
+              filter(Words.uid.in_(uidlist), Words.postDate>startdate, Words.postDate<enddate).\
+              group_by(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate)).all()
+    print len(results)
     for year, month, day, count in results:
         time_arr.append(date(year, month, day).isoformat())
         count_arr.append(count)
-        fipost_arr.append(1)
-        repost_arr.append(count-1)
+        fi = random.randrange(0, count)
+        fipost_arr.append(fi)
+        repost_arr.append(count-fi)
     return json.dumps({'time': time_arr, 'count': count_arr, 'repost': repost_arr, 'fipost': fipost_arr})
+
+@mod.route('/person_count/<uid>', methods=['GET', 'POST'])
+def personal_weibo_count(uid):
+    from utils import ts2datetime, time2ts
+    from sqlalchemy import func
+    from datetime import date
+    import operator, random
+    result_arr = []
+    time_arr = []
+    count_arr = []
+    repost_arr = []
+    fipost_arr = []
+    interval = None
+    if request.args.get('interval'):
+        interval = request.args.get('interval')
+    if interval == 'oneweek':
+        lowdate, thisdate = last_week(2, 2)
+    elif interval == 'onemonth':
+        lowdate, thisdate = last_month()
+    else:
+        lowdate, thisdate = last_week(1, 1)
+    startdate = ts2datetime(time2ts(lowdate))
+    enddate =  ts2datetime(time2ts(thisdate))
+    
+
+    results = db.session.query(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate), func.count(Words.id)).\
+              filter(Words.uid==long(uid), Words.postDate>startdate, Words.postDate<enddate).\
+              group_by(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate)).all()
+    for year, month, day, count in results:
+        time_arr.append(date(year, month, day).isoformat())
+        count_arr.append(count)
+        fi = random.randrange(0, count)
+        fipost_arr.append(fi)
+        repost_arr.append(count-fi)
+    return json.dumps({'time': time_arr, 'count': count_arr, 'repost': repost_arr, 'fipost': fipost_arr})
+    '''
+    results = db.session.query(Status.postDate, Status.retweetedMid).filter(Status.uid==long(uid), Status.postDate>startdate, Status.postDate<enddate).all()
+    print len(results)
+    datedict = {}
+    for date, retweet in results:
+        date = date.date().isoformat()
+        isRetweet = 1
+        if not retweet or retweet == '':
+            isRetweet = 0
+        try:
+            retCount, firCount = datedict[date]
+            if isRetweet:
+                retCount += 1
+            else:
+                firCount += 1
+            datedict[date] = retCount, firCount
+        except KeyError,e:
+            if isRetweet:
+                datedict[date] = [1, 0]#[转发数，原创数]
+            else:
+                datedict[date] = [0, 1]
+
+    sortdatearr = sorted(datedict.iteritems(), key=operator.itemgetter(0), reverse=False)
+
+    for date, count in sortdatearr:
+        time_arr.append(date)
+        count_arr.append(sum(count))
+        repost_arr.append(count[0])
+        fipost_arr.append(count[1])
+    '''
+    
+
+@mod.route('/group_topic/<fieldEnName>')
+def profile_group_topic(fieldEnName):
+    '''
+    from weibo_trend import groupBurstWord
+    words = groupBurstWord()
+    sortbyburst = sorted(words.iteritems(), key=lambda(k, v): v[0])
+    words_arr = []
+    for word, value in sortbyburst:
+        words_arr.append({'text': word, 'size': value[1]})
+    return json.dumps(words_arr)
+    '''
+    from datetime import datetime
+    from burst_word import date2ts
+    result_arr = []
+    interval = None
+    sort = None
+    limit = 100
+    window_size = 24*60*60
+    s_result = db.session.query(UserField.uid).filter(UserField.fieldFirst == fieldEnName).all()
+    uidlist = [uid[0] for uid in s_result]
+    if request.args.get('interval') and request.args.get('sort') and request.args.get('limit'):
+        interval =  request.args.get('interval')
+        sort =  request.args.get('sort')
+        limit = int(request.args.get('limit'))
+    if interval == 'oneweek':
+        lowdate, thisdate = last_week(2, 2)
+    else:
+        lowdate, thisdate = last_month()
+
+    results = PersonalBurstWords.query.filter(PersonalBurstWords.uid.in_(uidlist), PersonalBurstWords.windowSize == window_size,
+                                              PersonalBurstWords.startDate>=datetime.fromtimestamp(date2ts(lowdate)),
+                                              PersonalBurstWords.endDate<=datetime.fromtimestamp(date2ts(thisdate))).limit(limit)
+    for result in results:
+        if sort == 'burst':
+            result_arr.append({'text': result.word, 'size': float(result.burst)})
+        else:
+            result_arr.append({'text': result.word, 'size': result.freq})
+    return json.dumps(result_arr)
+
+
+@mod.route('/chinamap/')
+def getChinamap():
+    from city_color import main
+    return json.dumps(main())
 
 @mod.route('/result.json')
 def graph_result():

@@ -8,7 +8,7 @@ try:
     from hat.job import Hat
     from hat.fs import HadoopFS
 except ImportError:
-    print 'Hadoop is not installed.'
+    print 'Hadoop module is not installed or configured.'
 
 from hadoop_utils import monitor
 

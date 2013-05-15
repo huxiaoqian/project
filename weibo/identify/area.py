@@ -1,45 +1,27 @@
 # -*- coding: utf-8 -*-
 
 import operator
-import time
 
 import networkx as nx
 
-import weibo.model
+from weibo.model import RepostRelationship
 
 from weibo.extensions import db
-from weibo.model import *
+from time_utils import datetime2ts, window2time
+from utils import save_rank_results
 
-from time_utils import ts2datetime
+def simple_degreerank(top_n, post_date, topic_id, window_size):
+    raise NotImplementedError
 
-def whole_followers_results(top_n, topic_id, w):
-    window_date = ts2datetime(time.time())
-    users = db.session.query(User).order_by(User.followersCount.desc()).limit(top_n)
-    sorted_uids = []
-    for user in users:
-        sorted_uids.append(user.id)
-    return sorted_uids
-
-def burst_comments_results(top_n, topic_id, w):
-    window_date = ts2datetime(time.time())
-    users = db.session.query(User).order_by(User.followersCount.desc()).limit(top_n)
-    sorted_uids = []
-    for user in users:
-        sorted_uids.append(user.id)
-    return sorted_uids
-
-def area_pagerank_results(top_n, topic_id, w):
+def simple_pagerank(top_n, post_date, topic_id, window_size):
     data = []
-    window_date = ts2datetime(time.time())
 
     print 'start pagerank'
     g = nx.DiGraph()
 
-    relations = db.session.query(RepostRelationship).filter_by(topicId=topic_id)
+    relations = load_data(topic_id, post_date, window_size)
     if not relations:
         return data
-
-    print 'total edegs %s' % relations.count()
 
     for relation in relations:
         source_uid = relation.sourceUid
@@ -73,10 +55,11 @@ def area_pagerank_results(top_n, topic_id, w):
         sorted_pr = sorted_pr[:top_n]
 
     sorted_uids = map(lambda x: x[0], sorted_pr)
+    data = save_rank_results(sorted_uids, post_date=post_date, topic_id=topic_id, r='area', m='pagerank', w=window_size)
+    return data
 
-    return sorted_uids
-
-def common_results(topic_id, top_n, r, m, w):
-    func_name = '%s_%s_results' % (r.lower(), m.lower())
-    func = globals().get(func_name, None)
-    return func(*(top_n, topic_id, w))
+def load_data(topic_id, post_date, window_size):
+    end_time = datetime2ts(post_date)
+    start_time = end_time - window2time(window_size)
+    relations = db.session.query(RepostRelationship).filter_by(topicId=topic_id)
+    return relations

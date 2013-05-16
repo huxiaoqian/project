@@ -115,6 +115,7 @@ weibo_multi_sentiment_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'huyue_
 triple = [0, 0, 0]
 print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
 iter_count = 0
+misskey_err_count = 0
 ts = te = time.time()
 for r in get_results():
     iter_count += 1
@@ -134,7 +135,13 @@ for r in get_results():
     else:
         mid_id_str = id_str
 
-    if_emoticoned = weibo_emoticoned_bucket.Get(mid_id_str)
+    if_emoticoned = None
+    try:
+        if_emoticoned = weibo_emoticoned_bucket.Get(mid_id_str)
+    except KeyError:
+        # 确实存在retweeted_status在我们的数据中不存在的情况
+        misskey_err_count += 1
+
     if if_emoticoned:
         if_emoticoned = int(if_emoticoned)
     if if_emoticoned == 1:
@@ -147,8 +154,9 @@ for r in get_results():
         text = r['text']
 
     if text != '':
-        entry = cut(cut_str, text)
-        bow = dictionary.doc2bow(entry)
+        entries = cut(cut_str, text)
+        entries = [e.decode('utf-8') for e in entries]
+        bow = dictionary.doc2bow(entries)
         s = [1, 1, 1]
         for pair in bow:
             for rp in range(pair[1]):
@@ -166,3 +174,4 @@ for r in get_results():
     weibo_multi_sentiment_bucket.Put(id_str, str(sentiment))  # 存储情感信息
 
 print time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+print '缺失weibo_emoticoned_bucket数据', misskey_err_count

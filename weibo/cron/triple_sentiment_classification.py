@@ -155,14 +155,13 @@ for r in get_results():
 
     if text != '':
         entries = cut(cut_str, text)
-        entries = [e.decode('utf-8') for e in entries]
-        bow = dictionary.doc2bow(entries)
+        entry = [e.decode('utf-8') for e in entries]
+        bow = dictionary.doc2bow(entry)
         s = [1, 1, 1]
         for pair in bow:
-            for rp in range(pair[1]):
-                s[0] = s[0] * p_senti[pair[0]][0]
-                s[1] = s[1] * p_senti[pair[0]][1]
-                s[2] = s[2] * p_senti[pair[0]][2]
+            s[0] = s[0] * (p_senti[pair[0]][0] ** pair[1])
+            s[1] = s[1] * (p_senti[pair[0]][1] ** pair[1])
+            s[2] = s[2] * (p_senti[pair[0]][2] ** pair[1])
         if s[0] > s[1] and s[0] > s[2]:
             sentiment = HAPPY
         elif s[1] > s[0] and s[1] > s[2]:

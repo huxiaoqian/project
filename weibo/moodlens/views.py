@@ -21,7 +21,7 @@ def index():
 @mod.route('/data/<emotion>/')
 def data(emotion):
     data = []
-    total_days = 90
+    total_days = 10
 
     today = datetime.datetime.today()
     now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
@@ -31,6 +31,7 @@ def data(emotion):
     for i in xrange(-total_days + 1, 1):
         begin_ts = now_ts + during * (i - 1)
         end_ts = now_ts + during * i
+        print i, begin_ts, end_ts
         query_dict = {
             'timestamp': {'$gt': begin_ts, '$lt': end_ts},
             'sentiment': emotions_kv[emotion],
@@ -39,4 +40,28 @@ def data(emotion):
 
         data.append([end_ts * 1000, count])
 
+    print data
+    return json.dumps(data)
+
+
+@mod.route('/flag_data/<emotion>/')
+def flag_data(emotion):
+    data = []
+    total_days = 10
+
+    today = datetime.datetime.today()
+    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+    now_ts = int(now_ts)
+    during = 24 * 3600
+
+    for i in xrange(-total_days + 1, 1, 3):
+        begin_ts = now_ts + during * (i - 1)
+        end_ts = now_ts + during * i
+        data.append({
+            'x': end_ts * 1000,
+            'title': 'E' + str(i),
+            'text': 'hehe'
+        })
+
+    print data
     return json.dumps(data)

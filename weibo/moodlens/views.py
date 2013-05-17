@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import Blueprint, render_template
+from xapian_weibo.xapian_backend_extra import Schema
 from xapian_weibo.xapian_backend import XapianSearch
 import simplejson as json
 import datetime
@@ -9,7 +10,7 @@ import time
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
-s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_sentiment')
+s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_sentiment', schema=Schema, schema_version=1)
 
 
 @mod.route('/')

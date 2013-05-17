@@ -8,9 +8,7 @@
 	    $("#current_process").removeClass("progress-striped");
 	    if (data.length) {
 		$("#loading_current_data").text("计算完成!");
-		if (data.length < page_num)
-		    page_num = data.length
-		create_current_table(data, page_num);
+		create_current_table(data, 20);
 	    }
 	    else {
 		$("#loading_current_data").text("本期计算结果为空!");
@@ -23,9 +21,7 @@
 	    $("#previous_process").removeClass("progress-striped");
 	    if (data.length) {
 		$("#loading_previous_data").text("计算完成!");
-		if (data.length < page_num)
-		    page_num = data.length
-		create_previous_table(data, page_num);
+		create_previous_table(data, 20);
 	    }
 	    else {
 		$("#loading_previous_data").text("上期结果不存在!");
@@ -38,7 +34,7 @@
     function create_current_table(data, rowCount) {
 	var cellCount = 9;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>同比</th><th>敏感状态</th><th>全选<input type="checkbox"></th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>同比</th><th>敏感状态</th><th>全选<input type="checkbox"></th></tr></thead>';
 	var tbody = '<tbody>';
 	for(var i = 0;i < rowCount;i++) {
             var tr = '<tr>';
@@ -71,6 +67,11 @@
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
+		// user statuses
+		if (j == 3) {
+		    var td = '<td>查看</td>';
+		    tr += td;
+		}
             }
 	    tr += '</tr>';
 	    tbody += tr;
@@ -84,7 +85,7 @@
     function create_previous_table(data, rowCount) {
 	var cellCount = 7;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>敏感状态</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
 	for(var i = 0;i < rowCount;i++) {
             var tr = '<tr>';
@@ -104,6 +105,11 @@
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
+		// user statuses
+		if (j==3) {
+		    var td = '<td>查看</td>';
+		    tr += td;
+		}
             }
 	    tr += '</tr>';
 	    tbody += tr;
@@ -116,9 +122,9 @@
 
     function identify_request() {
 	// previous results
-	$.post("/identify/area/", {'action': 'previous_rank', 'topic_id': topic_id, 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
+	$.post("/identify/burst/", {'action': 'previous_rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
 	// current results
-	$.post("/identify/area/", {'action': 'rank', 'topic_id': topic_id, 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
+	$.post("/identify/burst/", {'action': 'rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
     }
 
     identify_request();

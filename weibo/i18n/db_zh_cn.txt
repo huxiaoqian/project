@@ -45,9 +45,11 @@ sourceMid 被转发微博ID
 fid 被关注博主ID
 
 #用户识别
-userIdentification 用户识别
+wholeUserIdentification 用户识别
+areaUserIdentification 用户识别
+burstUserIdentification 用户识别
 rank 排名
-identifyRange 识别范围
+userId 用户ID
 identifyDate 识别日期
 identifyWindow 识别窗口
 identifyMethod 识别方法

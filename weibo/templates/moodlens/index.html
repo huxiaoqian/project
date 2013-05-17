@@ -34,9 +34,9 @@
 
             $.getJSON('/moodlens/flag_data/' + name + '/', function(data) {
                 seriesOptions[names.length + i] = {
+                    name: name + '-events',
                     type : 'flags',
                     data : data,
-                    name : name + '-events',
                     onSeries : name,
                     shape : 'circlepin',
                     width : 16

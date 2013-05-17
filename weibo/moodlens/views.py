@@ -54,12 +54,12 @@ def flag_data(emotion):
     now_ts = int(now_ts)
     during = 24 * 3600
 
-    for i in xrange(-total_days + 1, 1, 3):
+    for i in xrange(-total_days + 1, 1, 4):
         begin_ts = now_ts + during * (i - 1)
         end_ts = now_ts + during * i
         data.append({
             'x': end_ts * 1000,
-            'title': 'E' + str(i),
+            'title': chr(ord('Z') + i),
             'text': 'hehe'
         })
 

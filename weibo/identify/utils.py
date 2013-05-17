@@ -2,87 +2,112 @@
 
 from weibo.extensions import db
 
-import weibo.model
-from weibo.model import *
+from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
-def acquire_id(name, value):
-    if not value:
-        return -1
-    m = getattr(weibo.model, name)
-    item = db.session.query(m).filter_by(**{'%sName' % name.lower(): value}).first()
-    if item:
-        return item.id
-    else:
-        item = m(**{'%sName' % name.lower(): value})
+def acquire_topic_id(name):
+    item = db.session.query(Topic).filter_by(topicName=name).first()
+    if not item:
+        #create a topic
+        item = Topic(topicName=name)
         db.session.add(item)
         db.session.commit()
         db.session.refresh(item)
-        return item.id
+    return item.id
 
-def acquire_value(name, id):
-    if id < 0:
+def acquire_topic_name(tid):
+    item = db.session.query(Topic).filter_by(id=tid).first()
+    if not item:
         return None
-    m = getattr(weibo.model, name)
-    item = db.session.query(m).filter_by(**{'id': id}).first()
-    if item:
-        return getattr(item, '%sName' % name.lower(), None)
-    else:
-        return None
+    return item.topicName
 
-def read_rank_results(top_n, post_date, topic_id=None, r=None, m=None, w=None, compare=False):
+def acquire_user_by_id(identifyRange, uid):
+    user = {}
+    user['name'] = ''
+    user['location'] = ''
+    user['count1'] = ''
+    user['count2'] = ''
+    return user
+
+def user_status(uid):
+    return 1
+
+def read_rank_results(top_n, identifyRange, method, date, window, topic_id=None, compare=False):
     data = []
-    items = db.session.query(UserIdentification).filter_by(topicId=topic_id, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=post_date).order_by(UserIdentification.rank.asc()).limit(top_n)
+    if identifyRange == 'whole':
+        items = db.session.query(WholeUserIdentification).filter_by(identifyMethod=method, identifyWindow=window, identifyDate=date).order_by(WholeUserIdentification.rank.asc()).limit(top_n)
+    elif identifyRange == 'area':
+        items = db.session.query(AreaUserIdentification).filter_by(topicId=topic_id, identifyMethod=method, identifyWindow=window, identifyDate=date).order_by(AreaUserIdentification.rank.asc()).limit(top_n)
+    elif identifyRange == 'burst':
+        items = db.session.query(BurstUserIdentification).filter_by(identifyMethod=method, identifyWindow=window, identifyDate=date).order_by(BurstUserIdentification.rank.asc()).limit(top_n)  
+    else:
+        return data
     if items.count():
         for item in items:
             rank = item.rank
             uid = item.userId
-            user = db.session.query(User).filter_by(id=uid).first()
+            user = acquire_user_by_id(identifyRange, uid)
             if not user:
                 continue
-            name = user.userName
-            location = user.location
-            followers = user.followersCount
-            friends = user.friendsCount
+            name = user['name']
+            location = user['location']
+            count1 = user['count1']
+            count2 = user['count2']
             #read from external knowledge database
             status = user_status(uid)
             if compare:
-                previous_rank = find_user_previous_rank(topic_id, uid, post_date, r=r, m=m, w=w)
+                previous_rank = find_user_previous_rank(identifyRange, uid, date, method, window, topic_id)
                 comparison = rank_comparison(previous_rank, rank)
-                row = (rank, uid, name, location, followers, friends, comparison, status)
+                row = (rank, uid, name, location, count1, count2, comparison, status)
             else:
-                row = (rank, uid, name, location, followers, friends, status)
+                row = (rank, uid, name, location, count1, count2, status)
             data.append(row)
     return data
 
-def save_rank_results(sorted_uids, post_date=None, topic_id=None, r=None, m=None, w=None):
+def save_rank_results(sorted_uids, identifyRange, method, date, window, topic_id=None):
     data = []
     rank = 1
     for uid in sorted_uids:
-        user = db.session.query(User).filter_by(id=uid).first()
+        user = acquire_user_by_id(identifyRange, uid)
         if not user:
             continue
-        name = user.userName
-        location = user.location
-        followers = user.followersCount
-        friends = user.friendsCount
+        name = user['name']
+        location = user['location']
+        count1 = user['count1']
+        count2 = user['count2']
         #read from external knowledge database
         status = user_status(uid)
-        row = (rank, uid, name, location, followers, friends, status)
+        previous_rank = find_user_previous_rank(identifyRange, uid, date, method, window, topic_id)
+        comparison = rank_comparison(previous_rank, rank)
+        row = (rank, uid, name, location, count1, count2, comparison, status)
         data.append(row)
-        item = UserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyRange=r,identifyDate=post_date, identifyWindow=w, identifyMethod=m)
+        if identifyRange == 'area':
+            item = AreaUserIdentification(topicId=topic_id, rank=rank, userId=uid, identifyDate=date, identifyWindow=window, identifyMethod=method)
+        elif identifyRange == 'whole':
+            item = WholeUserIdentification(rank=rank, userId=uid, identifyDate=date, identifyWindow=window, identifyMethod=method)
+        elif identifyRange == 'burst':
+            item = BurstUserIdentification(rank=rank, userId=uid, identifyDate=date, identifyWindow=window, identifyMethod=method)
+        else:
+            break
         db.session.add(item)
         rank += 1
     db.session.commit()
     return data
 
-def find_user_previous_rank(topic_id, uid, post_date, r=None, m=None, w=None):
+def find_user_previous_rank(identifyRange, uid, date, method, window, topic_id):
     #read from previous window record
-    base_time = datetime2ts(post_date)
-    window_time = window2time(w)
+    base_time = datetime2ts(date)
+    window_time = window2time(window)
     previous_date = ts2datetime(base_time-window_time)
-    item = db.session.query(UserIdentification).filter_by(topicId=topic_id, userId=uid, identifyRange=r, identifyMethod=m, identifyWindow=w, identifyDate=previous_date).first()
+    if identifyRange == 'area':
+        item = db.session.query(AreaUserIdentification).filter_by(topicId=topic_id, userId=uid, identifyMethod=method, identifyWindow=window, identifyDate=previous_date).first()
+    elif identifyRange == 'whole':
+        item = db.session.query(WholeUserIdentification).filter_by(userId=uid, identifyMethod=method, identifyWindow=window, identifyDate=previous_date).first()
+    elif identifyRange == 'burst':
+        item = db.session.query(BurstUserIdentification).filter_by(userId=uid, identifyMethod=method, identifyWindow=window, identifyDate=previous_date).first()
+    else:
+        return None
     if item:
         return item.rank
     else:
@@ -99,6 +124,3 @@ def rank_comparison(previous, current):
     else:
         comparison = 1
     return comparison
-
-def user_status(uid):
-    return 1

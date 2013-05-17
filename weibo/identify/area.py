@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import os
+import sys
+import select
+import subprocess
 import operator
+import tempfile
 
 import networkx as nx
 
@@ -8,58 +13,66 @@ from weibo.model import RepostRelationship
 
 from weibo.extensions import db
 from time_utils import datetime2ts, window2time
+from hadoop_utils import generate_job_id
 from utils import save_rank_results
 
-def simple_degreerank(top_n, post_date, topic_id, window_size):
+from pagerank import pagerank
+
+def degree_rank(top_n, date, topic_id, window_size):
     raise NotImplementedError
 
-def simple_pagerank(top_n, post_date, topic_id, window_size):
+def pagerank_rank(top_n, date, topic_id, window_size):
     data = []
 
-    print 'start pagerank'
-    g = nx.DiGraph()
+    tmp_file = prepare_data_for_pr(topic_id, date, window_size)
 
-    relations = load_data(topic_id, post_date, window_size)
-    if not relations:
+    if not tmp_file:
         return data
 
-    for relation in relations:
-        source_uid = relation.sourceUid
-        uid = relation.uid
-        g.add_edge(uid, source_uid)
+    input_tmp_path = tmp_file.name
+    
+    
+    job_id = generate_job_id(datetime2ts(date), topic_id)
+    iter_count = 1
 
-    total_vertex_size = len(g.nodes())
-    degrees = nx.degree(g)
-    #compute weekly connected components
-    number = 0
-    components = nx.weakly_connected_component_subgraphs(g)
-    components_size = map(len, components)
-    print '%s sub graph' % len(components)
-    for index, component in enumerate(components):
-        for node in component.node:
-            g.node[node]['number'] = number
-            g.node[node]['component'] = index
-            number += 1
-    page_ranks = [nx.pagerank(_g, weight='weight', max_iter=5000) for _g in components]
-    new_page_rank = {}
-    for page_rank in page_ranks:
-        for name in page_rank:
-            pr_value = page_rank[name]
-            component_index = g.node[name]['component']
-            pr_value *= components_size[component_index]*1.0 / total_vertex_size
-            new_page_rank[name] = pr_value
-    sorted_pr = sorted(new_page_rank.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sorted_uids = pagerank(job_id, iter_count, input_tmp_path, top_n)
+    
+    data = save_rank_results(sorted_uids, 'area', 'pagerank', date, window_size, topic_id=topic_id)
 
-    if len(sorted_pr) > top_n:
-        top_n += 1
-        sorted_pr = sorted_pr[:top_n]
-
-    sorted_uids = map(lambda x: x[0], sorted_pr)
-    data = save_rank_results(sorted_uids, post_date=post_date, topic_id=topic_id, r='area', m='pagerank', w=window_size)
     return data
 
-def load_data(topic_id, post_date, window_size):
-    end_time = datetime2ts(post_date)
+def prepare_data_for_pr(topic_id, date, window_size):
+    tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    
+    end_time = datetime2ts(date)
     start_time = end_time - window2time(window_size)
-    relations = db.session.query(RepostRelationship).filter_by(topicId=topic_id)
-    return relations
+
+    g = nx.DiGraph()
+
+    # relations = db.session.query(RepostRelationship).filter_by(topicId=topic_id)
+    # for relation in relations:
+    #     g.add_edges(relation.sourceUid, relation.uid)
+
+    import random
+    for i in range(15):
+        c1 = random.randint(1, 20)
+        c2 = random.randint(1, 20)
+        g.add_edge(c1, c2)
+
+    N = len(g.nodes())
+    if not N:
+        return None
+    for node in g.nodes():
+        outlinks = g.out_edges(nbunch=[node])
+        outlinks = map(str, [n2 for n1, n2 in outlinks])
+        if not outlinks:
+            value = 'pr_results,%s,%s' % (1.0/N, N)
+            tmp_file.write('%s\t%s\n' % (node, value))
+        else:
+            outlinks_str = ','.join(outlinks)
+            value = 'pr_results,%s,%s,' % (1.0/N, N)
+            value += outlinks_str
+            tmp_file.write('%s\t%s\n' % (node, value))
+
+    tmp_file.flush()
+    return tmp_file

@@ -13,7 +13,7 @@ def followers_rank(top_n, date, window_size):
     sorted_uids = []
     for user in users:
         sorted_uids.append(user.id)
-    data = save_rank_results(sorted_uids, 'whole', 'followers', date, window_size)
+    data = save_rank_results(sorted_uids, 'burst', 'followers', date, window_size)
     return data
 
 def active_rank(top_n, date, window_size):
@@ -23,7 +23,7 @@ def active_rank(top_n, date, window_size):
     sorted_uids = []
     for user in users:
         sorted_uids.append(user.id)
-    data = save_rank_results(sorted_uids, 'whole', 'active', date, window_size)
+    data = save_rank_results(sorted_uids, 'burst', 'active', date, window_size)
     return data
 
 def important_rank(top_n, date, window_size):
@@ -33,5 +33,5 @@ def important_rank(top_n, date, window_size):
     sorted_uids = []
     for user in users:
         sorted_uids.append(user.id)
-    data = save_rank_results(sorted_uids, 'whole', 'important', date, window_size)
+    data = save_rank_results(sorted_uids, 'burst', 'important', date, window_size)
     return data

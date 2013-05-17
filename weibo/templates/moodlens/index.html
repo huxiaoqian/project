@@ -24,7 +24,7 @@
 
         $.each(names, function(i, name) {
 
-            $.getJSON('/moodlens/data/' + name, function(data) {
+            $.getJSON('/moodlens/data/' + name + '/', function(data) {
                 seriesOptions[i] = {
                     name: name,
                     data: data

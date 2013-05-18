@@ -2,3 +2,4 @@ flask-sqlalchemy
 flask-admin
 networkx
 leveldb
+flup

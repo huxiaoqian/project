@@ -12,7 +12,7 @@ mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_sentiment', schema=Schema, schema_version=1)
-total_days = 10
+total_days = 90
 
 
 @mod.route('/')
@@ -54,7 +54,9 @@ def flag_data(emotion):
     now_ts = int(now_ts)
     during = 24 * 3600
 
-    for i in xrange(-total_days + 1, 1, 4):
+    iter_count = 0
+    for i in xrange(-total_days + 5, 1, 10):
+        iter_count += 1
         begin_ts = now_ts + during * (i - 1)
         end_ts = now_ts + during * i
         query_dict = {
@@ -67,9 +69,8 @@ def flag_data(emotion):
         text = ','.join([tp[0] for tp in keywords_with_count])
         data.append({
             'x': end_ts * 1000,
-            'title': chr(ord('Z') + i),
+            'title': chr(ord('A') + iter_count),
             'text': text
         })
 
-    print data
     return json.dumps(data)

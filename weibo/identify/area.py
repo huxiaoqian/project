@@ -12,7 +12,7 @@ import networkx as nx
 from weibo.extensions import db
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name
+from utils import save_rank_results, acquire_topic_name, is_in_black_list
 
 from pagerank import pagerank
 
@@ -53,8 +53,10 @@ def prepare_data_for_pr(topic_id, date, window_size):
     #need repost index
     import random
     for i in range(15):
-        c1 = random.randint(1, 20)
-        c2 = random.randint(1, 20)
+        repost_uid = random.randint(1, 20)
+        source_uid = random.randint(1, 20)
+        if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+            continue
         g.add_edge(c1, c2)
 
     N = len(g.nodes())

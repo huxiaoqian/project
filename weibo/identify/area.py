@@ -9,12 +9,10 @@ import tempfile
 
 import networkx as nx
 
-from weibo.model import RepostRelationship
-
 from weibo.extensions import db
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results
+from utils import save_rank_results, acquire_topic_name
 
 from pagerank import pagerank
 
@@ -44,15 +42,15 @@ def pagerank_rank(top_n, date, topic_id, window_size):
 def prepare_data_for_pr(topic_id, date, window_size):
     tmp_file = tempfile.NamedTemporaryFile(delete=False)
     
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
     end_time = datetime2ts(date)
     start_time = end_time - window2time(window_size)
 
     g = nx.DiGraph()
 
-    # relations = db.session.query(RepostRelationship).filter_by(topicId=topic_id)
-    # for relation in relations:
-    #     g.add_edges(relation.sourceUid, relation.uid)
-
+    #need repost index
     import random
     for i in range(15):
         c1 = random.randint(1, 20)

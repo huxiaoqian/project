@@ -3,12 +3,15 @@
 try:
     from hat.fs import HadoopFS
 except ImportError:
-    print 'Hadoop module is not installed.'
+    print 'Hadoop module is not installed or configured.'
+
+import time
+import tempfile
 
 from time_utils import unix2hadoop_date
 
-def generate_job_id(topic_id):
-    date = unix2hadoop_date(time.time())
+def generate_job_id(ts, topic_id):
+    date = unix2hadoop_date(ts)
     job_id = '%s_%s' % (date, topic_id)
     return job_id
 
@@ -32,23 +35,22 @@ def monitor(job_id):
     else:
         return 'finished'
 
-def hadoop_results(topic_id, top_n):
+def hadoop_results(job_id, top_n):
     data = []
-    job_id = generate_job_id(topic_id)
     fs = HadoopFS()
     outputs = fs.cat('%s/hat_results/*' % job_id)
     if not outputs:
-        return 'results_not_prepared'
+        return []
     if len(outputs) > top_n:
         outputs = outputs[-top_n:]
     outputs.reverse()
-    sorted_pr = []
+    sorted_uids = []
     for line in outputs:
-        name, pr = line.strip().split('\t')
-        sorted_pr.append((name, pr))
-    return sorted_pr
+        uid, pr = line.strip().split('\t')
+        sorted_uids.append(uid)
+    return sorted_uids
 
-def prepare_data(field, topic):
+def prepare_data(topic_id):
     tmp_file = tempfile.NamedTemporaryFile(delete=False)
     tmp_file = emulate(tmp_file)
     tmp_file.flush()

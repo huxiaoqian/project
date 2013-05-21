@@ -3,16 +3,29 @@
 	var status = data['status'];
 	var data = data['data'];
 	if (status == 'current finished') {
-	    $("#loading_current_data").text("计算完成!");
-	    $("#pr_process").css('width', "100%")
-	    $("#pr_bar").removeClass("active");
-	    $("#pr_bar").removeClass("progress-striped");
-	    create_current_table(data, 20);
+	    $("#current_process_bar").css('width', "100%")
+	    $("#current_process").removeClass("active");
+	    $("#current_process").removeClass("progress-striped");
+	    if (data.length) {
+		$("#loading_current_data").text("计算完成!");
+		if (data.length < page_num)
+		    page_num = data.length
+		create_current_table(data, page_num);
+	    }
+	    else {
+		$("#loading_current_data").text("本期计算结果为空!");
+	    }
+	    
 	}
 	else if (status == 'previous finished') {
+	    $("#previous_process_bar").css('width', "100%")
+	    $("#previous_process").removeClass("active");
+	    $("#previous_process").removeClass("progress-striped");
 	    if (data.length) {
-		$("#loading_previous_data").text("装载完成!");
-		create_previous_table(data, 20);
+		$("#loading_previous_data").text("计算完成!");
+		if (data.length < page_num)
+		    page_num = data.length
+		create_previous_table(data, page_num);
 	    }
 	    else {
 		$("#loading_previous_data").text("上期结果不存在!");
@@ -103,9 +116,9 @@
 
     function identify_request() {
 	// previous results
-	$.post("/identify/area/", {'action': 'previous_rank', 'field': field, 'keywords': keywords}, request_callback, "json");
+	$.post("/identify/area/", {'action': 'previous_rank', 'topic_id': topic_id, 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
 	// current results
-	$.post("/identify/area/", {'action': 'rank', 'field': field, 'keywords': keywords}, request_callback, "json");
+	$.post("/identify/area/", {'action': 'rank', 'topic_id': topic_id, 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
     }
 
     identify_request();

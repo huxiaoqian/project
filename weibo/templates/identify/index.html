@@ -5,55 +5,57 @@
   <div class="well">
     <legend>全网识别</legend>
     <form id="whole_identify" action="/identify/whole/" class="form-inline" method="POST">
-      	排序标准:
-	<div class="btn-group">
-	  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	    粉丝数
-	    <span class="caret"></span>
-	  </a>
-	  <ul class="dropdown-menu">
-	    <li><a href="#" data-toggle="tab">粉丝数</a></li>
-      	    <li><a href="#" data-toggle="tab">活跃度</a></li>
-      	    <li><a href="#" data-toggle="tab">重要度</a></li>
-	  </ul>
-	</div>
-      	时间范围:
-	<div class="btn-group">
-	  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	    1天
-	    <span class="caret"></span>
-	  </a>
-	  <ul class="dropdown-menu">
-	    <li><a href="#" data-toggle="tab">1天</a></li>
-      	    <li><a href="#" data-toggle="tab">1周</a></li>
-      	    <li><a href="#" data-toggle="tab">1个月</a></li>
-	    <li><a href="#" data-toggle="tab">3个月</a></li>
-	  </ul>
-	</div>
-	前<input name="top_n" type="text" value="500" class="span1">
-	条结果
-	每页<input name="page_num" type="text" value="20" class="span1">
-	条结果
-	<input type="hidden" name="action" value="run">
-	<input type="submit" class="btn btn-primary" value="识别">
+      排序标准:
+      <div class="btn-group">
+	<a id="whole_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
+	  粉丝数
+	  <span class="caret"></span>
+	</a>
+	<ul id="whole_rank_method_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_method('whole', 'followers');" data-toggle="tab">粉丝数</a></li>
+      	  <li><a href="#" onclick="choose_method('whole', 'active');" data-toggle="tab">活跃度</a></li>
+      	  <li><a href="#" onclick="choose_method('whole', 'important');" data-toggle="tab">重要度</a></li>
+	</ul>
+      </div>
+      时间范围:
+      <div class="btn-group">
+	<a  id="whole_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	  1天
+	  <span class="caret"></span>
+	</a>
+	<ul id="whole_window_size_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_window('whole', 1);" data-toggle="tab">1天</a></li>
+      	  <li><a href="#" onclick="choose_window('whole', 7);" data-toggle="tab">1周</a></li>
+      	  <li><a href="#" onclick="choose_window('whole', 30);" data-toggle="tab">1个月</a></li>
+      	  <li><a href="#" onclick="choose_window('whole', 90);" data-toggle="tab">3个月</a></li>
+	</ul>
+      </div>
+      前<input name="top_n" type="text" value="500" class="span1">
+      条结果
+      每页<input name="page_num" type="text" value="20" class="span1">
+      条结果
+      <input type="hidden" name="action" value="run">
+      <input id="whole_rank_method" type="hidden" name="rank_method" value="followers">
+      <input id="whole_window_size" type="hidden" name="window_size" value="1">
+      <input type="submit" class="btn btn-primary" value="识别">
     </form>
   </div>
 
   <div class="well">
     <legend>领域识别</legend>
     <form id="area_identify" action="/identify/area/" class="form-inline" method="POST">
-      <input name="keywords" type="text" class="span2 search-query" placeholder="子领域、话题">
+      <input name="topic" type="text" class="span2 search-query" placeholder="子领域、话题">
       时间范围:
       <div class="btn-group">
-	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	<a  id="area_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
 	  1天
 	  <span class="caret"></span>
 	</a>
-	<ul class="dropdown-menu">
-	  <li><a href="#" data-toggle="tab">1天</a></li>
-      	  <li><a href="#" data-toggle="tab">1周</a></li>
-      	  <li><a href="#" data-toggle="tab">1个月</a></li>
-	  <li><a href="#" data-toggle="tab">3个月</a></li>
+	<ul id="area_window_size_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_window('area', 1);" data-toggle="tab">1天</a></li>
+      	  <li><a href="#" onclick="choose_window('area', 7);" data-toggle="tab">1周</a></li>
+      	  <li><a href="#" onclick="choose_window('area', 30);" data-toggle="tab">1个月</a></li>
+      	  <li><a href="#" onclick="choose_window('area', 90);" data-toggle="tab">3个月</a></li>
 	</ul>
       </div>
       前<input name="top_n" type="text" value="500" class="span1">
@@ -62,6 +64,7 @@
       条结果
       <input type="hidden" name="hadoop" value="0">
       <input type="hidden" name="action" value="run">
+      <input id="area_window_size" type="hidden" name="window_size" value="1">
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
     <ul id="myTab" class="nav nav-tabs">
@@ -149,17 +152,29 @@
   <div class="well">
     <legend>突发识别</legend>
     <form id="burst_identify" action="/identify/burst/" class="form-inline" method="POST">
+      排序标准:
+      <div class="btn-group">
+	<a id="burst_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
+	  粉丝数
+	  <span class="caret"></span>
+	</a>
+	<ul id="burst_rank_method_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_method('burst', 'followers');" data-toggle="tab">粉丝数</a></li>
+      	  <li><a href="#" onclick="choose_method('burst', 'active');" data-toggle="tab">活跃度</a></li>
+      	  <li><a href="#" onclick="choose_method('burst', 'important');" data-toggle="tab">重要度</a></li>
+	</ul>
+      </div>
       时间范围:
       <div class="btn-group">
-	<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	<a  id="burst_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
 	  1天
 	  <span class="caret"></span>
 	</a>
-	<ul class="dropdown-menu">
-	  <li><a href="#" data-toggle="tab">1天</a></li>
-      	  <li><a href="#" data-toggle="tab">1周</a></li>
-      	  <li><a href="#" data-toggle="tab">1个月</a></li>
-	  <li><a href="#" data-toggle="tab">3个月</a></li>
+	<ul id="burst_window_size_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_window('burst', 1);" data-toggle="tab">1天</a></li>
+      	  <li><a href="#" onclick="choose_window('burst', 7);" data-toggle="tab">1周</a></li>
+      	  <li><a href="#" onclick="choose_window('burst', 30);" data-toggle="tab">1个月</a></li>
+      	  <li><a href="#" onclick="choose_window('burst', 90);" data-toggle="tab">3个月</a></li>
 	</ul>
       </div>
       前<input name="top_n" type="text" value="500" class="span1">
@@ -167,8 +182,14 @@
       每页<input name="page_num" type="text" value="20" class="span1">
       条结果
       <input type="hidden" name="action" value="run">
+      <input id="burst_rank_method" type="hidden" name="rank_method" value="followers">
+      <input id="burst_window_size" type="hidden" name="window_size" value="1">
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
   </div>
 </div>
+{% endblock %}
+
+{% block script %}
+  <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
 {% endblock %}

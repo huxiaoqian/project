@@ -2,15 +2,13 @@
 
 import os
 
-from optparse import OptionParser
-
 try:
     from hat.job import Hat
     from hat.fs import HadoopFS
 except ImportError:
-    print 'Hadoop is not installed.'
+    print 'Hadoop module is not installed or configured.'
 
-from hadoop_utils import monitor
+from hadoop_utils import monitor, hadoop_results
 
 class PageRankIter(Hat):
     def mapper(self, key, value):
@@ -74,25 +72,13 @@ class PageRankSorter(Hat):
     def reducer(self, key, values):
         for value in values:
             yield (value, key)
-        
-def main():
-    optparser = OptionParser()
-    optparser.add_option('-j', '--job_id', dest='job_id', help='Hadoop Job ID', default=None, type='string')
-    optparser.add_option('-c', '--iter_count', dest='iter_count', help='PageRank Iter Count', default=2, type='int')
-    optparser.add_option('-i', '--input', dest='input_path', help='Input File Path', default=None, type='string')
-    (options, args) = optparser.parse_args()
 
-    job_id = options.job_id
-    iter_count = options.iter_count
-    input_path = options.input_path
-
+def pagerank(job_id, iter_count, input_path, top_n):
     if not (job_id and iter_count and input_path and os.path.exists(input_path)):
-        print 'Usage: python pagerank.py --help'
-        sys.exit()
+        return []
 
     if monitor(job_id) == 'finished':
-        print 'Hadoop Job %s already finished!' % job_id
-        sys.exit()
+        return hadoop_results(job_id, top_n)
 
     #set work dir and put input temp file into file system
     fs = HadoopFS()
@@ -117,4 +103,27 @@ def main():
     fs.rmr('%s/hat_tmp*' % job_id)
     fs.rmr('%s/hat_init' % job_id)
 
-if __name__ == '__main__': main()
+    sorted_uids = hadoop_results(job_id, top_n)
+
+    return sorted_uids
+    
+if __name__ == '__main__':
+    from optparse import OptionParser
+
+    optparser = OptionParser()
+    optparser.add_option('-j', '--job_id', dest='job_id', help='Hadoop Job ID', default=None, type='string')
+    optparser.add_option('-c', '--iter_count', dest='iter_count', help='PageRank Iter Count', default=2, type='int')
+    optparser.add_option('-i', '--input', dest='input_path', help='Input File Path', default=None, type='string')
+    (options, args) = optparser.parse_args()
+
+    job_id = options.job_id
+    iter_count = options.iter_count
+    input_path = options.input_path
+
+    if not (job_id and iter_count and input_path and os.path.exists(input_path)):
+        print 'Usage: python pagerank.py --help'
+        sys.exit()
+
+    top_n = 500
+    for uid in pagerank(job_id, iter_count, input_path, top_n):
+        print uid

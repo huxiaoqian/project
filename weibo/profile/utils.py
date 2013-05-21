@@ -2,14 +2,23 @@
 
 import time
 from datetime import datetime, timedelta, date
-
 from config import db
 from config import app as current_app
 from flask import request
 from model import *
 from sqlalchemy import func
-
 import json
+import redis
+
+redis_host = 'localhost'
+redis_port = 6379
+redis_conn = redis.Redis(redis_host, redis_port)
+
+def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='20130430'):
+    sorted_key = 'followers_count'
+    sortedset_key = 'linhao_dailyfielduser_%s_%s_%s' % (update_date, fieldName, sorted_key)
+    result = redis_conn.zrevrange(sortedset_key, start_offset, end_offset, withscores=False)
+    return result
 
 def timeit(method):
     def timed(*args, **kw):
@@ -57,6 +66,9 @@ def local2datetime(time_str):
 def ts2datetime(ts):
      return datetime.fromtimestamp(int(float(ts)))
 
+def ts2date(ts):
+    return date.fromtimestamp(int(float(ts)))
+
 def time2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))
 
@@ -93,7 +105,8 @@ def last_month():
     return last_date.isoformat(), now_date.isoformat()
     
 def main():
-    last_week()
+    #last_week()
+    getFieldUsersByScores('finance', 0, 19)
     pass
     
 if __name__ == '__main__': main()

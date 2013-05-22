@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+
+FOLLOWERS_MIN_SUPPORT = 500
+
+REPOSTS_MIN_SUPPORT = 500
+
+PAGERANK_ITER_MAX = 1

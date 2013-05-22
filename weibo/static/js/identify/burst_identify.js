@@ -41,6 +41,9 @@
 	var tbody = '<tbody>';
 	for(var i = 0;i < rowCount;i++) {
             var tr = '<tr>';
+	    if (data[i][3].match("海外")) {
+		tr = '<tr class="success">';
+	    }
             for(var j = 0;j < cellCount;j++) {
 		if (j == 8) {
 		    // checkbox
@@ -92,6 +95,9 @@
 	var tbody = '<tbody>';
 	for(var i = 0;i < rowCount;i++) {
             var tr = '<tr>';
+	    if (data[i][3].match("海外")) {
+		tr = '<tr class="success">';
+	    }
             for(var j = 0;j < cellCount;j++) {
 		if (j == 6) {
 		    // identify status

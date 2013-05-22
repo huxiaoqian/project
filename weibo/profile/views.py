@@ -3,6 +3,10 @@
 import os
 import sys
 import urllib2
+import datetime
+from datetime import date
+import operator, random
+import time
 try:
     import simplejosn as json
 except ImportError:
@@ -13,9 +17,23 @@ from flask import Blueprint, url_for, render_template, request, abort, flash
 from weibo.extensions import db
 from weibo.model import *
 
-from utils import hot_uid_by_word, last_week, last_month
+from utils import hot_uid_by_word, last_week, last_month, ts2date, getFieldUsersByScores
 from flask.ext.sqlalchemy import Pagination
+import leveldb
 
+from xapian_weibo.xapian_backend import XapianSearch
+s_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1) 
+
+LEVELDBPATH = '/home/mirage/leveldb'
+buckets = {}
+def get_bucket(bucket):
+    if bucket in buckets:
+        return buckets[bucket]
+    buckets[bucket] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_' + bucket), block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))    
+    return buckets[bucket]
+
+emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
+fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
 
 COUNT_PER_PAGE = 20
 
@@ -32,8 +50,6 @@ mod = Blueprint('profile', __name__, url_prefix='/profile')
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
 def profile_search(model='hotest'):
-    '''获取最近一周的活跃博主作为热门博主
-    '''
     if request.method == 'GET':
         statuscount, friendscount, followerscount, province, field = getStaticInfo()
         if model == 'person':
@@ -53,7 +69,6 @@ def profile_search(model='hotest'):
                                    friendscount=friendscount, followerscount=followerscount,
                                    location=province, field=field, model=model, result=None, province=province_arg)
         else:
-        
             return render_template('profile/profile_search.html',statuscount=statuscount,
                                    friendscount=friendscount, followerscount=followerscount,
                                    location=province, field=field, model=model, result=None)
@@ -61,10 +76,41 @@ def profile_search(model='hotest'):
     
     if request.method == 'POST' and request.form['page']:
         if model == 'newest':
-            basequery = User.query.limit(5000)#order_by(User.createdAt.desc())
             page = int(request.form['page'])
-            users = basequery.paginate(page, COUNT_PER_PAGE, False).items
-            return json.dumps([i.serialize for i in users])
+            if page == 1:
+                startoffset = 0
+            else:
+                startoffset = (page - 1) * COUNT_PER_PAGE
+
+            total_days = 6
+            today = datetime.datetime.today()
+            now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+            now_ts = int(now_ts)
+            during = 24 * 3600
+            begin_ts = now_ts - total_days * during
+
+            query_dict = {
+                'created_at': {
+                    '$gt': begin_ts,
+                    '$lt': now_ts,
+                }
+            }
+            count, get_results = s_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
+                                               fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                               sort_by=['-created_at'])
+
+            users = []
+            for r in get_results():
+                statusesCount = r['statuses_count']
+                followersCount = r['followers_count']
+                friendsCount = r['friends_count']
+                userName = r['name']
+                description = r['description']
+                uid = r['_id']
+                profileImageUrl = r['profile_image_url']
+                users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
+                              'description': description, 'profileImageUrl': profileImageUrl})
+            return json.dumps(users)
         elif model == 'hotest':
             lowdate, thisdate = last_week()
             uids = hot_uid_by_word(lowdate, thisdate)
@@ -73,11 +119,15 @@ def profile_search(model='hotest'):
             users = basequery.paginate(page, COUNT_PER_PAGE, False).items
             return json.dumps([i.serialize for i in users])
         elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
-            uids = db.session.query(UserField.uid).filter(UserField.fieldFirst==model).all()
-            uidlist = [uid[0] for uid in uids]
-            basequery = User.query.filter(User.id.in_(uidlist)).limit(10000)#.order_by(User.followersCount.desc())
             page = int(request.form['page'])
-            users = basequery.paginate(page, COUNT_PER_PAGE, False).items
+            if page == 1:
+                startoffset = 0
+            else:
+                startoffset = (page - 1) * COUNT_PER_PAGE
+            endoffset = startoffset + COUNT_PER_PAGE - 1
+            uids = getFieldUsersByScores(model, startoffset, endoffset)
+            uidlist = [int(uid) for uid in uids]
+            users = User.query.filter(User.id.in_(uidlist)).all()
             return json.dumps([i.serialize for i in users])
         elif model == 'person':
             nickname = urllib2.unquote(request.form['nickname'])
@@ -86,15 +136,32 @@ def profile_search(model='hotest'):
         elif model in ['statuses', 'friends', 'followers']:
             low = int(request.form['low'])
             up = int(request.form['up'])
-            if model == 'statuses':
-                basequery = User.query.filter(User.statusesCount>low, User.statusesCount<up).limit(1000)#.order_by(User.statusesCount.desc())
-            if model == 'friends':
-                basequery = User.query.filter(User.friendsCount>low, User.friendsCount<up).limit(1000)#.order_by(User.friendsCount.desc())
-            if model == 'followers':
-                basequery = User.query.filter(User.followersCount>low, User.followersCount<up).limit(1000)#.order_by(User.followersCount.desc())
             page = int(request.form['page'])
-            users = basequery.paginate(page, COUNT_PER_PAGE, False).items
-            return json.dumps([i.serialize for i in users])
+            if page == 1:
+                startoffset = 0
+            else:
+                startoffset = (page - 1) * COUNT_PER_PAGE
+            sorted_key = '%s_count' % model
+            query_dict = { sorted_key: {
+                    '$gt': low,
+                    '$lt': up,
+                }
+            }
+            count, get_results = s_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
+                                               fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                               sort_by=['-' + sorted_key])
+            users = []
+            for r in get_results():
+                statusesCount = r['statuses_count']
+                followersCount = r['followers_count']
+                friendsCount = r['friends_count']
+                userName = r['name']
+                description = r['description']
+                uid = r['_id']
+                profileImageUrl = r['profile_image_url']
+                users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
+                              'description': description, 'profileImageUrl': profileImageUrl})
+            return json.dumps(users)
         elif model == 'province':
             province = request.form['province']
             basequery = User.query.filter(User.location.startswith(province)).limit(1000)#.order_by(User.followersCount.desc())
@@ -103,7 +170,7 @@ def profile_search(model='hotest'):
             return json.dumps([i.serialize for i in users])
 
 @mod.route('/group/<fieldEnName>', methods=['GET', 'POST'])
-def profile_group(fieldEnName='finance'):
+def profile_group(fieldEnName):
     field = FieldProfile.query.all()
     return render_template('profile/profile_group.html', field=field, model=fieldEnName)
 
@@ -121,30 +188,8 @@ def profile_person_tab_ajax(model, uid):
         return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
     elif model == 'personalnetwork':
         return render_template('profile/ajax/personal_network.html', uid=uid)
-    elif model == 'personal_friends_followers':
-        result = []
-        uid = 217602821#250195
-        s_result = db.session.query(FollowRelationship.fid).filter(FollowRelationship.uid==long(uid)).all()
-        print 's_result', len(s_result)
-        fids = [fid[0] for fid in s_result]
-        q_result = db.session.query(User.id, User.userName, User.statusesCount, User.followersCount, User.friendsCount, UserField.fieldFirst).\
-        filter(User.id.in_(fids)).\
-        filter(UserField.uid.in_(fids)).limit(20)
-        for id, name, sta, fol, fri, field in q_result:
-            result.append({'id': id,'userName': name, 'statusesCount': sta,
-                           'followersCount': fol, 'friendsCount': fri,
-                           'field': field})
-        '''
-        users = UserField.query.limit(10000)
-        for user in users:
-##            uids = 
-            raw = User.query.filter_by(id=user.uid).order_by(User.statusesCount.desc()).first()
-            if raw:
-                result.append({'id': raw.id,'userName': raw.userName, 'statusesCount': raw.statusesCount,
-                               'followersCount': raw.followersCount, 'friendsCount': raw.friendsCount,
-                               'field': user.fieldFirst})
-        '''
-        return render_template('profile/ajax/personal_friends_followers.html', result=result[:9], uid=uid)
+    elif model == 'personal_friends_followers':       
+        return render_template('profile/ajax/personal_friends_followers.html', uid=uid)
     elif model == 'grouptopic':
         return render_template('profile/ajax/group_word_cloud.html', field=uid)
     elif model == 'groupweibocount':
@@ -156,11 +201,66 @@ def profile_person_tab_ajax(model, uid):
             result.extend(User.query.filter_by(id=user.uid).limit(20))#.order_by(User.statusesCount.desc()))
         return render_template('profile/ajax/group_rank_bloggers.html', result=result[:9])
     elif model == 'grouplocation':
-        return render_template('profile/ajax/group_location.html')
+        return render_template('profile/ajax/group_location.html', field=uid)
     elif model == 'groupactive':
-        return render_template('profile/ajax/group_active.html')
+        return render_template('profile/ajax/group_active.html', field=uid)
     elif model == 'groupemotion':
-        return render_template('profile/ajax/group_emotion.html')
+        return render_template('profile/ajax/group_emotion.html', field=uid)
+
+@mod.route('/person_fri_fol/<uid>', methods=['GET', 'POST'])
+def profile_person_fri_fol(uid):
+    if request.method == 'GET' and uid and request.args.get('page'):
+        page = int(request.args.get('page'))
+        COUNT_PER_PAGE = 10
+        if page == 1:
+            startoffset = 0
+        else:
+            startoffset = (page - 1) * COUNT_PER_PAGE
+        friendship_bucket = get_bucket('friendship')
+        friends_key = str(uid) + '_' + 'friends'
+        followers_key = str(uid) + '_' + 'followers'
+        fri_fol = []
+        try:
+            friends = json.loads(friendship_bucket.Get(friends_key))
+        except KeyError:
+            friends = []
+        fri_fol.extend(friends)
+        try:
+            followers = json.loads(friendship_bucket.Get(followers_key))
+        except KeyError:
+            followers = []
+        fri_fol.extend(followers)
+        field_bucket = get_bucket('user_daily_field')
+        user_dict = {}
+        field_user_count = {}
+        if fri_fol != []:
+            for user_id in set(fri_fol[:10000]):
+                try:
+                    fields = field_bucket.Get(str(user_id) + '_' + '20130430')
+                    field = fields.split(',')[0]
+                except KeyError:
+                    continue
+                try:
+                    field_user_count[field] = field_user_count[field] + 1
+                except KeyError:
+                    field_user_count[field] = 1
+                count, get_results = s_user.search(query={'_id': user_id}, fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count'])
+                if count > 0:
+                    for user in get_results():
+                        user_dict[user_id] = [user['name'], user['statuses_count'], user['followers_count'], user['friends_count'], field]
+        sorted_users = sorted(user_dict.items(), key=lambda d: d[1][2], reverse=True)
+        result = []
+        for id, value in sorted_users:
+            result.append({'id': id,'userName': unicode(value[0], "utf-8"), 'statusesCount': value[1],
+                           'followersCount': value[2], 'friendsCount': value[3],
+                           'field': value[4]})
+        total_pages = len(result) / COUNT_PER_PAGE + 1
+        try:
+            users = result[startoffset:(startoffset+COUNT_PER_PAGE-1)]
+        except:
+            users = result[startoffset: len(result)-1]
+        sorted_field_count = sorted(field_user_count.items(), key=lambda d: d[1], reverse=True)
+        return json.dumps({'users': users, 'pages': total_pages, 'fields': sorted_field_count})
 
 @mod.route('/person_topic/<uid>', methods=['GET', 'POST'])
 def profile_person_topic(uid):
@@ -192,49 +292,10 @@ def profile_person_topic(uid):
     else:
         return json.dumps([])
 
-@mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
-def group_status_count(fieldEnName):
-    from utils import ts2datetime, time2ts
-    from sqlalchemy import func
-    from datetime import date
-    import operator, random
-    result_arr = []
-    time_arr = []
-    count_arr = []
-    repost_arr = []
-    fipost_arr = []
-    interval = None
-    s_result = db.session.query(UserField.uid).filter(UserField.fieldFirst == fieldEnName).all()#.limit(100)
-    uidlist = [uid[0] for uid in s_result]
-    if request.args.get('interval'):
-        interval = request.args.get('interval')
-    if interval == 'oneweek':
-        lowdate, thisdate = last_week(2, 2)
-    elif interval == 'onemonth':
-        lowdate, thisdate = last_month()
-    else:
-        lowdate, thisdate = last_week(1, 1)
-    startdate = ts2datetime(time2ts(lowdate))
-    enddate =  ts2datetime(time2ts(thisdate))
-    
-    results = db.session.query(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate), func.count(Words.id)).\
-              filter(Words.uid.in_(uidlist), Words.postDate>startdate, Words.postDate<enddate).\
-              group_by(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate)).all()
-    print len(results)
-    for year, month, day, count in results:
-        time_arr.append(date(year, month, day).isoformat())
-        count_arr.append(count)
-        fi = random.randrange(0, count)
-        fipost_arr.append(fi)
-        repost_arr.append(count-fi)
-    return json.dumps({'time': time_arr, 'count': count_arr, 'repost': repost_arr, 'fipost': fipost_arr})
-
 @mod.route('/person_count/<uid>', methods=['GET', 'POST'])
 def personal_weibo_count(uid):
     from utils import ts2datetime, time2ts
     from sqlalchemy import func
-    from datetime import date
-    import operator, random
     result_arr = []
     time_arr = []
     count_arr = []
@@ -244,7 +305,7 @@ def personal_weibo_count(uid):
     if request.args.get('interval'):
         interval = request.args.get('interval')
     if interval == 'oneweek':
-        lowdate, thisdate = last_week(2, 2)
+        lowdate, thisdate = last_week(3, 3)
     elif interval == 'onemonth':
         lowdate, thisdate = last_month()
     else:
@@ -297,15 +358,6 @@ def personal_weibo_count(uid):
 
 @mod.route('/group_topic/<fieldEnName>')
 def profile_group_topic(fieldEnName):
-    '''
-    from weibo_trend import groupBurstWord
-    words = groupBurstWord()
-    sortbyburst = sorted(words.iteritems(), key=lambda(k, v): v[0])
-    words_arr = []
-    for word, value in sortbyburst:
-        words_arr.append({'text': word, 'size': value[1]})
-    return json.dumps(words_arr)
-    '''
     from datetime import datetime
     from burst_word import date2ts
     result_arr = []
@@ -320,7 +372,7 @@ def profile_group_topic(fieldEnName):
         sort =  request.args.get('sort')
         limit = int(request.args.get('limit'))
     if interval == 'oneweek':
-        lowdate, thisdate = last_week(2, 2)
+        lowdate, thisdate = last_week(3, 3)
     else:
         lowdate, thisdate = last_month()
 
@@ -334,11 +386,194 @@ def profile_group_topic(fieldEnName):
             result_arr.append({'text': result.word, 'size': result.freq})
     return json.dumps(result_arr)
 
+@mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
+def group_status_count(fieldEnName):
+    total_days = 89
+    today = datetime.datetime.today()
+    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+    now_ts = int(now_ts)
+    during = 24 * 3600
 
-@mod.route('/chinamap/')
-def getChinamap():
-    from city_color import main
-    return json.dumps(main())
+    time_arr = []
+    total_arr = []
+    repost_arr = []
+    fipost_arr = []
+
+    interval = None
+    if request.args.get('interval'):
+        interval =  request.args.get('interval')
+    if interval == 'oneweek':
+        total_days = 6
+    elif interval == 'onemonth':
+        total_days = 29
+    elif interval == 'twomonth':
+        total_days = 59
+    else:
+        total_days = 89
+
+    bucket = get_bucket('field_daily_post_count')
+    for i in xrange(-total_days + 1, 1):
+        lt = now_ts + during * i
+        post_count = {}
+        for is_retweeted in [0, 1]:        
+            try:
+                daily_count = bucket.Get(str(fieldEnName) + '_' + str(lt) + '_' + str(is_retweeted))
+                daily_count = int(daily_count)
+            except KeyError:
+                daily_count = 0
+            post_count[is_retweeted] = daily_count
+        sumcount = sum(post_count.values())
+        if sumcount > 0:
+            time_arr.append(ts2date(lt).isoformat())
+            total_arr.append(sumcount)
+            repost_arr.append(post_count[1])
+            fipost_arr.append(post_count[0])
+        
+    return json.dumps({'time': time_arr, 'count': total_arr, 'repost': repost_arr, 'fipost': fipost_arr})
+
+@mod.route('/group_active/<fieldEnName>', methods=['GET', 'POST'])
+def group_active_count(fieldEnName):
+    total_days = 6
+    today = datetime.datetime.today()
+    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+    now_ts = int(now_ts)
+    during = 24 * 3600
+
+    interval = None
+    if request.args.get('interval'):
+        interval =  request.args.get('interval')
+    if interval == 'oneweek':
+        total_days = 6
+    elif interval == 'onemonth':
+        total_days = 29
+    elif interval == 'twomonth':
+        total_days = 59
+    else:
+        total_days = 89
+
+    bucket = get_bucket('field_daily_active_count')
+    uids_set = set([k.split('_')[2] for k in bucket.RangeIter(include_value = False)])
+    user_count = {}
+    for i in xrange(-total_days + 1, 1):
+        lt = now_ts + during * i
+        for uid in uids_set:    
+            try:
+                daily_count = bucket.Get(str(fieldEnName) + '_' + str(lt) + '_' + str(uid))
+                daily_count = int(daily_count)
+            except KeyError:
+                daily_count = 0
+            if daily_count > 0:
+                try:
+                    user_count[uid] += daily_count
+                except KeyError:
+                    user_count[uid] = daily_count
+
+    post_list = [count for user, count in user_count.items()]
+    freq = [post_list.count(u) for u in post_list]
+    count_dict = dict(zip(post_list,freq))
+    result = sorted(count_dict.iteritems(), key=operator.itemgetter(0), reverse=False)
+
+    trunc_n = 20
+    x_list = []
+    y_list = []
+
+    if len(result) > trunc_n:
+        trunc_after_sum = sum([v[1] for i, v in enumerate(result) if i >= trunc_n])
+        for n in xrange(0, trunc_n):
+            if n == trunc_n - 1:
+                x_list.append(str(result[n][0]) + '+')
+                y_list.append(trunc_after_sum)
+            else:
+                x_list.append(result[n][0])
+                y_list.append(result[n][1])
+    else:    
+        for count, freq in result:
+            x_list.append(count)
+            y_list.append(freq)
+    return json.dumps({'x': x_list, 'y': y_list})
+
+@mod.route('/group_emotion/<fieldEnName>')
+def profile_group_emotion(fieldEnName):
+    total_days = 89
+    today = datetime.datetime.today()
+    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+    now_ts = int(now_ts)
+    during = 24 * 3600
+
+    time_arr = []
+    happy_arr = []
+    angry_arr = []
+    sad_arr = []
+
+    interval = None
+    if request.args.get('interval'):
+        interval =  request.args.get('interval')
+    if interval == 'oneweek':
+        total_days = 6
+    elif interval == 'onemonth':
+        total_days = 29
+    elif interval == 'twomonth':
+        total_days = 59
+    else:
+        total_days = 89
+
+    bucket = get_bucket('field_daily_sentiment_count')
+    for i in xrange(-total_days + 1, 1):
+        lt = now_ts + during * i
+        emotion_count = {}
+        for emotion in emotions_kv.values():        
+            try:
+                daily_emotion_count = bucket.Get(str(fieldEnName) + '_' + str(lt) + '_' + str(emotion))
+                daily_emotion_count = int(daily_emotion_count)
+            except KeyError:
+                daily_emotion_count = 0
+            emotion_count[emotion] = daily_emotion_count
+        if sum(emotion_count.values()) > 0:
+            sumcount = sum(emotion_count.values())
+            time_arr.append(ts2date(lt).isoformat())
+            happy_arr.append(int(emotion_count[1] * 100 / sumcount) / 100.0)
+            angry_arr.append(int(emotion_count[2] * 100 / sumcount) / 100.0)
+            sad_arr.append(int(emotion_count[3] * 100 / sumcount) / 100.0)
+
+    return json.dumps({'time': time_arr, 'happy': happy_arr, 'angry': angry_arr, 'sad': sad_arr})
+
+@mod.route('/group_verify/<fieldEnName>')
+def profile_group_verify(fieldEnName):
+    update_date = '20130430'
+    bucket = get_bucket('field_daily_verify_count')
+    try:
+        verified_count = int(bucket.Get(str(fieldEnName) + '_' + update_date + '_' + 'True'))
+    except KeyError:
+        verified_count = 0
+    try:
+        normal_count = int(bucket.Get(str(fieldEnName) + '_' + update_date + '_' + 'False'))
+    except KeyError:
+        normal_count = 0
+
+    result_list = ''
+    if sum([verified_count, normal_count]) > 0:
+        sumcount = sum([verified_count, normal_count])
+        result_list = str(verified_count) + ',' + str(normal_count) + ',' + str(int(verified_count * 100 / sumcount) / 100.00) + ',' +  str(1 - int(verified_count * 100 / sumcount) / 100.00)
+
+    return json.dumps(result_list)
+
+
+@mod.route('/group_location/<fieldEnName>')
+def profile_group_location(fieldEnName):
+    from city_color import province_color_map
+    city_count = {}
+    loc_count_bucket = get_bucket('field_daily_location_count')
+    pro_city_bucket = get_bucket('province_city')
+    update_date = '20130430'
+    provinceid_set = set([k.split('_')[1] for k in pro_city_bucket.RangeIter(include_value = False) if k.split('_')[0] == 'provinceid'])
+    for pro_id in provinceid_set:
+        try:
+            count = loc_count_bucket.Get(fieldEnName + '_' + update_date + '_' + str(pro_id))
+            pro_str = pro_city_bucket.Get('provinceid_' + str(pro_id))
+            city_count[pro_str] = int(count)
+        except KeyError:
+            continue
+    return json.dumps(province_color_map(city_count))
 
 @mod.route('/result.json')
 def graph_result():

@@ -1,39 +1,35 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
-{% block body %}     
-  <script src="/static/js/profile/raphael.js"></script>
-  <script src="/static/js/profile/chinamap.js"></script>
-  <script src="/static/js/profile/RGraph.common.core.js"></script>
-  <script src="/static/js/profile/RGraph.pie.js"></script>
-  <script src="/static/js/profile/RGraph.common.dynamic.js"></script>
-  <script src="/static/js/profile/RGraph.common.tooltips.js"></script>
+{% block body %}
   <script>
   function drawVerifiedpie(){
-    var verified = new RGraph.Pie('verifiedCanvas',[5000,9000]);
+    var data = this.responseText.split(',');
+    if(data.length == 4){
+    var verified = new RGraph.Pie('verifiedCanvas',[parseInt(data[0].split("\"")[1]), parseInt(data[1])]);
         verified.Set('chart.title','认证分布');
         verified.Set('chart.labels',['认证','普通']);
         verified.Set('chart.tooltips.effect','expand');
         verified.Set('chart.labels.above',true);
         verified.Set('chart.tooltips.event','onmousemove');
-        verified.Set('chart.tooltips', ['35.7%','64.3%']);
+        verified.Set('chart.tooltips', [parseInt(data[2]), parseInt(data[3].split("\"")[0])]);
         verified.Set('chart.highlight.style','3d');
-        verified.Set('chart.colors', ['#ff0000','#ffb1b1']);//['#81BEF7','#F7819F']);
+        verified.Set('chart.colors', ['#ff0000', '#006600']);//['#ff0000','#ffb1b1']);//['#81BEF7','#F7819F']);
         verified.Set('chart.linewidth',2);
         verified.Set('chart.strokestyle','black');
         verified.Set('chart.tooltips.effect','fade');
-        verified.Draw();   
+        verified.Draw();
+      }
   }
   $(document).ready(function(){
-  //$(function () {
     $.ajax({
-      url:"/profile/chinamap/",
+      url:"/profile/group_location/{{field}}",
       dataType:"json",
       success:function(data){
         drawChinamap(data);
       }
-    });     
-
-    drawVerifiedpie(); 
+    });
+    RGraph.AJAX('/profile/group_verify/{{field}}', drawVerifiedpie);
+    
   })
 
   </script>
@@ -98,18 +94,15 @@
     }
     
   </style>
-  <form class="form-inline">
-      时间范围:
-        <div class="btn-group">
-          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1周<span class="caret"></span></a>
-          <ul class="dropdown-menu">
-            <li class="active"><a href="#" data-toggle="tab">1周</a></li>
-            <li><a href="#" data-toggle="tab">1个月</a></li>
-            <li><a href="#" data-toggle="tab">3个月</a></li>
-          </ul>
-        </div>
-
-      <button class="btn btn-primary"><i class="icon-search"></i>统计</button>
+  <form>
+    时间范围:
+    <select class="span2" name="interval" id="interval">
+      <option value="threemonth">3个月</option>
+      <option value="oneweek">1周</option>
+      <option value="onemonth">1个月</option>
+      <option value="twomonth">2个月</option>
+    </select>
+    <button type="button" class="btn btn-primary" onclick="return false;"><i class="icon-search"></i>统计</button>
   </form>
   <div id="locationdist" class="result_de container-fluid">
     <div class="row-fluid">

@@ -1,5 +1,6 @@
 {% extends 'profile/profile_layout.html' %}
 {% block title %}网民群体画像{% endblock %}
+
 {% block top_navbar_active %}
   <li><a href="/profile/person/">单个网民画像</a></li>
   <li class="active"><a href="/profile/group/">网民群体画像</a></li>
@@ -7,8 +8,15 @@
 {% endblock top_navbar_active %}
 
 {% block content %} 
-  
-
+  <script src="/static/js/profile/highcharts.js"></script>
+  <script src="/static/js/profile/exporting.js"></script>
+  <script src="/static/js/profile/raphael.js"></script>
+  <script src="/static/js/profile/chinamap.js"></script>
+  <script src="/static/js/profile/RGraph.common.core.js"></script>
+  <script src="/static/js/profile/RGraph.bar.js"></script>
+  <script src="/static/js/profile/RGraph.pie.js"></script>
+  <script src="/static/js/profile/RGraph.common.dynamic.js"></script>
+  <script src="/static/js/profile/RGraph.common.tooltips.js"></script>
   <div class="container-fluid">
     <div class="row-fluid">
       <div class="span2 well" style="padding: 8px 0;">
@@ -16,9 +24,9 @@
           <li class="nav-header">领域</li>
           {% for f in field %}
             {% if model == f.fieldEnName %}
-               <li class="active"><a href="#">{{f.fieldZhName}}</a></li>
+               <li class="active"><a href="/profile/group/{{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
             {% else %}
-               <li><a href="#">{{f.fieldZhName}}</a></li>
+               <li><a href="/profile/group/{{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
             {% endif %}
           {% endfor %}
           <li class="nav-header">领域管理</li>
@@ -30,14 +38,14 @@
       </div>
 
       <div class="span9">
-        <legend>财经领域</legend>
+        <legend>{{model}}领域</legend>
         <ul id="index-tabs" class="nav nav-tabs">
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouprank', uid='finance')}}" data-toggle="tab">博主排名</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouptopic', uid='finance')}}" data-toggle="tab">群体话题兴趣</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouplocation', uid='finance')}}" data-toggle="tab">认证及地理分布</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupweibocount', uid='finance')}}" data-toggle="tab">微博数量趋势</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupactive', uid='finance')}}" data-toggle="tab">人群活跃度趋势</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupemotion', uid='finance')}}" data-toggle="tab">人群情感趋势</a></li>
+          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouprank', uid=model)}}" data-toggle="tab">博主排名</a></li>
+          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouptopic', uid=model)}}" data-toggle="tab">群体话题兴趣</a></li>
+          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouplocation', uid=model)}}" data-toggle="tab">认证及地理分布</a></li>
+          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupweibocount', uid=model)}}" data-toggle="tab">微博数量走势</a></li>
+          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupactive', uid=model)}}" data-toggle="tab">人群活跃度走势</a></li>
+          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupemotion', uid=model)}}" data-toggle="tab">人群情感走势</a></li>
         </ul>
 
         

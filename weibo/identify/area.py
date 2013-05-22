@@ -1,23 +1,33 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import select
-import subprocess
-import operator
 import tempfile
+import operator
 
 import networkx as nx
 
-from weibo.extensions import db
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name, is_in_black_list
+from utils import save_rank_results, acquire_topic_name, is_in_black_list, acquire_status_by_id
+from config import PAGERANK_ITER_MAX
+
+from xapian_weibo.xapian_backend import XapianSearch
 
 from pagerank import pagerank
 
 def degree_rank(top_n, date, topic_id, window_size):
-    raise NotImplementedError
+    degree = prepare_data_for_degree(topic_id, date, window_size)
+    sorted_degree = sorted(degree.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sorted_uids = []
+    count = 0
+    for uid, value in sorted_degree:
+        if count > top_n:
+            break
+        sorted_uids.append(uid)
+        count += 1
+
+    data = save_rank_results(sorted_uids, 'area', 'degree', date, window_size, topic_id=topic_id)
+
+    return data
 
 def pagerank_rank(top_n, date, topic_id, window_size):
     data = []
@@ -31,7 +41,7 @@ def pagerank_rank(top_n, date, topic_id, window_size):
     
     
     job_id = generate_job_id(datetime2ts(date), topic_id)
-    iter_count = 1
+    iter_count = PAGERANK_ITER_MAX
 
     sorted_uids = pagerank(job_id, iter_count, input_tmp_path, top_n)
     
@@ -39,6 +49,39 @@ def pagerank_rank(top_n, date, topic_id, window_size):
 
     return data
 
+def prepare_data_for_degree(topic_id, date, window_size):
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
+    end_time = datetime2ts(date)
+    start_time = end_time - window2time(window_size)
+
+    g = nx.DiGraph()
+
+    #need repost index
+    statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    query_dict = {'text': [topic], 'timestamp': {'$gt': start_time, '$lt': end_time}}
+
+    count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'])
+    print 'topic statuses count %s' % count
+
+    for status in get_statuses_results():
+        try:
+            if status['retweeted_status']:
+                repost_uid = status['user']
+                rt_mid = status['retweeted_status']
+                source_uid = acquire_status_by_id(rt_mid)['user']
+                if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+                    continue
+                g.add_edge(repost_uid, source_uid)
+        except KeyError:
+            continue
+
+    N = len(g.nodes())
+    print 'topic network size %s' % N
+
+    return g.degree()
+ 
 def prepare_data_for_pr(topic_id, date, window_size):
     tmp_file = tempfile.NamedTemporaryFile(delete=False)
     
@@ -51,15 +94,27 @@ def prepare_data_for_pr(topic_id, date, window_size):
     g = nx.DiGraph()
 
     #need repost index
-    import random
-    for i in range(15):
-        repost_uid = random.randint(1, 20)
-        source_uid = random.randint(1, 20)
-        if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+    statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    query_dict = {'text': [topic], 'timestamp': {'$gt': start_time, '$lt': end_time}}
+
+    count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'])
+    print 'topic statuses count %s' % count
+
+    for status in get_statuses_results():
+        try:
+            if status['retweeted_status']:
+                repost_uid = status['user']
+                rt_mid = status['retweeted_status']
+                source_uid = acquire_status_by_id(rt_mid)['user']
+                if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+                    continue
+                g.add_edge(repost_uid, source_uid)
+        except KeyError:
             continue
-        g.add_edge(c1, c2)
 
     N = len(g.nodes())
+    print 'topic network size %s' % N
+
     if not N:
         return None
     for node in g.nodes():

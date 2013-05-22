@@ -6,6 +6,8 @@ from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, 
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
+from xapian_weibo.xapian_backend import XapianSearch
+
 def acquire_topic_id(name):
     item = db.session.query(Topic).filter_by(topicName=name).first()
     if not item:
@@ -23,12 +25,29 @@ def acquire_topic_name(tid):
     return item.topicName
 
 def acquire_user_by_id(identifyRange, uid):
+    user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+    count, get_results = user_search.search(query={'_id': uid})
+    # assert count==1, 'UID duplicated?'
     user = {}
-    user['name'] = ''
-    user['location'] = ''
-    user['count1'] = ''
-    user['count2'] = ''
+    for r in get_results():
+        user['name'] = r['name']
+        user['location'] = r['location']
+        if identifyRange == 'burst':
+            user['count1'] = 0
+            user['count2'] = 0
+        else:
+            user['count1'] = r['followers_count']
+            user['count2'] = r['friends_count']
     return user
+
+def acquire_status_by_id(mid):
+    status_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=1)
+    count, get_results = status_search.search(query={'_id': mid})
+    # assert count==1, 'MID duplicated?'
+    status = None
+    for r in get_results():
+        status = r
+    return status
 
 def user_status(uid):
     return 1
@@ -119,9 +138,9 @@ def find_user_previous_rank(identifyRange, uid, date, method, window, topic_id):
 def rank_comparison(previous, current):
     if previous:
         if current-previous > 0:
-            comparison = 1
-        elif current-previous < 0:
             comparison = -1
+        elif current-previous < 0:
+            comparison = 1
         else:
             comparison = 0
     else:

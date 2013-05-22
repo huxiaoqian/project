@@ -1,16 +1,12 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
 {% block body %}     
-
-  <script src="/static/js/profile/highcharts.js"></script>
-  <script src="/static/js/profile/exporting.js"></script>
-
   <script>
   function display_ori_repost_count(data){
     var chart = new Highcharts.Chart({
       chart: {
           renderTo: 'chartdiv_week_weibocount',
-          type: 'line',
+          type: 'spline',
           marginRight: 100,
           marginBottom: 25
       },
@@ -18,21 +14,18 @@
           text: '微博数量趋势',
           x: -20 //center
       },
-      /*
-      subtitle: {
-          text: '原创转发对比',
-          x: -20
-      },*/
       xAxis: {
-          categories: data['time'],//['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          categories: data['time'],
           labels:{
-            step:6,//3就是x轴显示的间隔
+            step:10,//3就是x轴显示的间隔
           }
       },
       yAxis: {
           title: {
               text: '微博条数（条）'
           },
+          min: 0,
+          lineWidth: 2,
           plotLines: [{
               value: 0,
               width: 1,
@@ -55,32 +48,26 @@
       },
       series: [{
           name: '总微博数',
-          data: data['count'],//[7.0, 9, 9, 14, 18, 21, 25, 26, 23, 18, 13, 9]
+          data: data['count'],
       }, {
           name: '转发微博数',
-          data: data['repost'],//[2, 8, 5, 11, 17, 22, 24, 24, 20, 14, 8, 2]
+          data: data['repost'],
       },{
           name: '原创微博数',
-          data: data['fipost'],//[2, 8, 5, 11, 17, 22, 24, 24, 20, 14, 8, 2]
+          data: data['fipost'],
       }]
   });
 }
 
-  function display_week_weibocount(){
-      $.ajax({
-          url: "/profile/group_count/{{field}}?interval=onemonth",
+  $(document).ready(function(){
+    $.ajax({
+          url: "/profile/group_count/{{field}}?interval=threemonth",
           dataType: 'json',   
           type: "GET",   
           success: function (data) {
             display_ori_repost_count(data);
           }
       });
-  }
-
-
-  $(document).ready(function(){
-    display_week_weibocount();
-      
   })
   function submit_form(){
     var interval_arg = $("#interval")[0].value;
@@ -90,7 +77,7 @@
           type: "GET",   
           success: function (data) {
             $("#chartdiv_week_weibocount").empty();
-            display_week_weibocount();
+            display_ori_repost_count(data);
           }
       });
   }
@@ -98,13 +85,14 @@
   <form class="form-inline">
       时间范围:
     <select class="span2" name="interval" id="interval">
-      <option value="onemonth">1个月</option>
-      <option value="oneweek">1周</option>
       <option value="threemonth">3个月</option>
+      <option value="oneweek">1周</option>
+      <option value="onemonth">1个月</option>
+      <option value="twomonth">2个月</option>
     </select>
     <button type="button" class="btn btn-primary" onclick="submit_form();return false;"><i class="icon-search"></i>生成数量趋势图</button>
   </form>
-  <div id="chartdiv_week_weibocount" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
+  <div id="chartdiv_week_weibocount" style="width: 930px; height: 400px;"></div>
       
 
 {% endblock body %}

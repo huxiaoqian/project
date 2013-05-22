@@ -1,44 +1,33 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
 {% block body %}
-
-  <script src="/static/js/profile/highcharts.js"></script>
-  <script src="/static/js/profile/exporting.js"></script>
-  <script src="/static/js/profile/emotion_summary.js"></script>
   <script>
-
-  function display_emotion_count(){
-    var time_arr = [];
-    var pos_arr = [];
-    var neg_arr = [];
-    dt_arr = emotion_tmline_arr;
-    for (var i=0;i<dt_arr.length;i++) {
-      time_arr.push(dt_arr[i].date);
-      pos_arr.push(dt_arr[i].c0);
-      neg_arr.push(dt_arr[i].c1);
-    }
+  function display_emotion_count(time_arr, happy_arr, angry_arr, sad_arr){
       var chart = new Highcharts.Chart({
         chart: {
             renderTo: 'chartdiv_emotion',
-            type: 'line',
+            type: 'spline',
             marginRight: 100,
             marginBottom: 25
         },
         title: {
-            text: '情绪趋势',
+            text: '群体情绪走势图',
             x: -20 //center
         },
         
         xAxis: {
             categories: time_arr,
             labels:{
-              step:6,//3就是x轴显示的间隔
+              step:10,//3就是x轴显示的间隔
             }
         },
         yAxis: {
             title: {
                 text: '比例'
             },
+            lineWidth: 2,
+            min: 0, 
+            max: 1,
             plotLines: [{
                 value: 0,
                 width: 1,
@@ -60,39 +49,54 @@
             borderWidth: 0
         },
         series: [{
-            name: '积极',
-            data: pos_arr,//[7.0, 9, 9, 14, 18, 21, 25, 26, 23, 18, 13, 9]
+            name: '高兴',
+            data: happy_arr,
+            color: '#006600',
+        },{
+            name: '愤怒',
+            data: angry_arr,
+            color: '#FF0000',
         }, {
-            name: '消极',
-            data: neg_arr,//[2, 8, 5, 11, 17, 22, 24, 24, 20, 14, 8, 2]
-        }]
+            name: '悲伤',
+            data: sad_arr,
+            color: '#000099',//'#0000FF','#0000CC',//
+          }]
     });
   }
 
   $(document).ready(function(){
-     display_emotion_count();
-     /*
     $.ajax({
-        url: "",
+        url: '/profile/group_emotion/{{field}}',
         dataType: 'json',   
         type: "GET",   
         success: function (data) {
-          display_emotion_count(data);
+          display_emotion_count(data['time'], data['happy'], data['angry'], data['sad']);
         }
-    });*/      
+    });
   })
+
+  function submit_form(){
+      var interval_arg = $("#interval")[0].value;
+      $.ajax({
+            url: "/profile/group_emotion/{{field}}?interval=" + interval_arg,
+            dataType: 'json',   
+            type: "GET",   
+            success: function (data) {
+              $("#chartdiv_emotion").empty();
+              display_emotion_count(data['time'], data['happy'], data['angry'], data['sad']);
+            }
+        });
+    }
   </script>
   <form class="form-inline">
     时间范围:
-      <div class="btn-group">
-        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1个月<span class="caret"></span></a>
-        <ul class="dropdown-menu">
-          <li><a href="#" data-toggle="tab">1周</a></li>
-          <li class="active"><a href="#" data-toggle="tab">1个月</a></li>
-          <li><a href="#" data-toggle="tab">3个月</a></li>
-        </ul>
-      </div>
-    <button class="btn btn-primary"><i class="icon-search"></i>生成情感趋势图</button>
+    <select class="span2" name="interval" id="interval">
+      <option value="threemonth">3个月</option>
+      <option value="oneweek">1周</option>
+      <option value="onemonth">1个月</option>
+      <option value="twomonth">2个月</option>
+    </select>
+    <button type="button" class="btn btn-primary" onclick="submit_form();return false;"><i class="icon-search"></i>生成群体情绪走势图</button>
   </form>
   <div id="chartdiv_emotion" style="width: 930px; height: 400px;"></div>
       

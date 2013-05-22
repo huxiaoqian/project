@@ -17,6 +17,8 @@ import area as areaModule
 
 import burst as burstModule
 
+import burst_monitor as burstRealtimeModule
+
 from utils import acquire_topic_id, acquire_topic_name, read_rank_results
 from time_utils import ts2datetime, datetime2ts, window2time
 
@@ -155,8 +157,8 @@ def area():
         current_time = datetime2ts('2013-3-7')
         if action == 'rank':
             current_date = ts2datetime(current_time)
-            data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
-            if not data:
+            current_data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
+            if not current_data:
                 if rank_method == 'pagerank':
                     rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
                     if rank_func:
@@ -165,7 +167,7 @@ def area():
                     rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
                     if rank_func:
                         current_data = rank_func(top_n, current_date, topic_id, window_size)
-                return json.dumps({'status': 'current finished', 'data': current_data})
+            return json.dumps({'status': 'current finished', 'data': current_data})
 
         elif action == 'previous_rank':
             previous_date = ts2datetime(current_time-window2time(window_size))
@@ -194,5 +196,17 @@ def area():
 
         else:
             abort(404)
+    else:
+        abort(404)
+
+@mod.route("/monitor/burst/", methods=["GET", "POST"])
+def burst_monitor():
+    request_method = request.method
+    if request_method == 'POST':
+        form = request.form
+        top_n = int(form.get('top_n', 10))
+        current_time = datetime2ts('2013-3-7') + 12*60*60
+        data = burstRealtimeModule.realtime_burst_user(top_n, current_time)
+        return json.dumps(data)
     else:
         abort(404)

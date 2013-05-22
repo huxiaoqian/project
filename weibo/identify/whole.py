@@ -32,8 +32,6 @@ def active_rank(top_n, date, window_size):
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
         uid_active = {}
         for uid, active in daily_user_active_bucket.RangeIter():
-            if is_in_black_list(int(uid)):
-                continue
             active = float(active)
             uid_active[int(uid)] = active
 
@@ -42,6 +40,8 @@ def active_rank(top_n, date, window_size):
         sorted_uids = []
         count = 0
         for uid, value in sorted_uid_active:
+            if is_in_black_list(uid):
+                continue
             if count >= top_n:
                 break
             sorted_uids.append(uid)
@@ -60,8 +60,6 @@ def important_rank(top_n, date, window_size):
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
         uid_important = {}
         for uid, important in daily_user_important_bucket.RangeIter():
-            if is_in_black_list(int(uid)):
-                continue
             important = float(important)
             uid_important[int(uid)] = important
 
@@ -70,6 +68,8 @@ def important_rank(top_n, date, window_size):
         sorted_uids = []
         count = 0
         for uid, value in sorted_uid_important:
+            if is_in_black_list(uid):
+                continue
             if count >= top_n:
                 break
             sorted_uids.append(uid)

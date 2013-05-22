@@ -20,7 +20,7 @@ def degree_rank(top_n, date, topic_id, window_size):
     sorted_uids = []
     count = 0
     for uid, value in sorted_degree:
-        if count > top_n:
+        if count >= top_n:
             break
         sorted_uids.append(uid)
         count += 1

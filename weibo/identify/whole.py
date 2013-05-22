@@ -42,7 +42,7 @@ def active_rank(top_n, date, window_size):
         sorted_uids = []
         count = 0
         for uid, value in sorted_uid_active:
-            if count > top_n:
+            if count >= top_n:
                 break
             sorted_uids.append(uid)
             count += 1
@@ -70,7 +70,7 @@ def important_rank(top_n, date, window_size):
         sorted_uids = []
         count = 0
         for uid, value in sorted_uid_important:
-            if count > top_n:
+            if count >= top_n:
                 break
             sorted_uids.append(uid)
             count += 1

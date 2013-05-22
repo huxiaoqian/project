@@ -2,6 +2,7 @@
 
 import os
 import time
+import operator
 from datetime import datetime
 import leveldb
 
@@ -25,27 +26,39 @@ def followers_rank(top_n, date, window_size):
 
 def active_rank(top_n, date, window_size):
     date_time = datetime2ts(date)
-
+    uid_active = {}
     if window_size == 1:
         db_name = get_leveldb('active', date_time)
         daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-        uid_active = {}
+        
         for uid, active in daily_user_active_bucket.RangeIter():
+            uid = int(uid)
             active = float(active)
-            uid_active[int(uid)] = active
+            uid_active[uid] = active
+    else:
+        for i in range(window_size):
+            db_name = get_leveldb('active', date_time - i*24*60*60)
+            daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+            for uid, active in daily_user_active_bucket.RangeIter():
+                uid = int(uid)
+                active = float(active)
+                if uid not in uid_active:
+                    uid_active[uid] = 0
+                uid_active[uid] += active
 
-        sorted_uid_active = sorted(uid_active.iteritems(), key=operator.itemgetter(1), reverse=True)
-
-        sorted_uids = []
-        count = 0
-        for uid, value in sorted_uid_active:
-            if is_in_black_list(uid):
-                continue
-            if count >= top_n:
-                break
-            sorted_uids.append(uid)
-            count += 1
+    sorted_uid_active = sorted(uid_active.iteritems(), key=operator.itemgetter(1), reverse=True)
+                
+    sorted_uids = []
+    count = 0
+    for uid, value in sorted_uid_active:
+        if is_in_black_list(uid):
+            continue
+        if count >= top_n:
+            break
+        sorted_uids.append(uid)
+        count += 1
 
     data = save_rank_results(sorted_uids, 'whole', 'active', date, window_size)
 
@@ -53,27 +66,38 @@ def active_rank(top_n, date, window_size):
 
 def important_rank(top_n, date, window_size):
     date_time = datetime2ts(date)
-
+    uid_important = {}
     if window_size == 1:
         db_name = get_leveldb('important', date_time)
         daily_user_important_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-        uid_important = {}
         for uid, important in daily_user_important_bucket.RangeIter():
+            uid = int(uid)
             important = float(important)
-            uid_important[int(uid)] = important
+            uid_important[uid] = important
+    else:
+        for i in range(window_size):
+            db_name = get_leveldb('important', date_time - i*24*60*60)
+            daily_user_important_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+            for uid, important in daily_user_important_bucket.RangeIter():
+                uid = int(uid)
+                important = float(important)
+                if uid not in uid_important:
+                    uid_important[uid] = 0
+                uid_important[uid] += important
 
-        sorted_uid_important = sorted(uid_important.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sorted_uid_important = sorted(uid_important.iteritems(), key=operator.itemgetter(1), reverse=True)
 
-        sorted_uids = []
-        count = 0
-        for uid, value in sorted_uid_important:
-            if is_in_black_list(uid):
-                continue
-            if count >= top_n:
-                break
-            sorted_uids.append(uid)
-            count += 1
+    sorted_uids = []
+    count = 0
+    for uid, value in sorted_uid_important:
+        if is_in_black_list(uid):
+            continue
+        if count >= top_n:
+            break
+        sorted_uids.append(uid)
+        count += 1
 
     data = save_rank_results(sorted_uids, 'whole', 'important', date, window_size)
 

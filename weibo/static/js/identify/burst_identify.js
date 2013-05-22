@@ -16,6 +16,9 @@
 	    
 	}
 	else if (status == 'previous finished') {
+	    // current results
+	    $.post("/identify/burst/", {'action': 'rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
+
 	    $("#previous_process_bar").css('width', "100%")
 	    $("#previous_process").removeClass("active");
 	    $("#previous_process").removeClass("progress-striped");
@@ -123,8 +126,6 @@
     function identify_request() {
 	// previous results
 	$.post("/identify/burst/", {'action': 'previous_rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
-	// current results
-	$.post("/identify/burst/", {'action': 'rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
     }
 
     identify_request();

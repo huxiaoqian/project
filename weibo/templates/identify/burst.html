@@ -1,5 +1,9 @@
 {% extends "identify/base.html" %}
 {% block title %}突发博主识别{% endblock %}
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.css') }}" media="screen" />
+{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="row-fluid">
@@ -124,30 +128,12 @@
 	<div id="previous_rank_page_selection" class="pagination-centered"></div>
       </div>
 
-      <!-- Modal -->
-      <div id="tweetModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	<div class="modal-header">
-	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-	  <h3 id="myModalLabel">用户微博详情</h3>
-	</div>
-	<div class="modal-body">
-	  <p>黑莓最新的Z10智能手机本周五在美国开卖。但发售现场没有想象中的火爆：没有消费者排队，甚至也没有吸引太多关注。在曼哈顿的两家AT&T门店中，周五上午只有不到20名消费者前来了解Z10。难道大家都在等带有全键盘的Q10</p>
-	  <hr>
-	  <p>【马化腾:运营商应转向数据业务 微信收费是谣言】正在与三大电信运营商陷入博弈局面的腾讯董事局主席马化腾，今日在中国发展高层论坛上称运营商应该从语音业务转向数据流量业务经营为主。腾讯每日产生大量流量，与运营商应该是合作关系。另外，他还再次辟谣微信收费传闻。</p>
-	  <hr>
-	  <p>【郭台铭密谈小米】富士康国际2012年净亏损3 .2亿美元，创历史最大亏损纪录，掌门人郭台铭近日拜访了小米。小米是富士康国际的客户，有猜测郭台铭是为了新的合作订单，跨界进入智能硬件终端的互联网企业是其看中的新客户。</p>
-	</div>
-	<div class="modal-footer">
-	  <button class="btn" data-dismiss="modal" aria-hidden="true">关闭</button>
-	</div>
-      </div>
-    </div>
-
   </div>
 </div>
 {% endblock %}
 
 {% block script %}
+    <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
     {% if not from_external %}

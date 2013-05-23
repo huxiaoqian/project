@@ -19,6 +19,8 @@ import burst as burstModule
 
 import burst_monitor as burstRealtimeModule
 
+from show_user_statuses import user_statuses
+
 from utils import acquire_topic_id, acquire_topic_name, read_rank_results
 from time_utils import ts2datetime, datetime2ts, window2time
 
@@ -210,3 +212,8 @@ def burst_monitor():
         return json.dumps(data)
     else:
         abort(404)
+
+@mod.route("/statuses/<int:uid>/<int:page>/")
+def show_user_statuses(uid, page):
+    statuses = user_statuses(uid, page)
+    return render_template('identify/user_statuses.html', statuses=statuses)

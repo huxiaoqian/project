@@ -1,5 +1,16 @@
 var previous_data = null;
 var current_data = null;
+function show_user_statuses(uid) {
+    $.fancybox({
+	ajax: {
+	    type: "GET",
+	},
+        'href':'/identify/statuses/'+uid+'/1/',
+        'transitionIn': 'none',
+        'transitionOut': 'fade',
+        'onClosed': function(){},
+    });
+}
 (function ($) {
     function request_callback(data) {
 	var status = data['status'];
@@ -96,6 +107,7 @@ var current_data = null;
 	    if (data[i][3].match("海外")) {
 		tr = '<tr class="success">';
 	    }
+	    var uid = data[i][1];
             for(var j = 0;j < cellCount;j++) {
 		if (j == 8) {
 		    // checkbox
@@ -125,10 +137,11 @@ var current_data = null;
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		// user statuses
-		if (j == 3) {
-		    var td = '<td>查看</td>';
-		    tr += td;
+		if(j == 3) {
+		    // user statuses
+		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
+		    var td_show_user = '<td>' + td_a + '</td>';
+		    tr += td_show_user;
 		}
             }
 	    tr += '</tr>';
@@ -147,6 +160,7 @@ var current_data = null;
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
+	    var uid = data[i][1];
 	    if (data[i][3].match("海外")) {
 		tr = '<tr class="success">';
 	    }
@@ -166,10 +180,11 @@ var current_data = null;
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		// user statuses
-		if (j==3) {
-		    var td = '<td>查看</td>';
-		    tr += td;
+		if(j == 3) {
+		    // user statuses
+		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
+		    var td_show_user = '<td>' + td_a + '</td>';
+		    tr += td_show_user;
 		}
             }
 	    tr += '</tr>';

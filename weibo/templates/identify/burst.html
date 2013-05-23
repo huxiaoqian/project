@@ -93,6 +93,7 @@
 	  <table class="table table-bordered">
 	  </table>
 	</div>
+	<div id="rank_page_selection" class="pagination-centered"></div>
       </div>
 
       <hr>
@@ -120,6 +121,7 @@
 	  <table class="table table-bordered">
 	  </table>
 	</div>
+	<div id="previous_rank_page_selection" class="pagination-centered"></div>
       </div>
 
       <!-- Modal -->
@@ -147,6 +149,7 @@
 
 {% block script %}
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
     {% if not from_external %}
       <script>
 	//load parameters from previous page

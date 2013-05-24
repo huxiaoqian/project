@@ -111,7 +111,12 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
     else:
         key_users = []
               
-    G = make_network(topic_id, date, window_size)
+    uid_ts, G = make_network(topic_id, date, window_size, ts=True)
+
+    N = len(G.nodes())
+
+    if not N:
+        return ''
 
     node_degree = nx.degree(G)
 
@@ -123,6 +128,7 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
     graph = gexf.addGraph("directed", "static", "demp graph")
     graph.addNodeAttribute('name', type='string', force_id='name')
     graph.addNodeAttribute('location', type='string', force_id='location')
+    graph.addNodeAttribute('timestamp', type='int', force_id='timestamp')
 
     pos = nx.spring_layout(G)
 
@@ -147,6 +153,7 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
         else:
             _node.addAttribute('name', 'Unknown')
             _node.addAttribute('location', 'Unknown')
+        _node.addAttribute('timestamp', str(uid_ts[uid]))
 
     for edge in G.edges():
         start, end = edge
@@ -174,7 +181,7 @@ def cut_network(g, node_degree):
             g.remove_node(node)
     return g
 
-def make_network(topic_id, date, window_size):
+def make_network(topic_id, date, window_size, ts=False):
     topic = acquire_topic_name(topic_id)
     if not topic:
         return None
@@ -187,19 +194,49 @@ def make_network(topic_id, date, window_size):
     statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
     query_dict = {'text': [topic], 'timestamp': {'$gt': start_time, '$lt': end_time}}
 
-    count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'])
+    if ts:
+        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'timestamp', 'retweeted_status'])
+    else:
+        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'])
     print 'topic statuses count %s' % count
 
-    for status in get_statuses_results():
-        try:
-            if status['retweeted_status']:
-                repost_uid = status['user']
-                rt_mid = status['retweeted_status']
-                source_uid = acquire_status_by_id(rt_mid)['user']
-                if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
-                    continue
-                g.add_edge(repost_uid, source_uid)
-        except KeyError:
-            continue
-
-    return g
+    if ts:
+        uid_ts = {}
+        for status in get_statuses_results():
+            try:
+                if status['retweeted_status']:
+                    repost_uid = status['user']
+                    rt_mid = status['retweeted_status']
+                    repost_ts = int(status['timestamp'])
+                    source_status = acquire_status_by_id(rt_mid)
+                    source_uid = source_status['user']
+                    source_ts = int(source_status['timestamp'])
+                    if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+                        continue
+                    if repost_uid not in uid_ts:
+                        uid_ts[repost_uid] = repost_ts
+                    else:
+                        if uid_ts[repost_uid] > repost_ts:
+                            uid_ts[repost_uid] = repost_ts
+                    if source_uid not in uid_ts:
+                        uid_ts[source_uid] = source_ts   
+                    else:
+                        if uid_ts[source_uid] > source_ts:
+                            uid_ts[source_uid] = source_ts
+                    g.add_edge(repost_uid, source_uid)
+            except KeyError:
+                continue
+        return uid_ts, g
+    else:
+        for status in get_statuses_results():
+            try:
+                if status['retweeted_status']:
+                    repost_uid = status['user']
+                    rt_mid = status['retweeted_status']
+                    source_uid = acquire_status_by_id(rt_mid)['user']
+                    if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+                        continue
+                    g.add_edge(repost_uid, source_uid)
+            except KeyError:
+                continue
+        return g      

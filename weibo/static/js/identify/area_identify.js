@@ -2,13 +2,55 @@ var previous_data = null;
 var current_data = null;
 var networkShowed = 0;
 var networkUpdated = 0;
+var animation = 1;
+var start_ts = null;
+var end_ts = null;
+var sigInst = null;
+var animation_timer = null;
+// Date format
+Date.prototype.format = function(format) { 
+    var o = { 
+	"M+" : this.getMonth()+1, //month 
+	"d+" : this.getDate(),    //day 
+	"h+" : this.getHours(),   //hour 
+	"m+" : this.getMinutes(), //minute 
+	"s+" : this.getSeconds(), //second 
+	"q+" : Math.floor((this.getMonth()+3)/3),  //quarter 
+	"S" : this.getMilliseconds() //millisecond 
+    } 
+    if(/(y+)/.test(format)) 
+	format=format.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length)); 
+    for(var k in o)
+	if(new RegExp("("+ k +")").test(format)) 
+	    format = format.replace(RegExp.$1, RegExp.$1.length==1 ? o[k] : ("00"+ o[k]).substr((""+ o[k]).length)); 
+    return format; 
+}
+
+function draw_animation() {
+    if (start_ts > end_ts) {
+	if (animation_timer)
+	    clearInterval(animation_timer);
+    }
+    else {
+	sigInst.iterNodes(function(n){
+	    var timestamp = 0;
+	    for (var i=0;i<n.attr['attributes'].length;i++) {
+		if (n.attr['attributes'][i]['attr'] == 'timestamp')
+		    timestamp = parseInt(n.attr['attributes'][i]['val']);
+	    }
+	    if (timestamp < start_ts)
+		n.hidden = 0;
+	}).draw(2,2,2);
+	start_ts = start_ts + 24*60*60;
+    }
+}
 
 function network_request_callback(data) {
     $("#network_progress").removeClass("active");
     $("#network_progress").removeClass("progress-striped");
     networkUpdated = 1;
     if (data) {
-	var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
+	sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
 	    defaultLabelColor: '#fff'
 	}).graphProperties({
 	    minNodeSize: 0.5,
@@ -16,6 +58,31 @@ function network_request_callback(data) {
 	});
 
 	sigInst.parseGexf(data);
+
+	if (animation) {
+	    sigInst.iterNodes(function(n){
+		n.hidden = 1;
+		var timestamp = 0;
+		for (var i=0;i<n.attr['attributes'].length;i++) {
+		    if (n.attr['attributes'][i]['attr'] == 'timestamp')
+			timestamp = parseInt(n.attr['attributes'][i]['val']);
+		}
+		if (!start_ts)
+		    start_ts = timestamp;
+		else {
+		    if (timestamp < start_ts)
+			start_ts = timestamp;
+		}
+		if (!end_ts)
+		    end_ts = timestamp;
+		else {
+		    if (timestamp > end_ts)
+			end_ts = timestamp;
+		}
+	    }).draw(2,2,2);
+	    start_ts = end_ts - 5*24*60*60;
+	    setInterval(draw_animation, 1000);
+	}
 
 	(function(){
 	    var popUp;
@@ -35,6 +102,8 @@ function network_request_callback(data) {
 			    return '<li>' + '博主昵称' + ' : ' + o.val + '</li>';
 			else if (o.attr == 'location')
 			    return '<li>' + '博主地域' + ' : ' + o.val + '</li>';
+			else if (o.attr == 'timestamp')
+			    return '<li>' + '博主最早出现时间' + ' : ' + new Date(o.val*1000).format("yyyy-MM-dd") + '</li>';
 			else
 			    return '<li>' + o.attr + ' : ' + o.val + '</li>';
 		    }).join('') +

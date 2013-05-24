@@ -1,5 +1,109 @@
 var previous_data = null;
 var current_data = null;
+var networkShowed = 0;
+var networkUpdated = 0;
+
+function network_request_callback(data) {
+    $("#network_progress").removeClass("active");
+    $("#network_progress").removeClass("progress-striped");
+    networkUpdated = 1;
+    if (data) {
+	var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
+	    defaultLabelColor: '#fff'
+	}).graphProperties({
+	    minNodeSize: 0.5,
+	    maxNodeSize: 5
+	});
+
+	sigInst.parseGexf(data);
+
+	(function(){
+	    var popUp;
+	    
+	    // This function is used to generate the attributes list from the node attributes.
+	    // Since the graph comes from GEXF, the attibutes look like:
+	    // [
+	    //   { attr: 'Lorem', val: '42' },
+	    //   { attr: 'Ipsum', val: 'dolores' },
+	    //   ...
+	    //   { attr: 'Sit',   val: 'amet' }
+	    // ]
+	    function attributesToString(attr) {
+		return '<ul>' +
+		    attr.map(function(o){
+			if (o.attr == 'name')
+			    return '<li>' + '博主昵称' + ' : ' + o.val + '</li>';
+			else if (o.attr == 'location')
+			    return '<li>' + '博主地域' + ' : ' + o.val + '</li>';
+			else
+			    return '<li>' + o.attr + ' : ' + o.val + '</li>';
+		    }).join('') +
+		    '</ul>';
+	    }
+	    
+	    function showNodeInfo(event) {
+		popUp && popUp.remove();
+		
+		var node;
+		sigInst.iterNodes(function(n){
+		    node = n;
+		},[event.content[0]]);
+		popUp = $(
+		    '<div class="node-info-popup"></div>'
+		).append(
+		    // The GEXF parser stores all the attributes in an array named
+		    // 'attributes'. And since sigma.js does not recognize the key
+		    // 'attributes' (unlike the keys 'label', 'color', 'size' etc),
+		    // it stores it in the node 'attr' object :
+		    attributesToString( node['attr']['attributes'] )
+		).attr(
+		    'id',
+		    'node-info'+sigInst.getID()
+		).css({
+		    'display': 'inline-block',
+		    'border-radius': 3,
+		    'padding': 5,
+		    'background': '#fff',
+		    'color': '#000',
+		    'box-shadow': '0 0 4px #666',
+		    'position': 'absolute',
+		    'left': node.displayX,
+		    'top': node.displayY+15
+		});
+		
+		$('ul',popUp).css('margin','0 0 0 20px');
+		
+		$('#sigma-graph').append(popUp);
+	    }
+	    
+	    function hideNodeInfo(event) {
+		popUp && popUp.remove();
+		popUp = false;
+	    }
+	    
+	    sigInst.bind('overnodes',showNodeInfo).bind('outnodes',hideNodeInfo).draw();
+	})();
+    }
+    else {
+	$("#loading_network_data").text("暂无结果!");
+    }
+}
+
+function show_network(topic_id, window_size) {
+    if (!networkShowed) {
+	$("#network").removeClass('out');
+	$("#network").addClass('in');
+	networkShowed = 1;
+	if (!networkUpdated)
+	    $.post("/identify/area/network/", {'topic_id': topic_id, 'window_size': window_size}, network_request_callback, "xml");
+    }
+    else {
+	networkShowed = 0;
+	$("#network").removeClass('in');
+	$("#network").addClass('out');
+    }
+}
+
 (function ($) {
     function request_callback(data) {
 	var status = data['status'];

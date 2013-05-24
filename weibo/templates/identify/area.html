@@ -2,7 +2,15 @@
 {% block title %}领域博主识别{% endblock %}
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.css') }}" media="screen" />
+    <style>
+      .sigma-expand {
+          position: relative;
+          background: #222;
+          margin: 0px auto;
+          height: 500px;
+      }
+    </style>
+    <script src="{{ url_for('static', filename='js/identify/sigma.min.js') }}"></script>
 {% endblock %}
 {% block content %}
     <div class="container-fluid">
@@ -125,13 +133,21 @@
 	    <form class="form-inline">
 	      <img src="{{ url_for('static', filename='img/identify/network.png') }}" class="img-polaroid">
 	      <label>
-		<input type="checkbox"> 动画演示
+		<input type="checkbox" checked="true"> 动画演示
 	      </label>
 	      <label>
-		<input type="checkbox"> 标注关键节点
+		<input type="checkbox" checked="true"> 标注关键节点
 	      </label>
-	      <a id="networkModal" href="javascript: void(0);" class="btn btn-danger"><i class="icon-picture"></i>生成并查看网络</a>
+	      <a href="javascript:void(0);" onclick="show_network({{ topic_id }}, {{ window_size }});" class="btn btn-danger"><i class="icon-picture"></i>生成并查看网络</a>
 	    </form>
+	    
+	    <div id="network" class="collapse out">
+	      <div id="network_progress" class="progress progress-striped active">
+		<div class="bar" style="width: 100%;"></div>
+	      </div>
+	      <div class="sigma-expand" id="sigma-graph"></div>
+	      <div id="loading_network_data">
+	    </div>
 	  </div>
 
 	  <div class="well">
@@ -196,26 +212,8 @@
     </div>
 {% endblock %}
 {% block script %}
-    <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
-
-    <script>
-      $(document).ready(function(){
-        $("#networkModal").click(function(){
-          $.fancybox({
-            'href':'/static/html/retweetmap.xhtml',
-            'width': '75%',
-            'height': '90%',
-            'autoScale': false,
-            'transitionIn': 'none',
-            'transitionOut': 'fade',
-            'type': 'iframe',
-            'onClosed': function(){},
-          });
-        });
-      });
-    </script>
 
     {% if not from_external %}
       <script>
@@ -230,6 +228,7 @@
 	var top_n = {{ top_n }};
 	var page_num = {{ page_num }};
       </script>
+      <script src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}"></script>
       <script src="{{ url_for('static', filename='js/identify/area_identify.js') }}"></script>
     {% endif %}
 {% endblock %}

@@ -9,7 +9,7 @@ try:
 except ImportError:
     import json
 
-from flask import Blueprint, url_for, render_template, request, abort, flash
+from flask import Blueprint, url_for, render_template, request, abort, flash, make_response
 
 import whole as wholeModule
 
@@ -201,6 +201,27 @@ def area():
     else:
         abort(404)
 
+@mod.route("/area/network/", methods=["POST"])
+def area_network():
+    request_method = request.method
+    if request_method == 'POST':
+        # current_time = time.time()
+        current_time = datetime2ts('2013-3-7')
+        current_date = ts2datetime(current_time)
+        gexf = None
+        form = request.form
+        topic_id = int(form.get('topic_id', None))
+        window_size = int(form.get('window_size', 1))
+        if not topic_id:
+            gexf = ''
+        else:
+            gexf = areaModule.make_network_graph(current_date, topic_id, window_size)
+        response = make_response(gexf)
+        response.headers['Content-Type'] = 'text/xml'
+        return response
+    else:
+        abort(404)
+    
 @mod.route("/monitor/burst/", methods=["GET", "POST"])
 def burst_monitor():
     request_method = request.method

@@ -24,7 +24,7 @@ def get_bucket(bucket):
     return buckets[bucket]
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
-s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_sentiment', schema=Schema, schema_version=1)
+xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_sentiment', schema=Schema, schema_version=1)
 xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo')
 total_days = 90
 
@@ -43,8 +43,13 @@ def field():
 def topic():
     return render_template('moodlens/topic_emotion.html', active='moodlens')
 
+
 @mod.route('/data/<emotion>/<area>/')
 def data(emotion, area='global'):
+    """
+    /keywords_data 接口已备好，只是差领域数据
+    """
+
     query = request.args.get('query', '')
     query = query.strip()
     ts = request.args.get('ts', '')
@@ -59,9 +64,13 @@ def data(emotion, area='global'):
         query_dict = {
             'timestamp': {'$gt': begin_ts, '$lt': end_ts},
             'sentiment': emotions_kv[emotion],
-            'text': query,
+            '$or': [],
         }
-        count, _ = s.search(query=query_dict)
+        for term in query.split(','):
+            if term:
+                query_dict['$or'].append({'text': term})
+
+        count, _ = xapian_search_sentiment.search(query=query_dict)
 
         data = [end_ts * 1000, count]
     else:
@@ -74,12 +83,15 @@ def data(emotion, area='global'):
             daily_emotion_count = 0
         data = [end_ts * 1000, daily_emotion_count]
 
-    print data
     return json.dumps(data)
 
 
 @mod.route('/flag_data/<emotion>/<area>/')
 def flag_data(emotion, area='global'):
+    """
+    此接口先只供调试用
+    /flag_data现在无法连上真实数据，得等拐点识别
+    """
     ts = request.args.get('ts', '')
     ts = long(ts)
 
@@ -92,14 +104,17 @@ def flag_data(emotion, area='global'):
     for i in xrange(-total_days + 5, 1, 10):
         timestamps.append(now_ts + during * i)
 
+    during = 3600
+
     data = []
     if ts in timestamps:
+        begin_ts = ts - during
         end_ts = ts
         query_dict = {
-            'timestamp': {'$gt': end_ts - 3600, '$lt': end_ts},
+            'timestamp': {'$gt': begin_ts, '$lt': end_ts},
             'sentiment': emotions_kv[emotion],
         }
-        count, get_results = s.search(query=query_dict, fields=['terms'])
+        count, get_results = xapian_search_sentiment.search(query=query_dict, fields=['terms'])
         print count
         keywords_with_count = top_keywords(get_results, top=10)
         text = ','.join([tp[0] for tp in keywords_with_count])
@@ -114,18 +129,31 @@ def flag_data(emotion, area='global'):
 
 @mod.route('/keywords_data/<emotion>/<area>/')
 def keywords_data(emotion, area='global'):
+    """
+    /keywords_data 接口已备好，只是差领域数据
+    """
+    query = request.args.get('query', '')
+    query = query.strip()
     ts = request.args.get('ts', '')
     ts = long(ts)
 
+    during = 3600
+
+    begin_ts = ts - during
     end_ts = ts
     query_dict = {
-        'timestamp': {'$gt': end_ts - 3600, '$lt': end_ts},
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
         'sentiment': emotions_kv[emotion],
     }
-    count, get_results = s.search(query=query_dict, fields=['terms'])
+    if query:
+        query_dict['$or'] = []
+        for term in query.split(','):
+            if term:
+                query_dict['$or'].append({'text': term})
+
+    count, get_results = xapian_search_sentiment.search(query=query_dict, fields=['terms'])
     print count
     keywords_with_count = top_keywords(get_results, top=20)
-    print keywords_with_count
     keywords_with_count = [list(i) for i in keywords_with_count]
 
     return json.dumps(keywords_with_count)
@@ -133,21 +161,29 @@ def keywords_data(emotion, area='global'):
 
 @mod.route('/weibos_data/<area>/')
 def weibos_data(area='global'):
+    """
+    此接口差领域数据，并且还跟另外的接口差领域数据检索途径不大一样
+    """
     query = request.args.get('query', '')
     query = query.strip()
-
     ts = request.args.get('ts', '')
     ts = long(ts)
 
+    during = 3600
+
+    begin_ts = ts - during
     end_ts = ts
     query_dict = {
-        'timestamp': {'$gt': end_ts - 3600, '$lt': end_ts},
-        '$or': [],
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+        'reposts_count': {'$gt': 1000},
     }
-    for term in query.split(','):
-        if term:
-            query_dict['$or'].append({'text': term})
-    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=5, sort_by=['reposts_count'], fields=['text', 'timestamp'])
+    if query:
+        query_dict['$or'] = []
+        for term in query.split(','):
+            if term:
+                query_dict['$or'].append({'text': term})
+
+    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=5, sort_by=['-reposts_count'], fields=['text', 'timestamp'])
     print count
     data = list(get_results())
 

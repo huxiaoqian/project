@@ -9,13 +9,17 @@ try:
 except ImportError:
     import json
 
-from flask import Blueprint, url_for, render_template, request, abort, flash
+from flask import Blueprint, url_for, render_template, request, abort, flash, make_response
 
 import whole as wholeModule
 
 import area as areaModule
 
 import burst as burstModule
+
+import burst_monitor as burstRealtimeModule
+
+from show_user_statuses import user_statuses
 
 from utils import acquire_topic_id, acquire_topic_name, read_rank_results
 from time_utils import ts2datetime, datetime2ts, window2time
@@ -45,8 +49,10 @@ def whole():
         rank_method = form.get('rank_method', 'followers')
         window_size = int(form.get('window_size', 1))
 
+        # current_time = time.time()
+        current_time = datetime2ts('2013-3-7')
         if action == 'rank':
-            current_date = ts2datetime(time.time())
+            current_date = ts2datetime(current_time)
             data = read_rank_results(top_n, 'whole', rank_method, current_date, window_size, compare=True)
             if not data:
                 rank_func = getattr(wholeModule, '%s_rank' % rank_method, None)
@@ -54,9 +60,9 @@ def whole():
                     data = rank_func(top_n, current_date, window_size)
             return json.dumps({'status': 'current finished', 'data': data})
         elif action == 'previous_rank':
-            previous_date = ts2datetime(time.time()-window2time(window_size))
+            previous_date = ts2datetime(current_time-window2time(window_size))
             previous_data = read_rank_results(top_n, 'whole', rank_method, previous_date, window_size)
-            if not previous_data:
+            if not previous_data and window_size <= 7:
                 rank_func = getattr(wholeModule, '%s_rank' % rank_method, None)
                 if rank_func:
                     previous_data = rank_func(top_n, previous_date, window_size)
@@ -85,8 +91,10 @@ def burst():
         rank_method = form.get('rank_method', 'followers')
         window_size = int(form.get('window_size', 1))
 
+        # current_time = time.time()
+        current_time = datetime2ts('2013-3-7')
         if action == 'rank':
-            current_date = ts2datetime(time.time())
+            current_date = ts2datetime(current_time)
             data = read_rank_results(top_n, 'burst', rank_method, current_date, window_size, compare=True)
             if not data:
                 rank_func = getattr(burstModule, '%s_rank' % rank_method, None)
@@ -94,9 +102,9 @@ def burst():
                     data = rank_func(top_n, current_date, window_size)
             return json.dumps({'status': 'current finished', 'data': data})
         elif action == 'previous_rank':
-            previous_date = ts2datetime(time.time()-window2time(window_size))
+            previous_date = ts2datetime(current_time-window2time(window_size))
             previous_data = read_rank_results(top_n, 'burst', rank_method, previous_date, window_size)
-            if not previous_data:
+            if not previous_data and window_size <= 7:
                 rank_func = getattr(burstModule, '%s_rank' % rank_method, None)
                 if rank_func:
                     previous_data = rank_func(top_n, previous_date, window_size)
@@ -147,12 +155,12 @@ def area():
                 else:
                     return json.dumps({'error': 'need a topic'})
 
+        # current_time = time.time()
+        current_time = datetime2ts('2013-3-7')
         if action == 'rank':
-            current_date = ts2datetime(time.time())
-            data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, compare=True)
-            if data:
-                return json.dumps({'status': 'current finished', 'data': data})
-            else:
+            current_date = ts2datetime(current_time)
+            current_data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
+            if not current_data:
                 if rank_method == 'pagerank':
                     rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
                     if rank_func:
@@ -161,14 +169,12 @@ def area():
                     rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
                     if rank_func:
                         current_data = rank_func(top_n, current_date, topic_id, window_size)
-                return json.dumps({'status': 'current finished', 'data': current_data})
+            return json.dumps({'status': 'current finished', 'data': current_data})
 
         elif action == 'previous_rank':
-            previous_date = ts2datetime(time.time()-window2time(window_size))
-            previous_data = read_rank_results(top_n, 'area', rank_method, previous_date, window_size)
-            if previous_data:
-                return json.dumps({'status': 'previous finished', 'data': previous_data})
-            else:
+            previous_date = ts2datetime(current_time-window2time(window_size))
+            previous_data = read_rank_results(top_n, 'area', rank_method, previous_date, window_size, topic_id=topic_id)
+            if not previous_data and window_size <= 7:
                 if rank_method == 'pagerank':
                     rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
                     if rank_func:
@@ -177,7 +183,7 @@ def area():
                     rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
                     if rank_func:
                         previous_data = rank_func(top_n, previous_date, topic_id, window_size)
-                return json.dumps({'status': 'previous finished', 'data': previous_data})
+            return json.dumps({'status': 'previous finished', 'data': previous_data})
 
         elif action == 'check_rank_status':
             #check Hadoop Job Status
@@ -194,3 +200,41 @@ def area():
             abort(404)
     else:
         abort(404)
+
+@mod.route("/area/network/", methods=["POST"])
+def area_network():
+    request_method = request.method
+    if request_method == 'POST':
+        # current_time = time.time()
+        current_time = datetime2ts('2013-3-7')
+        current_date = ts2datetime(current_time)
+        gexf = None
+        form = request.form
+        topic_id = int(form.get('topic_id', None))
+        window_size = int(form.get('window_size', 1))
+        if not topic_id:
+            gexf = ''
+        else:
+            gexf = areaModule.make_network_graph(current_date, topic_id, window_size)
+        response = make_response(gexf)
+        response.headers['Content-Type'] = 'text/xml'
+        return response
+    else:
+        abort(404)
+    
+@mod.route("/monitor/burst/", methods=["GET", "POST"])
+def burst_monitor():
+    request_method = request.method
+    if request_method == 'POST':
+        form = request.form
+        top_n = int(form.get('top_n', 10))
+        current_time = datetime2ts('2013-3-7') + 12*60*60
+        data = burstRealtimeModule.realtime_burst_user(top_n, current_time)
+        return json.dumps(data)
+    else:
+        abort(404)
+
+@mod.route("/statuses/<int:uid>/<int:page>/")
+def show_user_statuses(uid, page):
+    statuses = user_statuses(uid, page)
+    return render_template('identify/user_statuses.html', statuses=statuses)

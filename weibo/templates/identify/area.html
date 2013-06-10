@@ -2,7 +2,15 @@
 {% block title %}领域博主识别{% endblock %}
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.css') }}" media="screen" />
+    <style>
+      .sigma-expand {
+          position: relative;
+          background: #222;
+          margin: 0px auto;
+          height: 500px;
+      }
+    </style>
+    <script src="{{ url_for('static', filename='js/identify/sigma.min.js') }}"></script>
 {% endblock %}
 {% block content %}
     <div class="container-fluid">
@@ -61,7 +69,7 @@
               <li><a href="#area_2" data-toggle="tab">经济</a></li>
       	      <li><a href="#area_3" data-toggle="tab">体育</a></li>
       	      <li><a href="#area_4" data-toggle="tab">互联网</a></li>
-      	      <li><a href="#add_area_modal" data-toggle="modal"><i class="icon-plus"></i></a></li>
+	      <li><a href="/admin/" target="_blank"><i class="icon-cog"></i></a></li> 
             </ul>
       	    <div id="myTabContent" class="tab-content">
               <div class="tab-pane fade active in" id="area_1">
@@ -118,29 +126,6 @@
               </div>
       	    </div>
 
-      	    <!-- Modal -->
-      	    <div id="add_area_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      	      <div class="modal-header">
-      		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-      		<h3 id="myModalLabel">手工添加领域关键词</h3>
-      	      </div>
-      	      <div class="modal-body">
-      		<form class="form-inline">
-      		  <label>
-      		    领域: <input type="text" class="span2">
-      		  </label>
-      		  <label>
-      		    关键词: <input type="text" class="span4">
-      		  </label>
-      		</form>
-      	      </div>
-      	      <div class="modal-footer">
-      		<button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
-      		<button class="btn btn-primary">保存结果</button>
-      	      </div>
-      	    </div>
-	  </div>
-
 	  <hr>
 
 	  <div class="well">
@@ -148,13 +133,21 @@
 	    <form class="form-inline">
 	      <img src="{{ url_for('static', filename='img/identify/network.png') }}" class="img-polaroid">
 	      <label>
-		<input type="checkbox"> 动画演示
+		<input type="checkbox" checked="true"> 动画演示
 	      </label>
 	      <label>
-		<input type="checkbox"> 标注关键节点
+		<input type="checkbox" checked="true"> 标注关键节点
 	      </label>
-	      <a id="networkModal" href="javascript: void(0);" class="btn btn-danger"><i class="icon-picture"></i>生成并查看网络</a>
+	      <a href="javascript:void(0);" onclick="show_network({{ topic_id }}, {{ window_size }});" class="btn btn-danger"><i class="icon-picture"></i>生成并查看网络</a>
 	    </form>
+	    
+	    <div id="network" class="collapse out">
+	      <div id="network_progress" class="progress progress-striped active">
+		<div class="bar" style="width: 100%;"></div>
+	      </div>
+	      <div class="sigma-expand" id="sigma-graph"></div>
+	      <div id="loading_network_data">
+	    </div>
 	  </div>
 
 	  <div class="well">
@@ -176,12 +169,14 @@
 		<a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
 		<a class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
 		<a class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+		<a class="btn btn-small btn-danger" href="#" title="将勾选的人加入黑名单"><i class="icon-ban-circle"></i> 加入黑名单</a>
 	      </p>
 	    </div>
 	    <div id="rank_table">
 	      <table class="table table-bordered">
 	      </table>
 	    </div>
+	    <div id="rank_page_selection" class="pagination-centered"></div>
 	  </div>
 
 	  <hr>
@@ -209,6 +204,7 @@
 	      <table class="table table-bordered">
 	      </table>
 	    </div>
+	    <div id="previous_rank_page_selection" class="pagination-centered"></div>
 	  </div>
 
 	</div>
@@ -216,25 +212,8 @@
     </div>
 {% endblock %}
 {% block script %}
-    <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
-
-    <script>
-      $(document).ready(function(){
-        $("#networkModal").click(function(){
-          $.fancybox({
-            'href':'/static/html/retweetmap.xhtml',
-            'width': '75%',
-            'height': '90%',
-            'autoScale': false,
-            'transitionIn': 'none',
-            'transitionOut': 'fade',
-            'type': 'iframe',
-            'onClosed': function(){},
-          });
-        });
-      });
-    </script>
+    <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
 
     {% if not from_external %}
       <script>
@@ -249,6 +228,7 @@
 	var top_n = {{ top_n }};
 	var page_num = {{ page_num }};
       </script>
+      <script src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}"></script>
       <script src="{{ url_for('static', filename='js/identify/area_identify.js') }}"></script>
     {% endif %}
 {% endblock %}

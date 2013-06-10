@@ -86,12 +86,14 @@
 	    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
 	    <a class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
 	    <a class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+	    <a class="btn btn-small btn-danger" href="#" title="将勾选的人加入黑名单"><i class="icon-ban-circle"></i> 加入黑名单</a>
 	  </p>
 	</div>
 	<div id="rank_table">
 	  <table class="table table-bordered">
 	  </table>
 	</div>
+	<div id="rank_page_selection" class="pagination-centered"></div>
       </div>
 
       <hr>
@@ -119,6 +121,7 @@
 	  <table class="table table-bordered">
 	  </table>
 	</div>
+	<div id="previous_rank_page_selection" class="pagination-centered"></div>
       </div>
 
     </div>
@@ -128,6 +131,7 @@
 
 {% block script %}
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
     {% if not from_external %}
       <script>
 	//load parameters from previous page

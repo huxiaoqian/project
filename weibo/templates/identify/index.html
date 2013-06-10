@@ -62,7 +62,6 @@
       条结果
       每页<input name="page_num" type="text" value="20" class="span1">
       条结果
-      <input type="hidden" name="hadoop" value="0">
       <input type="hidden" name="action" value="run">
       <input id="area_window_size" type="hidden" name="window_size" value="1">
       <input type="submit" class="btn btn-primary" value="识别">
@@ -72,7 +71,7 @@
       <li><a href="#area_2" data-toggle="tab">经济</a></li>
       <li><a href="#area_3" data-toggle="tab">体育</a></li>
       <li><a href="#area_4" data-toggle="tab">互联网</a></li>
-      <li><a href="#add_area_modal" data-toggle="modal"><i class="icon-plus"></i></a></li> 
+      <li><a href="/admin/" target="_blank"><i class="icon-cog"></i></a></li> 
     </ul>
     <div id="myTabContent" class="tab-content">
       <div class="tab-pane fade active in" id="area_1">
@@ -128,24 +127,6 @@
         </ul>
       </div>
     </div>
-
-    <!-- Modal -->
-    <div id="add_area_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-header">
-	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-	<h3 id="myModalLabel">手工添加领域关键词</h3>
-      </div>
-      <div class="modal-body">
-	<form class="form-inline">
-	  领域: <input type="text" class="span2">
-	  关键词: <input type="text" class="span2">
-	</form>
-      </div>
-      <div class="modal-footer">
-	<button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
-	<button class="btn btn-primary">保存结果</button>
-      </div>
-    </div>
   </div>
 
   
@@ -186,10 +167,30 @@
       <input id="burst_window_size" type="hidden" name="window_size" value="1">
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
+
+    <div>
+      <a href="javascript:void(0);" onclick="show_burst_user();" class="pull-right" title="实时突发用户识别">
+	<i class="icon-exclamation-sign"></i>
+      </a>
+    </div>
+
+    <div id="realtime_burst_user" class="collapse out">
+      <div id="burst_user_progress" class="progress progress-striped active">
+	<div class="bar" style="width: 100%;"></div>
+      </div>
+      <div id="loading_burst_data">
+      </div>
+      <div id="burst_user_table">
+	<table class="table table-bordered">
+	</table>
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}
 
 {% block script %}
   <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/burst.js') }}"></script>
 {% endblock %}

@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    
+    <title>Load</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="./css/bootstrap.css" rel="stylesheet">
+    <link href="./css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="./css/docs.css" rel="stylesheet">
+    <link href="./js/google-code-prettify/prettify.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="assets/js/html5shiv.js"></script>
+    <![endif]-->
+
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-146052-10']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+<SCRIPT>
+ function toueme(){
+  window.location.href="./user_manage.html";
+ }
+</SCRIPT>
+  </head>
+
+  <body>
+    <div class="container" >
+        <h1 style="padding-left:400px;padding-top: 25px;color: #FF0040">
+            管理系统
+        </h1>
+        <div class="row-fluid">
+             <div class="span6" style="padding-left:60px;padding-top: 30px">
+             <table width="100%" border="0" cellpadding="0" cellspacing="0">
+             <tbody>
+	     <tr>
+		<td width="35%" height="50" style="font-size: 16pt" align="center">用户名 </td>
+		<td width="65%"  colspan="2" >
+			<input type="text"  id="username" class="logininput" name="usercode"    size="30"  datatype="Require" style="width: 180px; height:19px; border:1px solid #5397be;"  msg="请输入用户名"/>
+		</td>
+	     </tr>
+	     <tr>
+		<td height="50"  style="font-size: 16pt" align="center">密 码 </td>
+		<td  colspan="2" >
+			<input type="password"   id="password" class="logininput" name="password"    size="30"  datatype="Require" style="width: 180px; height:19px; border:1px solid #5397be;"  msg="请输入密码"/>
+		</td>
+	     </tr>
+             <tr>
+                <td colspan="3" style="padding-left:300px;padding-top: 35px">
+                    <input type="button" value="登陆"  style="width: 90px; height: 30px; background:#0489B1; font-size: 20px;border:#0489B1" onClick="toueme()"/>
+                </td>
+             </tr>
+             </tdoby>
+             </table>
+             </div>
+             <div class="span6">
+                 <img src="./img/702.jpg" width="300" height="100">
+             </div>
+        </div>
+        </div>
+             
+    </div>
+  </body>
+</html>

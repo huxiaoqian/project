@@ -1,0 +1,145 @@
+﻿<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title>System</title>
+<style type="text/css">
+<!--
+body { margin: 0px;padding: 0px;text-align: left;}
+TD {FONT-SIZE: 12px; COLOR: #333;}
+#daohang {BORDER-BOTTOM: #e2e2e2 1px solid;}
+
+
+-->
+</style>
+<script src="./js/jquery-1.9.1.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="./js/bootstrap.js"></script>
+<script type="text/javascript" src="./js/bootstrap.min.js"></script>
+<link href="./css/bootstrap.css" rel="stylesheet">
+<link href="./css/bootstrap-responsive.css" rel="stylesheet">
+<link href="./css/bootstrap.min.css" rel="stylesheet">
+<link href="./css/bootstrap-responsive.min.css" rel="stylesheet">
+
+
+
+
+<script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-146052-10']);
+      _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>                                
+</head>
+
+<body>
+
+<SCRIPT>
+
+ function toueme(){
+  window.location.href="./index.html";
+ }
+
+function lookU(he){
+ var lis = document.getElementById("Pass");
+ lis.style.background='#D8D8D8';
+ he.style.background='#58ACFA';
+}
+function lookP(he){
+ var lis = document.getElementById("User");
+ lis.style.background='#D8D8D8';
+ he.style.background='#58ACFA';
+}
+</SCRIPT>
+
+<div id="daohang" style="background:#58ACFA;">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="85%">
+    <ul class="nav" style="list-style:none;">
+              <li class="" style=" float:left; padding-left:60px;width:100px;">
+                <a href="./user_manage.html"  align="center" style="padding-top:10px;padding-bottom:10px;font-size: 16pt; color:#2E2E2E; font_weight:bold; background:#F2F2F2;">用户管理</a>
+              </li>
+              <li class="" style=" float:left; padding-left:60px;width:100px;">
+                <a href="./para_setting.html" align="center" style="padding-top:10px;padding-bottom:10px;font-size: 16pt; color:#FFFFFF; font_weight:bold;">参数设置</a>
+              </li>
+              
+              
+    </td>
+    <td width="10%" align="center" ><a style="font-size: 12pt;color:#000000;">**用户</a></td>
+    <td width="5%" align="center" ><a style="CURSOR: hand; font-size: 10pt;color:#000000;" onClick="toueme()">退出系统</a></td>
+  </tr>
+</table>
+</div>
+
+<div class="bs-docs-example">
+    <div class="tabbable tabs-left" style="float:left;">
+        <ul class="nav nav-tabs" style="padding-left:20px;padding-top:20px;float:left;">
+          
+          <li class="active" > <a  onClick="lookU(this)" id="User" href="#tab1" data-toggle="tab" align="center" style="font-size:16pt;color:#000000;padding-left:20px;padding-top:20px;background:#58ACFA;width:200px;" >基本信息</a></li>
+          
+          <li > <a  onClick="lookP(this)" id="Pass" href="#tab2" data-toggle="tab" align="center" style="font-size:16pt;color:#000000;padding-left:20px;padding-top:20px;background:#D8D8D8;width:200px;" >修改密码</a></li>
+
+        </ul>
+    </div>
+      <div class="tab-content" style="float:left;">
+        <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:500px;width:800px;">
+            <p style="font-size:20pt;color:#FE642E;">用户基本信息</p>
+            <div id="info" style="padding-left:60px;padding-top:30px;">
+
+               <div style="padding-left:60px;padding-top:30px;">
+                <span class="label label-success" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">姓名</span>
+                <span class="label" style="width:180px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">Default</span>
+              </div>
+               <div style="padding-left:60px;padding-top:30px;">
+                <span class="label label-warning" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">性别</span>
+                <span class="label" style="width:180px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">Default</span>
+              </div>
+               <div style="padding-left:60px;padding-top:30px;">
+                <span class="label label-important" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;"align="center">年龄</span>
+                <span class="label" style="width:180px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">Default</span>
+              </div>
+               <div style="padding-left:60px;padding-top:30px;">
+                <span class="label label-inverse" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">职位</span>
+                <span class="label" style="width:180px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">Default</span>
+              </div>
+           </div>
+        </div>
+        <div class="tab-pane" id="tab2" style="float:left;padding-left:30px;padding-top:50px;height:500px;width:800px;">
+        <p style="font-size:20pt;color:#FE642E;">修改密码</p>
+        <div class="span6" style="padding-left:60px;padding-top: 30px">
+             <table width="100%" border="0" cellpadding="0" cellspacing="0">
+             <tbody>
+	     <tr>
+		<td width="35%" height="50" style="font-size: 16pt" align="center">请输入原密码 </td>
+		<td width="65%"  colspan="2" >
+			<input type="password"  id="password" class="logininput" name="password"    size="30"  datatype="Require" style="width: 180px; height:23px; border:1px solid #5397be;"  msg="请输入原密码"/>
+		</td>
+	     </tr>
+	     <tr>
+		<td height="50"  style="font-size: 16pt" align="center">请输入新密码 </td>
+		<td  colspan="2" >
+			<input type="password"   id="password" class="logininput" name="password"    size="30"  datatype="Require" style="width: 180px; height:23px; border:1px solid #5397be;"  msg="请输入新密码"/>
+		</td>
+	     </tr>
+             <tr>
+		<td height="50"  style="font-size: 16pt" align="center">请确认新密码 </td>
+		<td  colspan="2" >
+			<input type="password"   id="password" class="logininput" name="password"    size="30"  datatype="Require" style="width: 180px; height:23px; border:1px solid #5397be;"  msg="请确认新密码"/>
+		</td>
+	     </tr>
+             <tr>
+                <td colspan="3" style="padding-left:300px;padding-top: 35px">
+                    <input type="button" value="确定"  style="width: 90px; height: 30px; background:#0489B1; font-size: 20px;border:#0489B1" />
+                </td>
+             </tr>
+             </tdoby>
+             </table>
+             </div>
+        </div>
+     </div>
+</div>
+</body>
+</html>

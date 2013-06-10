@@ -11,7 +11,7 @@ from weibo.root.views import mod as rootModule
 from weibo.identify.views import mod as identifyModule
 from weibo.moodlens.views import mod as moodlensModule
 from weibo.profile.views import mod as profileModule
-
+from weibo.sysadmin.views import mod as adminModule
 
 def create_app():
     app = Flask(__name__)
@@ -22,6 +22,7 @@ def create_app():
     app.register_blueprint(identifyModule)
     app.register_blueprint(moodlensModule)
     app.register_blueprint(profileModule)
+    app.register_blueprint(adminModule)
 
     # Create database
     db.init_app(app)

@@ -1,21 +1,15 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
 {% block body %}
-
-
 <form class="form-inline">
-  时间范围:
-    <div class="btn-group">
-      <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1个月<span class="caret"></span></a>
-      <ul class="dropdown-menu">
-        <li><a href="#" data-toggle="tab">1天</a></li>
-        <li><a href="#" data-toggle="tab">1周</a></li>
-        <li class="active"><a href="#" data-toggle="tab">1个月</a></li>
-        <li><a href="#" data-toggle="tab">3个月</a></li>
-      </ul>
-    </div>
-  
-  <button class="btn btn-primary" id="generate_network" onclick="javascript:void();"><i class="icon-search"></i>生成网络结构图</button>
+    时间范围:
+    <select class="span2" name="interval" id="interval">
+      <option value="90">最近3个月</option>
+      <option value="7">最近1周</option>
+      <option value="30">最近1个月</option>
+      <option value="60">最近2个月</option>
+    </select>
+    <button type="button" class="btn btn-primary" id="generate_network" onclick="submit_form();return false;"><i class="icon-search"></i>生成网络结构图</button>
 </form>
 <div id="community"></div>
 <script src="/static/js/profile/d3.v3.min.js"></script>
@@ -68,26 +62,36 @@ function accAdd(arg1,arg2){
     return (arg1*m+arg2*m)/m
 }
 
+function scalenodeweight(maxcount, mincount){
+	var maxsize = 20;
+	var minsize = 10;
+	if(maxcount == mincount){
+	    return (maxsize + minsize) / 2.0
+	}else{
+		return minsize + (maxsize - minsize) * Math.pow((count * 1.0/ (maxcount - mincount)), 10)
+	}
+}
+
 //给Number类型增加一个add方法，调用起来更加方便。
 Number.prototype.add = function (arg){
     return accAdd(arg,this);
 }
   function display_community(){
-	var width_1 = 700,
-		height_1 = 394
+	var width_1 = 900,
+		height_1 = 500
 	
 	var svg_1 = d3.select("#community").append("svg")
 		.attr("width", width_1)
 		.attr("height", height_1);
 	
 	var force = d3.layout.force()
-		.gravity(.05)
+		.gravity(.7)
 		.linkDistance([10,10,10,10,100,100,100,100,100,100,100,100,100,100,100])
 		.distance(50)
 		.charge(-420)
 		.size([width_1, height_1]);
 	
-	d3.json("/profile/result.json", function(json) {
+	d3.json("/profile/person_network/" + {{uid}}, function(json) {
 	  force
 		  .nodes(json.nodes)
 		  .links(json.links)
@@ -97,8 +101,8 @@ Number.prototype.add = function (arg){
 		  .data(json.links)
 		.enter().append("line")
 		  //.attr("class", "link")
-		  .style("stroke", function(d) {return "#C00"; })
-		  .style("stroke-width", function(d) {return (5).mul((d.value).div(10));});
+		  //.style("stroke", function(d) {return "#C00"; })
+		  //.style("stroke-width", function(d) {return 1})//(5).mul((d.value).div(10));});
 	
 	  var node = svg_1.selectAll(".node")
 		  .data(json.nodes)
@@ -107,29 +111,29 @@ Number.prototype.add = function (arg){
 		  .call(force.drag);
 	
 	  node.append("image")
-		  .attr("xlink:href", function(d) { return "/static/images/friends_profile_image/" + d.profile_image_url + '.jpg'})
+		  .attr("xlink:href", function(d) { return d.profile_image_url })
 		  .attr("x", function(d){
 							  if(d.group == 0){return -20;}
 							  else if(d.group == 5){return -8;}
-							  else {return -16};
+							  else {return -10};
 							  })
 		  .attr("y", function(d){
 							  if(d.group == 0){return -20;}
 							  else if(d.group == 5){return -8;}
-							  else {return -16};
+							  else {return -10};
 							  })
 		  .attr("width", function(d){
 							  if(d.group == 0){return 40;}
 							  else if(d.group == 5){return 16;}
-							  else {return 32};
+							  else {return 20};
 							  })
 		  .attr("height", function(d){
 							  if(d.group == 0){return 40;}
 							  else if(d.group == 5){return 16;}
-							  else {return 32};
+							  else {return 20};
 							  })
 		  .attr("class", "profile_image");
-	
+	  /*
 	  node.append("text")
 		  .attr("dx", 16)
 		  .attr("dy", 0)
@@ -155,7 +159,7 @@ Number.prototype.add = function (arg){
 		.attr("dy", 18)
 		.style("font-size", 12)
 	  	.text(function(d) { return d.domain });
-	
+	 */
 	  force.on("tick", function() {
 		link.attr("x1", function(d) { return d.source.x; })
 			.attr("y1", function(d) { return d.source.y; })

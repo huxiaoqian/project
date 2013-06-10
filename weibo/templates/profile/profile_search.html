@@ -445,9 +445,9 @@
                 {% endif %}
               {% endfor %}
             {% endif %}
+              <li><a href="/profile/search/foreign">境外</a></li>
             <li class="nav-header">领域管理</li>
-              <li class=""><a href="#typeahead">增加领域</a></li>
-              <li class=""><a href="#typeahead">删除领域</a></li>
+              <li class=""><a href="#typeahead">增加或删除领域</a></li>
             <li class="divider"></li>
             <li><a href="#">帮助</a></li>
           </ul>
@@ -607,7 +607,6 @@
       var i=0, length=data.length, item;
       for(; i<length; i++) {
         item = data[i];
-    
         html += "<div class=\"grid\"><div class=\"options\"><div class=\"detail opt\" title=\"特征详情\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><em><i class=\"icon-search\"></i></em><span>详情</span></a></div><div class=\"add opt\" title=\"添加到特征计算\"><a href=\"#\"><em><i class=\"icon-plus-sign\"></i></em><span>关注</span></a></div></div>";
         html += "<div class=\"imgholder\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><img src=\"" + item.profileImageUrl + "\" /></a></div>";
         html += "<strong>" + item.userName + "</strong>";

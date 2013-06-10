@@ -1,5 +1,7 @@
 # -*- coding:utf-8 -*-
 
+   
+
 import gensim
 from gensim import corpora, models, similarities
 from xapian_weibo.xapian_backend import XapianSearch
@@ -711,11 +713,54 @@ def getUserTopics(user_id, update_date=getNowDateStr()):
         except ValueError:
             pass
 
-def readUserTopics2Leveldb():
+def readUserLdaTopics2Leveldb(user_id, model='lda'):
     LEVELDBPATH = '/home/mirage/leveldb'
-    user_daily_topics_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user_daily_tokens'),
-                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    user_lda_topics_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user_lda_topics'),
+                                             block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    try:
+        f = open('./data/test/%s_2013-05-31_topics.txt' % user_id)
+        topic_dict = {}
+        for line in f.readlines():
+            topics = line.strip().split('+')
+            for topic in topics:
+                prob, word = topic.strip().split('*')
+                prob = float(prob)
+                if model == 'lsi':
+                    word = word.split("\"")[1]
+                topic_dict[word] = prob
+        user_lda_topics_bucket.Put(str(user_id), json.dumps(topic_dict))
+    except IOError:
+        print '%s user no topics' % user_id
 
+def readUserBurstTopics2Leveldb(user_id):
+    from weibo.extensions import db
+    from weibo.model import PersonalBurstWords
+    window_size = 24*60*60
+    results = PersonalBurstWords.query.filter(PersonalBurstWords.uid == user_id, PersonalBurstWords.windowSize == window_size,
+                                              PersonalBurstWords.startDate>=datetime.fromtimestamp(date2ts(lowdate)),
+                                              PersonalBurstWords.endDate<=datetime.fromtimestamp(date2ts(thisdate)))
+    for result in results:
+        if sort == 'burst':
+            result_arr.append({'text': result.word, 'size': float(result.burst)})
+        else:
+            result_arr.append({'text': result.word, 'size': result.freq})
+
+def readFieldLdaTopics2Leveldb(field, model='user_level'):
+    LEVELDBPATH = '/home/mirage/leveldb'
+    field_lda_topics_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_field_lda_topics'),
+                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    try:
+        f = open('./data/test/%s_%s_topics.txt' % (field, model))
+        topic_dict = {}
+        for line in f.readlines():
+            topics = line.strip().split('+')
+            for topic in topics:
+                prob, word = topic.strip().split('*')
+                prob = float(prob)
+                topic_dict[word] = prob
+        field_lda_topics_bucket.Put(str(field), json.dumps(topic_dict))
+    except IOError:
+        print '%s field no topics' % field
 
 def test_vsm():
     corpus = [[(0, 1), (1, 1), (2, 1)],[(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)],[(2, 1), (5, 1), (7, 1), (8, 1)],
@@ -810,29 +855,30 @@ if __name__ == '__main__':
         ，熊猫故里，政务公开，新闻传播，成都美食，成都旅游，成都求职', '2013-05-30', 'lsi')
     evaluate_model_precision(1255849511, '大智兴邦, 不过集众思 电视台主持人  财经，主持人  虚实之间，名人，明星', '2013-05-30', 'lsi')
     '''
-    #getFieldModel('finance')
-    #getFieldModel('finance', 'weibo_level')
     '''
+    getFieldModel('finance')
+    #getFieldModel('finance', 'weibo_level')
+    
     getFieldModel('culture')
-    getFieldModel('culture', 'weibo_level')
+    #getFieldModel('culture', 'weibo_level')
     
     getFieldModel('entertainment')
-    getFieldModel('entertainment', 'weibo_level')
+    #getFieldModel('entertainment', 'weibo_level')
     
     getFieldModel('fashion')
-    getFieldModel('fashion', 'weibo_level')
+    #getFieldModel('fashion', 'weibo_level')
     
     getFieldModel('education')
-    getFieldModel('education', 'weibo_level')
+    #getFieldModel('education', 'weibo_level')
     
     getFieldModel('sports')
-    getFieldModel('sports', 'weibo_level')
+    #getFieldModel('sports', 'weibo_level')
     
     getFieldModel('technology')
-    getFieldModel('technology', 'weibo_level')
+    #getFieldModel('technology', 'weibo_level')
 
     getFieldModel('media')
-    getFieldModel('media', 'weibo_level')
+    #getFieldModel('media', 'weibo_level')
     '''
     '''
     all_time = time.time()
@@ -843,9 +889,22 @@ if __name__ == '__main__':
         for uid in uids:
             getUserTopics(uid)
     print 'total use time', time.time() - all_time
+    
+    ##test_vsm()
+    all_time = time.time()
+    classes = ["culture", "entertainment", "fashion",'education', "finance", "sports", "technology",'media']
+    field_user = getFieldUser()
+    for area in classes:
+        uids = field_user[area]
+        for uid in uids:
+            readUserTopics2Leveldb(uid)
+    print 'total use time', time.time() - all_time
     '''
-    test_vsm()
-
+    all_time = time.time()
+    classes = ["culture", "entertainment", "fashion",'education', "finance", "sports", "technology",'media']
+    for area in classes:
+        readFieldLdaTopics2Leveldb(area)
+    print 'total use time', time.time() - all_time
 
 
 

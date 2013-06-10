@@ -17,12 +17,12 @@ from flask import Blueprint, url_for, render_template, request, abort, flash
 from weibo.extensions import db
 from weibo.model import *
 
-from utils import hot_uid_by_word, last_week, last_month, ts2date, getFieldUsersByScores
+from utils import hot_uid_by_word, last_week, last_month, ts2date, getFieldUsersByScores, time2ts, datetime2ts
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 
 from xapian_weibo.xapian_backend import XapianSearch
-s_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1) 
+s_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
@@ -35,6 +35,24 @@ def get_bucket(bucket):
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
 
+def fieldsEn2Zh(name):
+    if name == 'finance':
+        return '财经'
+    if name == 'media':
+        return '媒体'
+    if name == 'culture':
+        return '文化'
+    if name == 'technology':
+        return '科技'
+    if name == 'entertainment':
+        return '娱乐'
+    if name == 'education':
+        return '教育'
+    if name == 'fashion':
+        return '时尚'
+    if name == 'sports':
+        return '体育'
+
 COUNT_PER_PAGE = 20
 
 def getStaticInfo():
@@ -44,6 +62,30 @@ def getStaticInfo():
     province = db.session.query(Province).order_by(Province.id).all()
     field = db.session.query(FieldProfile).all()
     return statuscount, friendscount, followerscount, province, field
+
+def getUserInfoById(uid):
+    query_dict = {
+        '_id': int(uid)
+    }
+    count, get_results = s_user.search(query=query_dict, fields=['created_at', '_id', 'name', \
+        'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url', 'verified', 'gender'])
+    user = None
+    if count > 0:
+        for r in get_results():
+            statusesCount = r['statuses_count']
+            followersCount = r['followers_count']
+            friendsCount = r['friends_count']
+            userName = r['name']
+            description = r['description']
+            uid = r['_id']
+            profileImageUrl = r['profile_image_url']
+            verified = r['verified']
+            gender = r['gender']
+            user = {'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': \
+            followersCount, 'friendsCount': friendsCount, 'description': description, 'profileImageUrl': profileImageUrl,
+            'verified': verified, 'gender': gender}
+            return user
+    return user
 
 mod = Blueprint('profile', __name__, url_prefix='/profile')
 
@@ -72,8 +114,6 @@ def profile_search(model='hotest'):
             return render_template('profile/profile_search.html',statuscount=statuscount,
                                    friendscount=friendscount, followerscount=followerscount,
                                    location=province, field=field, model=model, result=None)
-    
-    
     if request.method == 'POST' and request.form['page']:
         if model == 'newest':
             page = int(request.form['page'])
@@ -98,7 +138,6 @@ def profile_search(model='hotest'):
             count, get_results = s_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
                                                fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
                                                sort_by=['-created_at'])
-
             users = []
             for r in get_results():
                 statusesCount = r['statuses_count']
@@ -112,12 +151,23 @@ def profile_search(model='hotest'):
                               'description': description, 'profileImageUrl': profileImageUrl})
             return json.dumps(users)
         elif model == 'hotest':
-            lowdate, thisdate = last_week()
-            uids = hot_uid_by_word(lowdate, thisdate)
-            basequery = User.query.filter(User.id.in_(list(uids)))#.order_by(User.followersCount.desc())
+            from utils import active_rank
+            current_time = '2013-3-7'
+            window_size = 1
+            top_n = 2000
+            rank_results = active_rank(top_n, current_time, window_size)
+            users = []
             page = int(request.form['page'])
-            users = basequery.paginate(page, COUNT_PER_PAGE, False).items
-            return json.dumps([i.serialize for i in users])
+            if page == 1:
+                startoffset = 0
+            else:
+                startoffset = (page - 1) * COUNT_PER_PAGE
+            endoffset = startoffset + COUNT_PER_PAGE - 1
+            for uid in rank_results:
+                user = getUserInfoById(uid)
+                if user:
+                    users.append(user)
+            return json.dumps(users[startoffset:endoffset])
         elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
             page = int(request.form['page'])
             if page == 1:
@@ -177,7 +227,15 @@ def profile_group(fieldEnName):
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):
     if uid:
-        user = User.query.filter_by(id=long(uid)).first_or_404()
+        count, get_results = s_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
+                                          'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
+        if count > 0:
+            for r in get_results():
+                user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  unicode(r['name'], 'utf-8'), 'friends_count': r['friends_count'], \
+                        'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
+                        'verified': r['verified'], 'created_at': r['created_at'], 'location': unicode(r['location'], "utf-8")}
+        else:
+            return 'no such user'
     return render_template('profile/profile_person.html', user=user)
 
 @mod.route('/person_tab_ajax/<model>/<uid>')
@@ -195,17 +253,128 @@ def profile_person_tab_ajax(model, uid):
     elif model == 'groupweibocount':
         return render_template('profile/ajax/group_weibo_count.html', field=uid)
     elif model == 'grouprank':
-        result = []
-        users = UserField.query.filter_by(fieldFirst='finance').limit(100)
-        for user in users:
-            result.extend(User.query.filter_by(id=user.uid).limit(20))#.order_by(User.statusesCount.desc()))
-        return render_template('profile/ajax/group_rank_bloggers.html', result=result[:9])
+        return render_template('profile/ajax/group_rank_bloggers.html', field=uid)
     elif model == 'grouplocation':
         return render_template('profile/ajax/group_location.html', field=uid)
     elif model == 'groupactive':
         return render_template('profile/ajax/group_active.html', field=uid)
     elif model == 'groupemotion':
         return render_template('profile/ajax/group_emotion.html', field=uid)
+    
+def social_graph(raw):
+    graph_result = {'nodes': [], 'links': [{"source":0,"target":1,"value":20},{"source":0,"target":2,"value":16}]}
+    center = raw['center']
+    top_fri = raw['top_fri']
+    top_fol = raw['top_fol']
+    rest = raw['rest']
+    graph_result['nodes'].append(social_node(center, 0, 0))
+    node_idx = 0
+    for uid in top_fri:
+        weight = top_fri[uid]
+        graph_result['nodes'].append(social_node(uid, 1, weight))
+        node_idx += 1
+        graph_result['links'].append({"source":0,"target":node_idx,"value":weight})
+    for uid in top_fol:
+        weight = top_fol[uid]
+        graph_result['nodes'].append(social_node(uid, 2, weight))
+        node_idx += 1
+        graph_result['links'].append({"source":0,"target":node_idx,"value":weight})
+    for uid in rest:
+        weight = rest[uid]
+        graph_result['nodes'].append(social_node(uid, 3, weight))
+        node_idx += 1
+        graph_result['links'].append({"source":0,"target":node_idx,"value":weight})
+    return graph_result
+
+def social_node(user_id, group, weight):
+    field_bucket = get_bucket('user_daily_field')
+    try:
+        fields = field_bucket.Get(str(user_id) + '_' + '20130430')
+        field = fields.split(',')[0]
+    except KeyError:
+        field = ''
+    count, get_results = s_user.search(query={'_id': int(user_id)}, fields=['profile_image_url', 'name'])
+    name = None
+    profile_image_url = None
+    if count:
+        for r in get_results():
+            name = r['name']
+            profile_image_url = r['profile_image_url']
+    return {"name": name, "group":group, "profile_image_url": profile_image_url, "domain": field, "weight": weight}
+
+@mod.route('/person_network/<uid>', methods=['GET', 'POST'])
+def profile_network(uid):
+    if request.method == 'GET':
+        center_uid = uid
+        friendship_bucket = get_bucket('friendship')
+        friends_key = str(uid) + '_' + 'friends'
+        followers_key = str(uid) + '_' + 'followers'
+        fri_fol = []
+        try:
+            friends = json.loads(friendship_bucket.Get(friends_key))
+        except KeyError:
+            friends = []
+        fri_fol.extend(friends)
+        try:
+            followers = json.loads(friendship_bucket.Get(followers_key))
+        except KeyError:
+            followers = []
+        fri_fol.extend(followers)
+
+        total_days = 89
+        today = datetime.datetime.today()
+        now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+        now_ts = int(now_ts)
+        during = 24 * 3600
+
+        interval = None
+        if request.args.get('interval'):
+            interval =  request.args.get('interval')
+        if interval == 'oneweek':
+            total_days = 6
+        elif interval == 'onemonth':
+            total_days = 29
+        elif interval == 'twomonth':
+            total_days = 59
+        else:
+            total_days = 89
+
+        interact_bucket = get_bucket('user_daily_interact_count')
+        uid_interact_count = {} 
+        for i in xrange(-total_days + 1, 1):
+            lt = now_ts + during * i
+            for f_uid in fri_fol:
+                count = 0
+                try:
+                    count += int(interact_bucket.Get(str(uid) + '_' + str(f_uid) + '_' + str(lt)))
+                except KeyError:
+                    pass
+                try:
+                    count += int(interact_bucket.Get(str(f_uid) + '_' + str(uid) + '_' + str(lt)))
+                except KeyError:
+                    pass
+                if count:
+                    try:
+                        uid_interact_count[str(f_uid)] += count
+                    except KeyError:
+                        uid_interact_count[str(f_uid)] = count
+
+        sorted_counts = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=True)
+        top_3_fri = {}
+        top_3_fol = {}
+        for uid, count in sorted_counts:
+            if uid in friends:
+                if len(top_3_fri) < 3:
+                    top_3_fri[uid] = count
+                    uid_interact_count.pop(uid, None)
+                if len(top_3_fol) < 3:
+                    top_3_fol[uid] = count
+                    uid_interact_count.pop(uid, None)
+                if len(top_3_fri) == 3 and len(top_3_fol) == 3:
+                    break
+        raw = {'center': center_uid, 'top_fri': top_3_fri, 'top_fol': top_3_fol, 'rest': uid_interact_count}
+        
+        return json.dumps(social_graph(raw))
 
 @mod.route('/person_fri_fol/<uid>', methods=['GET', 'POST'])
 def profile_person_fri_fol(uid):
@@ -253,7 +422,7 @@ def profile_person_fri_fol(uid):
         for id, value in sorted_users:
             result.append({'id': id,'userName': unicode(value[0], "utf-8"), 'statusesCount': value[1],
                            'followersCount': value[2], 'friendsCount': value[3],
-                           'field': value[4]})
+                           'field': fieldsEn2Zh(value[4])})
         total_pages = len(result) / COUNT_PER_PAGE + 1
         try:
             users = result[startoffset:(startoffset+COUNT_PER_PAGE-1)]
@@ -270,120 +439,119 @@ def profile_person_topic(uid):
         result_arr = []
         interval = None
         sort = None
+        topic_type = None
         limit = 100
         window_size = 24*60*60
-        if request.args.get('interval') and request.args.get('sort') and request.args.get('limit'):
-            interval =  request.args.get('interval')
+        if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
+            interval =  int(request.args.get('interval'))
             sort =  request.args.get('sort')
             limit = int(request.args.get('limit'))
-        if interval == 'oneweek':
-            lowdate, thisdate = last_week(2, 2)
-        else:
-            lowdate, thisdate = last_month()
-        results = PersonalBurstWords.query.filter(PersonalBurstWords.uid == uid, PersonalBurstWords.windowSize == window_size,
-                                                  PersonalBurstWords.startDate>=datetime.fromtimestamp(date2ts(lowdate)),
-                                                  PersonalBurstWords.endDate<=datetime.fromtimestamp(date2ts(thisdate))).limit(limit)
-        for result in results:
-            if sort == 'burst':
-                result_arr.append({'text': result.word, 'size': float(result.burst)})
+            topic_type = request.args.get('topic_type')
+        if topic_type == 'lda':
+            lda_topic_bucket = get_bucket('user_lda_topics')
+            try:
+                topics = json.loads(lda_topic_bucket.Get(str(uid)))
+                sortedtopics = sorted(topics.iteritems(), key=operator.itemgetter(1), reverse=True)
+                for k, v in sortedtopics[:limit]:
+                    result_arr.append({'text': k, 'size': float(v)})
+            except KeyError:
+                result_arr = []
+        if topic_type == 'bst':
+            from burst_word import read_burst_wordsFromDb, burst_model, sort_busrt_words
+            from utils import last_day
+            time_start, time_end = last_day(interval)
+            if interval == 1:
+                window_size = 3600
             else:
-                result_arr.append({'text': result.word, 'size': result.freq})
+                window_size = 24*60*60
+            topics = read_burst_wordsFromDb(uid, time_start, time_end, window_size)
+            if topics:
+                result_arr = sort_busrt_words(topics, sort=sort, limit=limit)
+            else:
+                new_topics = burst_model(time_start, time_end, uidnumber=uid, window_size = window_size)
+                if new_topics:
+                    result_arr = sort_busrt_words(new_topics, sort=sort, limit=limit)
         return json.dumps(result_arr)
     else:
         return json.dumps([])
 
 @mod.route('/person_count/<uid>', methods=['GET', 'POST'])
 def personal_weibo_count(uid):
-    from utils import ts2datetime, time2ts
-    from sqlalchemy import func
-    result_arr = []
+    post_status_kv = {'total': 2, 'repost': 1, 'fipost': 0}
+
+    total_days = 89
+    today = datetime.datetime.today()
+    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+    now_ts = int(now_ts)
+    during = 24 * 3600
     time_arr = []
-    count_arr = []
+    post_arr = []
     repost_arr = []
     fipost_arr = []
-    interval = None
+
     if request.args.get('interval'):
-        interval = request.args.get('interval')
-    if interval == 'oneweek':
-        lowdate, thisdate = last_week(3, 3)
-    elif interval == 'onemonth':
-        lowdate, thisdate = last_month()
-    else:
-        lowdate, thisdate = last_week(1, 1)
-    startdate = ts2datetime(time2ts(lowdate))
-    enddate =  ts2datetime(time2ts(thisdate))
-    
+        total_days =  int(request.args.get('interval')) - 1
 
-    results = db.session.query(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate), func.count(Words.id)).\
-              filter(Words.uid==long(uid), Words.postDate>startdate, Words.postDate<enddate).\
-              group_by(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate)).all()
-    for year, month, day, count in results:
-        time_arr.append(date(year, month, day).isoformat())
-        count_arr.append(count)
-        fi = random.randrange(0, count)
-        fipost_arr.append(fi)
-        repost_arr.append(count-fi)
-    return json.dumps({'time': time_arr, 'count': count_arr, 'repost': repost_arr, 'fipost': fipost_arr})
-    '''
-    results = db.session.query(Status.postDate, Status.retweetedMid).filter(Status.uid==long(uid), Status.postDate>startdate, Status.postDate<enddate).all()
-    print len(results)
-    datedict = {}
-    for date, retweet in results:
-        date = date.date().isoformat()
-        isRetweet = 1
-        if not retweet or retweet == '':
-            isRetweet = 0
-        try:
-            retCount, firCount = datedict[date]
-            if isRetweet:
-                retCount += 1
-            else:
-                firCount += 1
-            datedict[date] = retCount, firCount
-        except KeyError,e:
-            if isRetweet:
-                datedict[date] = [1, 0]#[转发数，原创数]
-            else:
-                datedict[date] = [0, 1]
+    bucket = get_bucket('user_daily_post_count')
+    for i in xrange(-total_days + 1, 1):
+        lt = now_ts + during * i
+        post_count = {}
+        for weibo_is_retweet_status in [0, 1]:     
+            try:
+                post_count[weibo_is_retweet_status] = int(bucket.Get(str(uid) + '_' + str(lt) + '_' + str(weibo_is_retweet_status)))
+            except KeyError:
+                post_count[weibo_is_retweet_status] = 0
+        if sum(post_count.values()) > 0:
+            sumcount = sum(post_count.values())
+            post_arr.append(sumcount)
+            repost_arr.append(post_count[1])
+            fipost_arr.append(post_count[0])
+            time_arr.append(ts2date(lt).isoformat())
 
-    sortdatearr = sorted(datedict.iteritems(), key=operator.itemgetter(0), reverse=False)
-
-    for date, count in sortdatearr:
-        time_arr.append(date)
-        count_arr.append(sum(count))
-        repost_arr.append(count[0])
-        fipost_arr.append(count[1])
-    '''
-    
+    return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr})
 
 @mod.route('/group_topic/<fieldEnName>')
 def profile_group_topic(fieldEnName):
-    from datetime import datetime
-    from burst_word import date2ts
-    result_arr = []
-    interval = None
-    sort = None
-    limit = 100
-    window_size = 24*60*60
-    s_result = db.session.query(UserField.uid).filter(UserField.fieldFirst == fieldEnName).all()
-    uidlist = [uid[0] for uid in s_result]
-    if request.args.get('interval') and request.args.get('sort') and request.args.get('limit'):
-        interval =  request.args.get('interval')
-        sort =  request.args.get('sort')
-        limit = int(request.args.get('limit'))
-    if interval == 'oneweek':
-        lowdate, thisdate = last_week(3, 3)
+    if request.method == 'GET' and fieldEnName:
+        result_arr = []
+        interval = None
+        sort = None
+        topic_type = None
+        limit = 100
+        window_size = 24*60*60
+        if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
+            interval =  int(request.args.get('interval'))
+            sort =  request.args.get('sort')
+            limit = int(request.args.get('limit'))
+            topic_type = request.args.get('topic_type')
+        if topic_type == 'lda':
+            field_lda_bucket = get_bucket('field_lda_topics')
+            try:
+                topics = json.loads(field_lda_bucket.Get(str(fieldEnName)))
+                sortedtopics = sorted(topics.iteritems(), key=operator.itemgetter(1), reverse=True)
+                for k, v in sortedtopics[:limit]:
+                    result_arr.append({'text': k, 'size': float(v)})
+            except KeyError:
+                result_arr = []
+        if topic_type == 'bst':
+            from burst_word import read_field_burst_wordsFromDb, burst_model_field, sort_busrt_words
+            from utils import last_day
+            time_start, time_end = last_day(interval)
+            if interval == 1:
+                window_size = 3600
+            else:
+                window_size = 24*60*60
+            topics = read_field_burst_wordsFromDb(fieldEnName, time_start, time_end, window_size)
+            if topics:
+                result_arr = sort_busrt_words(topics, sort=sort, limit=limit)
+            else:
+                new_topics = burst_model_field(time_start, time_end, field=fieldEnName, window_size=window_size)
+                if new_topics:
+                    result_arr = sort_busrt_words(new_topics, sort=sort, limit=limit)
+        return json.dumps(result_arr)
     else:
-        lowdate, thisdate = last_month()
+        return json.dumps([])
 
-    results = PersonalBurstWords.query.filter(PersonalBurstWords.uid.in_(uidlist), PersonalBurstWords.windowSize == window_size,
-                                              PersonalBurstWords.startDate>=datetime.fromtimestamp(date2ts(lowdate)),
-                                              PersonalBurstWords.endDate<=datetime.fromtimestamp(date2ts(thisdate))).limit(limit)
-    for result in results:
-        if sort == 'burst':
-            result_arr.append({'text': result.word, 'size': float(result.burst)})
-        else:
-            result_arr.append({'text': result.word, 'size': result.freq})
     return json.dumps(result_arr)
 
 @mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
@@ -433,28 +601,19 @@ def group_status_count(fieldEnName):
 
 @mod.route('/group_active/<fieldEnName>', methods=['GET', 'POST'])
 def group_active_count(fieldEnName):
-    total_days = 6
     today = datetime.datetime.today()
     now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
     now_ts = int(now_ts)
     during = 24 * 3600
 
-    interval = None
+    interval = 6
     if request.args.get('interval'):
-        interval =  request.args.get('interval')
-    if interval == 'oneweek':
-        total_days = 6
-    elif interval == 'onemonth':
-        total_days = 29
-    elif interval == 'twomonth':
-        total_days = 59
-    else:
-        total_days = 89
+        interval =  int(request.args.get('interval'))
 
     bucket = get_bucket('field_daily_active_count')
     uids_set = set([k.split('_')[2] for k in bucket.RangeIter(include_value = False)])
     user_count = {}
-    for i in xrange(-total_days + 1, 1):
+    for i in xrange(-interval + 1, 1):
         lt = now_ts + during * i
         for uid in uids_set:    
             try:
@@ -557,6 +716,30 @@ def profile_group_verify(fieldEnName):
 
     return json.dumps(result_list)
 
+@mod.route('/group_rank/<fieldEnName>')
+def profile_group_rank(fieldEnName):
+    page = 1
+    countperpage = 8
+    limit = 1000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage - 1
+    uids = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
+    users = []
+    for uid in uids:
+        user = getUserInfoById(uid)
+        if user:
+            users.append(user)
+    total_pages = limit / countperpage + 1
+    return json.dumps({'users': users, 'pages': total_pages})
 
 @mod.route('/group_location/<fieldEnName>')
 def profile_group_location(fieldEnName):

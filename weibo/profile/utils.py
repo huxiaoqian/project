@@ -9,10 +9,71 @@ from model import *
 from sqlalchemy import func
 import json
 import redis
+import leveldb
+import os
+import operator
 
 redis_host = 'localhost'
 redis_port = 6379
 redis_conn = redis.Redis(redis_host, redis_port)
+
+LEVELDBPATH = '/home/mirage/leveldb'
+
+def is_in_black_list(uid):
+    return False
+
+def get_leveldb(method, ts):
+    date = datetime.fromtimestamp(ts)
+    db_name = 'hanyang_daily_user_%s_' % method
+    db_name += str(date.year)
+    if date.month < 10:
+        db_name += '0%s' % str(date.month)
+    else:
+        db_name += str(date.month)
+    if date.day < 10:
+        db_name += '0%s' % str(date.day)
+    else:
+        db_name += str(date.day)
+    return db_name
+
+def active_rank(top_n, date, window_size):
+    date_time = datetime2ts(date)
+    uid_active = {}
+    if window_size == 1:
+        db_name = get_leveldb('active', date_time)
+        daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+        
+        for uid, active in daily_user_active_bucket.RangeIter():
+            uid = int(uid)
+            active = float(active)
+            uid_active[uid] = active
+    else:
+        for i in range(window_size):
+            db_name = get_leveldb('active', date_time - i*24*60*60)
+            daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+            for uid, active in daily_user_active_bucket.RangeIter():
+                uid = int(uid)
+                active = float(active)
+                if uid not in uid_active:
+                    uid_active[uid] = 0
+                uid_active[uid] += active
+
+    sorted_uid_active = sorted(uid_active.iteritems(), key=operator.itemgetter(1), reverse=True)
+                
+    sorted_uids = []
+    count = 0
+    for uid, value in sorted_uid_active:
+        if is_in_black_list(uid):
+            continue
+        if count >= top_n:
+            break
+        sorted_uids.append(uid)
+        count += 1
+
+    data = sorted_uids
+    return data
 
 def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='20130430'):
     sorted_key = 'followers_count'
@@ -66,6 +127,9 @@ def local2datetime(time_str):
 def ts2datetime(ts):
      return datetime.fromtimestamp(int(float(ts)))
 
+def datetime2ts(date):
+    return time.mktime(time.strptime(date, '%Y-%m-%d'))
+
 def ts2date(ts):
     return date.fromtimestamp(int(float(ts)))
 
@@ -97,17 +161,23 @@ def last_week(weeks=1, interval=1):
     last_monday = this_monday - timedelta(days=7*interval)
     return last_monday.isoformat(), this_monday.isoformat()
 
-def last_month():
-    '''计算当前日期回溯30日
+def last_month(mon_num=1):
+    '''计算当前日期回溯若干月
     '''
     now_date = date.today()
-    last_date = now_date - timedelta(days=30)
+    last_date = now_date - timedelta(days=30 * mon_num)
     return last_date.isoformat(), now_date.isoformat()
-    
+
+def last_day(day_num=1):
+    now_date = date.today()
+    last_date = now_date - timedelta(days=day_num)
+    return last_date.isoformat(), now_date.isoformat()
+
 def main():
     #last_week()
     getFieldUsersByScores('finance', 0, 19)
     pass
     
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    print last_day(1)
             

@@ -1,5 +1,5 @@
 {% extends 'profile/profile_layout.html' %}
-{% block title %}网民多维特征搜索{% endblock %}
+{% block title %}博主多维特征搜索与分领域展示{% endblock %}
 {% block head %}
 <style>
   body{
@@ -300,15 +300,37 @@
 </style>
 {% endblock head %}
 {% block top_navbar_active %}
-    <li><a href="/profile/person">单个网民画像</a></li>
-    <li><a href="/profile/group">网民群体画像</a></li>
-    <li class="active"><a href="/profile/search">网民特征搜索与分类展示</a></li>
+    <li><a href="/profile/person">单个用户特征展示</a></li>
+    <li><a href="/profile/group">领域特征展示</a></li>
+    <li class="active"><a href="/profile/search">博主特征搜索与分领域展示</a></li>
 {% endblock top_navbar_active %}
 
 {% block content %}
     <a name="top"></a>
     <p id="back-to-top"><a href="#top"><span></span>返回顶部</a></p>
-
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/profile/search/">微博用户特征计算及行为分析原型系统</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a href="/">首页</a></li>
+              <li><a href="/profile/person/">单个用户特征展示</a></li>
+              <li><a href="/profile/group/">领域特征展示</a></li>
+              <li class="active"><a href="/profile/search/">博主特征搜索与分领域展示</a></li>   
+            </ul>
+            <form class="navbar-search pull-left">
+                <input type="text" class="search-query" placeholder="按博主昵称搜索">
+            </form>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
     <div id="shadow_nav">
         <div class="wrapper" style="width: 1170px;">
             <div class="tent">
@@ -436,8 +458,8 @@
               {% for user in result %}
                 <div class="grid">
                     <div class="options">
-                      <div class="detail opt" title="画像详情"><a href="/profile/person/{{user.id}}" target="_blank"><em><i class="icon-search"></i></em><span>详情</span></a></div>
-                      <div class="add opt" title="添加到画像"><a href="#"><em><i class="icon-plus-sign"></i></em><span>关注</span></a></div>
+                      <div class="detail opt" title="特征详情"><a href="/profile/person/{{user.id}}" target="_blank"><em><i class="icon-search"></i></em><span>详情</span></a></div>
+                      <div class="add opt" title="添加到特征计算"><a href="#"><em><i class="icon-plus-sign"></i></em><span>关注</span></a></div>
                     </div>
                     <div class="imgholder">
                         <a href="/profile/person/{{user.id}}" target="_blank"><img src="{{user.profileImageUrl}}" /></a>
@@ -586,7 +608,7 @@
       for(; i<length; i++) {
         item = data[i];
     
-        html += "<div class=\"grid\"><div class=\"options\"><div class=\"detail opt\" title=\"画像详情\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><em><i class=\"icon-search\"></i></em><span>详情</span></a></div><div class=\"add opt\" title=\"添加到画像\"><a href=\"#\"><em><i class=\"icon-plus-sign\"></i></em><span>关注</span></a></div></div>";
+        html += "<div class=\"grid\"><div class=\"options\"><div class=\"detail opt\" title=\"特征详情\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><em><i class=\"icon-search\"></i></em><span>详情</span></a></div><div class=\"add opt\" title=\"添加到特征计算\"><a href=\"#\"><em><i class=\"icon-plus-sign\"></i></em><span>关注</span></a></div></div>";
         html += "<div class=\"imgholder\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><img src=\"" + item.profileImageUrl + "\" /></a></div>";
         html += "<strong>" + item.userName + "</strong>";
         html += "<p>微博数：" + item.statusesCount + "</p>";

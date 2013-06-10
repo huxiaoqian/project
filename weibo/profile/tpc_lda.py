@@ -143,13 +143,14 @@ def generate_dict_corpus_from_leveldb(update_date=getNowDateStr(), keep_number=2
     '''使用leveldb中的5月10日往前推3个月（89天）的约2千万微博数据生成字典，并约简字典，字典规模约为20万左右，用时约1小时
        使用leveldb中4月21日至5月21日的微博生成字典和语料，用时7分钟
        使用leveldb中5月1日至5月21日的微博生成字典和语料，用时5分钟
+       使用leveldb中5月7日至5月10日的微博生成字典和语料，字典规模为6万，用时100s
     '''
     LEVELDBPATH = '/home/mirage/leveldb'
     user_daily_tokens_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user_daily_tokens'),
                                                block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     swds = getStopWds('./data/stpwds_linhao_20130514.txt')
-    starttime = time2ts('2013-05-01')
-    endtime = time2ts('2013-05-21')
+    starttime = time2ts('2013-05-07')
+    endtime = time2ts('2013-05-10')
 
     start_dict_time = time.time()
     print 'start dict generation at ', start_dict_time
@@ -245,9 +246,10 @@ def train_lda_model(update_date=getNowDateStr()):
     '''5-20训练用时约6小时
        5-21训练用时1小时
        5-22训练用时40分钟
+       5-25训练用时5分钟
     '''
-    dictionary = corpora.Dictionary.load_from_text('./data/lda_2013-05-21_dict.txt')
-    corpus = corpora.MmCorpus('./data/lda_2013-05-21_corpus.mm')
+    dictionary = corpora.Dictionary.load_from_text('./data/lda_2013-05-25_dict.txt')
+    corpus = corpora.MmCorpus('./data/lda_2013-05-25_corpus.mm')
 
     ###生成tf-idf矩阵
     tfidf = models.TfidfModel(corpus)
@@ -256,7 +258,7 @@ def train_lda_model(update_date=getNowDateStr()):
     print 'LDA training start:'
     start = time.time()
     lda = gensim.models.ldamodel.LdaModel(corpus=corpus_tfidf, id2word=dictionary, num_topics=100,
-                                          update_every=1, chunksize=10000, passes=1)
+                                          update_every=0, chunksize=10000, passes=1)
     ###保存模型
     lda.save('./data/lda_%s_model.lda' % update_date)
     print 'training finish... use time ', time.time()-start
@@ -264,8 +266,8 @@ def train_lda_model(update_date=getNowDateStr()):
 def load_daily_user_topics():
     ##提取已保存的模型
     start = time.time()
-    dictionary = corpora.Dictionary.load_from_text('./data/lda_2013-05-21_dict.txt')
-    lda_model = gensim.models.ldamodel.LdaModel.load('./data/lda_2013-05-22_model.lda')
+    dictionary = corpora.Dictionary.load_from_text('./data/lda_2013-05-25_dict.txt')
+    lda_model = gensim.models.ldamodel.LdaModel.load('./data/lda_2013-05-26_model.lda')
     print 'load dict and model completed in ', time.time()-start, ' seconds'
 
     LEVELDBPATH = '/home/mirage/leveldb'
@@ -286,22 +288,18 @@ def load_daily_user_topics():
         #每1万条0.5秒
         doc_bow = dictionary.doc2bow(tokens)
         #每1万条5秒
+        '''
         topic_prob = lda_model[doc_bow]
         
         topics = []
-        '''
-        if len(sorted(topic_prob, key=itemgetter(1), reverse=True)):
-            topic, prob = sorted(topic_prob, key=itemgetter(1), reverse=True)[0]
-        else:
-            count += 1
-            continue
-        topics = lda_model.show_topic(topic)
-        '''
+        
         for topic, prob in sorted(topic_prob, key=itemgetter(1), reverse=True):
             topics.extend(lda_model.show_topic(topic))
         if len(topics):
             v = json.dumps(topics)
             user_daily_lda_topics_bucket.Put(k, v)
+        '''
+
         if count % 10000 == 0:
             te = time.time()
             print count, '%s sec' % (te - ts)
@@ -310,8 +308,54 @@ def load_daily_user_topics():
         count += 1
     print 'finish test model and use time: ', time.time()-start
 
+def generate_test_corpus_for_sparselda():
+    LEVELDBPATH = '/home/mirage/leveldb'
+    user_daily_tokens_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user_daily_tokens'),
+                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    swds = getStopWds('./data/stpwds_linhao_20130514.txt')
+    starttime = time2ts('2013-05-07')
+    endtime = time2ts('2013-05-10')
+
+    start_dict_time = time.time()
+    print 'start dict generation at ', start_dict_time
+    count = 0
+    ts = te = time.time()
+    docs = []
+    
+    results = user_daily_tokens_bucket.RangeIter()
+    for k, v in results:
+        uid, lt = k.split('_')
+        tokens = []
+        #每1万条0.5秒
+        if int(lt) < endtime and int(lt) > starttime:
+            for word, freq in json.loads(v).items():
+                if word not in swds:
+                    tokens.extend([word.encode('utf-8') for i in xrange(0, freq)])
+            if len(tokens):
+                docs.append(tokens)
+
+        if count % 10000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts)
+            ts = te
+        count += 1
+
+    f_corpus = open('/home/mirage/linhao/python-sparselda/testdata/corpus.txt', 'w')
+    f_voc = open('/home/mirage/linhao/python-sparselda/testdata/vocabulary.txt', 'w')
+    vocabulary = set()
+    for tokens in docs:
+        for word in tokens:
+            f_corpus.write('%s\t' % word)
+            vocabulary.add(word)
+        f_corpus.write('\n')
+    for token in vocabulary:
+        f_voc.write('%s\n' % token)
+    f_corpus.close()
+    f_voc.close()
+
 if __name__ == '__main__':
     #load_daily_user_tokens()
-    #generate_dict_corpus_from_leveldb()
-    #train_lda_model('2013-05-22')
+    #generate_dict_corpus_from_leveldb(keep_number=1000)
+    #train_lda_model()
     load_daily_user_topics()
+    #generate_test_corpus_for_sparselda()

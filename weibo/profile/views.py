@@ -17,7 +17,7 @@ from flask import Blueprint, url_for, render_template, request, abort, flash
 from weibo.extensions import db
 from weibo.model import *
 
-from utils import hot_uid_by_word, last_week, last_month, ts2date, getFieldUsersByScores
+from utils import hot_uid_by_word, last_week, last_month, ts2date, getFieldUsersByScores, time2ts
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 
@@ -207,6 +207,64 @@ def profile_person_tab_ajax(model, uid):
     elif model == 'groupemotion':
         return render_template('profile/ajax/group_emotion.html', field=uid)
 
+@mod.route('/person_network/<uid>', methods=['GET', 'POST'])
+def profile_network(uid):
+    if request.method == 'GET':
+        friendship_bucket = get_bucket('friendship')
+        friends_key = str(uid) + '_' + 'friends'
+        followers_key = str(uid) + '_' + 'followers'
+        fri_fol = []
+        try:
+            friends = json.loads(friendship_bucket.Get(friends_key))
+        except KeyError:
+            friends = []
+        fri_fol.extend(friends)
+        try:
+            followers = json.loads(friendship_bucket.Get(followers_key))
+        except KeyError:
+            followers = []
+        fri_fol.extend(followers)
+
+        total_days = 89
+        today = datetime.datetime.today()
+        now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+        now_ts = int(now_ts)
+        during = 24 * 3600
+
+        interval = None
+        if request.args.get('interval'):
+            interval =  request.args.get('interval')
+        if interval == 'oneweek':
+            total_days = 6
+        elif interval == 'onemonth':
+            total_days = 29
+        elif interval == 'twomonth':
+            total_days = 59
+        else:
+            total_days = 89
+
+        interact_bucket = get_bucket('user_daily_interact_count')
+        uid_interact_count = {} 
+        for i in xrange(-total_days + 1, 1):
+            lt = now_ts + during * i
+            for f_uid in fri_fol:
+                count = 0
+                try:
+                    count += int(interact_bucket.Get(str(uid) + '_' + str(f_uid) + '_' + str(lt)))
+                except KeyError:
+                    pass
+                try:
+                    count += int(interact_bucket.Get(str(f_uid) + '_' + str(uid) + '_' + str(lt)))
+                except KeyError:
+                    pass
+                if count:
+                    try:
+                        uid_interact_count[str(f_uid)] += count
+                    except KeyError:
+                        uid_interact_count[str(f_uid)] = count
+        print len(uid_interact_count)
+        return json.dumps(uid_interact_count)
+
 @mod.route('/person_fri_fol/<uid>', methods=['GET', 'POST'])
 def profile_person_fri_fol(uid):
     if request.method == 'GET' and uid and request.args.get('page'):
@@ -294,7 +352,7 @@ def profile_person_topic(uid):
 
 @mod.route('/person_count/<uid>', methods=['GET', 'POST'])
 def personal_weibo_count(uid):
-    from utils import ts2datetime, time2ts
+    from utils import ts2datetime
     from sqlalchemy import func
     result_arr = []
     time_arr = []
@@ -313,7 +371,6 @@ def personal_weibo_count(uid):
     startdate = ts2datetime(time2ts(lowdate))
     enddate =  ts2datetime(time2ts(thisdate))
     
-
     results = db.session.query(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate), func.count(Words.id)).\
               filter(Words.uid==long(uid), Words.postDate>startdate, Words.postDate<enddate).\
               group_by(func.year(Words.postDate), func.month(Words.postDate), func.day(Words.postDate)).all()

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import random
+
 from weibo.extensions import db
 
 from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification
@@ -33,8 +35,9 @@ def acquire_user_by_id(identifyRange, uid):
         user['name'] = r['name']
         user['location'] = r['location']
         if identifyRange == 'burst':
-            user['count1'] = 0
-            user['count2'] = 0
+            #need user info index
+            user['count1'] = random.randint(1, 10000)
+            user['count2'] = random.randint(1, 10000)
         else:
             user['count1'] = r['followers_count']
             user['count2'] = r['friends_count']

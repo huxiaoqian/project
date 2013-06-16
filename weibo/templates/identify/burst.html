@@ -46,7 +46,7 @@
 	      {% elif window_size == 7 %}1周
 	      {% elif window_size == 30 %}1个月
               {% elif window_size == 90 %}3个月
-	      {% else %}1天
+	      {% else %}1周
 	      {% endif %}
 	      <span class="caret"></span>
 	    </a>
@@ -65,7 +65,7 @@
 	  条结果
 	  <input type="hidden" name="action" value="run">
 	  <input id="burst_rank_method" type="hidden" name="rank_method" value="followers">
-	  <input id="burst_window_size" type="hidden" name="window_size" value="1">
+	  <input id="burst_window_size" type="hidden" name="window_size" value="7">
 	  <input type="submit" class="btn btn-primary" value="识别">
       	</form>
       </div>

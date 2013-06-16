@@ -10,7 +10,7 @@ from weibo.model import AreaUserIdentification
 
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name, is_in_black_list, acquire_status_by_id, acquire_user_by_id
+from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id
 from config import PAGERANK_ITER_MAX
 
 from xapian_weibo.xapian_backend import XapianSearch
@@ -211,7 +211,7 @@ def make_network(topic_id, date, window_size, ts=False):
                     source_status = acquire_status_by_id(rt_mid)
                     source_uid = source_status['user']
                     source_ts = int(source_status['timestamp'])
-                    if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+                    if is_in_trash_list(repost_uid) or is_in_trash_list(source_uid):
                         continue
                     if repost_uid not in uid_ts:
                         uid_ts[repost_uid] = repost_ts
@@ -234,7 +234,7 @@ def make_network(topic_id, date, window_size, ts=False):
                     repost_uid = status['user']
                     rt_mid = status['retweeted_status']
                     source_uid = acquire_status_by_id(rt_mid)['user']
-                    if is_in_black_list(repost_uid) or is_in_black_list(source_uid):
+                    if is_in_trash_list(repost_uid) or is_in_trash_list(source_uid):
                         continue
                     g.add_edge(repost_uid, source_uid)
             except KeyError:

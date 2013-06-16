@@ -8,7 +8,7 @@ import leveldb
 
 from datetime import datetime
 
-from utils import is_in_black_list, acquire_user_by_id, user_status
+from utils import is_in_trash_list, acquire_user_by_id, user_status
 from config import BURST_MIN_SUPPORT
 
 LEVELDBPATH = '/home/mirage/leveldb'
@@ -69,7 +69,7 @@ def realtime_burst_user(top_n, current_time):
     sorted_uids = []
     count = 0
     for uid, value in sorted_uid_burst:
-        if is_in_black_list(uid):
+        if is_in_trash_list(uid):
             continue
         if count >= top_n:
             break

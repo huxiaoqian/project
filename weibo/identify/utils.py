@@ -55,7 +55,7 @@ def acquire_status_by_id(mid):
 def user_status(uid):
     return 1
 
-def is_in_black_list(uid):
+def is_in_trash_list(uid):
     return False
 
 def read_rank_results(top_n, identifyRange, method, date, window, topic_id=None, compare=False):

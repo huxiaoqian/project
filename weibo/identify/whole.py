@@ -6,7 +6,7 @@ import operator
 from datetime import datetime
 import leveldb
 
-from utils import save_rank_results, is_in_black_list
+from utils import save_rank_results, is_in_trash_list
 from time_utils import datetime2ts, window2time
 from config import FOLLOWERS_MIN_SUPPORT, REPOSTS_MIN_SUPPORT
 
@@ -53,7 +53,7 @@ def active_rank(top_n, date, window_size):
     sorted_uids = []
     count = 0
     for uid, value in sorted_uid_active:
-        if is_in_black_list(uid):
+        if is_in_trash_list(uid):
             continue
         if count >= top_n:
             break
@@ -92,7 +92,7 @@ def important_rank(top_n, date, window_size):
     sorted_uids = []
     count = 0
     for uid, value in sorted_uid_important:
-        if is_in_black_list(uid):
+        if is_in_trash_list(uid):
             continue
         if count >= top_n:
             break

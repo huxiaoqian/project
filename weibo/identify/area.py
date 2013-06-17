@@ -224,7 +224,7 @@ def make_network(topic_id, date, window_size, ts=False):
                         if uid_ts[source_uid] > source_ts:
                             uid_ts[source_uid] = source_ts
                     g.add_edge(repost_uid, source_uid)
-            except KeyError:
+            except (TypeError, KeyError):
                 continue
         return uid_ts, g
     else:
@@ -237,6 +237,6 @@ def make_network(topic_id, date, window_size, ts=False):
                     if is_in_trash_list(repost_uid) or is_in_trash_list(source_uid):
                         continue
                     g.add_edge(repost_uid, source_uid)
-            except KeyError:
+            except (TypeError, KeyError):
                 continue
-        return g      
+        return g

@@ -10,7 +10,7 @@ from weibo.model import AreaUserIdentification
 
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id
+from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, load_scws, cut
 from config import PAGERANK_ITER_MAX
 
 from xapian_weibo.xapian_backend import XapianSearch
@@ -19,6 +19,8 @@ from pagerank import pagerank
 
 from gexf import Gexf
 from lxml import etree
+
+s = load_scws()
 
 def degree_rank(top_n, date, topic_id, window_size):
     data = []
@@ -191,8 +193,9 @@ def make_network(topic_id, date, window_size, ts=False):
     g = nx.DiGraph()
 
     #need repost index
+    topic = cut(s, topic.encode('utf-8'), f=['n', 'nr', 'ns', 'nt'])
     statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    query_dict = {'text': [topic], 'timestamp': {'$gt': start_time, '$lt': end_time}}
+    query_dict = {'text': topic, 'timestamp': {'$gt': start_time, '$lt': end_time}}
 
     if ts:
         count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'timestamp', 'retweeted_status'])

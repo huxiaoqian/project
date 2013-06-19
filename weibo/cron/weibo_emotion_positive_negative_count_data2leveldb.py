@@ -62,108 +62,76 @@ def load_140k_user_ids():
 
 def load_user_genders_from_mongo(uids):
     user_genders = {}
-    count = 0
     for uid in uids:
         user = mongo.master_timeline_user.find_one({'_id': uid})
         user_genders[uid] = user['gender']
-        count += 1
-        if count % 1000 == 0:
-            print count
 
     print 'user genders data ready'
     return user_genders
 
 
-def generate_timestamp():
-    tss = []
-    start_time = datetime.datetime(2011, 1, 1)
-    step_time = datetime.timedelta(hours=2)
-    while start_time < datetime.datetime(2013, 1, 1):
-        tss.append(int(time.mktime(start_time.timetuple())))
-        start_time += step_time
-    return tss
-
-
 @timeit
-def load_extra_weibos_from_xapian(uids):
-    begin_ts = time.mktime(datetime.datetime(2011, 1, 1).timetuple())
-    end_ts = time.mktime(datetime.datetime(2013, 1, 1).timetuple())
-
+def load_extra_weibos_from_xapian(begin_ts, end_ts):
     query_dict = {
         'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-        '$or': [],
     }
-    for uid in uids:
-        query_dict['$or'].append({'user': uid})
-    count, get_results = s.search(query=query_dict, fields=['text', 'user', 'timestamp'], sort_by=['-timestamp'])
+    count, get_results = s.search(query=query_dict, fields=['user', 'text'])
     print count
     return get_results
 
 
-@timeit
-def store2leveldb(get_results, user_genders, tss, global_count, male_count, female_count):
-    ts_idx = 0
-    timestamp = tss[ts_idx]
-    for r in get_results():
-        while r['timestamp'] < timestamp and ts_idx < len(tss) - 1:
-            ts_idx += 1
-            timestamp = tss[ts_idx]
+def store2leveldb(get_results, user_ids_140k_set, user_genders, begin_ts):
+    global_count = {'1': 0, '2': 0, '3': 0}
+    male_count = {'1': 0, '2': 0, '3': 0}
+    female_count = {'1': 0, '2': 0, '3': 0}
 
+    for r in get_results():
+        if r['user'] not in user_ids_140k_set:
+            continue
         # 微博是否包含指定的表情符号集
         emotions = re.findall(r'\[(\S+?)\]', r['text'])
         emotions_set = set(emotions)
         include_positive = True if emotions_set & positive_emotions_words_set else False
         include_negative = True if emotions_set & negative_emotions_words_set else False
         if include_positive and include_negative:
-            global_count[str(timestamp) + '_3'] += 1
+            global_count['3'] += 1
             if user_genders[r['user']] == 'f':
-                female_count[str(timestamp) + '_3'] += 1
+                female_count['3'] += 1
             elif user_genders[r['user']] == 'm':
-                male_count[str(timestamp) + '_3'] += 1
+                male_count['3'] += 1
 
         elif include_positive and not include_negative:
-            global_count[str(timestamp) + '_1'] += 1
+            global_count['1'] += 1
             if user_genders[r['user']] == 'f':
-                female_count[str(timestamp) + '_1'] += 1
+                female_count['1'] += 1
             elif user_genders[r['user']] == 'm':
-                male_count[str(timestamp) + '_1'] += 1
+                male_count['1'] += 1
 
         elif not include_positive and include_negative:
-            global_count[str(timestamp) + '_2'] += 1
+            global_count['2'] += 1
             if user_genders[r['user']] == 'f':
-                female_count[str(timestamp) + '_2'] += 1
+                female_count['2'] += 1
             elif user_genders[r['user']] == 'm':
-                male_count[str(timestamp) + '_2'] += 1
+                male_count['2'] += 1
+
+    begin_ts_str = str(begin_ts) + '_'
+    for k, v in global_count.iteritems():
+        weibo_emotion_positive_negative_global_count_bucket.Put(begin_ts_str + k, str(v))
+    for k, v in male_count.iteritems():
+        weibo_emotion_positive_negative_male_count_bucket.Put(begin_ts_str + k, str(v))
+    for k, v in female_count.iteritems():
+        weibo_emotion_positive_negative_female_count_bucket.Put(begin_ts_str + k, str(v))
 
 
 if __name__ == '__main__':
     user_ids_140k = load_140k_user_ids()
     user_ids_140k_set = set(user_ids_140k)
     user_genders = load_user_genders_from_mongo(user_ids_140k)
-    tss = generate_timestamp()
-    global_count, male_count, female_count = {}, {}, {}
-    for ts in tss:
-        for i in ['_1', '_2', '_3']:
-            global_count[str(ts) + i] = 0
-            male_count[str(ts) + i] = 0
-            female_count[str(ts) + i] = 0
-
-    size = 50
-    for i in xrange(len(user_ids_140k) / size):
-        print i * size
-        ids = user_ids_140k[i * size: (i + 1) * size]
-        get_results = load_extra_weibos_from_xapian(ids)
-        store2leveldb(get_results, user_genders, tss, global_count, male_count, female_count)
-
-    if len(user_ids_140k) % size:
-        idx = len(user_ids_140k) / size
-        ids = user_ids_140k[idx * size:]
-        get_results = load_extra_weibos_from_xapian(ids)
-        store2leveldb(get_results, user_genders, tss, global_count, male_count, female_count)
-
-    for k, v in global_count.iteritems():
-        weibo_emotion_positive_negative_global_count_bucket.Put(k, str(v))
-    for k, v in male_count.iteritems():
-        weibo_emotion_positive_negative_male_count_bucket.Put(k, str(v))
-    for k, v in female_count.iteritems():
-        weibo_emotion_positive_negative_female_count_bucket.Put(k, str(v))
+    start_time = datetime.datetime(2011, 1, 1)
+    step_time = datetime.timedelta(hours=2)
+    while start_time < datetime.datetime(2013, 1, 1):
+        begin_ts = int(time.mktime(start_time.timetuple()))
+        end_ts = begin_ts + 7200  # 2hours
+        get_results = load_extra_weibos_from_xapian(begin_ts, end_ts)
+        store2leveldb(get_results, user_ids_140k_set, user_genders, begin_ts)
+        start_time += step_time

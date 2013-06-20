@@ -238,3 +238,33 @@ def burst_monitor():
 def show_user_statuses(uid, page):
     statuses = user_statuses(uid, page)
     return render_template('identify/user_statuses.html', statuses=statuses)
+
+@mod.route("/add_kd/", methods=["POST"])
+def add_kd():
+    form = request.form
+    uids_str = form.get('uids', None)
+    if not uids_str:
+        return json.dumps({'status': 'empty uids'})
+    else:
+        uids = map(int, uids_str.split(','))
+        return json.dumps({'status': 'ok'})
+
+@mod.route("/remove_kd/", methods=["POST"])
+def remove_kd():
+    form = request.form
+    uids_str = form.get('uids', None)
+    if not uids_str:
+        return json.dumps({'status': 'empty uids'})
+    else:
+        uids = map(int, uids_str.split(','))
+        return json.dumps({'status': 'ok'})
+
+@mod.route("/add_trash/", methods=["POST"])
+def add_trash():
+    form = request.form
+    uids_str = form.get('uids', None)
+    if not uids_str:
+        return json.dumps({'status': 'empty uids'})
+    else:
+        uids = map(int, uids_str.split(','))
+        return json.dumps({'status': 'ok'})

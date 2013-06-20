@@ -1,5 +1,39 @@
 var previous_data = null;
 var current_data = null;
+
+$('#add_kd').click(function() {
+    var uids_str = get_selected_uids();
+    if (uids_str)
+	$.post("/identify/add_kd/", {'uids': uids_str}, uids_request_callback, "json");
+});
+
+$('#remove_kd').click(function() {
+    var uids_str = get_selected_uids();
+    if (uids_str)
+	$.post("/identify/remove_kd/", {'uids': uids_str}, uids_request_callback, "json");
+});
+
+$('#add_trash').click(function() {
+    var uids_str = get_selected_uids();
+    if (uids_str)
+	$.post("/identify/add_trash/", {'uids': uids_str}, uids_request_callback, "json");
+});
+
+function uids_request_callback(data) {
+}
+
+function get_selected_uids() {
+    var arr = new Array()
+    $.each($('#rank_table :checkbox'), function(i, val) {
+	if (this.id != 'select_all' && this.checked) {
+	    var uid = this.id.replace('uid_', '');
+	    arr.push(uid);
+	}
+    });
+    var uids_str = arr.join(',');
+    return uids_str;
+}
+
 (function ($) {
     function request_callback(data) {
 	var status = data['status'];
@@ -89,7 +123,7 @@ var current_data = null;
     function create_current_table(data, start_row, end_row) {
 	var cellCount = 9;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>同比</th><th>敏感状态</th><th>全选<input type="checkbox"></th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>同比</th><th>敏感状态</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -99,7 +133,7 @@ var current_data = null;
             for(var j = 0;j < cellCount;j++) {
 		if (j == 8) {
 		    // checkbox
-		    var td = '<td><input type="checkbox"></td>';
+		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
 		}
 		else if (j == 7) {
 		    // identify status
@@ -133,6 +167,14 @@ var current_data = null;
 	table += thead + tbody;
 	table += '</table>'
 	$("#rank_table").html(table);
+	$('#select_all').click(function(){
+	    var $this = $(this);
+	    this.checked = !this.checked;
+	    $.each($('#rank_table :checkbox'), function(i, val) {
+		if ($(this) != $this)
+		    this.checked = !this.checked;
+	    });  
+	});
     }
 
     function create_previous_table(data, start_row, end_row) {

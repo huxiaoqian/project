@@ -44,8 +44,8 @@ def topic():
     return render_template('moodlens/topic_emotion.html', active='moodlens')
 
 
-@mod.route('/data/<emotion>/<area>/')
-def data(emotion, area='global'):
+@mod.route('/data/<area>/')
+def data(area='global'):
     """
     /keywords_data 接口已备好，只是差领域数据
     """
@@ -57,33 +57,36 @@ def data(emotion, area='global'):
 
     during = 24 * 3600
 
+    emotions_data = {}
     if query:
         begin_ts = ts - during
         end_ts = ts
         print begin_ts, end_ts
         query_dict = {
             'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-            'sentiment': emotions_kv[emotion],
             '$or': [],
         }
         for term in query.split(','):
             if term:
-                query_dict['$or'].append({'text': term})
+                query_dict['$or'].append({'text': [term]})
+        for k, v in emotions_kv.iteritems():
+            query_dict['sentiment'] = v
+            count, _ = xapian_search_sentiment.search(query=query_dict)
 
-        count, _ = xapian_search_sentiment.search(query=query_dict)
-
-        data = [end_ts * 1000, count]
+            emotions_data[k] = [end_ts * 1000, count]
     else:
         bucket = get_bucket('weibo_daily_sentiment_count_%s' % area)
         end_ts = ts
-        try:
-            daily_emotion_count = bucket.Get(str(end_ts) + '_' + str(emotions_kv[emotion]))
-            daily_emotion_count = int(daily_emotion_count)
-        except KeyError:
-            daily_emotion_count = 0
-        data = [end_ts * 1000, daily_emotion_count]
 
-    return json.dumps(data)
+        for k, v in emotions_kv.iteritems():
+            try:
+                daily_emotion_count = bucket.Get(str(end_ts) + '_' + str(v))
+                daily_emotion_count = int(daily_emotion_count)
+            except KeyError:
+                daily_emotion_count = 0
+            emotions_data[k] = [end_ts * 1000, daily_emotion_count]
+
+    return json.dumps(emotions_data)
 
 
 @mod.route('/flag_data/<emotion>/<area>/')

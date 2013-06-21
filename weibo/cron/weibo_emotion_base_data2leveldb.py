@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from xapian_weibo.xapian_backend import XapianSearch
-from xapian_weibo.xapian_backend_extra import _load_weibos_from_xapian
-from xapian_weibo.utils import load_emotion_words
+from xapian_weibo.utils import load_emotion_words, timeit
 import os
 import leveldb
 import time
+import datetime
 import opencc
 import re
 
 LEVELDBPATH = '/home/mirage/leveldb'
-s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo')
+s = XapianSearch(path='/opt/xapian_weibo/data/20130616/', name='master_timeline_weibo')
 cc = opencc.OpenCC('s2t')
 emotions_words = load_emotion_words()
 emotions_words = [unicode(e, 'utf-8') for e in emotions_words]
@@ -27,14 +27,18 @@ weibo_empty_retweet_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_we
                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 
-def timeit(method):
-    def timed(*args, **kw):
-        ts = time.time()
-        result = method(*args, **kw)
-        te = time.time()
-        print '%r %2.2f sec' % (method.__name__, te - ts)
-        return result
-    return timed
+@timeit
+def _load_weibos_from_xapian(total_days=90, fields=['_id', 'retweeted_status', 'text']):
+    begin_ts = time.mktime(datetime.datetime(2013, 1, 1).timetuple())
+    end_ts = time.mktime(datetime.datetime(2013, 6, 1).timetuple())
+
+    query_dict = {
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+    }
+
+    count, get_results = s.search(query=query_dict, fields=fields)
+    print count
+    return get_results
 
 
 def load_extra_weibos_from_xapian(ids):

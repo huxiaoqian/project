@@ -9,16 +9,9 @@
     时间范围:
     <select class="span2" name="interval" id="interval">
       <option value="-1">从注册至今</option>
-      <option value="1">最近1天</option>
-      <option value="7">最近1周</option>
-      <option value="30">最近1个月</option>
-      <option value="60">最近2个月</option>
-      <option value="90">最近3个月</option>
     </select>
      以<select class="span2" name="sort" id="sort">
         <option value="prob">概率</option>
-        <option value="freq">词频</option>
-        <option value="burst">突发度</option>
       </select>
 
       作为权重显示前<input type="number" name="limit" value="200" min="1" max="1000" class="span2" id="limit">关键词
@@ -110,6 +103,9 @@ function display_d3_cloud(data){
 }
 
   $(document).ready(function(){
+    $("#topic_type").change(function(){  
+      changChild($(this).val());  
+    });
     $.ajax({
         url: "/profile/group_topic/{{field}}?interval=90&sort=prob&limit=200&topic_type=lda",
         dataType: 'json',   
@@ -119,6 +115,19 @@ function display_d3_cloud(data){
         }
     });
   });
+  function changChild(tid){  
+    $("#interval").empty();//清空
+    $("#sort").empty();
+    if (tid == 'bst'){
+      var html = "<option value='90'>最近3个月</option><option value='60'>最近2个月</option><option value='30'>最近1个月</option><option value='7'>最近1周</option><option value='1'>最近1天</option>";
+      var shtml = "<option value='freq'>词频</option><option value='burst'>突发度</option>";
+    }else{
+      var html = "<option value='-1'>从注册至今</option>";
+      var shtml = "<option value='prob'>概率</option>";
+    }
+    $("#interval").append(html);
+    $("#sort").append(shtml);
+  }
   function submit_form(){
     var interval_arg = $("#interval")[0].value;
     var sort_arg = $("#sort")[0].value;

@@ -66,7 +66,7 @@
 
   $(document).ready(function(){
     $.ajax({
-        url: '/profile/group_emotion/{{field}}',
+        url: '/profile/group_emotion/{{field}}?interval=120',
         dataType: 'json',   
         type: "GET",   
         success: function (data) {

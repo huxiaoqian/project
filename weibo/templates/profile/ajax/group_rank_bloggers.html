@@ -7,10 +7,10 @@
       </select>
     时间范围:
     <select class="span2" name="interval" id="interval">
-      <option value="-1">近期</option>
+      <option value="-1">最近一周</option>
     </select>
-    前<input type="number" name="limit" value="1000" min="1" max="1000" class="span2" id="limit">条，
-      每页<input type="text" id="countperpage" name="countperpage" value="8" class="span1">
+    前<input type="number" name="limit" value="1000" min="1" max="1000" class="span2" id="limit" disabled>条，
+      每页<input type="text" id="countperpage" name="countperpage" value="8" class="span1" disabled>
       条结果
     <button type="button" class="btn btn-primary" id="rank" onclick="submit_form();return false;"><i class="icon-search"></i>排序</button>
   </form>
@@ -34,14 +34,18 @@
   <script src="/static/js/profile/bootstrap.min.js"></script>
   <script src="/static/js/profile/jquery.bootpag.min.js"></script>
   <script>
-  $(document).ready(function(){
-      var countperpage_args = $("#countperpage")[0].value;
+  var countperpage_args = 8;
+  var limit_arg = 1000;
+  var sex_kv = {'m': '男', 'f': '女'};
+  var v_kv = {'true': '是', 'false': '否'};
+  function submit_form(){
       var interval_arg = $("#interval")[0].value;
       var sort_arg = $("#sort_type")[0].value;
-      var limit_arg = $("#limit")[0].value;
-      // init bootpag
-      var total_page_number;
-      $.ajax({
+      getRankData(countperpage_args, interval_arg, sort_arg, limit_arg);
+  }
+  function getRankData(countperpage_args, interval_arg, sort_arg, limit_arg){
+    var total_page_number;
+    $.ajax({
         url: "/profile/group_rank/{{field}}?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
         dataType: 'json',   
         type: "GET",
@@ -55,9 +59,10 @@
             html += "<td>" + user['statusesCount'] + "</td>";
             html += "<td>" + user['followersCount'] + "</td>";
             html += "<td>" + user['friendsCount'] + "</td>";
-            html += "<td>" + user['verified'] + "</td>";
-            html += "<td>" + user['gender'] + "</td></tr>";
+            html += "<td>" + v_kv[user['verified']] + "</td>";
+            html += "<td>" + sex_kv[user['gender']] + "</td></tr>";
           }
+          $("#user_table").empty();
           $("#user_table").append(html);
           $('#page-selection').bootpag({
               total: total_page_number,
@@ -69,7 +74,6 @@
                   dataType: 'json',   
                   type: "GET",
                   success: function (data) {
-                    console.log(data);
                     var html = "";
                     for(var i=0;i < data['users'].length;i += 1){
                       user = data['users'][i];
@@ -78,15 +82,20 @@
                       html += "<td>" + user['statusesCount'] + "</td>";
                       html += "<td>" + user['followersCount'] + "</td>";
                       html += "<td>" + user['friendsCount'] + "</td>";
-                      html += "<td>" + user['verified'] + "</td>";
-                      html += "<td>" + user['gender'] + "</td></tr>";
+                      html += "<td>" + v_kv[user['verified']] + "</td>";
+                      html += "<td>" + sex_kv[user['gender']] + "</td></tr>";
                     }
                     $("#user_table").append(html);
                   }
                 });
             });
         }
-      });       
+      });
+  }
+  $(document).ready(function(){
+      var interval_arg = $("#interval")[0].value;
+      var sort_arg = $("#sort_type")[0].value;
+      getRankData(countperpage_args, interval_arg, sort_arg, limit_arg);
   })
   </script>
 {% endblock body %}

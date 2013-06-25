@@ -1,9 +1,9 @@
 {% extends 'profile/profile_layout.html' %}
-{% block title %}微博用户特征计算及行为分析原型系统{% endblock %}
+{% block title %}***原型系统{% endblock %}
 
 {% block top_navbar_active %}
-  <li><a href="/profile/person/">单个用户特征展示</a></li>
-  <li class="active"><a href="/profile/group/">领域特征展示</a></li>
+  <li><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+  <li class="active"><a href="/profile/group/finance">领域特征展示</a></li>
   <li><a href="/profile/search/">博主特征搜索与分领域展示</a></li>
 {% endblock top_navbar_active %}
 
@@ -25,12 +25,12 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </a>
-        <a class="brand" href="/profile/search/">微博用户特征计算及行为分析原型系统</a>
+        <a class="brand" href="/profile/search/">***原型系统</a>
         <div class="nav-collapse">
           <ul class="nav">
             <li><a href="/">首页</a></li>
-            <li><a href="/profile/person/">单个用户特征展示</a></li>
-            <li class="active"><a href="/profile/group/">领域特征展示</a></li>
+            <li><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+            <li class="active"><a href="/profile/group/finance">领域特征展示</a></li>
             <li><a href="/profile/search/">博主特征搜索与分领域展示</a></li>   
           </ul>
           <form class="navbar-search pull-left">
@@ -52,16 +52,17 @@
                <li><a href="/profile/group/{{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
             {% endif %}
           {% endfor %}
-            <li><a href="/profile/search/foreign">境外</a></li>
+          <li><a href="#">境外</a></li>
+          <!--
           <li class="nav-header">领域管理</li>
-            <li class=""><a href="#typeahead">增加或删除领域</a></li>
+            <li class=""><a href="#typeahead">增加或删除领域</a></li>-->
           <li class="divider"></li>
           <li><a href="#">帮助</a></li>
         </ul>
       </div>
 
       <div class="span9">
-        <legend>{{model}}领域</legend>
+        <legend>{{atfield}}领域</legend>
         <ul id="index-tabs" class="nav nav-tabs">
           <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouprank', uid=model)}}" data-toggle="tab">领域用户排序列表</a></li>
           <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouptopic', uid=model)}}" data-toggle="tab">领域话题兴趣</a></li>

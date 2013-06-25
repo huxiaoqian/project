@@ -61,7 +61,7 @@
 
   $(document).ready(function(){
     $.ajax({
-          url: "/profile/group_count/{{field}}?interval=threemonth",
+          url: "/profile/group_count/{{field}}?interval=120",
           dataType: 'json',   
           type: "GET",   
           success: function (data) {
@@ -85,10 +85,11 @@
   <form class="form-inline">
       时间范围:
     <select class="span2" name="interval" id="interval">
-      <option value="threemonth">3个月</option>
-      <option value="oneweek">1周</option>
-      <option value="onemonth">1个月</option>
-      <option value="twomonth">2个月</option>
+      <option value="120">4个月</option>
+      <option value="90">3个月</option>
+      <option value="7">1周</option>
+      <option value="30">1个月</option>
+      <option value="60">2个月</option>
     </select>
     <button type="button" class="btn btn-primary" onclick="submit_form();return false;"><i class="icon-search"></i>生成数量趋势图</button>
   </form>

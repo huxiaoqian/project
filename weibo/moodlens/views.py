@@ -71,7 +71,7 @@ def data(area='global'):
                 query_dict['$or'].append({'text': [term]})
         for k, v in emotions_kv.iteritems():
             query_dict['sentiment'] = v
-            count, _ = xapian_search_sentiment.search(query=query_dict)
+            count = xapian_search_sentiment.search(query=query_dict, count_only=True)
 
             emotions_data[k] = [end_ts * 1000, count]
     else:

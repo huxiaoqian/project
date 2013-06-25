@@ -1,0 +1,924 @@
+﻿<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+<title>Field</title>
+<style type="text/css">
+<!--
+body { margin: 0px;padding: 0px;text-align: left;}
+TD {FONT-SIZE: 12px; COLOR: #333;}
+#daohang {BORDER-BOTTOM: #e2e2e2 1px solid;}
+
+
+-->
+</style>
+<script src="./js/jquery-1.9.1.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="./js/bootstrap.js"></script>
+<script type="text/javascript" src="./js/bootstrap.min.js"></script>
+<link href="./css/bootstrap.css" rel="stylesheet">
+<link href="./css/bootstrap-responsive.css" rel="stylesheet">
+<link href="./css/bootstrap.min.css" rel="stylesheet">
+<link href="./css/bootstrap-responsive.min.css" rel="stylesheet">
+<style type="text/css" media="all">
+ul{  
+    list-style-type:none;  
+    width:100%;
+    padding: 0px;
+    margin:0px;  
+  }  
+  
+  </style>
+ <style type="text/css">
+  .onecity1{
+    color:#FF0000;
+
+  }
+  .onecity2{
+    color:black;
+  }
+  
+    </style>
+</head>
+
+<body>
+
+<SCRIPT>
+ function de_field(){
+ $(document).ready(function(){
+      var divs=$("input[checked='checked']").css("display",'none');
+})
+}  
+ function toueme(){
+  window.location.href="./index.html";
+ }
+
+function add_field(nu){<!-- 添加按钮 -->
+  switch(nu)
+  {
+       case 1: var fl=prompt("请输入要添加的领域名称","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       case 2: var fl=prompt("请输入要添加的话题名称","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       case 3: var fl=prompt("请输入要添加的新词","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       case 4: var fl=prompt("请输入要添加的情感词白名单","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       case 5: var fl=prompt("请输入新的活跃度权重","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+        case 6: var fl=prompt("请输入新的粉丝数权重","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+        case 7: var fl=prompt("请输入新的转发数权重","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+        case 8: var fl=prompt("请输入新的评论数权重","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       case 9: var fl=prompt("请输入新的外籍用户权重","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       case 10: var fl=prompt("请输入新的黑名单博主","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       case 11: var fl=prompt("请输入新的重要媒体","");
+               if(fl)
+               {
+                  alert("您输入的是"+fl);
+               }
+               break;
+       default: break;
+}
+ 
+}
+function drop_menu(he){<!-- 选择下拉菜单 -->
+ switch(he)
+ {
+    case 1:var lis = document.getElementById("drop");
+           lis.style.display='block';
+           break;
+    case 2:var lis = document.getElementById("drop_w");
+           lis.style.display='block';
+           break;
+    case 3:var lis = document.getElementById("drop_h");
+           lis.style.display='block';
+           break;
+    case 4:var lis = document.getElementById("drop_m");
+           lis.style.display='block';
+           break;
+    default:break;
+ }
+ 
+ 
+}
+function declear_all(he){<!-- 全选 -->
+
+  switch(he)
+ {
+    case 1:$(document).ready(function(){
+           var divs=$("input[name='field_new']").attr("checked",'ture');
+           })
+           var lis = document.getElementById("drop");
+           lis.style.display='none';
+           break;
+    case 2:$(document).ready(function(){
+           var divs=$("input[name='field_white']").attr("checked",'ture');
+           })
+           var lis = document.getElementById("drop_w");
+           lis.style.display='none';
+           break;
+    case 3:$(document).ready(function(){
+           var divs=$("input[name='field_hei']").attr("checked",'ture');
+           })
+           var lis = document.getElementById("drop_h");
+           lis.style.display='none';
+           break;
+    case 4:$(document).ready(function(){
+           var divs=$("input[name='field_media']").attr("checked",'ture');
+           })
+           var lis = document.getElementById("drop_m");
+           lis.style.display='none';
+           break;
+    default:break;
+ }
+ 
+
+}
+function declear_re(he){<!-- 反选 -->
+  switch(he)
+ {
+    case 1:$("[name='field_new']").each(function(){
+     
+   
+             if($(this).attr("checked"))
+             {
+                 $(this).removeAttr("checked");
+             }
+             else
+             {
+                 $(this).attr("checked",'true');
+             }
+   
+           })
+           var lis = document.getElementById("drop");
+           lis.style.display='none';
+           break;
+    case 2:$("[name='field_white']").each(function(){
+     
+   
+             if($(this).attr("checked"))
+             {
+                 $(this).removeAttr("checked");
+             }
+             else
+             {
+                 $(this).attr("checked",'true');
+             }
+   
+           })
+           var lis = document.getElementById("drop_w");
+           lis.style.display='none';
+           break;
+    case 3:$("[name='field_hei']").each(function(){
+     
+   
+             if($(this).attr("checked"))
+             {
+                 $(this).removeAttr("checked");
+             }
+             else
+             {
+                 $(this).attr("checked",'true');
+             }
+   
+           })
+           var lis = document.getElementById("drop_h");
+           lis.style.display='none';
+           break;
+    case 4:$("[name='field_media']").each(function(){
+     
+   
+             if($(this).attr("checked"))
+             {
+                 $(this).removeAttr("checked");
+             }
+             else
+             {
+                 $(this).attr("checked",'true');
+             }
+   
+           })
+           var lis = document.getElementById("drop_m");
+           lis.style.display='none';
+           break;
+    default:break;
+ }
+  
+
+}
+
+function cancle(){
+ var lis = document.getElementById("firm");
+ lis.style.display='none';
+}
+function look(he){<!-- 导航栏切换 -->
+ switch(he)
+ {
+ case 1: var lis = document.getElementById("User");
+         lis.style.background='#58ACFA';
+         var lis = document.getElementById("Pass");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Bai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Wai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Hei");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Media");
+         lis.style.background='#D8D8D8';
+         break;
+  case 2: var lis = document.getElementById("User");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Pass");
+         lis.style.background='#58ACFA';
+         var lis = document.getElementById("Bai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Wai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Hei");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Media");
+         lis.style.background='#D8D8D8';
+         break;
+  case 3: var lis = document.getElementById("User");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Pass");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Bai");
+         lis.style.background='#58ACFA';
+         var lis = document.getElementById("Wai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Hei");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Media");
+         lis.style.background='#D8D8D8';
+         break;
+  case 4: var lis = document.getElementById("User");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Pass");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Bai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Wai");
+         lis.style.background='#58ACFA';
+         var lis = document.getElementById("Hei");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Media");
+         lis.style.background='#D8D8D8';
+         break;
+  case 5: var lis = document.getElementById("User");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Pass");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Bai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Wai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Hei");
+         lis.style.background='#58ACFA';
+         var lis = document.getElementById("Media");
+         lis.style.background='#D8D8D8';
+         break;
+  case 6: var lis = document.getElementById("User");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Pass");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Bai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Wai");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Hei");
+         lis.style.background='#D8D8D8';
+         var lis = document.getElementById("Media");
+         lis.style.background='#58ACFA';
+         break;
+   default: break;
+  }
+}
+
+</SCRIPT>
+
+<div id="daohang" style="background:#58ACFA;">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    
+    <td width="85%">
+    <ul class="nav" style="list-style:none;">
+              
+              <li class="" style=" float:left; padding-left:60px;width:100px;">
+                <a href="./user_manage.html"  align="center" style="padding-top:10px;padding-bottom:10px;font-size: 16pt; color:#FFFFFF; font_weight:bold;">用户管理</a>
+              </li>
+              <li class="" style=" float:left; padding-left:60px;width:100px;">
+                <a href="./para_setting.html" align="center" style="padding-top:10px;padding-bottom:10px;font-size: 16pt; color:#2E2E2E; font_weight:bold; background:#F2F2F2;">参数设置</a>
+              </li>             
+              
+    </td>
+    <td width="10%" align="center" ><a style="font-size: 12pt;color:black;">**用户</a></td>
+    <td width="5%" align="center" ><a style="CURSOR: hand;font-size: 10pt;color:black;" onClick="toueme()" >退出系统</a></td>
+  </tr>
+</table>
+</div>
+
+<div class="bs-docs-example">
+    <div class="tabbable tabs-left" style="float:left;">
+        <ul class="nav nav-tabs" style="padding-left:20px;padding-top:20px;float:left;">
+          
+          <li class="active" > <a  onClick="look(1)" id="User" href="#tab1" data-toggle="tab" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >领域及话题管理</a></li>
+          
+          <li > <a  onClick="look(2)" id="Pass" href="#tab2" data-toggle="tab" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >新词管理</a></li>
+
+          <li > <a  onClick="look(3)" id="Bai" href="#tab3" data-toggle="tab" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >情感词白名单管理</a></li>
+
+          <li > <a  onClick="look(4)" id="Wai" href="#tab4" data-toggle="tab" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >博主权重指标管理</a></li>
+
+          <li > <a  onClick="look(5)" id="Hei" href="#tab5" data-toggle="tab" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >博主黑名单管理</a></li>
+
+          <li > <a  onClick="look(6)" id="Media" href="#tab6" data-toggle="tab" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >重要媒体管理</a></li>
+        </ul>
+    </div>
+      <div class="tab-content" style="float:left;height:1000px;width:1050px;">
+        <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:900px;width:1000px;">
+            <p style="font-size:20pt;color:#FE642E;">领域及话题管理</p>
+            <div id="info" style="padding-left:50px;padding-top:20px;height:800px;width:800px;">
+               <div style="padding-top:10px;">
+                   <div id="manage"  style="width:780px; height:70px;padding-top: 25px">
+                    <input type="button" name="add" value="添加领域"   style="width: 100px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(1)"/>
+                  </div>
+              </div>
+               <div style="padding-top:10px;">
+                <span class="label label-success" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">娱乐</span>
+                <div>
+                <input type="checkbox" name="field" value="学霸的爱情" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>学霸的爱情
+                <input type="checkbox" name="field" value="怀念哥哥张国荣" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>怀念哥哥张国荣
+                <input type="checkbox" name="field" value="张国荣十周年" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>张国荣十周年
+                <input type="checkbox" name="field" value="学霸的爱情" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>学霸的爱情
+                <input type="checkbox" name="field" value="怀念哥哥张国荣" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>怀念哥哥张国荣
+                <input type="checkbox" name="field" value="张国荣十周年" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>张国荣
+                <input type="checkbox" name="field" value="学霸的爱情" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>学霸的爱情
+                <input type="checkbox" name="field" value="怀念哥哥张国荣" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>怀念哥哥张国荣
+                <input type="checkbox" name="field" value="张国荣十周年" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>张国荣十周年
+                <input type="checkbox" name="field" value="学霸的爱情" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>学霸的爱情
+                <input type="checkbox" name="field" value="怀念哥哥张国荣" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>怀念哥哥张国荣
+                <input type="checkbox" name="field" value="张国荣十周年" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>张国荣
+                <div id="manage" style="width:500px; height:70px;padding-left:470px;padding-top: 25px">
+                    <input type="button" name="add" value="添加话题"  style="width: 100px; height: 30px; background:#F5DA81; font-size: 20px;border:#FFBF00" onClick="add_field(2)"/>
+                    <input type="button" name="deleteT" value="删除话题"  style="width: 100px; height: 30px; background:#F7BE81; font-size: 20px;border:#FFBF00" onClick="de_field()"/>
+                    <input type="button" name="deleteF" value="删除领域"  style="width: 100px; height: 30px; background:#F79F81; font-size: 20px;border:#FFBF00" />
+                </div>
+                </div>
+              </div>
+               <div style="padding-top:10px;">
+                <span class="label label-warning" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">政治</span>
+                <div>
+                <input type="checkbox" name="field" value="无限吃巧克力" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>无限吃巧克力
+                <input type="checkbox" name="field" value="富裕阶层" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>富裕阶层
+                <input type="checkbox" name="field" value="拉萨矿区滑坡" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>拉萨矿区滑坡
+                <input type="checkbox" name="field" value="无限吃巧克力" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>无限吃巧克力
+                <input type="checkbox" name="field" value="富裕阶层" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>富裕阶层
+                <input type="checkbox" name="field" value="拉萨矿区滑坡" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>拉萨矿区滑坡
+                <input type="checkbox" name="field" value="无限吃巧克力" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>无限吃巧克力
+                <input type="checkbox" name="field" value="富裕阶层" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>富裕阶层
+                <input type="checkbox" name="field" value="拉萨矿区滑坡" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>拉萨矿区滑坡
+                <input type="checkbox" name="field" value="无限吃巧克力" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>无限吃巧克力
+                <input type="checkbox" name="field" value="富裕阶层" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>富裕阶层
+                <input type="checkbox" name="field" value="拉萨矿区滑坡" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>拉萨矿区滑坡
+                <div id="manage" style="width:500px; height:70px;padding-left:470px;padding-top: 25px">
+                    <input type="button" name="add" value="添加话题"  style="width: 100px; height: 30px; background:#F5DA81; font-size: 20px;border:#FFBF00" onClick="add_field(2)"/>
+                    <input type="button" name="deleteT" value="删除话题"  style="width: 100px; height: 30px; background:#F7BE81; font-size: 20px;border:#FFBF00" />
+                    <input type="button" name="deleteF" value="删除领域"  style="width: 100px; height: 30px; background:#F79F81; font-size: 20px;border:#FFBF00" />
+                </div>
+                </div>
+              </div>
+               <div style="padding-top:10px;">
+                <span class="label label-important" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;"align="center">影视</span>
+                <div>
+                <input type="checkbox" name="field" value="忠烈杨家将" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>忠烈杨家将
+                <input type="checkbox" name="field" value="厨子戏子痞子" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>厨子戏子痞子
+                <input type="checkbox" name="field" value="最抠门男友" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>最抠门男友
+                <input type="checkbox" name="field" value="忠烈杨家将" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>忠烈杨家将
+                <input type="checkbox" name="field" value="厨子戏子痞子" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>厨子戏子痞子
+                <input type="checkbox" name="field" value="最抠门男友" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>最抠门男友
+                <input type="checkbox" name="field" value="忠烈杨家将" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>忠烈杨家将
+                <input type="checkbox" name="field" value="厨子戏子痞子" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>厨子戏子痞子
+                <input type="checkbox" name="field" value="最抠门男友" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>最抠门男友
+                <input type="checkbox" name="field" value="忠烈杨家将" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>忠烈杨家将
+                <input type="checkbox" name="field" value="厨子戏子痞子" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>厨子戏子痞子
+                <input type="checkbox" name="field" value="最抠门男友" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>最抠门男友
+                <div id="manage" style="width:500px; height:70px;padding-left:470px;padding-top: 25px">
+                    <input type="button" name="add" value="添加话题"  style="width: 100px; height: 30px; background:#F5DA81; font-size: 20px;border:#FFBF00" onClick="add_field(2)"/>
+                    <input type="button" name="deleteT" value="删除话题"  style="width: 100px; height: 30px; background:#F7BE81; font-size: 20px;border:#FFBF00" />
+                    <input type="button" name="deleteF" value="删除领域"  style="width: 100px; height: 30px; background:#F79F81; font-size: 20px;border:#FFBF00" />
+                </div>
+
+                </div>
+              </div>
+               <div style="padding-top:10px;">
+                <span class="label label-inverse" style="width:70px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">体育</span>
+                <div>
+                <input type="checkbox" name="field" value="国安VS恒大" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>国安VS恒大
+                <input type="checkbox" name="field" value="赵锡永被捕" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>赵锡永被捕
+                <input type="checkbox" name="field" value="地铁公交禁食" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>地铁公交禁食
+                <input type="checkbox" name="field" value="国安VS恒大" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>国安VS恒大
+                <input type="checkbox" name="field" value="赵锡永被捕" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>赵锡永被捕
+                <input type="checkbox" name="field" value="地铁公交禁食" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>地铁公交禁食
+                <input type="checkbox" name="field" value="国安VS恒大" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>国安VS恒大
+                <input type="checkbox" name="field" value="赵锡永被捕" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>赵锡永被捕
+                <input type="checkbox" name="field" value="地铁公交禁食" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>地铁公交禁食
+                <input type="checkbox" name="field" value="国安VS恒大" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>国安VS恒大
+                <input type="checkbox" name="field" value="赵锡永被捕" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>赵锡永被捕
+                <input type="checkbox" name="field" value="地铁公交禁食" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/>地铁公交禁食
+                <div id="manage" style="width:500px; height:70px;padding-left:470px;padding-top: 25px">
+                    <input type="button" name="add" value="添加话题"  style="width: 100px; height: 30px; background:#F5DA81; font-size: 20px;border:#FFBF00" onClick="add_field(2)"/>
+                    <input type="button" name="deleteT" value="删除话题"  style="width: 100px; height: 30px; background:#F7BE81; font-size: 20px;border:#FFBF00" />
+                    <input type="button" name="deleteF" value="删除领域"  style="width: 100px; height: 30px; background:#F79F81; font-size: 20px;border:#FFBF00" />
+                </div>
+                </div>
+              </div>
+              
+           </div>
+        </div>
+        <div class="tab-pane" id="tab2" style="float:left;padding-left:30px;padding-top:50px;height:700px;width:1000px;">
+        <p style="font-size:20pt;color:#FE642E;">新词管理</p>
+        <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
+               <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
+                    <div class="btn-group" >
+                       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu(1)">
+                         选择
+                       <span class="caret"></span>
+                      </a>
+                       <ul class="dropdown-menu" id="drop">
+                    
+                         <li><a href='#' onClick="declear_all(1)">全选</a></li>
+                         <li><a href='#' onClick="declear_re(1)">反选</a></li>
+                    </ul>
+                    </div>
+                    <input type="button" name="delete" value="导入"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+                    <input type="button" name="delete" value="导出"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+                    <input type="button" name="add" value="添加"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(3)"/>
+                    <input type="button" name="delete" value="删除"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="你妹" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">你妹</span>
+                <input type="checkbox" name="field_new" value="矮油" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">矮油</span>
+                <input type="checkbox" name="field_new" value="你妹的" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">你妹的</span>
+                <input type="checkbox" name="field_new" value="睡不着" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">睡不着</span>
+              </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="有爱" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">有爱</span>
+                <input type="checkbox" name="field_new" value="不要不" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不要不</span>
+                <input type="checkbox" name="field_new" value="必须" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">必须</span>
+                <input type="checkbox" name="field_new" value="潜力股" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">潜力股</span>
+
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="好开心" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">好开心</span>
+                <input type="checkbox" name="field_new" value="秘诀" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">秘诀</span>
+                <input type="checkbox" name="field_new" value="如果" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">如果</span>
+                <input type="checkbox" name="field_new" value="太他妈" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">太他妈</span>
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="牵着" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">牵着</span>
+                <input type="checkbox" name="field_new" value="怪不得" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">怪不得</span>
+                <input type="checkbox" name="field_new" value="爱你" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">爱你</span>
+                <input type="checkbox" name="field_new" value="果然" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">果然</span>
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="可耐" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">可耐</span>
+                <input type="checkbox" name="field_new" value="帅锅" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">帅锅</span>
+                <input type="checkbox" name="field_new" value="干嘛" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">干嘛</span>
+                <input type="checkbox" name="field_new" value="帮转" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">帮转</span>
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="虎躯一震" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">虎躯一震</span>
+                <input type="checkbox" name="field_new" value="给力" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">给力</span>
+                <input type="checkbox" name="field_new" value="不懂" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不懂</span>
+                <input type="checkbox" name="field_new" value="睡不醒" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">睡不醒</span>
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="不开心" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不开心</span>
+                <input type="checkbox" name="field_new" value="不来" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不来</span>
+                <input type="checkbox" name="field_new" value="不爱" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不爱</span>
+                <input type="checkbox" name="field_new" value="伤不起" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">伤不起</span>
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="不能" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不能</span>
+                <input type="checkbox" name="field_new" value="不知道" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不知道</span>
+                <input type="checkbox" name="field_new" value="不喜欢" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不喜欢</span>
+                <input type="checkbox" name="field_new" value="不高兴" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不高兴</span>
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="HOLD不住" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">HOLD不住</span>
+                <input type="checkbox" name="field_new" value="hold不住" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">hold不住</span>
+                <input type="checkbox" name="field_new" value="不过" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不过</span>
+                <input type="checkbox" name="field_new" value="掐指一算" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">掐指一算</span>
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_new" value="娘炮" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:95px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">娘炮</span>
+              </div>
+               
+           </div>
+        </div>
+
+         <div class="tab-pane" id="tab3" style="float:left;padding-left:30px;padding-top:50px;height:700px;width:1000px;">
+        <p style="font-size:20pt;color:#FE642E;">情感词白名单管理</p>
+        <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:900px;">
+               <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
+                    <div class="btn-group" >
+                       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu(2)">
+                         选择
+                       <span class="caret"></span>
+                      </a>
+                       <ul class="dropdown-menu" id="drop_w">
+                    
+                         <li><a href='#' onClick="declear_all(2)">全选</a></li>
+                         <li><a href='#' onClick="declear_re(2)">反选</a></li>
+                    </ul>
+                    </div>
+                    <input type="button" name="delete" value="导入"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+                    <input type="button" name="delete" value="导出"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+                    <input type="button" name="add" value="添加"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(4)"/>
+                    <input type="button" name="delete" value="删除"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+               </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_white" value="爱" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">爱</span>
+                <input type="checkbox" name="field_white" value="赞" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">赞</span>
+                <input type="checkbox" name="field_white" value="爽" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">爽</span>
+                <input type="checkbox" name="field_white" value="酷" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">酷</span>
+                <input type="checkbox" name="field_white" value="不" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">不</span>
+                <input type="checkbox" name="field_white" value="吐" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-info" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">吐</span>
+              </div>
+              <div style="padding-top:10px;">
+              <input type="checkbox" name="field_white" value="汗" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">汗</span>
+                <input type="checkbox" name="field_white" value="囧" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">囧</span>
+                <input type="checkbox" name="field_white" value="困" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">困</span>
+                <input type="checkbox" name="field_white" value="衰" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">衰</span>
+                <input type="checkbox" name="field_white" value="累" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">累</span>
+                <input type="checkbox" name="field_white" value="贱" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-info" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">贱</span>
+              </div>
+
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_white" value="泪" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">泪</span>
+                <input type="checkbox" name="field_white" value="恨" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">恨</span>
+                <input type="checkbox" name="field_white" value="笑" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">笑</span>
+                <input type="checkbox" name="field_white" value="哭" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">哭</span>
+                <input type="checkbox" name="field_white" value="织" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">织</span>
+                <input type="checkbox" name="field_white" value="怒" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-info" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">怒</span>
+
+               </div>
+               <div style="padding-top:10px;">
+               <input type="checkbox" name="field_white" value="贊" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">贊</span>
+                <input type="checkbox" name="field_white" value="晕" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">晕</span>
+                <input type="checkbox" name="field_white" value="哼" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">哼</span>
+                <input type="checkbox" name="field_white" value="淚" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">淚</span>
+                <input type="checkbox" name="field_white" value="吧" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">吧</span>
+                <input type="checkbox" name="field_white" value="雪" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-info" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">雪</span>
+              </div>
+               <div style="padding-top:10px;">
+                <input type="checkbox" name="field_white" value="愛" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">愛</span>
+                <input type="checkbox" name="field_white" value="心" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">心</span>
+                <input type="checkbox" name="field_white" value="萌" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">萌</span>
+                <input type="checkbox" name="field_white" value="帅" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">帅</span>
+                <input type="checkbox" name="field_white" value="吗" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">吗</span>
+                <input type="checkbox" name="field_white" value="耶" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-info" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">耶</span>
+                
+               </div>
+               <div style="padding-top:10px;">
+               <input type="checkbox" name="field_white" value="控" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-success" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">控</span>
+                <input type="checkbox" name="field_white" value="顶" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-warning" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">顶</span>
+                <input type="checkbox" name="field_white" value="啊" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-important" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">啊</span>
+                <input type="checkbox" name="field_white" value="哈" style="padding: 10px;height:15px; width:50px; font-size:12pt;"/><span class="label label-inverse" style="width:45px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">哈</span>
+              </div>
+           
+               
+           </div>
+        </div>
+      <div class="tab-pane" id="tab4" style="float:left;padding-left:30px;padding-top:50px;height:700px;width:1000px;">
+        <p style="font-size:20pt;color:#FE642E;">博主权重指标管理</p>
+        <div id="info" style="padding-left:50px;padding-top:20px;height:500px;width:900px;">
+          <div style="float:left;padding-left:20px;padding-top:30px;height:100px;width:300px;">
+          <div style="padding-top:10px;">
+               <span class="label label-success" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">活跃度</span>
+               <span class="label" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">60</span>
+          </div>
+          <div id="manage" style="width:500px; height:70px;padding-left:150px;padding-top: 25px">
+                    
+              <input type="button" name="delete" value="编辑"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(5)"/>
+                    
+           </div>
+         </div>
+         <div style="float:left;padding-left:20px;padding-top:30px;height:100px;width:300px;">
+           <div style="padding-top:10px;">
+               <span class="label label-warning" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">粉丝数</span>
+               <span class="label" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">60</span>
+          </div>
+          <div id="manage" style="width:500px; height:70px;padding-left:150px;padding-top: 25px">
+                    
+              <input type="button" name="delete" value="编辑"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(6)"/>
+                    
+           </div>
+         </div>
+         <div style="float:left;padding-left:20px;padding-top:30px;height:100px;width:300px;">
+           <div style="padding-top:10px;">
+               <span class="label label-important" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">转发数</span>
+               <span class="label" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">60</span>
+          </div>
+          <div id="manage" style="width:500px; height:70px;padding-left:150px;padding-top: 25px">
+                    
+              <input type="button" name="delete" value="编辑"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(7)"/>
+                    
+           </div>
+         </div>
+         <div style="float:left;padding-left:20px;padding-top:30px;height:100px;width:300px;">
+           <div style="padding-top:10px;">
+               <span class="label label-info" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">评论数</span>
+               <span class="label" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">60</span>
+          </div>
+          <div id="manage" style="width:500px; height:70px;padding-left:150px;padding-top: 25px">
+                    
+              <input type="button" name="delete" value="编辑"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(8)"/>
+                    
+           </div>
+         </div>
+         <div style="float:left;padding-left:20px;padding-top:30px;height:100px;width:300px;">
+           <div style="padding-top:10px;">
+               <span class="label label-inverse" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">外籍用户</span>
+               <span class="label" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">60</span>
+          </div>
+          <div id="manage" style="width:500px; height:70px;padding-left:150px;padding-top: 25px">
+                    
+              <input type="button" name="delete" value="编辑"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(9)"/>
+                    
+           </div>
+         </div>
+        </div>
+      </div>
+
+       <div class="tab-pane" id="tab5" style="float:left;padding-left:30px;padding-top:50px;height:700px;width:1000px;">
+        <p style="font-size:20pt;color:#FE642E;">博主黑名单管理</p>
+        <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
+             <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
+                    <div class="btn-group" >
+                       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu(3)">
+                         选择
+                       <span class="caret"></span>
+                      </a>
+                       <ul class="dropdown-menu" id="drop_h">
+                    
+                         <li><a href='#' onClick="declear_all(3)">全选</a></li>
+                         <li><a href='#' onClick="declear_re(3)">反选</a></li>
+                    </ul>
+                    </div>
+                    <input type="button" name="add" value="添加"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(10)"/>
+                    <input type="button" name="delete" value="删除"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+               </div>
+               <div class="tab-box-list_user">
+                     <span class="tt-choose" style="font-size:20px;width:300px;height:30px;padding-left:100px;padding-top: 20px">是否选择</span>
+                     <span class="tt-index" style="font-size:20px;width:300px;height:30px;padding-left:100px;padding-top: 20px">用户ID</span>
+                     <span class="tt-title" style="font-size:20px;width:300px;height:30px;padding-left:100px;padding-top: 20px">用户昵称</span>
+               </div>
+               <div class="item-list-wrap">
+                    <ul class="item-list">
+                    <li>
+                       <div class="item-hd">
+                             <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 50px；font-size:12pt;"/>
+                             <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 50px">13879184</span>
+                             <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 50px"> <link>薛蛮子</link></span>
+                             
+                       </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">21970987</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 30px"> <link>李开复</link></span>
+                            
+                       </div>
+                    </li>
+                    <li>
+                      <div class="item-hd">
+                            <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">39070975</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>林志玲</link></span>
+                            
+                      </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">49709790</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>任志强</link></span>
+                       </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">85097809</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>王石</link></span>
+       
+                       </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">60987098</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>吴晓求</link></span>
+       
+                       </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                            <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">79080987</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>潘石屹</link></span>
+        
+                        </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                            <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">89080980</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 30px"> <link>韩寒</link></span>
+        
+                        </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                             <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                             <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">99867453</span>
+                             <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>郭敬明</link></span>
+        
+                        </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                             <input type="checkbox" name="field_hei" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                             <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">10978967</span>
+                             <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>张欣</link></span>
+        
+                        </div>
+                    </li>
+                    </ul>
+                    </div>
+        </div>
+      </div>
+      
+      <div class="tab-pane" id="tab6" style="float:left;padding-left:30px;padding-top:50px;height:700px;width:1000px;">
+        <p style="font-size:20pt;color:#FE642E;">重要媒体管理</p>
+        <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
+             <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
+                    <div class="btn-group" >
+                       <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu(4)">
+                         选择
+                       <span class="caret"></span>
+                      </a>
+                       <ul class="dropdown-menu" id="drop_m">
+                    
+                         <li><a href='#' onClick="declear_all(4)">全选</a></li>
+                         <li><a href='#' onClick="declear_re(4)">反选</a></li>
+                    </ul>
+                    </div>
+                    <input type="button" name="add" value="添加"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" onClick="add_field(11)"/>
+                    <input type="button" name="delete" value="删除"  style="width: 90px; height: 30px; background:#81DAF5; font-size: 20px;border:#FFBF00" />
+               </div>
+               <div class="tab-box-list_user">
+                     <span class="tt-choose" style="font-size:20px;width:300px;height:30px;padding-left:100px;padding-top: 20px">是否选择</span>
+                     <span class="tt-index" style="font-size:20px;width:300px;height:30px;padding-left:100px;padding-top: 20px">用户ID</span>
+                     <span class="tt-title" style="font-size:20px;width:300px;height:30px;padding-left:100px;padding-top: 20px">用户昵称</span>
+               </div>
+               <div class="item-list-wrap">
+                    <ul class="item-list">
+                    <li>
+                       <div class="item-hd">
+                             <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 50px；font-size:12pt;"/>
+                             <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 50px">13879184</span>
+                             <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 50px"> <link>薛蛮子</link></span>
+                             
+                       </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">21970987</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 30px"> <link>李开复</link></span>
+                            
+                       </div>
+                    </li>
+                    <li>
+                      <div class="item-hd">
+                            <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">39070975</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>林志玲</link></span>
+                            
+                      </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">49709790</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>任志强</link></span>
+                       </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">85097809</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>王石</link></span>
+       
+                       </div>
+                    </li>
+                    <li>
+                       <div class="item-hd">
+                            <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">60987098</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>吴晓求</link></span>
+       
+                       </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                            <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">79080987</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>潘石屹</link></span>
+        
+                        </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                            <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                            <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">89080980</span>
+                            <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 30px"> <link>韩寒</link></span>
+        
+                        </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                             <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                             <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">99867453</span>
+                             <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>郭敬明</link></span>
+        
+                        </div>
+                    </li>
+                    <li>
+                        <div class="item-hd">
+                             <input type="checkbox" name="field_media" style="width:280px;height:30px;padding-left:80px;padding-top: 15px；font-size:12pt;"/>
+                             <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 15px">10978967</span>
+                             <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;width:280px;height:30px;padding-left:110px;padding-top: 15px"> <link>张欣</link></span>
+        
+                        </div>
+                    </li>
+                    </ul>
+                    </div>
+        </div>
+      </div>
+     </div>
+
+</div>
+
+    
+</div>
+</div>
+</body>
+</html>

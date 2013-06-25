@@ -5,7 +5,8 @@ from extensions import db
 __all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship',
            'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', 
            'RangeCount', 'Province', 'Words', 'PersonalBurstWords','FieldProfile', 'UserField', 
-           'HotStatus', 'Media']
+           'HotStatus', 'Media', 'Manager', 'NewWords', 'WhiteList', 'UserWeight', 'BlackList',
+           'IMedia']
 
 class User(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -281,3 +282,76 @@ class HotStatus(db.Model):
 
     def __repr__(self):
         return self.id
+
+class Manager(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    password = db.Column(db.String(20), unique=True)
+    managerName = db.Column(db.String(30))
+    managerGender = db.Column(db.String(5))
+    managerAge = db.Column(db.Integer)
+    managerPosition = db.Column(db.String(30))
+
+    @classmethod
+    def _name(cls):
+        return u'管理员'
+
+    def __repr__(self):
+        return self.managerName
+
+class NewWords(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    wordsName = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'新词'
+
+    def __repr__(self):
+        return self.wordsName
+
+class WhiteList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    listName = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'白名单'
+
+    def __repr__(self):
+        return self.listName
+
+class UserWeight(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    weightName = db.Column(db.String(20), unique=True)
+    weight = db.Column(db.Integer)
+
+    @classmethod
+    def _name(cls):
+        return u'博主指标权重'
+
+    def __repr__(self):
+        return self.weightName
+
+class BlackList(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    blackID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
+    blackName = db.Column(db.String(30), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'黑名单'
+
+    def __repr__(self):
+        return self.blackName
+
+class IMedia(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    mediaID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
+    mediaName = db.Column(db.String(30), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'重要媒体'
+
+    def __repr__(self):
+        return self.mediaName

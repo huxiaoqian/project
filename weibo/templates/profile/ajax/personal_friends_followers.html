@@ -1,28 +1,15 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
-{% block body %}     
-
-  <form class="form-inline">
-      时间范围:
-        <div class="btn-group">
-          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1天<span class="caret"></span></a>
-          <ul class="dropdown-menu">
-            <li class="active"><a href="#" data-toggle="tab">1天</a></li>
-            <li><a href="#" data-toggle="tab">1周</a></li>
-            <li><a href="#" data-toggle="tab">1个月</a></li>
-            <li><a href="#" data-toggle="tab">3个月</a></li>
-          </ul>
-        </div>
-      <button class="btn btn-primary"><i class="icon-search"></i>计算</button>
-  </form>
-  <div class="btn-group">
-    <button class="active btn">政务<span>20</span></button>
-    <button class="btn btn-primary">体育<span>20</span></button>
-    <button class="btn btn-success">财经<span>10</span></button>
-    <button class="btn btn-info">娱乐<span>4</span></button>
-    <button class="btn btn-warning">传媒<span>2</span></button>
-    <button class="btn btn-inverse">社会<span>1</span></button>
-  </div>
+{% block body %}
+<style>
+  #TagCloud {
+    padding: 15px;
+    border: solid 1px #eee;
+    background: #f5f5f5;
+  }
+</style>
+  <p id="TagCloud">
+  </p>
   <table class="table table-hover">
     <thead>
       <tr>
@@ -34,31 +21,82 @@
         <th>领域</th>
       </tr>
     </thead>
-    <tbody>
-      {% for user in result %}
-        <tr>
-          <td>{{user.id}}</td>
-          <td>{{user.userName}}</td>
-          <td>{{user.statusesCount}}</td>
-          <td>{{user.followersCount}}</td>
-          <td>{{user.friendsCount}}</td>
-          <td>{{user.field}}</td>
-        </tr>
-      {% endfor %}
+    <tbody id="user_table">
     </tbody>
   </table>
   <div class="inputAppend"><a class="btn btn-small" href="#"><i class="icon-download-alt"></i> 导出</a></div>
-  <div class="pagination pagination-centered">
-    <ul>
-      <li class="disabled"><a href="#">«</a></li>
-      <li class="active"><a href="#">1</a></li>
-      <li><a href="#">2</a></li>
-      <li><a href="#">3</a></li>
-      <li><a href="#">4</a></li>
-      <li><a href="#">5</a></li>
-      <li><a href="#">»</a></li>
-    </ul>
-  </div>
+  <div id="page-selection" class="pagination pagination-centered"></div>
+  <script src="/static/js/profile/bootstrap.min.js"></script>
+  <script src="/static/js/profile/jquery.bootpag.min.js"></script>
+  <script>
+  var fieldEn2Zh = function(name){
+    if(name == 'finance'){ return '财经'};
+    if(name == 'media'){ return '媒体'};
+    if(name == 'culture'){ return '文化'};
+    if(name == 'technology'){ return '科技'};
+    if(name == 'entertainment'){ return '娱乐'};
+    if(name == 'education'){ return '教育'};
+    if(name == 'fashion'){ return '时尚'};
+    if(name == 'sports'){ return '体育'};
+  }
+    $(document).ready(function(){
+      // init bootpag
+      var total_page_number;
+      $.ajax({
+        url: "/profile/person_fri_fol/" + {{uid}} + "?page=1",
+        dataType: 'json',   
+        type: "GET",
+        success: function (data) {
+          var fields_result = data['fields'];
+          $("#TagCloud").empty();
+          var field_html = "";
+          for(var i=0;i<fields_result.length;i+=1){
+            var fieldName = fields_result[i][0];
+            var fieldCount = fields_result[i][1];
+            field_html += "<a href=\"#\"><span class=\"label label-info\">" + fieldEn2Zh(fieldName) + "</span><span class=\"badge\">" + fieldCount + "</span></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;";
+          }
+          $("#TagCloud").append(field_html);
+          total_page_number = parseInt(data['pages']);
+          var html = "";
+          for(var i=0;i < data['users'].length;i += 1){
+            user = data['users'][i];
+            html += "<tr><td>" + user['id'] + "</td>";
+            html += "<td>" + user['userName'] + "</td>";
+            html += "<td>" + user['statusesCount'] + "</td>";
+            html += "<td>" + user['followersCount'] + "</td>";
+            html += "<td>" + user['friendsCount'] + "</td>";
+            html += "<td>" + user['field'] + "</td></tr>";
+          }
+          $("#user_table").append(html);
+          $('#page-selection').bootpag({
+              total: total_page_number,
+              maxVisible: 10
+          }).on("page", function(event, /* page number here */ num){
+               $("#user_table").empty();
+               $.ajax({
+                  url: "/profile/person_fri_fol/" + {{uid}} + "?page=" + num,
+                  dataType: 'json',   
+                  type: "GET",
+                  success: function (data) {
+                    var html = "";
+                    for(var i=0;i < data['users'].length;i += 1){
+                      user = data['users'][i];
+                      html += "<tr><td>" + user['id'] + "</td>";
+                      html += "<td>" + user['userName'] + "</td>";
+                      html += "<td>" + user['statusesCount'] + "</td>";
+                      html += "<td>" + user['followersCount'] + "</td>";
+                      html += "<td>" + user['friendsCount'] + "</td>";
+                      html += "<td>" + fieldEn2Zh(user['field']) + "</td></tr>";
+                    }
+                    $("#user_table").append(html);
+                  }
+                });
+            });
+        }
+      });
+
+    });
+  </script>
 
 {% endblock body %}
 

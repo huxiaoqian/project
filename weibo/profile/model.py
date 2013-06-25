@@ -3,32 +3,10 @@
 from config import db
 
 __all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship',
-           'UserIdentification', 'RangeCount', 'Province', 'Words', 'PersonalBurstWords',
-           'FieldProfile', 'UserField', 'HotStatus', 'Media']
-
-class Field(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    fieldName = db.Column(db.String(20), unique=True)
-
-    @classmethod
-    def _name(cls):
-        return u'领域'
-
-    def __repr__(self):
-        return self.fieldName
-
-class Topic(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    topicName = db.Column(db.String(20), unique=True)
-    fieldId = db.Column(db.Integer, db.ForeignKey('field.id'))
-    field = db.relationship('Field', primaryjoin='Field.id==Topic.fieldId')
-
-    @classmethod
-    def _name(cls):
-        return u'子领域, 话题'
-
-    def __repr__(self):
-        return self.topicName
+           'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', 
+           'RangeCount', 'Province', 'Words', 'PersonalBurstWords','FieldProfile', 'UserField', 
+           'HotStatus', 'Media', 'Manager', 'NewWords', 'WhiteList', 'UserWeight', 'BlackList',
+           'IMedia']
 
 class User(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -123,21 +101,73 @@ class FollowRelationship(db.Model):
     def __repr__(self):
         return '%s->%s' % (self.uid, self.fid)
 
-class UserIdentification(db.Model):
+class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
-    topic = db.relationship('Topic', primaryjoin='Topic.id==UserIdentification.topicId')
-    rank = db.Column(db.Integer)
-    userId = db.Column(db.BigInteger(11, unsigned=True), db.ForeignKey('user.id'))
-    user = db.relationship('User', primaryjoin='User.id==UserIdentification.userId')
-    identifyRange = db.Column(db.String(20), default='area')
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='PageRank')
+    fieldName = db.Column(db.String(20), unique=True)
 
     @classmethod
     def _name(cls):
-        return u'博主识别'
+        return u'领域'
+
+    def __repr__(self):
+        return self.fieldName
+
+class Topic(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topicName = db.Column(db.String(20), unique=True)
+    fieldId = db.Column(db.Integer, db.ForeignKey('field.id'))
+    field = db.relationship('Field', primaryjoin='Field.id==Topic.fieldId')
+
+    @classmethod
+    def _name(cls):
+        return u'子领域, 话题'
+
+    def __repr__(self):
+        return self.topicName
+
+class WholeUserIdentification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='followers')
+
+    @classmethod
+    def _name(cls):
+        return u'全网博主识别'
+
+    def __repr__(self):
+        return self.id
+
+class AreaUserIdentification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
+    topic = db.relationship('Topic', primaryjoin='Topic.id==AreaUserIdentification.topicId')
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='pagerank')
+
+    @classmethod
+    def _name(cls):
+        return u'领域博主识别'
+
+    def __repr__(self):
+        return self.id
+
+class BurstUserIdentification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='followers')
+
+    @classmethod
+    def _name(cls):
+        return u'突发博主识别'
 
     def __repr__(self):
         return self.id
@@ -252,3 +282,76 @@ class HotStatus(db.Model):
 
     def __repr__(self):
         return self.id
+
+class Manager(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    password = db.Column(db.String(20), unique=True)
+    managerName = db.Column(db.String(30))
+    managerGender = db.Column(db.String(5))
+    managerAge = db.Column(db.Integer)
+    managerPosition = db.Column(db.String(30))
+
+    @classmethod
+    def _name(cls):
+        return u'管理员'
+
+    def __repr__(self):
+        return self.managerName
+
+class NewWords(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    wordsName = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'新词'
+
+    def __repr__(self):
+        return self.wordsName
+
+class WhiteList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    listName = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'白名单'
+
+    def __repr__(self):
+        return self.listName
+
+class UserWeight(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    weightName = db.Column(db.String(20), unique=True)
+    weight = db.Column(db.Integer)
+
+    @classmethod
+    def _name(cls):
+        return u'博主指标权重'
+
+    def __repr__(self):
+        return self.weightName
+
+class BlackList(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    blackID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
+    blackName = db.Column(db.String(30), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'黑名单'
+
+    def __repr__(self):
+        return self.blackName
+
+class IMedia(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    mediaID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
+    mediaName = db.Column(db.String(30), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'重要媒体'
+
+    def __repr__(self):
+        return self.mediaName

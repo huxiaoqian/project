@@ -157,7 +157,7 @@ function drawChinamap(data) {
     };
     table_str += row_str;
     table_str += '</table>'
-    summary.html('<h5>微博地域分布</h5>'+table_str);
+    summary.html('<h5>注册地域分布</h5>'+table_str);
     for (var state in china) {
 	//分省区域着色
 	china[state]['path'].color = Raphael.getColor(0.9);

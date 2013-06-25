@@ -1,47 +1,65 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
-{% block body %}     
-  <script src="/static/js/profile/RGraph.common.core.js"></script>
-  <script src="/static/js/profile/RGraph.bar.js"></script>
-  <script src="/static/js/profile/RGraph.common.dynamic.js"></script>
-  <script src="/static/js/profile/RGraph.common.tooltips.js"></script>
+{% block body %}
   <script>
-  function display_active_chart(){
-    var active = new RGraph.Bar('activeCanvas',[2500,1900,1600,1700,1800,1750,1600,1000,800,700,600,400,300,200,100]);
-              active.Set('chart.title','博主活跃度分布');
-        active.Set('chart.labels',['1','2','3','4','5','6','7','8','9','10','11','12','13','13','14+']);       
-              active.Set('chart.strokestyle', 'black');
-        active.Set('labels.above',true);
-        active.Set('chart.tooltips.effect','expand');
-        active.Set('chart.tooltips.event','onmousemove');
-              active.Set('chart.tooltips', ['2500','1900','1600','1700','1800','1750','1600','1000','800','700','600','400','300','200','100']);
-        active.Set('chart.highlight.style','3d');
-        active.Set('chart.colors',['#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858','#FA5858']);
-        active.Set('chart.width',700);
-        active.Set('chart.height',350);
-              active.Set('gutter.left', 120);
-              active.Set('gutter.right', 80);
-        active.Draw();
+  var active;
+  function display_active_chart(data){
+    active = new RGraph.Bar('activeCanvas',data['y']);
+    active.Set('chart.title','博主活跃度分布');
+    active.Set('chart.labels',data['x']);       
+    active.Set('chart.strokestyle', 'black');
+    active.Set('labels.above',true);
+    active.Set('chart.tooltips.effect','expand');
+    active.Set('chart.tooltips.event','onmousemove');
+    active.Set('chart.tooltips', data['y']);
+    active.Set('chart.highlight.style','3d');
+    active.Set('chart.colors',['#009966']);
+    active.Set('chart.width',930);
+    active.Set('chart.height',400);
+    active.Set('chart.title.xaxis', '发布微博数量（/条）');
+    active.Set('chart.title.yaxis', '人数（/人）');
+    active.Set('chart.gutter.left', 65);
+    active.Set('chart.gutter.bottom', 45);
+    active.Set('chart.title.xaxis.pos', 0.25);
+    active.Set('chart.title.yaxis.pos', 0.23);
+    active.Draw();
+  }
+  function submit_form(){
+    var interval_arg = $("#interval")[0].value;
+    RGraph.Clear(active.canvas);
+    $.ajax({
+          url: "/profile/group_active/{{field}}?interval=" + interval_arg,
+          dataType: 'json',   
+          type: "GET",   
+          success: function (data) {
+            $("#chartdiv_week_weibocount").empty();
+            display_active_chart(data);
+          }
+      });
   }
   $(document).ready(function(){
-    display_active_chart();
+    $.ajax({
+          url: "/profile/group_active/{{field}}?interval=120",
+          dataType: 'json',   
+          type: "GET",   
+          success: function (data) {
+             display_active_chart(data);
+          }
+      });
   })
   </script>
   <form class="form-inline">
     时间范围:
-      <div class="btn-group">
-        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">1天<span class="caret"></span></a>
-        <ul class="dropdown-menu">
-          <li class="active"><a href="#" data-toggle="tab">1天</a></li>
-          <li><a href="#" data-toggle="tab">1周</a></li>
-          <li><a href="#" data-toggle="tab">1个月</a></li>
-          <li><a href="#" data-toggle="tab">3个月</a></li>
-        </ul>
-      </div>
-
-    <button class="btn btn-primary"><i class="icon-search"></i>计算</button>
+    <select class="span2" name="interval" id="interval">
+      <option value="120">4个月</option>
+      <option value="90">3个月</option>
+      <option value="7">1周</option>
+      <option value="30">1个月</option>
+      <option value="60">2个月</option>
+    </select>
+    <button type="button" class="btn btn-primary" onclick="submit_form();return false;"><i class="icon-search"></i>计算</button>
   </form>
-  <div><canvas id="activeCanvas" width="1000" height="400">[No canvas support]</canvas></div>
+  <div><canvas id="activeCanvas" width="930" height="400">[No canvas support]</canvas></div>
 
 {% endblock body %}
 

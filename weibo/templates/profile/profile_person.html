@@ -1,9 +1,10 @@
 {% extends 'profile/profile_layout.html' %}
-{% block title %}单个网民画像{% endblock %}
+
+{% block title %}单个用户特征展示{% endblock %}
 {% block top_navbar_active %}
-    <li class="active"><a href="/profile/person">单个网民画像</a></li>
-    <li><a href="/profile/group">网民群体画像</a></li>
-    <li><a href="/profile/search">网民特征搜索与分类展示</a></li>
+    <li class="active"><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+    <li><a href="/profile/group/finance">领域特征展示</a></li>
+    <li><a href="/profile/search">博主特征搜索与分领域展示</a></li>
 {% endblock top_navbar_active %}
 {% block content %}
 <div class="navbar navbar-fixed-top">
@@ -14,54 +15,50 @@
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </a>
-    <a class="brand" href="/profile/search/">网民画像</a>
+    <a class="brand" href="/profile/search/">***原型系统</a>
     <div class="nav-collapse">
       <ul class="nav">
         <li><a href="/">首页</a></li>
-        <li class="active"><a href="/profile/person/">单个网民画像</a></li>
-        <li><a href="/profile/group/">网民群体画像</a></li>
-        <li><a href="/profile/search/">网民特征搜索与分类展示</a></li>   
+        <li class="active"><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+        <li><a href="/profile/group/finance">领域特征展示</a></li>
+        <li><a href="/profile/search/">博主特征搜索与分领域展示</a></li>   
       </ul>
       <form class="navbar-search pull-left">
           <input type="text" class="search-query" placeholder="按博主昵称搜索">
       </form>
-      <ul class="nav pull-right">
-        <li><a href="#">帮助</a></li>
-      </ul>
-
     </div><!--/.nav-collapse -->
   </div>
 </div>
 </div>
  
   <div class="container-fluid">
-    <legend>{{ user.userName }}</legend>
+    <legend>{{ user['userName'] }}</legend>
       <div class="row-fluid">
         <div class="span3">
           <div class="well sidebar-nav">
             <div class="caption">
               <ul class="nav nav-list">
-                <li><img style="width: 50px; height: 50px;" src="{{ user.profileImageUrl }}"></li>
+                <li><img style="width: 50px; height: 50px;" src="{{ user['profile_image_url'] }}"></li>
                 <li class="nav-header">基本信息</li>
-                <li>关注：<span class="badge badge-success">{{ user.friendsCount }}</span> </li>
-                <li class="">粉丝：<span class="badge badge-info">{{ user.followersCount }}</span></li>
-                <li class="">微博：<span class="badge badge-warning">{{ user.statusesCount }}</span></li>
-                {% if user.gender == 'f' %}
+                <li>关注：<span class="badge badge-success">{{ user['friends_count'] }}</span> </li>
+                <li class="">粉丝：<span class="badge badge-info">{{ user['followers_count'] }}</span></li>
+                <li class="">微博：<span class="badge badge-warning">{{ user['statuses_count'] }}</span></li>
+                {% if user['gender'] == 'f' %}
                   <li class="">性别：女</li>
                 {% else %}
                   <li class="">性别：男</li>
                 {% endif %}
-                {% if user.verified == False %}
+                {% if user['verified'] == False %}
                   <li class="">普通用户</li>
                 {% else %}
                   <li class="">认证用户</li>
                 {% endif %}
                 <!--<li class="">个人简介：天使投资人薛蛮子</li>-->
                 <li class="nav-header">注册信息</li>
-                <li class="">{{ user.location }}</li>
-                <li class="">{{ user.createdAt }}</li>
+                <li class="">{{ user['location'] }}</li>
+                <li class="">{{ user['createdAt'] }}</li>
                 <li class="nav-header">微博地址</li>
-                <li class=""><a href="http://weibo.com/u/{{ user.id }}" target="_blank">weibo.com/u/{{ user.id }}</a></li>
+                <li class=""><a href="http://weibo.com/u/{{ user.id }}" target="_blank">weibo.com/u/{{ user['id'] }}</a></li>
               </ul>
             </div>
           </div>
@@ -69,9 +66,9 @@
         <div class="span9">
           <ul id="index-tabs" class="nav nav-tabs">
             <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personaltopic', uid=user.id)}}" data-toggle="tab">话题兴趣</a></li>
-            <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personal_friends_followers', uid=user.id)}}" data-toggle="tab">关注及粉丝分布</a></li>
+            <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personal_friends_followers', uid=user.id)}}" data-toggle="tab">关注及粉丝领域分布</a></li>
             <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personalnetwork', uid=user.id)}}" data-toggle="tab">社会网络结构</a></li>
-            <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personalweibocount', uid=user.id)}}" data-toggle="tab">微博数量趋势</a></li>
+            <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personalweibocount', uid=user.id)}}" data-toggle="tab">微博数量走势</a></li>
           </ul>
         </div>
       </div><!--.row-fluid end--> 

@@ -39,7 +39,7 @@
   }
   $(document).ready(function(){
     $.ajax({
-          url: "/profile/group_active/{{field}}?interval=90",
+          url: "/profile/group_active/{{field}}?interval=120",
           dataType: 'json',   
           type: "GET",   
           success: function (data) {
@@ -51,6 +51,7 @@
   <form class="form-inline">
     时间范围:
     <select class="span2" name="interval" id="interval">
+      <option value="120">4个月</option>
       <option value="90">3个月</option>
       <option value="7">1周</option>
       <option value="30">1个月</option>

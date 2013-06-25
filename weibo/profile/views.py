@@ -122,7 +122,7 @@ def profile_search(model='hotest'):
             else:
                 startoffset = (page - 1) * COUNT_PER_PAGE
 
-            total_days = 6
+            total_days = 90
             today = datetime.datetime.today()
             now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
             now_ts = int(now_ts)
@@ -222,7 +222,7 @@ def profile_search(model='hotest'):
 @mod.route('/group/<fieldEnName>', methods=['GET', 'POST'])
 def profile_group(fieldEnName):
     field = FieldProfile.query.all()
-    return render_template('profile/profile_group.html', field=field, model=fieldEnName)
+    return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
 
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):
@@ -569,15 +569,8 @@ def group_status_count(fieldEnName):
 
     interval = None
     if request.args.get('interval'):
-        interval =  request.args.get('interval')
-    if interval == 'oneweek':
-        total_days = 6
-    elif interval == 'onemonth':
-        total_days = 29
-    elif interval == 'twomonth':
-        total_days = 59
-    else:
-        total_days = 89
+        interval =  int(request.args.get('interval'))
+        total_days = interval
 
     bucket = get_bucket('field_daily_post_count')
     for i in xrange(-total_days + 1, 1):
@@ -588,6 +581,7 @@ def group_status_count(fieldEnName):
                 daily_count = bucket.Get(str(fieldEnName) + '_' + str(lt) + '_' + str(is_retweeted))
                 daily_count = int(daily_count)
             except KeyError:
+                print 'here'
                 daily_count = 0
             post_count[is_retweeted] = daily_count
         sumcount = sum(post_count.values())
@@ -666,15 +660,8 @@ def profile_group_emotion(fieldEnName):
 
     interval = None
     if request.args.get('interval'):
-        interval =  request.args.get('interval')
-    if interval == 'oneweek':
-        total_days = 6
-    elif interval == 'onemonth':
-        total_days = 29
-    elif interval == 'twomonth':
-        total_days = 59
-    else:
-        total_days = 89
+        interval =  int(request.args.get('interval'))
+        total_days = interval
 
     bucket = get_bucket('field_daily_sentiment_count')
     for i in xrange(-total_days + 1, 1):

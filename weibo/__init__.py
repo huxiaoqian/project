@@ -11,6 +11,7 @@ from weibo.root.views import mod as rootModule
 from weibo.identify.views import mod as identifyModule
 from weibo.moodlens.views import mod as moodlensModule
 from weibo.profile.views import mod as profileModule
+from weibo.propagate.views import mod as propagateModule
 from weibo.sysadmin.views import mod as adminModule
 
 def create_app():
@@ -22,6 +23,7 @@ def create_app():
     app.register_blueprint(identifyModule)
     app.register_blueprint(moodlensModule)
     app.register_blueprint(profileModule)
+    app.register_blueprint(propagateModule)
     app.register_blueprint(adminModule)
 
     # Create database
@@ -29,11 +31,11 @@ def create_app():
     with app.test_request_context():
         db.create_all()
 
-    # Create admin
-    admin.init_app(app)
-    for m in model.__all__:
-        m = getattr(model, m)
-        n = m._name()
-        admin.add_view(SQLModelView(m, db.session, name=n))
+    # # Create admin
+    # admin.init_app(app)
+    # for m in model.__all__:
+    #     m = getattr(model, m)
+    #     n = m._name()
+    #     admin.add_view(SQLModelView(m, db.session, name=n))
 
     return app

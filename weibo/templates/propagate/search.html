@@ -1,0 +1,86 @@
+{% extends "propagate/base.html" %}
+{% block title %}信息搜索{% endblock %}
+{% block content %}
+
+    <div class="container">
+
+      <div class="row">
+      	<legend>微博信息搜索</legend>
+
+      	<form class="form-inline" action = "/propagate/showResult/" method="post">
+
+          <ul>
+      	    关键字词: <input type="text" class="span2" placeholder="请输入关键字" value="" role="textbox" name="keyword">
+      	    关键用户: <input type="text" class="span2" placeholder="请输入用户" value="" role="textbox" name="keyuser">
+          </ul>
+
+          <ul>
+      	    开始时间: <input type="text" class="span2" placeholder="2013-04-13" data-date-format="yyyy-mm-dd" value="" role="textbox" name="beg_time">
+      	    截止时间: <input type="text" class="span2" placeholder="2013-04-13" data-date-format="yyyy-mm-dd" value="" role="textbox" name="end_time">
+            <input type="hidden" name="r" value="1">
+      	  <input type="submit" class="btn btn-primary" value = "搜索">
+
+      	</form>
+        <hr>
+	 <div class="well">
+
+	    <ul id="myTab" class="nav nav-tabs">
+            <li class="active"><a href="#热门话题" data-toggle="tab">热门话题</a></li>
+            <li><a href="#热门微博" data-toggle="tab">热门微博</a></li>
+      </ul>
+
+	  <div id="myTabContent" class="tab-content">
+
+            
+            <div class="tab-pane fade active in" id="热门话题">
+            	{% for field in field_topics %}
+            	<p>{{ field.field_name }}</p>
+              <ul class="inline">
+              	{% for topic in field.topics %}
+		              <li><a href="/showTopicResult/{{ topic }}/">{{ topic }}</a></li>
+				        {% endfor %}
+              </ul>
+              {% endfor %}
+              <div>
+                <a href="/topics" >查看更多</a>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="热门微博">
+
+            {% for status in status_hot %}
+            <div class="WB_feed_type SW_fun  S_line2" action-type="feed_list_item" >
+              <div class="WB_feed_datail S_line2 clearfix">
+			         <div class="WB_face">
+                  <a class="W_face_radius" title="{{ status.user.name }}"><img title="{{ status.user.name }}" alt="" width="50" height="50" src="{{ status.user.profile_image_url }}"></a>
+							 </div>
+			         <div class="WB_detail">
+			           <div class="WB_info"><a class="WB_name S_func1" nick-name="{{ status.user.name }}" title="{{ status.user.name }}" href="{{ status.weibo_url }}">{{ status.user.name }}</a>
+                 </div>
+				         <div class="WB_text" node-type="feed_list_content">{{ status.status.text }}</div>
+					     <div class="WB_func clearfix">
+					       <div class="WB_handle">
+					         <a action-type="feed_list_like" title="赞"><em class="W_ico20 icon_praised_b"></em>赞:{{ status.status.attitudesCount }}</a><i class="S_txt3">|</i>
+					         <a action-type="feed_list_forward">转发:{{ status.status.repostsCount }}</a><i class="S_txt3">|</i>
+					         <a action-type="feed_list_comment">评论:{{ status.status.commentsCount }}</a><i class="S_txt3">|</i>
+                   <a href="/showResult_single/{{ status.status.id }}/" action-type="feed_list_comment">分析</a>
+					     </div>
+					     <div class="WB_from">
+					       <a target="_blank" class="S_link2 WB_time" node-type="feed_list_item_date">{{ status.status.postDate }}</a> 
+                 <em class="S_txt2">来自</em><a class="S_link2" target="_blank">{{ status.status.sourcePlatform }}</a>							
+							 </div>
+				       </div>
+				       <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
+			       </div>
+		        </div>
+	         </div>
+	       {% endfor %}
+
+                
+    <div>
+        <a href="/hot_status" >查看更多</a>
+    </div>
+    </div>
+    </div> <!-- /container -->
+
+{% endblock %}

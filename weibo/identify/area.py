@@ -193,7 +193,7 @@ def make_network(topic_id, date, window_size, ts=False):
     g = nx.DiGraph()
 
     #need repost index
-    topic = cut(s, topic.encode('utf-8'), f=['n', 'nr', 'ns', 'nt'])
+    topic = cut(s, topic.encode('utf-8'))
     statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
     query_dict = {'text': topic, 'timestamp': {'$gt': start_time, '$lt': end_time}}
 

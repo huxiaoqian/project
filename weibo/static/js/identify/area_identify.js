@@ -189,6 +189,7 @@ function network_request_callback(data) {
     }
     else {
 	$("#loading_network_data").text("暂无结果!");
+	$("#loading_network_data").show();
     }
 }
 

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division
+import time
 import  calendar
 import re
-import datetime
+from datetime import datetime
 from datetime import date
 
 from weibo.model import *
@@ -13,10 +14,11 @@ from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
 
+user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
+
 def get_user(uid):
     user = {}
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
-    count,get_results = s.search(query={'_id': uid})
+    count,get_results = user_search.search(query={'_id': uid})
     for r in get_results():
         user['id'] = r['_id']
         user['province'] = r['province']
@@ -45,6 +47,7 @@ def get_user(uid):
 
 def calculate(results):
     #初始化
+    start_time = time.time()
     topic_info = {}
 
     topic_index = {}
@@ -58,6 +61,9 @@ def calculate(results):
     blogs_sum = 0
     comments_sum = 0
     topic_ori_blog = []
+
+    topic_leader_uid = set()
+    topic_participents_uid = set()
     
     city_count={}
     html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option>
@@ -113,7 +119,8 @@ def calculate(results):
             uid = int(r['user'])
             user = get_user(uid)
             if user != None:
-                if user not in topic_participents:
+                if uid not in topic_participents_uid:
+                    topic_participents_uid.add(uid)
                     topic_participents.append(user)
                 if r['retweeted_status'] == None:
                     temp_ori = {}
@@ -123,11 +130,13 @@ def calculate(results):
                 if r['reposts_count'] != None and r['comments_count'] != None:
                     rc = r['reposts_count'] + r['comments_count']
                     if rc > 1500:
-                        topic_leader.append(user)
+                        if uid not in topic_leader_uid:
+                            topic_leader_uid.add(uid)
+                            topic_leader.append(user)                  
                 if r['reposts_count'] > 1000:
                     temp = {}
                     temp['status'] = r
-                    temp['status']['created_at'] = datetime.datetime.fromtimestamp(r['timestamp'])
+                    temp['status']['created_at'] = datetime.fromtimestamp(r['timestamp'])
                     temp['status']['text'] = r['text'].decode("utf-8")
                     temp['status']['source'] = re.match('<.*?>(.*)<.*?>', r['source']).group(1).decode("utf-8")
                     temp['user'] = user
@@ -154,6 +163,8 @@ def calculate(results):
         comments_sum = comments_sum + r['comments_count']
         blogs_sum += 1
 
+    print 'loop is done in %s seconds' % (time.time() - start_time)
+
     timedelta = len(date_list)
     avg = blogs_sum/float(timedelta)
     i = 0
@@ -177,29 +188,29 @@ def calculate(results):
 	top_medias.append(media_name)
 	
     media_list = []
-    for r in topic_ori_blog:
-	tmedia = []
-        tmedia.append(r['user']['name'])
-	x = r['status']['comments_count']+r['status']['reposts_count']
-	tmedia.append(x)
-	media_list.append(tmedia)
-	sorted(media_list, key=lambda tmedia: tmedia[1],reverse = True)
-	if len(media_list) >= 20:
-	    m = 0
-	    while m < 20:
-		if media_list[m][0] in top_medias:
-		    media_index += 1
-		    m += 1
-		else:
-		    m += 1
-	else:
-	    m = 0
-	    while m < len(media_list):
-		if media_list[m][0] in top_medias:
-		    media_index += 1
-		    m += 1
-		else:
-		    m += 1
+    # for r in topic_ori_blog:
+    #     tmedia = []
+    #     tmedia.append(r['user']['name'])
+    #     x = r['status']['comments_count']+r['status']['reposts_count']
+    #     tmedia.append(x)
+    #     media_list.append(tmedia)
+    #     sorted(media_list, key=lambda tmedia: tmedia[1],reverse = True)
+    #     if len(media_list) >= 20:
+    #         m = 0
+    #         while m < 20:
+    #     	if media_list[m][0] in top_medias:
+    #     	    media_index += 1
+    #     	    m += 1
+    #     	else:
+    #     	    m += 1
+    #     else:
+    #         m = 0
+    #         while m < len(media_list):
+    #     	if media_list[m][0] in top_medias:
+    #     	    media_index += 1
+    #     	    m += 1
+    #     	else:
+    #     	    m += 1
 
     leader_index = len(topic_leader)
 
@@ -242,5 +253,7 @@ def calculate(results):
     topic_info['topic_working_list'] = work_list
     topic_info['topic_working_count'] = work_count
     topic_info['topic_index'] = topic_index
+
+    print 'calculate is done in %s seconds' % (time.time() - start_time)
             
     return topic_info

@@ -144,6 +144,7 @@ def showresult_by_topic():
             if request.method == 'POST':
                 return json.dumps({'perday_blog_count': zip(date_list, perday_blog_count), 'map_data': topic_area_list})
         return render_template('propagate/showResult.html',
+                               data = {'perday_blog_count': zip(date_list, perday_blog_count), 'map_data': topic_area_list},
                                 topic_profile_image_url = topic_img_url[0],
                                 topic_ori_screen_name = topic_ori_screen_name,
                                 blog_rel_count = topic_blog_count,

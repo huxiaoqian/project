@@ -6,13 +6,14 @@
 
 <script type="text/javascript">
   var current = null;
+  var data = {{ data|tojson|safe }};
 </script>
 <style>
 	
   .sigma-expand {
       position: relative;
       margin: 0px auto;
-      height: 500px;
+      height: 600px;
   }
 </style>
 
@@ -44,7 +45,7 @@
              <li><a href="#area_2" data-toggle="tab">相关微博</a></li>
 	           <li><a href="#area_3" data-toggle="tab">地理分布</a></li>
 	           <li><a href="#area_4" data-toggle="tab">主要指标</a></li>
-             <li><a href="#area_5" data-toggle="tab">传播路径</a></li>
+             <li><a id="area_5_a" href="#area_5" data-toggle="tab">传播路径</a></li>
              <li><a href="#area_6" data-toggle="tab">人员领域分布</a></li>
                 </ul>
           
@@ -470,20 +471,29 @@ function refresh_grid(){
         });
       };
         $(document).ready(function(){
-          $.post("/propagate/showResult/", {'keyword': '{{ keyword }}', 'keyuser': '{{ keyuser }}', 'beg_time': '{{ beg_time }}', 'end_time': '{{ end_time }}'}, request_callback, "json");
+	  var first = true;
+	  var graph_data = null;
+          <!-- $.post("/propagate/showResult/", {'keyword': '{{ keyword }}', 'keyuser': '{{ keyuser }}', 'beg_time': '{{ beg_time }}', 'end_time': '{{ end_time }}'}, request_callback, "json"); -->
           $.get("/static/gexf/forest.gexf", function(data) {
-	    var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
+	    graph_data = data;
+	  }, "xml");
+	  $("#area_5_a").on('shown', function (e) {
+	     if (!graph_data)
+	       return
+	     $('canvas').remove();
+	     var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
 	      defaultLabelColor: '#fff'
 	      }).graphProperties({
 	         minNodeSize: 0.5,
 	         maxNodeSize: 5
 	      });
 
-	   sigInst.parseGexf(data);
+	   sigInst.parseGexf(graph_data);
 
 	   sigInst.draw();
-	  }, "xml");
+          });
         });
+        request_callback(data);
 	loadData();
 	backToTop(); 
 	$('#thumbnail').height('700px'); 

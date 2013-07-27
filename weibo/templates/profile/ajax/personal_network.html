@@ -9,7 +9,7 @@
       <option value="30">最近1个月</option>
       <option value="60">最近2个月</option>
     </select>
-    <button type="button" class="btn btn-primary" id="generate_network" onclick="submit_form();return false;"><i class="icon-search"></i>生成网络结构图</button>
+    <button type="button" class="btn btn-primary" id="generate_network" onclick="submit_form();return false;"><i class="icon-search"></i>生成网络结构图</button>(红线连接的点表示联系最紧密的关注者，绿线连接的点表示联系最紧密的粉丝)
 </form>
 <div id="community"></div>
 <script src="/static/js/profile/d3.v3.min.js"></script>
@@ -87,7 +87,7 @@ Number.prototype.add = function (arg){
 	var force = d3.layout.force()
 		.gravity(.7)
 		.linkDistance([10,10,10,10,100,100,100,100,100,100,100,100,100,100,100])
-		.distance(50)
+		.distance(150)
 		.charge(-420)
 		.size([width_1, height_1]);
 	
@@ -100,9 +100,15 @@ Number.prototype.add = function (arg){
 	  var link = svg_1.selectAll(".link")
 		  .data(json.links)
 		.enter().append("line")
-		  //.attr("class", "link")
-		  //.style("stroke", function(d) {return "#C00"; })
-		  //.style("stroke-width", function(d) {return 1})//(5).mul((d.value).div(10));});
+		  .attr("class", "link")
+		  .style("stroke", function(d) {
+		  							if(d.group == 1) {return "#C00";}
+		  							if(d.group == 2) {return "#00FF00";}
+		  							 })
+		  .style("stroke-width", function(d) {
+		  							if(d.group == 1) {return 1;}
+		  							if(d.group == 2) {return 1;}
+		  							})//(5).mul((d.value).div(10));});
 	
 	  var node = svg_1.selectAll(".node")
 		  .data(json.nodes)
@@ -113,23 +119,27 @@ Number.prototype.add = function (arg){
 	  node.append("image")
 		  .attr("xlink:href", function(d) { return d.profile_image_url })
 		  .attr("x", function(d){
-							  if(d.group == 0){return -20;}
-							  else if(d.group == 5){return -8;}
+							  if(d.group == 0){return -35;}
+							  else if(d.group == 1){return -25;}
+							  else if(d.group == 2){return -15;}
 							  else {return -10};
 							  })
 		  .attr("y", function(d){
-							  if(d.group == 0){return -20;}
-							  else if(d.group == 5){return -8;}
+							  if(d.group == 0){return -35;}
+							  else if(d.group == 1){return -25;}
+							  else if(d.group == 2){return -15;}
 							  else {return -10};
 							  })
 		  .attr("width", function(d){
-							  if(d.group == 0){return 40;}
-							  else if(d.group == 5){return 16;}
+							  if(d.group == 0){return 70;}
+							  else if(d.group == 1){return 50;}
+							  else if(d.group == 2){return 30;}
 							  else {return 20};
 							  })
 		  .attr("height", function(d){
-							  if(d.group == 0){return 40;}
-							  else if(d.group == 5){return 16;}
+							  if(d.group == 0){return 70;}
+							  else if(d.group == 1){return 50;}
+							  else if(d.group == 2){return 30;}
 							  else {return 20};
 							  })
 		  .attr("class", "profile_image");

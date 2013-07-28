@@ -273,17 +273,17 @@ def social_graph(raw):
         weight = top_fri[uid]
         graph_result['nodes'].append(social_node(uid, 1, weight))
         node_idx += 1
-        graph_result['links'].append({"source":0,"target":node_idx,"value":weight})
+        graph_result['links'].append({"source":0,"target":node_idx,"value":weight, 'group': 1})
     for uid in top_fol:
         weight = top_fol[uid]
         graph_result['nodes'].append(social_node(uid, 2, weight))
         node_idx += 1
-        graph_result['links'].append({"source":0,"target":node_idx,"value":weight})
+        graph_result['links'].append({"source":0,"target":node_idx,"value":weight, 'group': 2})
     for uid in rest:
         weight = rest[uid]
         graph_result['nodes'].append(social_node(uid, 3, weight))
         node_idx += 1
-        graph_result['links'].append({"source":0,"target":node_idx,"value":weight})
+        graph_result['links'].append({"source":0,"target":node_idx,"value":weight, 'group': 3})
     return graph_result
 
 def social_node(user_id, group, weight):
@@ -363,17 +363,19 @@ def profile_network(uid):
         top_3_fri = {}
         top_3_fol = {}
         for uid, count in sorted_counts:
-            if uid in friends:
+            if int(uid) in friends:
                 if len(top_3_fri) < 3:
                     top_3_fri[uid] = count
                     uid_interact_count.pop(uid, None)
+                    continue
+            if int(uid) in followers:
                 if len(top_3_fol) < 3:
                     top_3_fol[uid] = count
                     uid_interact_count.pop(uid, None)
-                if len(top_3_fri) == 3 and len(top_3_fol) == 3:
-                    break
+                    continue
+            if len(top_3_fri) == 3 and len(top_3_fol) == 3:
+                break
         raw = {'center': center_uid, 'top_fri': top_3_fri, 'top_fol': top_3_fol, 'rest': uid_interact_count}
-        
         return json.dumps(social_graph(raw))
 
 @mod.route('/person_fri_fol/<uid>', methods=['GET', 'POST'])

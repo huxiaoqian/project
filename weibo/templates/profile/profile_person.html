@@ -65,9 +65,9 @@
         </div>
         <div class="span9">
           <ul id="index-tabs" class="nav nav-tabs">
+            <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personalnetwork', uid=user.id)}}" data-toggle="tab">社会网络结构</a></li>
             <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personaltopic', uid=user.id)}}" data-toggle="tab">话题兴趣</a></li>
             <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personal_friends_followers', uid=user.id)}}" data-toggle="tab">关注及粉丝领域分布</a></li>
-            <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personalnetwork', uid=user.id)}}" data-toggle="tab">社会网络结构</a></li>
             <li><a href="{{url_for('profile.profile_person_tab_ajax', model='personalweibocount', uid=user.id)}}" data-toggle="tab">微博数量走势</a></li>
           </ul>
         </div>

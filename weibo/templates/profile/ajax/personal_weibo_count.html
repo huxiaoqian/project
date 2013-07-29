@@ -1,9 +1,6 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
-{% block body %}     
-  <script src="/static/js/profile/highcharts.js"></script>
-  <script src="/static/js/profile/exporting.js"></script>
-
+{% block body %}
   <script>
   function display_ori_repost_count(data){
     var chart = new Highcharts.Chart({
@@ -67,24 +64,21 @@
 }
 
   function display_week_weibocount(){
-      $.ajax({
-          url: "/profile/person_count/{{uid}}?interval=120",
-          dataType: 'json',   
-          type: "GET",   
-          success: function (data) {
-            display_ori_repost_count(data);
-          }
-      });
+    var interval_arg = $("#interval_count").val();
+    $.ajax({
+        url: "/profile/person_count/{{uid}}?interval=" + interval_arg,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          display_ori_repost_count(data);
+        }
+    });
   }
 
-display_week_weibocount();
-/*
-  $(document).ready(function(){
-    display_week_weibocount();
-  })*/
+  display_week_weibocount();
 
   function submit_form(){
-    var interval_arg = $("#interval")[0].value;
+    var interval_arg = $("#interval_count").val();
     $.ajax({
           url: "/profile/person_count/{{uid}}?interval=" + interval_arg,
           dataType: 'json',   
@@ -98,7 +92,9 @@ display_week_weibocount();
   </script>
   <form class="form-inline">
       时间范围:
-    <select class="span2" name="interval" id="interval">
+    <select class="span2" name="interval" id="interval_count">
+      <option value="180">6个月</option>
+      <option value="150">5个月</option>
       <option value="120">4个月</option>
       <option value="90">3个月</option>
       <option value="60">2个月</option>
@@ -108,7 +104,5 @@ display_week_weibocount();
     <button type="button" class="btn btn-primary" onclick="submit_form();return false;"><i class="icon-search"></i>生成数量趋势图</button>
   </form>
   <div id="chartdiv_week_weibocount" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
-      
-
 {% endblock body %}
 

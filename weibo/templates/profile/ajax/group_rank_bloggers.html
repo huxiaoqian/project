@@ -2,11 +2,11 @@
 
 {% block body %}     
   <form class="form-inline">
-    排序标准<select class="span2" name="sort_type" id="sort_type">
+    排序标准<select class="span2" name="sort_type" id="rb_sort_type">
         <option value="followers">粉丝数</option>
       </select>
     时间范围:
-    <select class="span2" name="interval" id="interval">
+    <select class="span2" name="interval" id="rb_interval">
       <option value="-1">最近一周</option>
     </select>
     前<input type="number" name="limit" value="1000" min="1" max="1000" class="span2" id="limit" disabled>条，
@@ -39,8 +39,8 @@
   var sex_kv = {'m': '男', 'f': '女'};
   var v_kv = {'true': '是', 'false': '否'};
   function submit_form(){
-      var interval_arg = $("#interval")[0].value;
-      var sort_arg = $("#sort_type")[0].value;
+      var interval_arg = $("#rb_interval")[0].value;
+      var sort_arg = $("#rb_sort_type")[0].value;
       getRankData(countperpage_args, interval_arg, sort_arg, limit_arg);
   }
   function getRankData(countperpage_args, interval_arg, sort_arg, limit_arg){
@@ -93,8 +93,8 @@
       });
   }
   $(document).ready(function(){
-      var interval_arg = $("#interval")[0].value;
-      var sort_arg = $("#sort_type")[0].value;
+      var interval_arg = $("#rb_interval")[0].value;
+      var sort_arg = $("#rb_sort_type")[0].value;
       getRankData(countperpage_args, interval_arg, sort_arg, limit_arg);
   })
   </script>

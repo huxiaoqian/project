@@ -3,7 +3,7 @@
 {% block body %}
 <form class="form-inline">
     时间范围:
-    <select class="span2" name="interval" id="interval">
+    <select class="span2" name="interval_network" id="nt_interval">
       <option value="90">最近3个月</option>
       <option value="7">最近1周</option>
       <option value="30">最近1个月</option>
@@ -91,7 +91,7 @@ Number.prototype.add = function (arg){
 		.charge(-420)
 		.size([width_1, height_1]);
 	
-	d3.json("/profile/person_network/" + {{uid}}, function(json) {
+	d3.json("/profile/person_network/" + {{uid}} + "?interval=120", function(json) {
 	  force
 		  .nodes(json.nodes)
 		  .links(json.links)

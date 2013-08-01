@@ -183,7 +183,7 @@ def cut_network(g, node_degree):
             g.remove_node(node)
     return g
 
-def make_network(topic_id, date, window_size, ts=False):
+def make_network(topic_id, date, window_size, max_size=100000, ts=False):
     topic = acquire_topic_name(topic_id)
     if not topic:
         return None
@@ -198,9 +198,9 @@ def make_network(topic_id, date, window_size, ts=False):
     query_dict = {'text': topic, 'timestamp': {'$gt': start_time, '$lt': end_time}}
 
     if ts:
-        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'timestamp', 'retweeted_status'])
+        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'timestamp', 'retweeted_status'], max_offset=max_size)
     else:
-        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'])
+        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'], max_offset=max_size)
     print 'topic statuses count %s' % count
 
     if ts:

@@ -25,6 +25,9 @@ EXTRA_STOPWORD_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'stopword.dic')
 EXTRA_EMOTIONWORD_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'emotionlist.txt')
 EXTRA_ONE_WORD_WHITE_LIST_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'one_word_white_list.txt')
 
+status_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+
 def acquire_topic_id(name):
     item = db.session.query(Topic).filter_by(topicName=name).first()
     if not item:
@@ -42,7 +45,6 @@ def acquire_topic_name(tid):
     return item.topicName
 
 def acquire_user_by_id(identifyRange, uid):
-    user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
     count, get_results = user_search.search(query={'_id': uid})
     # assert count==1, 'UID duplicated?'
     user = {}
@@ -59,7 +61,6 @@ def acquire_user_by_id(identifyRange, uid):
     return user
 
 def acquire_status_by_id(mid):
-    status_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=1)
     count, get_results = status_search.search(query={'_id': mid})
     # assert count==1, 'MID duplicated?'
     status = None

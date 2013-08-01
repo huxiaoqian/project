@@ -139,7 +139,7 @@ def area():
         #window size for idenfity i.e. adding time limit on input data
         window_size = int(form.get('window_size', 1))
         #use PageRank if and only if window size equals 1
-        if window_size == 1:
+        if window_size == 1 or window_size == 7:
             rank_method = 'pagerank'
         else:
             rank_method = 'degree'

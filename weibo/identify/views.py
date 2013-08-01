@@ -24,7 +24,7 @@ from show_user_statuses import user_statuses
 from utils import acquire_topic_id, acquire_topic_name, read_rank_results
 from time_utils import ts2datetime, datetime2ts, window2time
 
-from hadoop_utils import generate_job_id, monitor, prepare_data
+from hadoop_utils import monitor
 
 mod = Blueprint('identify', __name__, url_prefix='/identify')
 

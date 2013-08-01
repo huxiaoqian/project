@@ -53,7 +53,7 @@ def pagerank_rank(top_n, date, topic_id, window_size):
     input_tmp_path = tmp_file.name
     
     
-    job_id = generate_job_id(datetime2ts(date), topic_id)
+    job_id = generate_job_id(datetime2ts(date), window_size, topic_id)
     iter_count = PAGERANK_ITER_MAX
 
     sorted_uids = pagerank(job_id, iter_count, input_tmp_path, top_n)

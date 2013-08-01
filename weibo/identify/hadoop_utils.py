@@ -10,9 +10,9 @@ import tempfile
 
 from time_utils import unix2hadoop_date
 
-def generate_job_id(ts, topic_id):
+def generate_job_id(ts, window_size, topic_id):
     date = unix2hadoop_date(ts)
-    job_id = '%s_%s' % (date, topic_id)
+    job_id = '%s_%s_%s' % (date, window_size, topic_id)
     return job_id
 
 def monitor(job_id):

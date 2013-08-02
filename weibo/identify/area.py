@@ -60,7 +60,11 @@ def pagerank_rank(top_n, date, topic_id, window_size):
     return data
 
 def prepare_data_for_degree(topic_id, date, window_size):
-    g = make_network(topic_id, date, window_size)
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
+
+    g = make_network(topic, date, window_size)
 
     if not g:
         return None
@@ -75,8 +79,12 @@ def prepare_data_for_degree(topic_id, date, window_size):
 
 def prepare_data_for_pr(topic_id, date, window_size):
     tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    
-    g = make_network(topic_id, date, window_size)
+
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
+
+    g = make_network(topic, date, window_size)
 
     if not g:
         return None
@@ -109,8 +117,12 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
         key_users = read_key_users(current_date, window_size, topic_id, top_n=10)
     else:
         key_users = []
+
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
               
-    uid_ts, G = make_network(topic_id, date, window_size, ts=True)
+    uid_ts, G = make_network(topic, date, window_size, ts=True)
 
     N = len(G.nodes())
 
@@ -171,10 +183,7 @@ def cut_network(g, node_degree):
             g.remove_node(node)
     return g
 
-def make_network(topic_id, date, window_size, max_size=100000, ts=False):
-    topic = acquire_topic_name(topic_id)
-    if not topic:
-        return None
+def make_network(topic, date, window_size, max_size=100000, ts=False):
     end_time = datetime2ts(date)
     start_time = end_time - window2time(window_size)
 

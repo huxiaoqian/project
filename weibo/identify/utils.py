@@ -3,9 +3,11 @@
 import os
 import random
 
-from weibo.extensions import db
-
-from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification
+try:
+    from weibo.extensions import db
+    from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification
+except ImportError:
+    print 'Warning: Not in web environment.'
 
 from time_utils import ts2datetime, datetime2ts, window2time
 

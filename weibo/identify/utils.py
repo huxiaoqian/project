@@ -154,6 +154,15 @@ def find_user_previous_rank(identifyRange, uid, date, method, window, topic_id):
     else:
         return None
 
+def read_key_users(date, window, topic_id, top_n=10):
+    items = db.session.query(AreaUserIdentification).filter_by(topicId=topic_id, identifyWindow=window, identifyDate=date).order_by(AreaUserIdentification.rank.asc()).limit(top_n)
+    users = []
+    if items.count():
+        for item in items:
+            uid = item.userId
+            users.append(uid)
+    return users
+
 def rank_comparison(previous, current):
     if previous:
         if current-previous > 0:

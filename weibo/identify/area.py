@@ -5,12 +5,9 @@ import operator
 
 import networkx as nx
 
-from weibo.extensions import db
-from weibo.model import AreaUserIdentification
-
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, load_scws, cut
+from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, read_key_users, load_scws, cut
 from config import PAGERANK_ITER_MAX
 
 from xapian_weibo.xapian_backend import XapianSearch
@@ -165,15 +162,6 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
         edge_counter += 1
 
     return etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
-
-def read_key_users(date, window, topic_id, top_n=10):
-    items = db.session.query(AreaUserIdentification).filter_by(topicId=topic_id, identifyWindow=window, identifyDate=date).order_by(AreaUserIdentification.rank.asc()).limit(top_n)
-    users = []
-    if items.count():
-        for item in items:
-            uid = item.userId
-            users.append(uid)
-    return users
     
 def cut_network(g, node_degree):
     degree_threshold = 2

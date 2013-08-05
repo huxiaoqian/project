@@ -228,6 +228,7 @@ def burst_monitor():
     if request_method == 'POST':
         form = request.form
         top_n = int(form.get('top_n', 10))
+        # current_time = time.time()
         current_time = datetime2ts('2013-3-7') + 12*60*60
         data = burstRealtimeModule.realtime_burst_user(top_n, current_time)
         return json.dumps(data)

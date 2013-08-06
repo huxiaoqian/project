@@ -14,16 +14,29 @@ from xapian_weibo.xapian_backend import XapianSearch
 
 LEVELDBPATH = '/home/mirage/leveldb'
 
+def save_to_db(method):
+    def func(*args, **kw):
+        data = method(*args, **kw)
+        method_name = method.__name__
+        rank_field = method_name.split('_')[0]
+        try:
+            save_rank_results(data, 'whole', rank_field, args[1], args[2])
+        except:
+            print '%s save results failed, it is ok if not in web environment.' % method.__name__
+        return data
+    return func
+
+@save_to_db
 def followers_rank(top_n, date, window_size):
     user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
     count, get_results = user_search.search(query={'followers_count': {'$gt': FOLLOWERS_MIN_SUPPORT}}, sort_by=['-followers_count'], fields=['_id'], max_offset=top_n)
     sorted_uids = []
     for user in get_results():
         sorted_uids.append(user['_id'])
-    data = save_rank_results(sorted_uids, 'whole', 'followers', date, window_size)
 
-    return data
+    return sorted_uids
 
+@save_to_db
 def active_rank(top_n, date, window_size):
     date_time = datetime2ts(date)
     uid_active = {}
@@ -60,10 +73,9 @@ def active_rank(top_n, date, window_size):
         sorted_uids.append(uid)
         count += 1
 
-    data = save_rank_results(sorted_uids, 'whole', 'active', date, window_size)
+    return sorted_uids
 
-    return data
-
+@save_to_db
 def important_rank(top_n, date, window_size):
     date_time = datetime2ts(date)
     uid_important = {}
@@ -99,9 +111,7 @@ def important_rank(top_n, date, window_size):
         sorted_uids.append(uid)
         count += 1
 
-    data = save_rank_results(sorted_uids, 'whole', 'important', date, window_size)
-
-    return data
+    return sorted_uids
 
 def get_leveldb(method, ts):
     date = datetime.fromtimestamp(ts)

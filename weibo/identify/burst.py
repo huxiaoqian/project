@@ -56,16 +56,19 @@ def active_rank(top_n, date, window_size):
             previous_active = 0
         uid_active[uid] = math.fabs(active - previous_active)
 
-    sorted_uid_active = sorted(uid_active.iteritems(), key=operator.itemgetter(1), reverse=True)
-    sorted_uids = []
-    count = 0
-    for uid, value in sorted_uid_active:
-        if is_in_trash_list(uid):
-            continue
-        if count >= top_n:
-            break
-        sorted_uids.append(uid)
+    if len(uid_active) < 100000000:
+        sorted_uid_active = sorted(uid_active.iteritems(), key=operator.itemgetter(1), reverse=True)
+        sorted_uids = []
+        count = 0
+        for uid, value in sorted_uid_active:
+            if is_in_trash_list(uid):
+                continue
+            if count >= top_n:
+                break
+            sorted_uids.append(uid)
         count += 1
+    else:
+        sorted_uids = user_rank(uid_active, 'whole_active', top_n, date, window_size)
 
     return sorted_uids
 
@@ -89,17 +92,19 @@ def important_rank(top_n, date, window_size):
             previous_important = 0
         uid_important[uid] = math.fabs(important - previous_important)
 
-    sorted_uid_important = sorted(uid_important.iteritems(), key=operator.itemgetter(1), reverse=True)
-
-    sorted_uids = []
-    count = 0
-    for uid, value in sorted_uid_important:
-        if is_in_trash_list(uid):
-            continue
-        if count >= top_n:
-            break
-        sorted_uids.append(uid)
+    if len(uid_important) < 100000000:
+        sorted_uid_important = sorted(uid_important.iteritems(), key=operator.itemgetter(1), reverse=True)
+        sorted_uids = []
+        count = 0
+        for uid, value in sorted_uid_important:
+            if is_in_trash_list(uid):
+                continue
+            if count >= top_n:
+                break
+            sorted_uids.append(uid)
         count += 1
+    else:
+        sorted_uids = user_rank(uid_important, 'whole_active', top_n, date, window_size)
 
     return sorted_uids
 

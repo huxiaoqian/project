@@ -10,6 +10,8 @@ from utils import save_rank_results, is_in_trash_list
 from time_utils import datetime2ts, window2time
 from config import FOLLOWERS_MIN_SUPPORT, REPOSTS_MIN_SUPPORT
 
+from user_sorter import user_rank
+
 from xapian_weibo.xapian_backend import XapianSearch
 
 LEVELDBPATH = '/home/mirage/leveldb'
@@ -61,17 +63,19 @@ def active_rank(top_n, date, window_size):
                     uid_active[uid] = 0
                 uid_active[uid] += active
 
-    sorted_uid_active = sorted(uid_active.iteritems(), key=operator.itemgetter(1), reverse=True)
-                
-    sorted_uids = []
-    count = 0
-    for uid, value in sorted_uid_active:
-        if is_in_trash_list(uid):
-            continue
-        if count >= top_n:
-            break
-        sorted_uids.append(uid)
+    if len(uid_active) < 100000000:
+        sorted_uid_active = sorted(uid_active.iteritems(), key=operator.itemgetter(1), reverse=True)
+        sorted_uids = []
+        count = 0
+        for uid, value in sorted_uid_active:
+            if is_in_trash_list(uid):
+                continue
+            if count >= top_n:
+                break
+            sorted_uids.append(uid)
         count += 1
+    else:
+        sorted_uids = user_rank(uid_active, 'whole_active', top_n, date, window_size)
 
     return sorted_uids
 
@@ -99,17 +103,20 @@ def important_rank(top_n, date, window_size):
                     uid_important[uid] = 0
                 uid_important[uid] += important
 
-    sorted_uid_important = sorted(uid_important.iteritems(), key=operator.itemgetter(1), reverse=True)
-
-    sorted_uids = []
-    count = 0
-    for uid, value in sorted_uid_important:
-        if is_in_trash_list(uid):
-            continue
-        if count >= top_n:
-            break
-        sorted_uids.append(uid)
+    if len(uid_important) < 100000000:
+        sorted_uid_important = sorted(uid_important.iteritems(), key=operator.itemgetter(1), reverse=True)
+        sorted_uids = []
+        count = 0
+        for uid, value in sorted_uid_important:
+            if is_in_trash_list(uid):
+                continue
+            if count >= top_n:
+                break
+            sorted_uids.append(uid)
         count += 1
+    else:
+        sorted_uids = user_rank(uid_important, 'whole_active', top_n, date, window_size)
+
 
     return sorted_uids
 

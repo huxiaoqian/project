@@ -9,6 +9,7 @@ import leveldb
 from datetime import datetime
 
 from utils import is_in_trash_list, acquire_user_by_id, user_status
+from time_utils import ts2datetime, datetime2ts
 from config import BURST_MIN_SUPPORT
 
 LEVELDBPATH = '/home/mirage/leveldb'
@@ -76,7 +77,8 @@ def realtime_burst_user(top_n, current_time):
         sorted_uids.append(uid)
         count += 1
 
-    data = save_rank_results(sorted_uids)
+    data = generate_rank_results(sorted_uids)
+
     return data
     
 def get_leveldb(ts, hour):
@@ -97,7 +99,7 @@ def get_leveldb(ts, hour):
         db_name += '_%s' % hour
     return db_name
 
-def save_rank_results(sorted_uids):
+def generate_rank_results(sorted_uids):
     data = []
     rank = 1
     for uid in sorted_uids:
@@ -116,7 +118,9 @@ def save_rank_results(sorted_uids):
     return data
 
 def main():
-    for uid in realtime_burst_user(top_n):
+    # current_time = time.time()
+    current_time = datetime2ts('2013-3-7') + 12*60*60
+    for uid in realtime_burst_user(top_n, current_time):
         print uid
 
 if __name__ == '__main__': main()

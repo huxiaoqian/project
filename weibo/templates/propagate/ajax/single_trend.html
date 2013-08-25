@@ -1,0 +1,34 @@
+<div class="container">
+	<div id="count_chart" style="height: 500px;width: 900px; margin: 0px auto auto 200px;"></div>
+</div>
+<script>
+  $.ajax({
+	url:"/propagate/single_ajax_trend/",
+	dataType:"json",
+	data: request_data_dict,
+	type:"POST",
+	success:function(data){
+		display_trend_chart(data);
+	}
+  });
+  function display_trend_chart(data){
+  	$('#count_chart').highcharts('StockChart', {
+ 
+      rangeSelector : {
+        selected : 1
+      },
+
+      title : {
+        text : '传播趋势'
+      },
+      
+      series : [{
+        name : '微博数量',
+        data : data['perday_blog_count'],
+        tooltip: {
+          valueDecimals: 2
+        }
+      }]
+    });
+  }
+</script>

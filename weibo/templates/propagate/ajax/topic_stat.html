@@ -1,0 +1,66 @@
+<style>
+  .sub_item{
+    width:350px;
+    height:24px;   
+    padding: 5px;
+    margin:5px;
+    float:left;
+    font-size:22px;
+    color:#2E2E2E;
+    text-align:center;
+    display:block;
+  }
+  .itemlabel{
+    width:200px;
+    min-height:5px;   
+    padding: 5px;
+    margin:5px;
+    float:left;
+    font-size:20px;
+    color:#0080FF;
+    text-align:center;
+    display:block;
+  }
+  .itemtext{
+    width:100px;
+    min-height:5px;   
+    padding: 5px;
+    margin:5px;
+    float:left;
+    font-size:20px;
+    color:black;
+    text-align:left;
+    display:block;
+  }
+</style>
+<div>
+  <div class="sub_item">
+	<div class="itemlabel">持续性：</div>
+	<div class="itemtext">{{ topic_persistent_count }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">爆发力：</div>
+    <div class="itemtext">{{ topic_sudden_count }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">覆盖度：</div>
+    <div class="itemtext">{{ topic_coverage_count }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">重要媒体渗透度：</div>
+    <div class="itemtext">{{ topic_media_count }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">舆论领袖渗透度：</div>
+    <div class="itemtext">{{ topic_leader_count }}</div>
+  </div>
+</div>
+
+<div style="float:left">
+	<h3>指标释意</h3>
+	<p>持续性：截止目前（第i天），原创微博数和转发微博数之和超出i日均线的天数</p>
+	<p>爆发力：截止目前（第i天），超出i日均线的原创微博数和转发微博数之和与截止目前的所有原创微博数和转发微博数之和的比例</p>
+	<p>覆盖度：每小时的原创微博数、转发微博数和评论数的和</p>
+	<p>重要媒体渗透度：当天评论+转发数TOP20的转发微博中，转发人是TOP20媒体的个数</p>
+	<p>舆论领袖渗透度：当天的传播网络中，关键节点用户的个数</p>
+</div>

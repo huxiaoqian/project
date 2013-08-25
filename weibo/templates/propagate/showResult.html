@@ -1,491 +1,80 @@
 {% extends "propagate/base.html" %}
-{% block title %}搜索结果{% endblock %}
+{% block title %}话题传播分析{% endblock %}
 
 {% block head %}
-{{ super() }}
-
-<script type="text/javascript">
-  var current = null;
-</script>
-<style>
-	
-  .sigma-expand {
-      position: relative;
-      margin: 0px auto;
-      height: 500px;
-  }
-</style>
-
-       
+  {{ super() }}
+  <link rel="stylesheet" href="/static/css/jquery-ui.css" />
+  <script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
 {% endblock %}
     
 {% block content %}
-    <div class="container"> 
-
-    <div class="container-fluid">
-          <div class="row-fluid">
-
-            <div class="span2">
-                <img style="width: 180px; height: 180px;" type="image/jpg" src="{{ topic_profile_image_url }}" media="screen" />
-                  <div class="caption">
-                    <h3>基本信息</h3>
-                    <label>发起人：<span class="badge badge-success"> {{ topic_ori_screen_name }} </span> </label>
-                    <label class="appendedInput">相关微博条数：<span class="badge badge-info"> {{ blog_rel_count }} </span></label>
-                    <label class="appendedInput">原创微博条数：<span class="badge badge-warning"> {{ blog_ori_count }} </span></label>
-                    <label class="appendedInput">原创微博比例：{{ blog_ori_account }} </label>
-                    <label class="appendedInput">领袖人数：{{ topic_leader_count }} </label>
-                    <label class="appendedInput">发起时间：{{ topic_ori_date }} </label>
-                  </div>
-            </div><!--左侧信息-->
-            
-            <div class="span10">
-                <ul id = "myTab" class="nav nav-tabs">
-             <li class="active"><a href="#area_1" data-toggle="tab">演变趋势</a></li>
-             <li><a href="#area_2" data-toggle="tab">相关微博</a></li>
-	           <li><a href="#area_3" data-toggle="tab">地理分布</a></li>
-	           <li><a href="#area_4" data-toggle="tab">主要指标</a></li>
-             <li><a href="#area_5" data-toggle="tab">传播路径</a></li>
-             <li><a href="#area_6" data-toggle="tab">人员领域分布</a></li>
-                </ul>
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div class="span12">
+        <div class="caption" style="float:left">
+          <div style="float:left">
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="{{ topic_profile_image_url }}" media="screen" />
+          </div>
+          <div style="float:left;padding-left:50px;">
+            <h3>话题传播分析</h3>
+            <div style="float:left;padding-top:10px;">
+              <label style="font-size:18px">话题：<span class="badge badge-success" style="font-size:18px"> {{ keyword }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">关键用户：<span class="badge badge-info" style="font-size:18px"> {{ keyuser_str }} </span></label>
+            </div>
+            <div style="float:left;padding-top:10px;">
+              <label style="font-size:18px">开始时间：<span class="badge badge-success" style="font-size:18px"> {{ return_beg_str }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">截止时间：<span class="badge badge-success style="font-size:18px"> {{ return_end_str }} </span></label>
+            </div>
+            <div style="float:left;padding-top:10px;">
+              <label style="font-size:18px">发起人：<span class="badge badge-success" style="font-size:18px"> {{ topic_ori_screen_name }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">相关微博条数：<span class="badge badge-info" style="font-size:18px"> {{ blog_rel_count }} </span></label>
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">
+                <label class="appendedInput" style="font-size:18px">原创微博条数：<span class="badge badge-warning" style="font-size:18px"> {{ blog_ori_count }} </span></label>
+                <label class="appendedInput" style="font-size:18px;padding-top:10px;">原创微博比例：{{ blog_ori_account }}</label>
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">
+              <label class="appendedInput" style="font-size:18px">领袖人数：{{ topic_leader_count }} </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">发起时间：{{ topic_ori_date }} </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!--上侧基本信息-->
           
-            <div id="myTabContent" class="tab-content">
-                
-	      
-               <div class="tab-pane fade active in" id="area_1">
-                <div id="count_chart" style="height: 500px; min-width: 500px"></div>
-               </div><!--area1-->
-            
-            <div class="tab-pane fade" id="area_2">
-           
-              {% for status in blog_rel_list %}
-
-              <div class="WB_feed_type SW_fun  S_line2">
-                <div class="WB_feed_datail S_line2 clearfix">
-                  <div class="WB_face">
-                  <a class="W_face_radius"><img alt="" width="50" height="50" src="{{ status['user']['profile_image_url'] }}"></a>
-                  </div>
-                <div class="WB_detail">
-                  <div class="WB_info"><a class="WB_name S_func1"> {{ status['user']['name'] }} </a>
-                  </div>
-                  <div class="WB_text" node-type="feed_list_content">{{ status['status']['text'] }}</div>
-                <div class="WB_func clearfix">
-                  <div class="WB_handle">
-                    <a><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
-                    <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
-                    <a>收藏:{{ status['status']['favourite_count'] }}</a><i class="S_txt3">|</i>
-                    <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
-                    <a href="/propagate/showResult_single/{{ status['status']['_id'] }}/">分析</a>
-                  </div>
-                  <div class="WB_from">
-                    <a class="S_link2 WB_time" >{{ status['status']['created_at'] }}</a> 
-                    <em class="S_txt2">来自</em><a class="S_link2" >{{ status['status']['source'] }}</a>                           
-                  </div>
-                </div>
-                <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
-                </div>
-                </div>
-              </div>
-              {% endfor %}
-              </div><!--area2-->
-            
-          <div class="tab-pane fade" id="area_3">
-
-            <div id="main">
-              <div id="Summary"></div>
-              <div id="Map">
-                <div id="ChinaMap">
-                </div>
-                <div id="ColorBar">
-                </div>
-            </div>
-            <div class="clear-float"></div>
-            </div>
-
-          </div><!--地理分布-->
-            
-           <div class="tab-pane fade" id="area_4">
-            <div>
-            <div class="sub_item">
-			       <div class="itemlabel">持续性：</div>
-			       <div class="itemtext">{{ topic_persistent_count }}</div>
-		        </div>
-
-            <div class="sub_item">
-			       <div class="itemlabel">爆发力：</div>
-			       <div class="itemtext">{{ topic_sudden_count }}</div>
-		        </div>
-
-            <div class="sub_item">
-			       <div class="itemlabel">覆盖度：</div>
-			       <div class="itemtext">{{ topic_coverage_count }}</div>
-		        </div>
-
-            <div class="sub_item">
-			       <div class="itemlabel">重要媒体渗透度：</div>
-			       <div class="itemtext">{{ topic_media_count }}</div>
-		        </div>
-
-            <div class="sub_item">
-			       <div class="itemlabel">舆论领袖渗透度：</div>
-			       <div class="itemtext">{{ topic_leader_count }}</div>
-		        </div>
-            </div>
-
-      <div style="float:left">
-        <h3>指标释意</h3>
-        <p>持续性：截止目前（第i天），原创微博数和转发微博数之和超出i日均线的天数</p>
-        <p>爆发力：截止目前（第i天），超出i日均线的原创微博数和转发微博数之和与截止目前的所有原创微博数和转发微博数之和的比例</p>
-        <p>覆盖度：每小时的原创微博数、转发微博数和评论数的和</p>
-        <p>重要媒体渗透度：当天评论+转发数TOP20的转发微博中，转发人是TOP20媒体的个数</p>
-        <p>舆论领袖渗透度：当天的传播网络中，关键节点用户的个数</p>
+    <div class="row-fluid" style="padding-top:20px;">
+      <div class="span12" id = "index-tabs">
+        <ul class="nav nav-tabs">
+          <li><a href="/propagate/topic_ajax_trend/" >演变趋势</a></li>
+          <li><a href="/propagate/topic_ajax_weibos/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >相关微博</a></li>
+          <li><a href="/propagate/topic_ajax_spatial/" >地理分布</a></li>
+          <li><a href="/propagate/topic_ajax_stat/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >主要指标</a></li>
+          <li><a href="/propagate/topic_ajax_path/" >传播路径</a></li>
+          <li><a href="/propagate/topic_ajax_userfield/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >人员领域分布</a></li>
+        </ul>
       </div>
-          </div><!--主要指标-->
-            
-          <div class="tab-pane fade" id="area_5">
-           <div class="sigma-expand" id="sigma-graph"></div>
-          </div><!--area5-->
-            
-          <div class="tab-pane fade" id="area_6">
-
-            <div>
-                <div id="working_count" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
-            </div>
-
-            <div class="well">
-
-              <legend>次级传播用户</legend>
-                <div>
-                  <p>
-                    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
-                  </p>
-                </div>
-            <div>
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>博主ID</th>
-                  <th>博主昵称</th>
-                  <th>博主地域</th>
-                  <th>粉丝数</th>
-                  <th>关注数</th>
-                  <th>关联级别</th>
-                  <th>敏感状态</th>
-                </tr>
-              </thead>
-              <div id="users_area">
-              <tbody>
-        {% for user in topic_key_user_list %}
-        <tr>
-    <td>{{ user.id }}</td>
-    <td>{{ user.name }}</td>
-    <td>{{ user.location }}</td>
-    <td>{{ user.followers_count }}</td>
-    <td>{{ user.bi_followers_count }}</td>
-    <td>二级</td>
-    <td><i class="icon-ok"></i></td>
-        </tr>
-        {% endfor %} 
-      </tbody>
-      </div>
-          </table>
-    <div id="page-selection"></div>
     </div>
-    </div>
-    <div class = "span9" >
-      <legend>关键传播用户</legend>
-    <div id="thumbnail">
-            {% for u in topic_key_user_list %}
-            <div class="grid">
-                <div id="imgholder">
-                    <img type="image/jpg" src="{{ u.profile_image_url }}" media="screen">
-                </div>
-                <strong>{{ u.name }}</strong>
-                <p>微博数：{{ u.statuses_count }}</p>
-                <p>关注数：{{ u.bi_followers_count }}</p>
-                <p>粉丝数：{{ u.followers_count }}</p>
-                <p>个人描述：{{ u.description }}</p>
-                <div class="meta">{{u.url}}</div>
-            </div>
-            {% endfor %}
-    </div>
-    <div id="loader">
-          <div id="loaderCircle" style="display: none;"></div>
-    </div>
-    </div>
-    </div>
-    </div><!--.container end--> 
+  </div>
 {% endblock %}
-
 {% block script %}
-<script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
-
-<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/raphael.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.parseGexf.js') }}"></script>
-
-
-<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/chinamap.js') }}"></script>
-
-    <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
-    <script>
-        // init bootpag
-        $('#page-selection').bootpag({
-            total: 23,
-            page: 1,
-            maxVisible: 10 
-        }).on("page", function(event, /* page number here */ num){
-             $("#users_area").html("Insert content"); // some ajax content loading...
-        });
-    </script>
-    <script>
-  var options = {
-      numOfCol: 5,
-      offsetX: 8,
-      offsetY: 8
-  };
-  
-  //blocksit define
-  
-  $(window).load( function() {
-    $('#thumbnail').BlocksIt(options);
-  });
-  
-  //window resize
-  var currentWidth = 1100;
-  $(window).resize(function() {
-    var winWidth = $(window).width();
-    var conWidth;
-    if(winWidth < 660) {
-      conWidth = 440;
-      col = 2
-    } else if(winWidth < 880) {
-      conWidth = 660;
-      col = 3
-    } else if(winWidth < 1100) {
-      conWidth = 880;
-      col = 4;
-    } else {
-      conWidth = 1100;
-      col = 5;
-    }
-    
-    if(conWidth != currentWidth) {
-      currentWidth = conWidth;
-      $('#thumbnail').width(conWidth);
-      $('#thumbnail').BlocksIt({
-        numOfCol: col,
-        offsetX: 8,
-        offsetY: 8
+  <script src="/static/js/jquery-ui.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
+  <script>
+    var keywords = '{{keyword}}';
+    var keyuser = '{{keyuser}}';
+    var begin_str = '{{beg_time}}';
+    var end_str = '{{end_time}}';
+    var request_data_dict = {'keyword': keywords, 'keyuser': keyuser, 'beg_time': begin_str, 'end_time': end_str};
+    $(document).ready(function(){
+      $("#index-tabs" ).tabs({
+        beforeLoad: function( event, ui ) {
+          ui.jqXHR.error(function() {
+            ui.panel.html("无法显示此页，我们将尽快解决该问题. ");
+          });
+        }
       });
-    }
-  });
-  
-  // Capture scroll event.
-  $(document).bind('scroll', onScroll);
-      
-  // Load first data from the API.
-  
-  var handler = null;
-  var page = 1;
-  var isLoading = true;
-  var apiURL = "/profile/search/culture" ;
-  var dataparams;
-  /**
-   * When scrolled all the way to the bottom, add more tiles.
-   */
-  function onScroll(event) {
-    // Only check when we're not still waiting for data.
-    if(!isLoading) {
-      // Check if we're within 100 pixels of the bottom edge of the broser window.
-      var closeToBottom = ($(window).scrollTop() + $(window).height() > $(document).height() - 100);
-      if(closeToBottom) {
-        loadData();
-      }
-    }
-  };
-  
-  /**
-     * Refreshes the layout.
-     */
-    function applyLayout() {
-      // Clear our previous layout handler.
-      //if(handler) handler.wookmarkClear();
-      
-      // Create a new layout handler.
-    
-      handler = $('#thumbnail');
-      handler.BlocksIt(options);
-    };
-  
-  /**
-     * Loads data from the API.
-     */
-    function loadData() {
-      isLoading = true;
-      $('#loaderCircle').show();
-        
-        dataparams = {page: page};
-      
-      $.ajax({
-        url: apiURL,
-        type: 'POST',
-        dataType: 'json',
-        data: dataparams, // Page parameter to make sure we load new data
-        success: onLoadData
-      });
-      
-    };
-    
-    /**
-     * Receives data from the API, creates HTML for images and updates the layout
-     */
-    function onLoadData(data) {
-      isLoading = false;
-      $('#loaderCircle').hide();
-      
-      // Increment page index for future calls.
-      page++;
-      
-      // Create HTML for the images.
-      var html = '';
-      var i=0, length=data.length, item;
-      for(; i<length; i++) {
-        item = data[i];
-
-        html += "<div class=\"imgholder\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><img src=\"" + item.profileImageUrl + "\" /></a></div>";
-        html += "<strong>" + item.userName + "</strong>";
-        html += "<p>微博数：" + item.statusesCount + "</p>";
-        html += "<p>关注数：" + item.friendsCount + "</p>";
-        html += "<p>粉丝数：" + item.followersCount + "</p>";
-        html += "<p>个人描述：" + item.description + "</p>";
-        html += "<div class=\"meta\"><a href=\"http://weibo.com/u/" + item.id + "\" target=\"_blank\">weibo.com/u/" + item.id + "</a></div></div>";
-      }
-      
-      // Add image HTML to the page.
-      $('#thumbnail').append(html);
-      
-      // Apply layout.
-      applyLayout();
-
-      refresh_grid();
-  }
-
-function refresh_grid(){
-  $("#thumbnail > div.grid").each(function(){
-    $(this).hover(
-      function(){
-        $(this).addClass("gridHover").children("div.options").css("opacity", "1");
-      },
-      function(){
-        $(this).removeClass("gridHover").children("div.options").css("opacity", "0");
-      });
-  });
-  $("#thumbnail > div.grid > div.options > div.opt").each(function(){
-    $(this).hover(
-      function(){
-        $(this).css("background-color", "#0088cc");
-        $(this).find("span").css("color", "#ffffff");
-        $(this).find("i").addClass("icon-white");
-      },
-      function(){
-        $(this).css("background-color", "#ffffff");
-        $(this).find("span").css("color", "#0088cc");
-        $(this).find("i").removeClass("icon-white");
-      });
-  });
-}
-
-</script>
-
- <script>
-        function request_callback(data) {
-	$('#count_chart').highcharts('StockChart', {
-			
-			rangeSelector : {
-				selected : 1
-			},
-
-			title : {
-				text : '话题传播趋势'
-			},
-			
-			series : [{
-				name : '微博数量',
-				data : data['perday_blog_count'],
-				tooltip: {
-					valueDecimals: 2
-				}
-			}]
-		});
-
-	  var map_data = data['map_data'];
-	  drawChinamap(map_data);
-
-    $('#working_count').highcharts({
-            chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false
-            },
-            title: {
-                text: '用户领域分布'
-            },
-            tooltip: {
-              pointFormat: '{series.name}: <b>{point.percentage}%</b>',
-              percentageDecimals: 1
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: true,
-                        color: '#000000',
-                        connectorColor: '#000000',
-                        formatter: function() {
-                            return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';
-                        }
-                    }
-                }
-            },
-            series: [{
-                type: 'pie',
-                name: '占比',
-                data: [
-                    ['金融',   45.0],
-                    ['房地产',       26.8],
-                    {
-                        name: '媒体',
-                        y: 12.8,
-                        sliced: true,
-                        selected: true
-                    },
-                    ['科技',    8.5],
-                    ['教育',     6.2],
-                    ['未知领域',   0.7]
-                ]
-            }]
-        });
-      };
-        $(document).ready(function(){
-          $.post("/propagate/showResult/", {'keyword': '{{ keyword }}', 'keyuser': '{{ keyuser }}', 'beg_time': '{{ beg_time }}', 'end_time': '{{ end_time }}'}, request_callback, "json");
-          $.get("/static/gexf/forest.gexf", function(data) {
-	    var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
-	      defaultLabelColor: '#fff'
-	      }).graphProperties({
-	         minNodeSize: 0.5,
-	         maxNodeSize: 5
-	      });
-
-	   sigInst.parseGexf(data);
-
-	   sigInst.draw();
-	  }, "xml");
-        });
-	loadData();
-	backToTop(); 
-	$('#thumbnail').height('700px'); 
-        </script>
-{% endblock %}
+    })
+  </script>
+{% endblock script %}

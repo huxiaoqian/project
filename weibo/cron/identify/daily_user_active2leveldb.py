@@ -4,24 +4,32 @@ import os
 import time
 import leveldb
 
+from datetime import datetime
+
 from xapian_weibo.xapian_backend import XapianSearch
 
 def datetime2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))
 
+def ts2datetime(ts):
+    return time.strftime('%Y-%m-%d', time.localtime(ts))
+
 LEVELDBPATH = '/home/mirage/leveldb'
-daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'hanyang_daily_user_active_20130307'),
-                                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 
 user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
-batch = leveldb.WriteBatch()
+def make(date):
+    end_ts = datetime2ts(date)
+    start_ts = end_ts - 24*60*60
 
-def make():
-    start_ts = datetime2ts('2013-3-7')
-    end_ts = datetime2ts('2013-3-8')
+    db_name = get_leveldb('active', end_ts)
+
+    daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+
+    batch = leveldb.WriteBatch()
 
     query_dict = {'timestamp': {'$gt': start_ts, '$lt': end_ts}}
 
@@ -29,12 +37,14 @@ def make():
 
     print 'total statuses: %s' % statuses_count
 
+    print 'writing to levelDB %s...' % db_name
+
     count = 0
 
     uid_active = {}
     for status in get_statuses_results():
-        if count % 1000 == 0:
-            print count
+        if count % 10000 == 0:
+            print 'current count: %s' % count
         try:
             repost = status['retweeted_status']
             isRepost = True
@@ -56,8 +66,41 @@ def make():
 
     daily_user_active_bucket.Write(batch, sync=True)
 
-def read():
-    for key, value in daily_user_active_bucket.RangeIter():
-        print key, value
+    print 'done.'
 
-if __name__ == '__main__': make()
+def read(date):
+    end_ts = datetime2ts(date)
+    
+    db_name = get_leveldb('active', end_ts)
+
+    daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    count = 0
+    for key, value in daily_user_active_bucket.RangeIter():
+        count += 1
+    print 'total kvs: %s' % count
+
+def get_leveldb(method, ts):
+    date = datetime.fromtimestamp(ts)
+    db_name = 'hanyang_daily_user_%s_' % method
+    db_name += str(date.year)
+    if date.month < 10:
+        db_name += '0%s' % str(date.month)
+    else:
+        db_name += str(date.month)
+    if date.day < 10:
+        db_name += '0%s' % str(date.day)
+    else:
+        db_name += str(date.day)
+    return db_name
+
+def main():
+    # current_time = time.time()
+    current_time = datetime2ts('2013-3-1')
+
+    date = ts2datetime(current_time)
+
+    make(date)
+
+if __name__ == '__main__': main()
+    

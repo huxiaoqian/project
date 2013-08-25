@@ -24,7 +24,7 @@ from show_user_statuses import user_statuses
 from utils import acquire_topic_id, acquire_topic_name, read_rank_results
 from time_utils import ts2datetime, datetime2ts, window2time
 
-from hadoop_utils import generate_job_id, monitor, prepare_data
+from hadoop_utils import monitor
 
 mod = Blueprint('identify', __name__, url_prefix='/identify')
 
@@ -139,7 +139,7 @@ def area():
         #window size for idenfity i.e. adding time limit on input data
         window_size = int(form.get('window_size', 1))
         #use PageRank if and only if window size equals 1
-        if window_size == 1:
+        if window_size == 1 or window_size == 7:
             rank_method = 'pagerank'
         else:
             rank_method = 'degree'
@@ -228,6 +228,7 @@ def burst_monitor():
     if request_method == 'POST':
         form = request.form
         top_n = int(form.get('top_n', 10))
+        # current_time = time.time()
         current_time = datetime2ts('2013-3-7') + 12*60*60
         data = burstRealtimeModule.realtime_burst_user(top_n, current_time)
         return json.dumps(data)

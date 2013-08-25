@@ -5,12 +5,9 @@ import operator
 
 import networkx as nx
 
-from weibo.extensions import db
-from weibo.model import AreaUserIdentification
-
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, load_scws, cut
+from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, read_key_users, load_scws, cut
 from config import PAGERANK_ITER_MAX
 
 from xapian_weibo.xapian_backend import XapianSearch
@@ -53,7 +50,7 @@ def pagerank_rank(top_n, date, topic_id, window_size):
     input_tmp_path = tmp_file.name
     
     
-    job_id = generate_job_id(datetime2ts(date), topic_id)
+    job_id = generate_job_id(datetime2ts(date), window_size, topic_id)
     iter_count = PAGERANK_ITER_MAX
 
     sorted_uids = pagerank(job_id, iter_count, input_tmp_path, top_n)
@@ -63,7 +60,11 @@ def pagerank_rank(top_n, date, topic_id, window_size):
     return data
 
 def prepare_data_for_degree(topic_id, date, window_size):
-    g = make_network(topic_id, date, window_size)
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
+
+    g = make_network(topic, date, window_size)
 
     if not g:
         return None
@@ -78,8 +79,12 @@ def prepare_data_for_degree(topic_id, date, window_size):
 
 def prepare_data_for_pr(topic_id, date, window_size):
     tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    
-    g = make_network(topic_id, date, window_size)
+
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
+
+    g = make_network(topic, date, window_size)
 
     if not g:
         return None
@@ -112,8 +117,12 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
         key_users = read_key_users(current_date, window_size, topic_id, top_n=10)
     else:
         key_users = []
+
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
               
-    uid_ts, G = make_network(topic_id, date, window_size, ts=True)
+    uid_ts, G = make_network(topic, date, window_size, ts=True)
 
     N = len(G.nodes())
 
@@ -165,15 +174,6 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
         edge_counter += 1
 
     return etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
-
-def read_key_users(date, window, topic_id, top_n=10):
-    items = db.session.query(AreaUserIdentification).filter_by(topicId=topic_id, identifyWindow=window, identifyDate=date).order_by(AreaUserIdentification.rank.asc()).limit(top_n)
-    users = []
-    if items.count():
-        for item in items:
-            uid = item.userId
-            users.append(uid)
-    return users
     
 def cut_network(g, node_degree):
     degree_threshold = 2
@@ -183,10 +183,7 @@ def cut_network(g, node_degree):
             g.remove_node(node)
     return g
 
-def make_network(topic_id, date, window_size, ts=False):
-    topic = acquire_topic_name(topic_id)
-    if not topic:
-        return None
+def make_network(topic, date, window_size, max_size=100000, ts=False):
     end_time = datetime2ts(date)
     start_time = end_time - window2time(window_size)
 
@@ -198,9 +195,9 @@ def make_network(topic_id, date, window_size, ts=False):
     query_dict = {'text': topic, 'timestamp': {'$gt': start_time, '$lt': end_time}}
 
     if ts:
-        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'timestamp', 'retweeted_status'])
+        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'timestamp', 'retweeted_status'], max_offset=max_size)
     else:
-        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'])
+        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'], max_offset=max_size)
     print 'topic statuses count %s' % count
 
     if ts:

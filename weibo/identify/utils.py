@@ -3,9 +3,11 @@
 import os
 import random
 
-from weibo.extensions import db
-
-from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification
+try:
+    from weibo.extensions import db
+    from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification
+except ImportError:
+    print 'Warning: Not in web environment.'
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
@@ -25,6 +27,9 @@ EXTRA_STOPWORD_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'stopword.dic')
 EXTRA_EMOTIONWORD_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'emotionlist.txt')
 EXTRA_ONE_WORD_WHITE_LIST_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'one_word_white_list.txt')
 
+status_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+
 def acquire_topic_id(name):
     item = db.session.query(Topic).filter_by(topicName=name).first()
     if not item:
@@ -42,7 +47,6 @@ def acquire_topic_name(tid):
     return item.topicName
 
 def acquire_user_by_id(identifyRange, uid):
-    user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
     count, get_results = user_search.search(query={'_id': uid})
     # assert count==1, 'UID duplicated?'
     user = {}
@@ -59,7 +63,6 @@ def acquire_user_by_id(identifyRange, uid):
     return user
 
 def acquire_status_by_id(mid):
-    status_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=1)
     count, get_results = status_search.search(query={'_id': mid})
     # assert count==1, 'MID duplicated?'
     status = None
@@ -152,6 +155,15 @@ def find_user_previous_rank(identifyRange, uid, date, method, window, topic_id):
         return item.rank
     else:
         return None
+
+def read_key_users(date, window, topic_id, top_n=10):
+    items = db.session.query(AreaUserIdentification).filter_by(topicId=topic_id, identifyWindow=window, identifyDate=date).order_by(AreaUserIdentification.rank.asc()).limit(top_n)
+    users = []
+    if items.count():
+        for item in items:
+            uid = item.userId
+            users.append(uid)
+    return users
 
 def rank_comparison(previous, current):
     if previous:

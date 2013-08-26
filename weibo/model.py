@@ -6,7 +6,7 @@ __all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRela
            'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', 
            'RangeCount', 'Province', 'Words', 'PersonalBurstWords','FieldProfile', 'UserField', 
            'HotStatus', 'Media', 'Manager', 'NewWords', 'WhiteList', 'UserWeight', 'BlackList',
-           'IMedia']
+           'IMedia', 'M_Weibo']
 
 class User(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -355,3 +355,18 @@ class IMedia(db.Model):
 
     def __repr__(self):
         return self.mediaName
+
+class M_Weibo(db.Model):
+    weibo_id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
+    text = db.Column(db.String(350))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.BigInteger(11, unsigned=True))
+
+    @classmethod
+    def _name(cls):
+        return u'微博素材'
+
+    def __repr__(self):
+        return self.weibo_id

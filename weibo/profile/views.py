@@ -327,17 +327,8 @@ def profile_network(uid):
         now_ts = int(now_ts)
         during = 24 * 3600
 
-        interval = None
         if request.args.get('interval'):
-            interval =  request.args.get('interval')
-        if interval == 'oneweek':
-            total_days = 6
-        elif interval == 'onemonth':
-            total_days = 29
-        elif interval == 'twomonth':
-            total_days = 59
-        else:
-            total_days = 89
+            total_days =  int(request.args.get('interval')) - 1
 
         interact_bucket = get_bucket('user_daily_interact_count')
         uid_interact_count = {} 
@@ -583,7 +574,6 @@ def group_status_count(fieldEnName):
                 daily_count = bucket.Get(str(fieldEnName) + '_' + str(lt) + '_' + str(is_retweeted))
                 daily_count = int(daily_count)
             except KeyError:
-                print 'here'
                 daily_count = 0
             post_count[is_retweeted] = daily_count
         sumcount = sum(post_count.values())

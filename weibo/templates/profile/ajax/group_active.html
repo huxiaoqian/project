@@ -1,5 +1,4 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
-
 {% block body %}
   <script>
   var active;
@@ -25,7 +24,7 @@
     active.Draw();
   }
   function submit_form(){
-    var interval_arg = $("#interval")[0].value;
+    var interval_arg = $("#act_interval")[0].value;
     RGraph.Clear(active.canvas);
     $.ajax({
           url: "/profile/group_active/{{field}}?interval=" + interval_arg,
@@ -37,21 +36,25 @@
           }
       });
   }
-  $(document).ready(function(){
+  function init_chart(){
+    var interval_arg = $("#act_interval")[0].value;
     $.ajax({
-          url: "/profile/group_active/{{field}}?interval=120",
+          url: "/profile/group_active/{{field}}?interval=" + interval_arg,
           dataType: 'json',   
           type: "GET",   
           success: function (data) {
              display_active_chart(data);
           }
       });
-  })
+  }
+  init_chart();
   </script>
   <form class="form-inline">
     时间范围:
-    <select class="span2" name="interval" id="interval">
+    <select class="span2" name="interval" id="act_interval">
       <option value="120">4个月</option>
+      <option value="180">6个月</option>
+      <option value="150">5个月</option>
       <option value="90">3个月</option>
       <option value="7">1周</option>
       <option value="30">1个月</option>

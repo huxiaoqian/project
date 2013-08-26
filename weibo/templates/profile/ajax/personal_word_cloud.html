@@ -7,19 +7,18 @@
         <option value="bst" onclick="changeTime(0);">突发词</option>
       </select>
     时间范围:
-    <select class="span2" name="interval" id="interval">
+    <select class="span2" name="interval" id="tp_interval">
       <option value="-1">从注册至今</option>
     </select>
-     以<select class="span2" name="sort" id="sort">
+     以<select class="span2" name="sort" id="tp_sort">
         <option value="prob">概率</option>
       </select>
-      作为权重显示前<input type="number" name="limit" value="200" min="1" max="1000" class="span2" id="limit">关键词
+      作为权重显示前<input type="number" name="limit" value="200" min="1" max="1000" class="span2" id="tp_limit">关键词
       <!--<input type='button' onclick='return false;'>-->
-    <button type="button" class="btn btn-primary" id="generate_cloud" onclick="submit_form();return false;"><i class="icon-search"></i>生成关键词云图</button>
+    <button type="button" class="btn btn-primary" id="generate_cloud" onclick="submit_form();return false;"><i class="icon-search"></i>分析</button>
 </form>
 <div id='d3_cloud'></div>
-
-<script src="/static/js/profile/d3.v3.min.js"></script>
+  <script src="/static/js/profile/d3.v3.min.js"></script>
   <script src="/static/js/profile/d3.layout.cloud.js"></script>
 
   <script>
@@ -117,8 +116,8 @@ function display_d3_cloud(data){
     }); 
   })
   function changChild(tid){  
-    $("#interval").empty();//清空
-    $("#sort").empty();
+    $("#tp_interval").empty();//清空
+    $("#tp_sort").empty();
     if (tid == 'bst'){
       var html = "<option value='90'>最近3个月</option><option value='60'>最近2个月</option><option value='30'>最近1个月</option><option value='7'>最近1周</option><option value='1'>最近1天</option>";
       var shtml = "<option value='freq'>词频</option><option value='burst'>突发度</option>";
@@ -126,13 +125,13 @@ function display_d3_cloud(data){
       var html = "<option value='-1'>从注册至今</option>";
       var shtml = "<option value='prob'>概率</option>";
     }
-    $("#interval").append(html);
-    $("#sort").append(shtml);
+    $("#tp_interval").append(html);
+    $("#tp_sort").append(shtml);
   }
   function submit_form(){
-    var interval_arg = $("#interval")[0].value;
-    var sort_arg = $("#sort")[0].value;
-    var limit_arg = $("#limit")[0].value;
+    var interval_arg = $("#tp_interval")[0].value;
+    var sort_arg = $("#tp_sort")[0].value;
+    var limit_arg = $("#tp_limit")[0].value;
     var type_arg = $("#topic_type")[0].value;
     $.ajax({
           url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&sort=" + sort_arg + "&limit=" + limit_arg + "&topic_type=" + type_arg,

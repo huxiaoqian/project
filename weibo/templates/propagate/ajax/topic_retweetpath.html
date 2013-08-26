@@ -1,0 +1,24 @@
+<style>
+  .sigma-expand {
+      position: relative;
+      margin: 0px auto;
+      height: 320px;
+  }
+</style>
+<div class="sigma-expand" id="sigma-graph"></div>
+<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.parseGexf.js') }}"></script>
+<script>
+	$.get("/static/gexf/forest.gexf", function(data) {
+	  var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
+	  	defaultLabelColor: '#fff'
+    }).graphProperties({
+       minNodeSize: 0.5,
+       maxNodeSize: 5
+    });
+
+	  sigInst.parseGexf(data);
+ 
+    sigInst.draw();
+  }, "xml");
+</script>

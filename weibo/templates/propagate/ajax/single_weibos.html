@@ -1,0 +1,35 @@
+<link href="{{ url_for('static', filename='css/propagate/microblog.css') }}" rel="stylesheet">
+<style>
+  .WB_feed_datail, .WB_feed_type {
+    width: 1000px;
+  }
+  .WB_info, .WB_text, .WB_detail {
+    width: 950px;
+  }
+</style>
+  <div class="WB_feed_type SW_fun  S_line2">
+    <div class="WB_feed_datail S_line2 clearfix">
+      <div class="WB_face">
+      <a class="W_face_radius"><img alt="" width="50" height="50" src="{{ tar_profile_image_url }}"></a>
+      </div>
+    <div class="WB_detail">
+      <div class="WB_info"><a class="WB_name S_func1"> {{ tar_screen_name }} </a>
+      </div>
+      <div class="WB_text" node-type="feed_list_content">{{ tar_text }}</div>
+    <div class="WB_func clearfix">
+      <div class="WB_handle">
+        <a><em class="W_ico20 icon_praised_b"></em>赞:{{ tar_attitudes_count }}</a><i class="S_txt3">|</i>
+        <a>转发:{{ tar_repost_count }}</a><i class="S_txt3">|</i>
+        <a>评论:{{ tar_comments_count }}</a><i class="S_txt3">|</i>
+        <a href="/propagate/showResult_single/{{ tar_id }}/">分析</a><i class="S_txt3">|</i>
+        <a href="/propagate/add_material/{{ tar_id }}/">导入素材库</a>
+      </div>
+      <div class="WB_from">
+        <a class="S_link2 WB_time" >{{ tar_post_date }}</a> 
+        <em class="S_txt2">来自</em><a class="S_link2" >{{ tar_source }}</a>                           
+      </div>
+    </div>
+    <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
+    </div>
+    </div>
+  </div>

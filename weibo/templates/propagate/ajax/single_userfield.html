@@ -1,0 +1,220 @@
+<style>
+  .descriptions {
+  font-family: "Trebuchet MS", Helvetica, Arial;
+  }
+  .block {
+  padding: 15px;
+  background: #fff;
+  margin-bottom: 10px;
+  line-height: 1.7;
+  box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+  -moz-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+  -webkit-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+  transition: box-shadow 1s;
+  -moz-transition: -moz-box-shadow 1s;
+  -webkit-transition: -webkit-box-shadow 1s;
+  }
+  #thumbnail{
+  position: relative;
+  width:1200px;
+  height: 700px;
+  margin:0 auto auto 0;
+  padding-bottom: 10px;
+  }
+  .grid{
+  width:188px;
+  min-height:100px;
+  padding: 15px;
+  background:#fff;
+  margin:8px;
+  font-size:12px;
+  float:left;
+  box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+  -moz-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+  -webkit-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+  -webkit-transition: top 1s ease, left 1s ease;
+  -moz-transition: top 1s ease, left 1s ease;
+  -o-transition: top 1s ease, left 1s ease;
+  -ms-transition: top 1s ease, left 1s ease;
+  }
+  strong {
+  border-bottom:1px solid #ccc;
+  margin:10px 0;
+  display:block;
+  padding:0 0 5px;
+  font-size:17px;
+  }
+  .meta{
+  text-align:right;
+  color:#777;
+  font-style:italic;
+  }
+  .imgholder img{
+  max-width:100%;
+  background:#ccc;
+  display:block;
+  }
+</style>
+<div id="working_count" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+<div class="well">
+  <legend>次级传播用户</legend>
+  <div>
+    <p>
+      <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
+    </p>
+  </div>
+  <div>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>博主ID</th>
+          <th>博主昵称</th>
+          <th>博主地域</th>
+          <th>粉丝数</th>
+          <th>关注数</th>
+          <th>关联级别</th>
+          <th>敏感状态</th>
+        </tr>
+      </thead>
+      <div id="users_area">
+        <tbody>
+          {% for user in blog_key_user_list %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.name }}</td>
+              <td>{{ user.location }}</td>
+              <td>{{ user.followers_count }}</td>
+              <td>{{ user.bi_followers_count }}</td>
+              <td>二级</td>
+              <td><i class="icon-ok"></i></td>
+            </tr>
+          {% endfor %} 
+        </tbody>
+      </div>
+    </table>
+    <div id="page-selection" class="pagination pagination-centered"></div>
+  </div>
+</div>
+<div class = "span12" >
+  <legend>关键传播用户</legend>
+  <div id="thumbnail">
+    {% for u in blog_key_user_list %}
+      <div class="grid">
+        <div id="imgholder"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
+        <strong>{{ u.name }}</strong>
+        <p>微博数：{{ u.statuses_count }}</p>
+        <p>关注数：{{ u.bi_followers_count }}</p>
+        <p>粉丝数：{{ u.followers_count }}</p>
+        <p>个人描述：{{ u.description }}</p>
+        <div class="meta">{{u.url}}</div>
+      </div>
+    {% endfor %}
+  </div>
+  <div id="loader">
+      <div id="loaderCircle" style="display: none;"></div>
+  </div>
+</div>
+
+<script src="/static/js/profile/bootstrap.min.js"></script>
+<script src="/static/js/profile/jquery.bootpag.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
+<script>
+  // init bootpag
+  $('#page-selection').bootpag({
+      total: 23,
+      page: 1,
+      maxVisible: 10 
+  }).on("page", function(event, /* page number here */ num){
+       $("#users_area").html("Insert content"); // some ajax content loading...
+  });
+
+  display_user_field_dist();
+
+  function display_user_field_dist(){
+    $('#working_count').highcharts({
+      chart: {
+          plotBackgroundColor: null,
+          plotBorderWidth: null,
+          plotShadow: false
+      },
+      title: {
+          text: '用户领域分布'
+      },
+      tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage}%</b>',
+        percentageDecimals: 1
+      },
+      plotOptions: {
+          pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              dataLabels: {
+                  enabled: true,
+                  color: '#000000',
+                  connectorColor: '#000000',
+                  formatter: function() {
+                      return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';
+                  }
+              }
+          }
+      },
+      series: [{
+        type: 'pie',
+        name: '占比',
+        data: [
+            ['金融',   45.0],
+            ['房地产',       26.8],
+            {
+                name: '媒体',
+                y: 12.8,
+                sliced: true,
+                selected: true
+            },
+            ['科技',    8.5],
+            ['教育',     6.2],
+            ['未知领域',   0.7]
+        ]
+      }]
+    });
+  }
+
+  var options = {
+      numOfCol: 8,
+      offsetX: 8,
+      offsetY: 8
+  };
+
+  $('#thumbnail').BlocksIt(options);
+
+//window resize
+  var currentWidth = 1100;
+  $(window).resize(function() {
+    var winWidth = $(window).width();
+    var conWidth;
+    if(winWidth < 660) {
+      conWidth = 440;
+      col = 2
+    } else if(winWidth < 880) {
+      conWidth = 660;
+      col = 3
+    } else if(winWidth < 1100) {
+      conWidth = 880;
+      col = 4;
+    } else {
+      conWidth = 1100;
+      col = 5;
+    }
+    
+    if(conWidth != currentWidth) {
+      currentWidth = conWidth;
+      $('#thumbnail').width(conWidth);
+      $('#thumbnail').BlocksIt({
+        numOfCol: col,
+        offsetX: 8,
+        offsetY: 8
+      });
+    }
+  });  
+
+</script>

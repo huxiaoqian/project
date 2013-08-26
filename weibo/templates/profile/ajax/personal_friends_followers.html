@@ -53,7 +53,7 @@
           for(var i=0;i<fields_result.length;i+=1){
             var fieldName = fields_result[i][0];
             var fieldCount = fields_result[i][1];
-            field_html += "<a href=\"#\"><span class=\"label label-info\">" + fieldEn2Zh(fieldName) + "</span><span class=\"badge\">" + fieldCount + "</span></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;";
+            field_html += "<a href=\"#\"><span class=\"label label-info\">" + fieldEn2Zh(fieldName) + "</span><span class=\"badge\">" + fieldCount + "</span></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
           }
           $("#TagCloud").append(field_html);
           total_page_number = parseInt(data['pages']);

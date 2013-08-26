@@ -1,12 +1,18 @@
 {% extends 'profile/profile_layout.html' %}
 {% block title %}***原型系统{% endblock %}
-
+{% block head %}
+  <link rel="stylesheet" href="/static/css/jquery-ui.css" />
+  <style>
+    body{
+      padding-top: 60px;
+    }
+  </style>
+{% endblock head%}
 {% block top_navbar_active %}
   <li><a href="/profile/person/1813080181">单个用户特征展示</a></li>
   <li class="active"><a href="/profile/group/finance">领域特征展示</a></li>
   <li><a href="/profile/search/">博主特征搜索与分领域展示</a></li>
 {% endblock top_navbar_active %}
-
 {% block content %} 
   <script src="/static/js/profile/highcharts.js"></script>
   <script src="/static/js/profile/exporting.js"></script>
@@ -61,30 +67,33 @@
         </ul>
       </div>
 
-      <div class="span9">
+      <div class="span9" id="index-tabs">
         <legend>{{atfield}}领域</legend>
-        <ul id="index-tabs" class="nav nav-tabs">
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouprank', uid=model)}}" data-toggle="tab">领域用户排序列表</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouptopic', uid=model)}}" data-toggle="tab">领域话题兴趣</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='grouplocation', uid=model)}}" data-toggle="tab">领域认证及地理分布</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupweibocount', uid=model)}}" data-toggle="tab">领域微博数量走势</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupactive', uid=model)}}" data-toggle="tab">人群活跃度走势</a></li>
-          <li><a href="{{url_for('profile.profile_person_tab_ajax', model='groupemotion', uid=model)}}" data-toggle="tab">人群情感走势</a></li>
+        <ul class="nav nav-tabs">
+          <li><a href="/profile/person_tab_ajax/grouprank/{{model}}" >领域用户排序列表</a></li>
+          <li><a href="/profile/person_tab_ajax/grouptopic/{{model}}" >领域话题兴趣</a></li>
+          <li><a href="/profile/person_tab_ajax/grouplocation/{{model}}" >领域认证及地理分布</a></li>
+          <li><a href="/profile/person_tab_ajax/groupweibocount/{{model}}" >领域微博数量走势</a></li>
+          <li><a href="/profile/person_tab_ajax/groupactive/{{model}}" >人群活跃度走势</a></li>
+          <li><a href="/profile/person_tab_ajax/groupemotion/{{model}}" >人群情感走势</a></li>
         </ul>
-
-        
       </div>
     </div><!--row-fluid-->
   </div><!--container-fluid-->
-
-
 {% endblock content %}
 {% block script %}
-  <script src="/static/js/profile/bootstrap.min.js"></script>
-  <script src="/static/js/profile/bootstrap-tab-ajax.js"></script>
+  <script src="/static/js/jquery-ui.js"></script>
+  <script src="/static/js/profile/highcharts.js"></script>
+  <script src="/static/js/profile/exporting.js"></script>
   <script>
   $(document).ready(function(){
-    $("#index-tabs").ajaxTab();  
+    $( "#index-tabs" ).tabs({
+      beforeLoad: function( event, ui ) {
+        ui.jqXHR.error(function() {
+          ui.panel.html("无法显示此页，我们将尽快解决该问题. ");
+        });
+      }
+    });
   })
   </script>
 {% endblock script %}

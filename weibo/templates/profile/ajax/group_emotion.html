@@ -1,5 +1,4 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
-
 {% block body %}
   <script>
   function display_emotion_count(time_arr, happy_arr, angry_arr, sad_arr){
@@ -64,19 +63,21 @@
     });
   }
 
-  $(document).ready(function(){
+  function init_chart(){
+    var interval_arg = $("#emo_interval")[0].value;
     $.ajax({
-        url: '/profile/group_emotion/{{field}}?interval=120',
+        url: '/profile/group_emotion/{{field}}?interval=' + interval_arg,
         dataType: 'json',   
         type: "GET",   
         success: function (data) {
           display_emotion_count(data['time'], data['happy'], data['angry'], data['sad']);
         }
     });
-  })
+  }
+  init_chart();
 
   function submit_form(){
-      var interval_arg = $("#interval")[0].value;
+      var interval_arg = $("#emo_interval")[0].value;
       $.ajax({
             url: "/profile/group_emotion/{{field}}?interval=" + interval_arg,
             dataType: 'json',   
@@ -90,11 +91,14 @@
   </script>
   <form class="form-inline">
     时间范围:
-    <select class="span2" name="interval" id="interval">
-      <option value="threemonth">3个月</option>
-      <option value="oneweek">1周</option>
-      <option value="onemonth">1个月</option>
-      <option value="twomonth">2个月</option>
+    <select class="span2" name="interval" id="emo_interval">
+      <option value="180">6个月</option>
+      <option value="150">5个月</option>
+      <option value="120">4个月</option>
+      <option value="90">3个月</option>
+      <option value="60">2个月</option>
+      <option value="30">1个月</option>
+      <option value="7">1周</option>
     </select>
     <button type="button" class="btn btn-primary" onclick="submit_form();return false;"><i class="icon-search"></i>生成群体情绪走势图</button>
   </form>

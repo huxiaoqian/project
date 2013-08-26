@@ -260,13 +260,18 @@
     var emotion_ratio = {};
     var happy_absolute = [];
     var angry_absolute = [];
-    var sad_absolute = []
+    var sad_absolute = [];
     var happy_ratio = [];
     var angry_ratio = [];
     var sad_ratio = [];
+    var happy_list = [];
+    var angry_list = [];
+    var sad_list = [];
+    var ts_list = [];
 
     function pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6){
         if(times >= total_days){
+            get_peaks();
             return;
         }
         
@@ -296,18 +301,106 @@
                     happy_ratio.push([ts * 1000, happy_emotion_ratio]);
                     angry_ratio.push([ts * 1000, angry_emotion_ratio]);
                     sad_ratio.push([ts * 1000, sad_emotion_ratio]);
+                    happy_list.push(happy_emotion_ratio);
+                    angry_list.push(angry_emotion_ratio);
+                    sad_list.push(sad_emotion_ratio);
+                    ts_list.push(ts);
                 }
                 else{
                     emotion_ratio[ts * 1000] = [0, 0, 0, 0];
                 }
+                /*
                 pull_emotion_flag('happy', 'global', total_days, times, begin_ts, during, series4);
                 pull_emotion_flag('angry', 'global', total_days, times, begin_ts, during, series5);
                 pull_emotion_flag('sad', 'global', total_days, times, begin_ts, during, series6);
+                */
                 times++;
                 pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6);
             }
         });
     }
+
+    function get_peaks(){
+        $.ajax({
+            url: "/moodlens/emotionpeak/?happy=" + happy_list.join(',') + "&angry=" + angry_list.join(',') + "&sad=" + sad_list.join(',') + "&ts=" + ts_list,
+            type: "GET",
+            dataType:"json",
+            success: function(data){
+              console.log(data);
+              for(var i in data){
+                var h_count = happy_list[i];
+                var a_count = angry_list[i];
+                var s_count = sad_list[i];
+                var ts = data[i]['ts'];
+                var e_data = data[i]['ann_data'];
+                cloud_data[ts2datestr(ts)] = data[i]['cloud_data'];
+                var date = new Date(ts * 1000);
+                if(h_count == 0){
+                   e_data['happy']['title'] = undefined
+                   e_data['happy']['text'] = undefined
+                }
+                if(a_count == 0){
+                   e_data['angry']['title'] = undefined
+                   e_data['angry']['text'] = undefined
+                }
+                if(s_count == 0){
+                   e_data['sad']['title'] = undefined
+                   e_data['sad']['text'] = undefined
+                }
+                var one_point_data = [date, h_count, e_data['happy']['title'], e_data['happy']['text'], a_count, e_data['angry']['title'], e_data['angry']['text'], s_count, e_data['sad']['title'], e_data['sad']['text']];
+                dt_tmline_arr.push(date);
+                ann_data.addRow(one_point_data);
+                ann_chart.draw(ann_data, ann_redraw_options);
+              }
+              google.visualization.events.addListener(ann_chart, 'select', selectHandler);
+              $(".chartclient-annotation").click(ann_div_selectHandler);
+              $("chartclient-annotation-sel").click(ann_div_selectHandler);
+              function ann_div_selectHandler(e) {
+                var date_str=$(this).find(".chartclient-annotation-date").text();
+                var emotion = $(this).find(".chartclient-annotation-title").text();
+                var date_arr=date_str.split("-");
+                date_str = new Date(parseInt(date_arr[0]),parseInt(date_arr[1])-1,parseInt(date_arr[2])).format("yyyyMMdd");
+                /*
+                if(emotion == '高兴'){
+                  emotion = 'happy';
+                }
+                if(emotion == '悲伤'){
+                  emotion = 'sad';
+                }
+                if(emotion == '愤怒'){
+                  emotion = 'angry';
+                }*/
+                chg_date(date_str, emotion);
+              }
+              function selectHandler() {
+                var item=ann_chart.getSelection()[0];
+                var idx_slct=item.row;
+                var idx_col = item.column;
+                var date_str=dt_tmline_arr[idx_slct].format("yyyyMMdd");
+                var emotion = 'happy';
+                if (idx_col == 4){
+                    emotion = 'angry';
+                }
+                if (idx_col == 7){
+                    emotion = 'sad';
+                }
+                chg_date(date_str, emotion);
+              }
+              function chg_date(date_str, emotion) {
+                $("#tag_cloud").empty();
+                var cloud_text = cloud_data[date_str][emotion];
+                console.log(cloud_text);
+                for (var i=0;i<cloud_text.length;i++) {
+                  if(cloud_text[i].c > 10){
+                    cloud_text[i].c = 10;
+                  }
+                  $("#tag_cloud").append("<li><a style=\"font-size:"+(cloud_text[i].c/1.)+"ex\">"+cloud_text[i].w+"</a></li>");
+                }
+                redraw_tagcanvas();
+              }
+            }
+          })
+      }
 
     function pull_emotion_flag(emotion_type, area_type, total_days, times, begin_ts, during, series){
         if(times >= total_days){
@@ -360,7 +453,6 @@
             $('#emotion_pie_container').empty();
             display_emotion_pie(data);
         }
-        
     }
 
     function display_emotion_pie(data){
@@ -423,7 +515,7 @@
                 marginRight: 10,
                 events: {
                     load: function() {
-                        var total_days = 90;
+                        var total_days = 150;
                         var now_date = new Date();
                         var now_year = now_date.getFullYear();
                         var now_month = now_date.getMonth();
@@ -527,7 +619,7 @@
                 marker : {
                     enabled : false,    
                 }
-            },{
+            }/*,{
                 name: 'happy-events',
                 type : 'flags',
                 data : [],
@@ -554,7 +646,7 @@
                 shape : 'circlepin',
                 width : 16,
                 color: '#000099'
-            }]
+            }*/]
         });
     }
 

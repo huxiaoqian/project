@@ -33,19 +33,60 @@ def index():
 
     return render_template('admin/index.html', result = result)
 
-@mod.route('/paraset/')
-def help():
+@mod.route('/paraset/field/')
+def help_field():
     if 'logged_in' in session and session['logged_in']:
         fields = db.session.query(Field).filter().all()
         topics = db.session.query(Topic).filter().all()
+        return render_template('admin/para_field.html', fields = fields, topics = topics) 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/new/')
+def help_new():
+    if 'logged_in' in session and session['logged_in']:
         newwords = db.session.query(NewWords).filter().all()
+        return render_template('admin/para_new.html', newwords = newwords) 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/white/')
+def help_white():
+    if 'logged_in' in session and session['logged_in']:
         whites = db.session.query(WhiteList).filter().all()
+        return render_template('admin/para_white.html', whites = whites) 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/weight/')
+def help_weight():
+    if 'logged_in' in session and session['logged_in']:
         userweights = db.session.query(UserWeight).filter().all()
+        return render_template('admin/para_weight.html',userweights = userweights) 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/black/')
+def help_black():
+    if 'logged_in' in session and session['logged_in']:
         blacks = db.session.query(BlackList).filter().all()
+        return render_template('admin/para_hei.html',blacks = blacks) 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/media/')
+def help_media():
+    if 'logged_in' in session and session['logged_in']:
         medias = db.session.query(IMedia).filter().all()
+        return render_template('admin/para_media.html', medias = medias) 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/material/')
+def help_material():
+    if 'logged_in' in session and session['logged_in']:
         materials = db.session.query(M_Weibo).filter().all()
-        return render_template('admin/para_setting.html', fields = fields, topics = topics, newwords = newwords, whites = whites,
-                           userweights = userweights, blacks = blacks, medias = medias, materials = materials) 
+        return render_template('admin/para_ma.html', materials = materials) 
     else:
         return redirect('/sysadmin/')
 
@@ -228,35 +269,3 @@ def material_de():
         db.session.commit()
     return json.dumps(result)
 
-@mod.route('/new_out', methods=['GET','POST'])
-def new_out():
-    result = 'Right'
-    newwords = db.session.query(NewWords).filter().all()
-    with open('weibo_newwords.csv', 'wb') as f1:
-        writer1 = csv.writer(f1)
-        writer1.writerow(('编号','新词'))
-        for newword in newwords:
-            writer1.writerow((newword.id, newword.wordsName.encode('utf-8')))
-    return json.dumps(result)
-
-@mod.route('/white_out', methods=['GET','POST'])
-def white_out():
-    result = 'Right'
-    newwords = db.session.query(WhiteList).filter().all()
-    with open('weibo_whitelist.csv', 'wb') as f1:
-        writer1 = csv.writer(f1)
-        writer1.writerow(('编号','白名单'))
-        for newword in newwords:
-            writer1.writerow((newword.id, newword.listName.encode('utf-8')))
-    return json.dumps(result)
-
-@mod.route('/material_out', methods=['GET','POST'])
-def material_out():
-    result = 'Right'
-    newwords = db.session.query(M_Weibo).filter().all()
-    with open('weibo_material.csv', 'wb') as f1:
-        writer1 = csv.writer(f1)
-        writer1.writerow(('微博ID','微博内容','转发数','评论数','发布时间','发布者'))
-        for newword in newwords:
-            writer1.writerow((newword.weibo_id, newword.text.encode('utf-8'),newword.repostsCount,newword.commentsCount,newword.postDate,newword.uid))
-    return json.dumps(result)

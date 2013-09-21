@@ -203,20 +203,28 @@ def change_weight():
 def field_de():
     result = 'Right'
     new_id = request.form['f_id']
-    old_items = db.session.query(Field).filter(Field.id==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    conditions = db.session.query(Topic).filter(Topic.fieldId==new_id).all()
+    if len(conditions):
+        result = 'Wrong'
+    else:        
+        old_items = db.session.query(Field).filter(Field.id==new_id).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
     return json.dumps(result)
 
 @mod.route('/topic_de', methods=['GET','POST'])
 def topic_de():
     result = 'Right'
     new_id = request.form['f_id']
-    old_items = db.session.query(Topic).filter(Topic.id==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    conditions = db.session.query(AreaUserIdentification).filter(AreaUserIdentification.topicId==new_id).all()
+    if len(conditions):
+        result = 'Wrong'
+    else:
+        old_items = db.session.query(Topic).filter(Topic.id==new_id).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
     return json.dumps(result)
 
 @mod.route('/new_de', methods=['GET','POST'])
@@ -224,9 +232,12 @@ def new_de():
     result = 'Right'
     new_id = request.form['f_id']
     old_items = db.session.query(NewWords).filter(NewWords.wordsName==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/white_de', methods=['GET','POST'])
@@ -234,9 +245,12 @@ def white_de():
     result = 'Right'
     new_id = request.form['f_id']
     old_items = db.session.query(WhiteList).filter(WhiteList.listName==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/hei_de', methods=['GET','POST'])
@@ -244,9 +258,12 @@ def hei_de():
     result = 'Right'
     new_id = request.form['f_id']
     old_items = db.session.query(BlackList).filter(BlackList.blackID==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/media_de', methods=['GET','POST'])
@@ -254,9 +271,12 @@ def media_de():
     result = 'Right'
     new_id = request.form['f_id']
     old_items = db.session.query(IMedia).filter(IMedia.mediaID==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/material_de', methods=['GET','POST'])
@@ -264,8 +284,12 @@ def material_de():
     result = 'Right'
     new_id = request.form['f_id']
     old_items = db.session.query(M_Weibo).filter(M_Weibo.weibo_id==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
+
 

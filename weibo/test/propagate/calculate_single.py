@@ -4,22 +4,24 @@ from __future__ import division
 import  calendar
 import re
 from datetime import datetime
-
 import time
 from datetime import date
-
-from weibo.model import *
-from weibo.extensions import db
-
-
+from model import *
+from config import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
 
-def get_user(uid):
+xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+xapian_search_weibo_test = XapianSearch(path='/opt/xapian_weibo/data/faked/', name='master_timeline_weibo', schema_version=2)
+
+
+def get_user(uid, test):
     user = {}
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
-    count,get_results = s.search(query={'_id': uid},fields = ['_id','province','bi_followers_count','verified','description','friends_count','city','gender','created_at','profile_image_url','verified_reason','followers_count','location','name','active','statuses_count'])
+    if test == 'None':
+        count, get_results = xapian_search_weibo.search(query={'_id': uid}, fields = ['_id','province','bi_followers_count','verified','description','friends_count','city','gender','created_at','profile_image_url','verified_reason','followers_count','location','name','active','statuses_count'])
+    else:
+        count, get_results = xapian_search_weibo_test.search(query={'_id': uid}, fields = ['_id','province','bi_followers_count','verified','description','friends_count','city','gender','created_at','profile_image_url','verified_reason','followers_count','location','name','active','statuses_count'])
     for r in get_results():
         user['id'] = r['_id']
         user['province'] = r['province']
@@ -61,12 +63,12 @@ def get_user(uid):
     else:
         return user
 
-def get_ori_status(_id):
-    
+def get_ori_status(_id, test):
     status ={}
-    
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count,get_results = s.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_status','reposts_count','comments_count','attitudes_count','user','timestamp'])
+    if test == 'None':
+        count, get_results = xapian_search_weibo.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_status','reposts_count','comments_count','attitudes_count','user','timestamp'])
+    else:
+        count, get_results = xapian_search_weibo_test.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_status','reposts_count','comments_count','attitudes_count','user','timestamp'])
     for r in get_results():
         status['text'] = r['text'].decode("utf-8")
         status['id'] = r['_id']
@@ -83,7 +85,7 @@ def get_ori_status(_id):
         status['commentsCount'] = r['comments_count']
         status['attitudesCount'] = r['attitudes_count']
         if r['user']: 
-            status['user'] = get_user(r['user'])
+            status['user'] = get_user(r['user'], test)
         else:
             status['user'] = {'name':'未知用户'}
         status['timestamp'] =r['timestamp']
@@ -91,7 +93,7 @@ def get_ori_status(_id):
         break
     return status
     
-def calculate_single(_id):
+def calculate_single(_id, test):
 
     #初始化
     blog_info = {}
@@ -108,7 +110,6 @@ def calculate_single(_id):
         if pp == u'海外' or pp == u'其他':
             continue
         city_count[pp] = 0
-
         
     begin_ts1 = time.mktime(datetime(2011, 1, 1).timetuple())
     now = date.today()
@@ -118,12 +119,13 @@ def calculate_single(_id):
     end_ts1 = time.mktime(datetime(now_year, now_month, now_day).timetuple())
     
     #获取原微博信息
-    status_ori = get_ori_status(_id)
+    status_ori = get_ori_status(_id, test)
 
     #获取相关微博
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count,get_results = s.search(query={'retweeted_status': _id, 'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
-
+    if test == 'None':
+        count, get_results = xapian_search_weibo.search(query={'retweeted_status': _id, 'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
+    else:
+        count, get_results = xapian_search_weibo_test.search(query={'retweeted_status': _id, 'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
     print count
     reposter = []
     
@@ -140,7 +142,7 @@ def calculate_single(_id):
     for r in get_results():
       
         if r['user']:
-            user = get_user(r['user'])
+            user = get_user(r['user'], test)
             if user['location'] != None:
                 p = user['location']
                 tp = p.split(' ')
@@ -180,7 +182,10 @@ def calculate_single(_id):
                 perday_repost_count.append(0)
             perday_repost_count[-1] = 1
         reposts_sum += r['reposts_count']
-        comments_sum += r['comments_count']
+        try:
+            comments_sum += r['comments_count']
+        except:
+            pass
 
     totalRepost = reposts_sum + 1
     avg = (float(totalRepost))/len(date_list)

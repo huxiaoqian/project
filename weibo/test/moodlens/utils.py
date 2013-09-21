@@ -19,8 +19,8 @@ def getStopWds(filename):
         swds.add(word)
         count += 1
     return swds
-
-swds = getStopWds('./weibo/moodlens/stpwds_linhao_20130826.txt')#os.path.join(os.getcwd(), 'stpwds_linhao_20130826.txt'))
+    
+swds = getStopWds('./stpwds_linhao_20130826.txt')
 
 def timeit(method):
     def timed(*args, **kw):

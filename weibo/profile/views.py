@@ -23,9 +23,12 @@ import leveldb
 
 from xapian_weibo.xapian_backend import XapianSearch
 s_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 
 LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
+
+
 def get_bucket(bucket):
     if bucket in buckets:
         return buckets[bucket]
@@ -470,8 +473,6 @@ def profile_person_topic(uid):
 
 @mod.route('/person_count/<uid>', methods=['GET', 'POST'])
 def personal_weibo_count(uid):
-    post_status_kv = {'total': 2, 'repost': 1, 'fipost': 0}
-
     total_days = 89
     today = datetime.datetime.today()
     now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
@@ -485,23 +486,69 @@ def personal_weibo_count(uid):
     if request.args.get('interval'):
         total_days =  int(request.args.get('interval')) - 1
 
-    bucket = get_bucket('user_daily_post_count')
-    for i in xrange(-total_days + 1, 1):
-        lt = now_ts + during * i
-        post_count = {}
-        for weibo_is_retweet_status in [0, 1]:     
-            try:
-                post_count[weibo_is_retweet_status] = int(bucket.Get(str(uid) + '_' + str(lt) + '_' + str(weibo_is_retweet_status)))
-            except KeyError:
-                post_count[weibo_is_retweet_status] = 0
-        if sum(post_count.values()) > 0:
-            sumcount = sum(post_count.values())
-            post_arr.append(sumcount)
-            repost_arr.append(post_count[1])
-            fipost_arr.append(post_count[0])
-            time_arr.append(ts2date(lt).isoformat())
+    for i in range(total_days-1, -1, -1):
+        end_ts = now_ts - i * during
+        begin_ts = end_ts - during 
+
+        query_dict = {
+            'timestamp': {
+                '$gt': begin_ts,
+                '$lt': end_ts
+            },
+            'user': int(uid),
+        }
+
+        count, get_results = xapian_search_weibo.search(query=query_dict, fields=['retweeted_status'])
+        post_count = 0
+        fipost_count = 0
+        repost_count = 0
+        for r in get_results():
+            if r['retweeted_status']:
+                repost_count += 1
+            else:
+                fipost_count += 1
+            post_count += 1
+
+        post_arr.append(post_count)
+        fipost_arr.append(fipost_count)
+        repost_arr.append(repost_count)
+        time_arr.append(ts2date(end_ts).isoformat())
 
     return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr})
+
+    '''
+    for i in range(total_days-1, -1, -1):
+        end_ts = now_ts - i * during 
+        begin_ts = end_ts - during 
+
+        fipost_query_dict = {
+            'timestamp': {
+                '$gt': begin_ts,
+                '$lt': end_ts
+            },
+            'user': int(uid),
+            'retweeted_status': None
+        }
+
+        repost_query_dict = {
+            'timestamp': { 
+                '$gt': begin_ts,
+                '$lt': end_ts
+            },
+            'user': int(uid),
+            '$not': {'retweeted_status': None}
+        }
+
+        fipost_count = xapian_search_weibo.search(query=fipost_query_dict, count_only=True)
+        repost_count = xapian_search_weibo.search(query=repost_query_dict, count_only=True)
+        total_count = fipost_count + repost_count
+        post_arr.append(total_count)
+        fipost_arr.append(fipost_count)
+        repost_arr.append(repost_count)
+        time_arr.append(ts2date(end_ts).isoformat())
+
+    return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr})
+    '''
 
 @mod.route('/group_topic/<fieldEnName>')
 def profile_group_topic(fieldEnName):

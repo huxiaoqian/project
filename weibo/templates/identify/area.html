@@ -227,99 +227,108 @@
                 
               if(filename=="Previous_Rank_Result.csv"){
                   var ta=$("#previous_rank_table"); 
+
+                  var $table = ta.find("table"); 
+                  var $head = ta.find("thead");
+                  var $body = ta.find("tbody");
+                  var $r_head = $head.find("tr");
+                  var $rows = $body.find("tr");
+                  var tmpColDelim = String.fromCharCode(11); // vertical tab character
+                  var tmpRowDelim = String.fromCharCode(0); // null character
+
+              // actual delimiter characters for CSV format
+                  var colDelim = ",";
+                  var rowDelim = "\r\n";
+
+              // Grab text from table into CSV formatted string
+                  var c_head = $r_head.find("th");
+                  var csv_head = '';
+                  for(var count=0;count<c_head.length;count++){ 
+                      if(count == (c_head.length-1)){
+                        csv_head = csv_head + c_head[count].innerHTML + rowDelim;
+                      }
+                      else{
+                        csv_head = csv_head + c_head[count].innerHTML + colDelim;
+                      }
+                
+                  }
                }
               else{
                   var ta=$("#rank_table");
-               }
+                  var $table = ta.find("table"); 
+                  var $head = ta.find("thead");
+                  var $body = ta.find("tbody");
+                  var $r_head = $head.find("tr");
+                  var $rows = $body.find("tr");
+                  var tmpColDelim = String.fromCharCode(11); // vertical tab character
+                  var tmpRowDelim = String.fromCharCode(0); // null character
 
-  
-              
-            //console.log(ta.className);
-            var $table = ta.find("table"); 
-            var $head = ta.find("thead");
-            var $body = ta.find("tbody");
-            var $r_head = $head.find("tr");
-            var $rows = $body.find("tr");
-            	// Temporary delimiter characters unlikely to be typed by keyboard
-            	// This is to avoid accidentally splitting the actual contents
-            var tmpColDelim = String.fromCharCode(11); // vertical tab character
-            var	tmpRowDelim = String.fromCharCode(0); // null character
+              // actual delimiter characters for CSV format
+                  var colDelim = ",";
+                  var rowDelim = "\r\n";
 
-            	// actual delimiter characters for CSV format
-            var	colDelim = ",";
-            var	rowDelim = "\r\n";
-
-            	// Grab text from table into CSV formatted string
-            var c_head = $r_head.find("th");
-            var csv_head = '';
-            for(var count=0;count<c_head.length-1;count++){ 
-                if(count == (c_head.length-2)){
-                  csv_head = csv_head + c_head[count].innerHTML + rowDelim;
-                }
-                else{
-                  csv_head = csv_head + c_head[count].innerHTML + colDelim;
-                }
+              // Grab text from table into CSV formatted string
+                  var c_head = $r_head.find("th");
+                  var csv_head = '';
+                  for(var count=0;count<c_head.length-1;count++){ 
+                      if(count == (c_head.length-2)){
+                        csv_head = csv_head + c_head[count].innerHTML + rowDelim;
+                      }
+                      else{
+                        csv_head = csv_head + c_head[count].innerHTML + colDelim;
+                      }
                 
-            } 
+                  }
+               } 
 
               csv = $rows.map(function (i, row) {
-                	var $row = $(row),
-                		$cols = $row.find('td');
+                  var $row = $(row),
+                    $cols = $row.find('td');
 
-                	return $cols.map(function (j, col) {
-                    	var $col = $(col);
+                  return $cols.map(function (j, col) {
+                      var $col = $(col);
                       if($col.find('i').length == 1){
-                        var pic = $col.find('i');
-                        if(pic.attr('class') == "icon-arrow-up"){
-                          var text = '上升';
+                        var pic = $col.find('i');                        
+                        if(pic.attr('class') == "icon-ok"){
+                            var text = '是';
                         }
                         else{
-                          if(pic.attr('class') == "icon-arrow-down"){
-                            var text = '下降';
-                          }
-                          else{
-                            if(pic.attr('class') == "icon-ok"){
-                              var text = '是';
-                            }
-                            else{
-                              var text = '否';
-                            }
-                          }
+                            var text = '否';
                         }
                       }
                       else{
                         var text = $col.text();
                       }
-                    	
+                      
 
-                    	return text.replace('"', '"'); // escape double quotes
+                      return text.replace('"', '"'); // escape double quotes
 
-                	}).get().join(tmpColDelim);
+                  }).get().join(tmpColDelim);
 
-            	}).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);
+              }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);
 
               csv = csv_head + csv;
 
               // Data URI
-            	csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+              csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
 
-        		$(this)
-            		.attr({
-            			'download': filename,
-                		'href': csvData,
-                		'target': '_blank'
-        			});
-    		}
+            $(this)
+                .attr({
+                  'download': filename,
+                    'href': csvData,
+                    'target': '_blank'
+              });
+        }
 
 
-    		$("a[id='out']").on('click', function (event) {
-    			exportTableToCSV.apply(this, [$('#dvData>table'), 'Rank_Result.csv']);
-    			alert("导出成功！");
-    		});
-            	$("a[id='previous_out']").on('click', function (event) {
-    			exportTableToCSV.apply(this, [$('#dvData>table'), 'Previous_Rank_Result.csv']);
-    			alert("导出成功！");
-    		});
+        $("a[id='out']").on('click', function (event) {
+          exportTableToCSV.apply(this, [$('#dvData>table'), 'Rank_Result.csv']);
+          alert("导出成功！");
+        });
+              $("a[id='previous_out']").on('click', function (event) {
+          exportTableToCSV.apply(this, [$('#dvData>table'), 'Previous_Rank_Result.csv']);
+          alert("导出成功！");
+        });
 
 	  </script>
 

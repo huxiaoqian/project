@@ -350,8 +350,10 @@ def single_ajax_userfield():
     else:
         pass
 
-@mod.route("/add_material/<mid>/", methods = ["GET","POST"])
-def add_material(mid):
+@mod.route("/add_material", methods = ["GET","POST"])
+def add_material():
+    result = 'Right'
+    mid = request.form['mid']
     mid = int(mid)
     blog_info = calculate_single(mid)
                                  
@@ -361,11 +363,15 @@ def add_material(mid):
     blog_text = blog_info['status']['text']
     blog_id = blog_info['status']['id']
     bloger_ids = db.session.query(HotStatus).filter(HotStatus.id==blog_id).all()
-    for bloger_id in bloger_ids:
-        new_item = M_Weibo(weibo_id=blog_id,text=blog_text.encode('utf-8'),repostsCount=blog_reposts_count,commentsCount=blog_comments_count,postDate=blog_time,uid=bloger_id.uid)
-        db.session.add(new_item)
-        db.session.commit()
-    return '导入成功！'
+    ma_ids = db.session.query(M_Weibo).filter(M_Weibo.weibo_id==blog_id).all()
+    if len(ma_ids):
+        result = 'Wrong'
+    else:
+        for bloger_id in bloger_ids:
+            new_item = M_Weibo(weibo_id=blog_id,text=blog_text.encode('utf-8'),repostsCount=blog_reposts_count,commentsCount=blog_comments_count,postDate=blog_time,uid=bloger_id.uid)
+            db.session.add(new_item)
+            db.session.commit()
+    return json.dumps(result)
 
 @mod.route("/topics")
 def topics():

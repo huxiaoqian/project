@@ -184,8 +184,9 @@ function declear_re(){<!-- 反选 -->
                               if(this.checked)
                               {
                                   var fa = $(this).parent();
-                                  var ne = $(fa).next();
+                                  var ne = $(fa).prev().prev().prev().prev().prev().prev();                                  
                                   var f_id = $(ne).children().html();
+                                  
                                   $.ajax({   
                                     type:"POST",  
                                     url:"/sysadmin/material_de",

@@ -168,10 +168,13 @@ def add_black():
     result = 'Right'
     new_field = request.form['topic']
     new_names = db.session.query(User).filter(User.id==new_field).all()
-    for new_name in new_names:
-        new_item = BlackList(blackID=new_field,blackName=new_name.userName)
-        db.session.add(new_item)
-        db.session.commit()
+    if len(new_names):
+        for new_name in new_names:
+            new_item = BlackList(blackID=new_field,blackName=new_name.userName)
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/add_media', methods=['GET','POST'])
@@ -179,10 +182,13 @@ def add_media():
     result = 'Right'
     new_field = request.form['topic']
     new_names = db.session.query(User).filter(User.id==new_field).all()
-    for new_name in new_names:
-        new_item = IMedia(mediaID=new_field,mediaName=new_name.userName)
-        db.session.add(new_item)
-        db.session.commit()
+    if len(new_names):
+        for new_name in new_names:
+            new_item = IMedia(mediaID=new_field,mediaName=new_name.userName)
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/change_weight', methods=['GET','POST'])

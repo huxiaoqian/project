@@ -58,12 +58,15 @@ function add_field(){<!-- 添加按钮 -->
                     async:false,
                     data:{topic : fl},
                     success: function(data){
-                      if(data) {
+                      if(data=='Right') {
                                 alert("添加重要媒体成功！");
                                 location.reload();
                               } 
+                      else{
+                        alert("您输入的ID有误，请重新输入！");
+                      }
                     }              
-                  })
+                  });
                }
 }
  

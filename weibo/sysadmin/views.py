@@ -223,14 +223,10 @@ def field_de():
 def topic_de():
     result = 'Right'
     new_id = request.form['f_id']
-    conditions = db.session.query(AreaUserIdentification).filter(AreaUserIdentification.topicId==new_id).all()
-    if len(conditions):
-        result = 'Wrong'
-    else:
-        old_items = db.session.query(Topic).filter(Topic.id==new_id).all()
-        for old_item in old_items:
-            db.session.delete(old_item)
-            db.session.commit()
+    old_items = db.session.query(Topic).filter(Topic.id==new_id).all()
+    for old_item in old_items:
+        db.session.delete(old_item)
+        db.session.commit()
     return json.dumps(result)
 
 @mod.route('/new_de', methods=['GET','POST'])
@@ -298,4 +294,34 @@ def material_de():
         result = 'Wrong'
     return json.dumps(result)
 
+@mod.route('/new_in', methods=['GET','POST'])
+def new_in():
+    f_name = request.form['new_words']
 
+    for i in range(0,len(f_name)):
+        new_item = NewWords(wordsName=f_name[i])
+        db.session.add(new_item)
+        db.session.commit()
+
+    if len(f_name) > 0:
+        result = 'Right'
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
+
+@mod.route('/mydata_out')
+def mydata_out():
+    result='Right'
+    reader = csv.reader(file('RepostRelationship.csv', 'rb'))
+    #print len(reader)
+    
+    n=0
+    for line in reader:
+        id , t_id , rank , uid , identifyDate , identifyWindow , identifyMethod , ca = line
+        new_item = RepostRelationship(id=id,fieldId=t_id,topicId=rank,uid=uid,sourceUid=identifyDate,mid=identifyWindow,sourceMid=identifyMethod,createdAt=ca)
+        db.session.add(new_item)
+        db.session.commit()
+        n=n+1
+        print n
+
+    return json.dumps(result)

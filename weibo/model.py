@@ -73,10 +73,8 @@ class Status(db.Model):
 
 class RepostRelationship(db.Model):
     id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
-    fieldId = db.Column(db.Integer, db.ForeignKey('field.id'))
-    field = db.relationship('Field', primaryjoin='Field.id==RepostRelationship.fieldId')
-    topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
-    topic = db.relationship('Topic', primaryjoin='Topic.id==RepostRelationship.topicId')
+    fieldId = db.Column(db.Integer)    
+    topicId = db.Column(db.Integer)
     uid =  db.Column(db.BigInteger(11, unsigned=True))
     sourceUid = db.Column(db.BigInteger(11, unsigned=True))
     mid = db.Column(db.BigInteger(20, unsigned=True))
@@ -142,8 +140,7 @@ class WholeUserIdentification(db.Model):
 
 class AreaUserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
-    topic = db.relationship('Topic', primaryjoin='Topic.id==AreaUserIdentification.topicId')
+    topicId = db.Column(db.Integer)
     rank = db.Column(db.Integer)
     userId = db.Column(db.BigInteger(11, unsigned=True))
     identifyDate = db.Column(db.Date)

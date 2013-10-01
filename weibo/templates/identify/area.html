@@ -252,7 +252,32 @@
                       }
                 
                   }
-               }
+                csv = $rows.map(function (i, row) {
+                  var $row = $(row),
+                    $cols = $row.find('td');
+
+                  return $cols.map(function (j, col) {
+                      var $col = $(col);
+                      if($col.find('i').length == 1){
+                        var pic = $col.find('i');                        
+                        if(pic.attr('class') == "icon-ok"){
+                            var text = '是';
+                        }
+                        else{
+                            var text = '否';
+                        }
+                      }
+                      else{
+                        var text = $col.text();
+                      }
+                      
+
+                      return text.replace('"', '"'); // escape double quotes
+
+                  }).get().join(tmpColDelim);
+
+              }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);
+              }
               else{
                   var ta=$("#rank_table");
                   var $table = ta.find("table"); 
@@ -279,9 +304,7 @@
                       }
                 
                   }
-               } 
-
-              csv = $rows.map(function (i, row) {
+                csv = $rows.map(function (i, row) {
                   var $row = $(row),
                     $cols = $row.find('td');
 
@@ -293,12 +316,27 @@
                             var text = '是';
                         }
                         else{
-                            var text = '否';
+                          if(pic.attr('class') == "icon-arrow-down"){
+                              var text = '下降';
+                          }
+                          else{
+                            if(pic.attr('class') == "icon-arrow-up"){
+                                var text = '上升';
+                            }
+                            else{
+                              if(pic.attr('class') == "icon-minus"){
+                                  var text = '持平';
+                              }
+                              else{
+                                var text = '否';
+                              }
+                            }
+                          }                            
                         }
                       }
-                      else{
-                        var text = $col.text();
-                      }
+                    else{
+                       var text = $col.text();
+                    }
                       
 
                       return text.replace('"', '"'); // escape double quotes
@@ -306,6 +344,9 @@
                   }).get().join(tmpColDelim);
 
               }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);
+               } 
+
+              
 
               csv = csv_head + csv;
 

@@ -23,8 +23,8 @@
         <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
         <a>收藏:{{ status['status']['favourite_count'] }}</a><i class="S_txt3">|</i>
         <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
-        <a href="/propagate/showresult_single/{{ status['status']['_id'] }}/">分析</a><i class="S_txt3">|</i>
-        <a href="/propagate/add_material/{{ status['status']['_id'] }}/">导入素材库</a>
+        <a href="/propagate/showresult_single/{{ status['status']['_id'] }}/" style="color:#FF8000;">分析</a><i class="S_txt3">|</i>
+        <a href="/propagate/add_material/{{ status['status']['_id'] }}/" style="color:red;">导入素材库</a>
       </div>
       <div class="WB_from">
         <a class="S_link2 WB_time" >{{ status['status']['created_at'] }}</a> 

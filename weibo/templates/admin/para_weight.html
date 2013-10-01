@@ -70,9 +70,7 @@ ul{
           
           <li> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >领域及话题管理</a></li>
           
-          <li > <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >新词管理</a></li>
-
-          <li> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >情感词白名单管理</a></li>
+          <li > <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >保留词管理</a></li>
 
           <li  class="active"> <a id="Wai" href="/sysadmin/paraset/weight/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >博主权重指标管理</a></li>
 
@@ -81,6 +79,8 @@ ul{
           <li> <a id="Media" href="/sysadmin/paraset/media/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >重要媒体管理</a></li>
 
           <li> <a id="Material" href="/sysadmin/paraset/material/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >微博素材管理</a></li>
+
+          <li> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >用户权限管理</a></li>
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
@@ -93,7 +93,7 @@ ul{
          <div style="float:left;padding-left:20px;padding-top:30px;height:100px;width:300px;">
            <div style="padding-top:10px;">
                <span id="context{{userw.id}}" class="label label-info" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">{{userw.weightName}}</span>
-               <span id="weight{{userw.id}}" class="label label-warning" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">{{userw.weight}}</span>
+               <span id="weight{{userw.id}}" class="label label-warning" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">{{userw.weight / 100.0}}</span>
           </div>
           <div id="manage" style="width:150px; height:70px;padding-left:150px;padding-top: 25px">       
               <button id="button{{userw.id}}" type="button" class="btn btn-success">编辑</button>      

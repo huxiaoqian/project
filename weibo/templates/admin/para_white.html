@@ -15,10 +15,14 @@ TD {FONT-SIZE: 12px; COLOR: #333;}
 <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
 <script type="text/javascript" src="/static/js/admin/bootstrap.js"></script>
 <script type="text/javascript" src="/static/js/admin/bootstrap.min.js"></script>
+<script type="text/javascript" src="/static/js/admin/bootstrap-fileupload.js"></script>
+<script type="text/javascript" src="/static/js/admin/bootstrap-fileupload.min.js"></script>
 <link href="/static/css/admin/bootstrap.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap-responsive.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap.min.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap-responsive.min.css" rel="stylesheet">
+<link href="/static/css/admin/bootstrap-fileupload.css" rel="stylesheet">
+<link href="/static/css/admin/bootstrap-fileupload.min.css" rel="stylesheet">
 <style type="text/css" media="all">
 ul{  
     list-style-type:none;  
@@ -139,9 +143,7 @@ function declear_re(){<!-- 反选 -->
           
           <li> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >领域及话题管理</a></li>
           
-          <li> <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >新词管理</a></li>
-
-          <li  class="active"> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >情感词白名单管理</a></li>
+          <li> <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >保留词管理</a></li>
 
           <li> <a id="Wai" href="/sysadmin/paraset/weight/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >博主权重指标管理</a></li>
 
@@ -150,16 +152,18 @@ function declear_re(){<!-- 反选 -->
           <li> <a id="Media" href="/sysadmin/paraset/media/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >重要媒体管理</a></li>
 
           <li> <a id="Material" href="/sysadmin/paraset/material/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >微博素材管理</a></li>
+
+          <li  class="active"> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >用户权限管理</a></li>
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
 
 
         <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:900px;width:1000px;">
-        <p style="font-size:20pt;color:#FE642E;">情感词白名单管理</p>
+        <p style="font-size:20pt;color:#FE642E;">用户权限管理</p>
         <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:900px;">
                <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
-                    <div class="btn-group" >
+                    <div class="btn-group" style="float:left;padding-right:10px;">
                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu()">
                          选择
                        <span class="caret"></span>
@@ -170,9 +174,14 @@ function declear_re(){<!-- 反选 -->
                          <li><a href='#' onClick="declear_re()">反选</a></li>
                     </ul>
                     </div>
-                    <a id="white_out" type="button" class="btn btn-warning">导出</a>
-                    <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
-                    <button id='de_white' type="button" class="btn btn-danger">删除</button>
+                    <div class="fileupload fileupload-new" data-provides="fileupload" >
+                        <span class="btn btn-file" style="background:#0101DF;color:white;"><span class="fileupload-new" >导入</span><span class="fileupload-exists">修改</span><input type="file" /></span>
+                        <span class="fileupload-preview"></span>
+                        <a href="#" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
+                        <a id="new_out" type="button" class="btn btn-warning">导出</a>
+                        <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
+                        <button id="de_new" type="button" class="btn btn-danger">删除</button>
+                    </div>
                </div>
                <div style="padding-top:10px;" id="white_table">
 

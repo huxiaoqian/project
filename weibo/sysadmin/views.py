@@ -50,11 +50,11 @@ def help_new():
     else:
         return redirect('/sysadmin/')
 
-@mod.route('/paraset/white/')
+@mod.route('/paraset/userlist/')
 def help_white():
     if 'logged_in' in session and session['logged_in']:
-        whites = db.session.query(WhiteList).filter().all()
-        return render_template('admin/para_white.html', whites = whites) 
+        userlists = db.session.query(UserList).filter().all()
+        return render_template('admin/para_userlist.html', userlists = userlists) 
     else:
         return redirect('/sysadmin/')
 
@@ -149,29 +149,25 @@ def add_topic():
 def add_new():
     result = 'Right'
     new_field = request.form['topic']
-    new_item = NewWords(wordsName=new_field)
+    se_weight = request.form['se_weight']
+    new_item = NewWords(wordsName=new_field,seWeight=se_weight)
     db.session.add(new_item)
     db.session.commit()
     return json.dumps(result)
 
-@mod.route('/add_white', methods=['GET','POST'])
-def add_white():
-    result = 'Right'
-    new_field = request.form['topic']
-    new_item = WhiteList(listName=new_field)
-    db.session.add(new_item)
-    db.session.commit()
-    return json.dumps(result)
 
 @mod.route('/add_black', methods=['GET','POST'])
 def add_black():
     result = 'Right'
     new_field = request.form['topic']
     new_names = db.session.query(User).filter(User.id==new_field).all()
-    for new_name in new_names:
-        new_item = BlackList(blackID=new_field,blackName=new_name.userName)
-        db.session.add(new_item)
-        db.session.commit()
+    if len(new_names):
+        for new_name in new_names:
+            new_item = BlackList(blackID=new_field,blackName=new_name.userName)
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/add_media', methods=['GET','POST'])
@@ -179,10 +175,13 @@ def add_media():
     result = 'Right'
     new_field = request.form['topic']
     new_names = db.session.query(User).filter(User.id==new_field).all()
-    for new_name in new_names:
-        new_item = IMedia(mediaID=new_field,mediaName=new_name.userName)
-        db.session.add(new_item)
-        db.session.commit()
+    if len(new_names):
+        for new_name in new_names:
+            new_item = IMedia(mediaID=new_field,mediaName=new_name.userName)
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/change_weight', methods=['GET','POST'])
@@ -217,21 +216,17 @@ def field_de():
 def topic_de():
     result = 'Right'
     new_id = request.form['f_id']
-    conditions = db.session.query(AreaUserIdentification).filter(AreaUserIdentification.topicId==new_id).all()
-    if len(conditions):
-        result = 'Wrong'
-    else:
-        old_items = db.session.query(Topic).filter(Topic.id==new_id).all()
-        for old_item in old_items:
-            db.session.delete(old_item)
-            db.session.commit()
+    old_items = db.session.query(Topic).filter(Topic.id==new_id).all()
+    for old_item in old_items:
+        db.session.delete(old_item)
+        db.session.commit()
     return json.dumps(result)
 
 @mod.route('/new_de', methods=['GET','POST'])
 def new_de():
     result = 'Right'
     new_id = request.form['f_id']
-    old_items = db.session.query(NewWords).filter(NewWords.wordsName==new_id).all()
+    old_items = db.session.query(NewWords).filter(NewWords.id==new_id).all()
     if len(old_items):
         for old_item in old_items:
             db.session.delete(old_item)
@@ -240,18 +235,6 @@ def new_de():
         result = 'Wrong'
     return json.dumps(result)
 
-@mod.route('/white_de', methods=['GET','POST'])
-def white_de():
-    result = 'Right'
-    new_id = request.form['f_id']
-    old_items = db.session.query(WhiteList).filter(WhiteList.listName==new_id).all()
-    if len(old_items):
-        for old_item in old_items:
-            db.session.delete(old_item)
-            db.session.commit()
-    else:
-        result = 'Wrong'
-    return json.dumps(result)
 
 @mod.route('/hei_de', methods=['GET','POST'])
 def hei_de():
@@ -292,4 +275,41 @@ def material_de():
         result = 'Wrong'
     return json.dumps(result)
 
+@mod.route('/new_in', methods=['GET','POST'])
+def new_in():
+    f_name = request.form['new_words']
+    n = 0
+    st = ''
+    wid = 'id'
+    wna = 'na'
+    wwe = 'we'
+    for i in range(0,len(f_name)):
+        
+        if f_name[i] == ',':
+            if n==0:
+                wid = st
+                n = n + 1
+            else:
+                wna = st
+                n = n + 1
+            st = ''
+        elif f_name[i]=='\n':
+            new_item = NewWords(id=wid,wordsName=wna.encode('utf-8'),seWeight=wwe)
+            db.session.add(new_item)
+            db.session.commit()
+            n = 0
+            i = i + 1
+            st = ''
+        else:
+            st = st + f_name[i]
+            if n == 2:
+                wwe = st
+                i = i + 1
+                n = 0
+
+    if len(f_name) > 0:
+        result = 'Right'
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
 

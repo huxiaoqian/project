@@ -52,6 +52,8 @@ def getStatusByNameAndRid(name, rid, r_users):
 	return [mid, uid, ts]
 
 def prepare_from_xapian():
+	finish_set = set() #存储已经解析上层转发结构的微博
+
 	total_days = 150#260
 	today = datetime.datetime.today()
 	now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
@@ -70,19 +72,20 @@ def prepare_from_xapian():
 	print 'statuses_count: ', count
 
 	process_count = 0
-	batch = leveldb.WriteBatch()
 	for r in get_results():
 		if process_count % 10000 == 0:
 			print process_count
 		process_count += 1
 
-		reposts = []
-
 		mid = r['_id']
 		uid = r['user']
 		ts = int(r['timestamp'])
 		if mid and uid and ts:
-			reposts.append([mid, uid, ts])
+			reposts_ = [mid, uid, ts]
+			if mid not in finish_set:
+				finish_set.add(mid)
+			else:
+				continue
 
 		text = r['text']
 		repost_users = re.findall(u'/@([a-zA-Z-_\u0391-\uFFE5]+)', text)
@@ -90,27 +93,28 @@ def prepare_from_xapian():
 		retweeted_mid = None
 		retweeted_uid = None
 		if retweeted_status:
-			if getStatusById(retweeted_status):
-				retweeted_mid, retweeted_uid = getStatusById(retweeted_status)
-			else:
-				continue
 			if repost_users and len(repost_users):
 				for idx in range(0, len(repost_users)):
 					if getStatusByNameAndRid(repost_users[idx], retweeted_status, repost_users[-len(repost_users)+idx+1:-1]):
 						repost_mid, repost_uid, repost_ts = getStatusByNameAndRid(repost_users[idx], retweeted_status, repost_users[-len(repost_users)+idx+1:-1])
-						#print repost_mid, repost_uid, repost_ts
-						reposts.append([repost_mid, repost_uid, repost_ts])
+						if repost_mid not in finish_set:
+							finish_set.add(repost_mid)
+						else:
+							continue
+						k = str(reposts_[0]) + '_' + str(reposts_[1]) + '_' + str(reposts_[2])
+						v = str(repost_mid) + '_' + str(repost_uid)
+						weibo_repost_bucket.Put(k, v)
+						reposts_ = [repost_mid, repost_uid, repost_ts]
+			if getStatusById(retweeted_status):
+				retweeted_mid, retweeted_uid = getStatusById(retweeted_status)
+				k = str(reposts_[0]) + '_' + str(reposts_[1]) + '_' + str(reposts_[2])
+				v = str(retweeted_mid) + '_' + str(retweeted_uid)
+				weibo_repost_bucket.Put(k, v)
+			else:
+				continue
 		else:
 			continue
-		for idx in range(0, len(reposts)):
-			k = str(reposts[idx][0]) + '_' + str(retweeted_mid)
-			v = str(reposts[idx][1]) + '_' + str(retweeted_uid) + '_' + str(reposts[idx][2]) + '_' + str(mid)
-			batch.Put(k, str(v))
-			for r_mid, r_uid, r_ts in reposts[-len(reposts)+idx+1:-1]:
-				k = str(reposts[idx][0]) + '_' + str(r_mid)
-				v = str(reposts[idx][1]) + '_' + str(r_uid) + '_' + str(reposts[idx][2]) + '_' + str(mid)
-				batch.Put(k, str(v))
-	weibo_repost_bucket.Write(batch, sync=True)
+
 
 def read_repost_data():
 	count = 0
@@ -119,5 +123,5 @@ def read_repost_data():
 	print count
 
 if __name__ == '__main__':
-	#prepare_from_xapian()
-	read_repost_data()
+	prepare_from_xapian()
+	#read_repost_data()

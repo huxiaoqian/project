@@ -297,11 +297,14 @@ def material_de():
 @mod.route('/new_in', methods=['GET','POST'])
 def new_in():
     f_name = request.form['new_words']
-
+    print len(f_name)
     for i in range(0,len(f_name)):
-        new_item = NewWords(wordsName=f_name[i])
-        db.session.add(new_item)
-        db.session.commit()
+        if f_name[i]=='\n':
+            continue
+        else:
+            new_item = NewWords(wordsName=f_name[i])
+            db.session.add(new_item)
+            db.session.commit()
 
     if len(f_name) > 0:
         result = 'Right'
@@ -309,19 +312,82 @@ def new_in():
         result = 'Wrong'
     return json.dumps(result)
 
-@mod.route('/mydata_out')
+@mod.route('/data_out')
+def data_out():
+     return render_template('admin/out.html')
+
+@mod.route('/mydata_out', methods=['GET','POST'])
 def mydata_out():
     result='Right'
-    reader = csv.reader(file('RepostRelationship.csv', 'rb'))
-    #print len(reader)
-    
-    n=0
-    for line in reader:
-        id , t_id , rank , uid , identifyDate , identifyWindow , identifyMethod , ca = line
-        new_item = RepostRelationship(id=id,fieldId=t_id,topicId=rank,uid=uid,sourceUid=identifyDate,mid=identifyWindow,sourceMid=identifyMethod,createdAt=ca)
-        db.session.add(new_item)
-        db.session.commit()
-        n=n+1
+##    with open('RepostRelationship.csv', 'wb') as f:
+##        writer = csv.writer(f)
+##        items = db.session.query(RepostRelationship).filter().all()
+##        n=0
+##        print len(items)
+##        for item in items:
+##            id=item.id
+##            fieldId=item.fieldId
+##            topicId=item.topicId
+##            uid=item.uid
+##            sourceUid=item.sourceUid
+##            mid=item.mid
+##            sourceMid=item.sourceMid
+##            createdAt=item.createdAt
+##            writer.writerow((id,fieldId,topicId,uid,sourceUid,mid,sourceMid,createdAt))
+##            n=n+1
+##            print n
+##        print n
+
+##    with open('AreaUserIdentification.csv', 'wb') as f:
+##        writer = csv.writer(f)
+##        items = db.session.query(AreaUserIdentification).filter().all()
+##        n=0
+##        print len(items)
+##        for item in items:
+##            id=item.id
+##            topicId=item.topicId
+##            rank=item.rank
+##            userId=item.userId
+##            identifyDate=item.identifyDate
+##            identifyWindow=item.identifyWindow
+##            identifyMethod=item.identifyMethod
+##            writer.writerow((id,topicId,rank,userId,identifyDate,identifyWindow,identifyMethod))
+##            n=n+1
+##            print n
+##        print n
+##
+##    with open('Field.csv', 'wb') as f:
+##        writer = csv.writer(f)
+##        items = db.session.query(Field).filter().all()
+##        n=0
+##        print len(items)
+##        for item in items:
+##            id=item.id
+##            fieldName=item.fieldName
+##            writer.writerow((id,fieldName.encode('utf-8')))
+##            n=n+1
+##        print n
+
+    with open('WhiteList.csv', 'wb') as f:
+        writer = csv.writer(f)
+        items = db.session.query(WhiteList).filter().all()
+        n=0
+        print len(items)
+        for item in items:
+            id=item.id
+            listName=item.listName
+            writer.writerow((id,listName.encode('utf-8')))
+            n=n+1
         print n
+        
+    
+##    n=0
+##    for line in reader:
+##        id , t_id , rank , uid , identifyDate , identifyWindow , identifyMethod , ca = line
+##        new_item = RepostRelationship(id=id,fieldId=t_id,topicId=rank,uid=uid,sourceUid=identifyDate,mid=identifyWindow,sourceMid=identifyMethod,createdAt=ca)
+##        db.session.add(new_item)
+##        db.session.commit()
+##        n=n+1
+##        print n
 
     return json.dumps(result)

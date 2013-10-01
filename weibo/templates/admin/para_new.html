@@ -177,15 +177,14 @@ function declear_re(){<!-- 反选 -->
                          <li><a href='#' onClick="declear_re()">反选</a></li>
                     </ul>
                     </div>
-                    <div class="fileupload fileupload-new" data-provides="fileupload" >
-                        <span class="btn btn-file" style="background:#0101DF;color:white;"><span class="fileupload-new" >导入</span><span class="fileupload-exists">修改</span><input type="file" /></span>
-                        <span class="fileupload-preview"></span>
-                        <a href="#" class="close fileupload-exists" data-dismiss="fileupload" style="float: none">×</a>
+                    <div class="fileupload">
+                        <input type="file" id="files" name="files[]" multiple style="display:none" onchange="handleFileSelect(this.files)"/>
+                        <a class="btn btn-success" href="#" id="fileSelect">导入</a>
                         <a id="new_out" type="button" class="btn btn-warning">导出</a>
                         <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
                         <button id="de_new" type="button" class="btn btn-danger">删除</button>
                     </div>
-                    
+                                                            
                </div>
                <div style="padding-top:10px;" id="new_table">
           
@@ -194,6 +193,49 @@ function declear_re(){<!-- 反选 -->
                 {% endfor %}
                 </div>
                 <script>
+                      function handleFileSelect(evt){
+                        var files = evt;
+
+                        for(var i=0,f;f=files[i];i++){
+                          if(confirm("您确信要批量导入？\n注意：批量导入的文件一定是CSV文件！")){
+                            var reader = new FileReader();
+                            reader.onload = function (oFREvent) {
+                              var a = oFREvent.target.result;
+                              $.ajax({   
+                                    type:"POST",  
+                                    url:"/sysadmin/new_in",
+                                    dataType: "json",
+                                    async:false,
+                                    data:{new_words : a},
+                                    success: function(data){
+                                        if( data =='Right'){
+                                          alert("批量导入成功！");
+                                        }
+                                    }           
+                                  });
+                              location.reload();
+                            };
+                            
+                            reader.readAsText(f,'GB2312');                                                        
+                            
+                          }
+                          else{
+                            alert("您已取消批量导入");
+                          }
+                        }
+
+                      }
+                      
+                      var fileSelect = document.getElementById("fileSelect"),
+                          fileElem = document.getElementById("files");
+
+                      fileSelect.addEventListener("click", function (e) {
+                        if (fileElem) {
+                            fileElem.click();
+                        }
+                        e.preventDefault(); // prevent navigation to "#"
+                        }, false);
+
                       $("#de_new").click(function() {
                           $("[name='field_new']").each(function(){
                               

@@ -5,8 +5,8 @@ from extensions import db
 __all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship',
            'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', 
            'RangeCount', 'Province', 'Words', 'PersonalBurstWords','FieldProfile', 'UserField', 
-           'HotStatus', 'Media', 'Manager', 'NewWords', 'WhiteList', 'UserWeight', 'BlackList',
-           'IMedia', 'M_Weibo']
+           'HotStatus', 'Media', 'Manager', 'NewWords', 'UserWeight', 'BlackList',
+           'IMedia', 'M_Weibo', 'UserList']
 
 class User(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -298,6 +298,7 @@ class Manager(db.Model):
 class NewWords(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     wordsName = db.Column(db.String(20), unique=True)
+    seWeight = db.Column(db.Integer)
 
     @classmethod
     def _name(cls):
@@ -305,17 +306,6 @@ class NewWords(db.Model):
 
     def __repr__(self):
         return self.wordsName
-
-class WhiteList(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    listName = db.Column(db.String(20), unique=True)
-
-    @classmethod
-    def _name(cls):
-        return u'白名单'
-
-    def __repr__(self):
-        return self.listName
 
 class UserWeight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -367,3 +357,18 @@ class M_Weibo(db.Model):
 
     def __repr__(self):
         return self.weibo_id
+
+class UserList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    password = db.Column(db.String(20), unique=True)
+    identify = db.Column(db.Integer)
+    moodlens = db.Column(db.Integer)
+    profile = db.Column(db.Integer)
+    propagate = db.Column(db.Integer)
+
+    @classmethod
+    def _name(cls):
+        return u'用户权限列表'
+
+    def __repr__(self):
+        return self.id

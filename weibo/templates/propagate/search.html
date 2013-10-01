@@ -10,6 +10,8 @@
       width: 950px;
     }
   </style>
+  <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
+
 {% endblock head%}
 {% block content %}
   <div class="container">
@@ -84,8 +86,29 @@
                       <a action-type="feed_list_like" title="赞"><em class="W_ico20 icon_praised_b"></em>赞:{{ status.status.attitudesCount }}</a><i class="S_txt3">|</i>
                       <a action-type="feed_list_forward">转发:{{ status.status.repostsCount }}</a><i class="S_txt3">|</i>
                       <a action-type="feed_list_comment">评论:{{ status.status.commentsCount }}</a><i class="S_txt3">|</i>
-                      <a href="/propagate/showresult_single/{{ status.status.id }}/" action-type="feed_list_comment">分析</a><i class="S_txt3">|</i>
-                      <a href="/propagate/add_material/{{ status.status.id }}/" action-type="feed_list_comment">导入素材库</a>
+                      <a href="/propagate/showresult_single/{{ status.status.id }}/" action-type="feed_list_comment" style="color:#FF8000;">分析</a><i class="S_txt3">|</i>
+                      <a id="ma{{ status.status.id }}" name ="{{ status.status.id }}" style="color:red;">导入素材库</a>
+                      <script>
+                          $("#ma{{ status.status.id }}").click(function () {
+                              var id=this.getAttribute("name");
+                              
+                              $.ajax({   
+                                  type:"POST",  
+                                  url:"/propagate/add_material",
+                                  dataType: "json",
+                                  async:false,
+                                  data:{mid : id},
+                                  success: function(data){
+                                      if(data == 'Right') {
+                                        alert("导入成功！");
+                                      }
+                                      else{
+                                        alert("该微博已在素材库中！");
+                                      } 
+                                  }              
+                              });
+                          });
+                      </script>
                     </div>
                     <div class="WB_from">
                       <a target="_blank" class="S_link2 WB_time" node-type="feed_list_item_date">{{ status.status.postDate }}</a> 

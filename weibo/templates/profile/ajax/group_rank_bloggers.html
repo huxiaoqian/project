@@ -14,7 +14,7 @@
       条结果
     <button type="button" class="btn btn-primary" id="rank" onclick="submit_form();return false;"><i class="icon-search"></i>排序</button>
   </form>
-  <table class="table table-hover">
+  <table class="table table-hover" id="group_table">
     <thead>
       <tr>
         <th>博主ID</th>
@@ -29,7 +29,7 @@
     <tbody id="user_table">
     </tbody>
   </table>
-  <div class="inputAppend"><a class="btn btn-small" href="#"><i class="icon-download-alt"></i> 导出</a></div>
+  <div class="inputAppend"><a class="btn btn-small" id="out"><i class="icon-download-alt"></i> 导出</a></div>
   <div id="page-selection" class="pagination pagination-centered"></div>
   <script src="/static/js/profile/bootstrap.min.js"></script>
   <script src="/static/js/profile/jquery.bootpag.min.js"></script>
@@ -97,6 +97,65 @@
       var sort_arg = $("#rb_sort_type")[0].value;
       getRankData(countperpage_args, interval_arg, sort_arg, limit_arg);
   })
+
+  function exportTableToCSV($table, filename) {
+                
+            //  alert(filename);
+                  var ta=$("#group_table");  
+                  var $head = ta.find("thead");
+                  var $body = ta.find("tbody");
+                  var $r_head = $head.find("tr");
+                  var $rows = $body.find("tr");
+                  var tmpColDelim = String.fromCharCode(11); // vertical tab character
+                  var tmpRowDelim = String.fromCharCode(0); // null character
+
+              // actual delimiter characters for CSV format
+                  var colDelim = ",";
+                  var rowDelim = "\r\n";
+
+              // Grab text from table into CSV formatted string
+                  var c_head = $r_head.find("th");
+                  var csv_head = '';
+                  for(var count=0;count<c_head.length;count++){ 
+                      if(count == (c_head.length-1)){
+                          csv_head = csv_head + c_head[count].innerHTML + rowDelim;
+                        }
+                        else{
+                          csv_head = csv_head + c_head[count].innerHTML + colDelim;
+                        }
+                    }
+                                      
+                csv = $rows.map(function (i, row) {
+                  var $row = $(row),
+                    $cols = $row.find('td');
+
+                  return $cols.map(function (j, col) {
+                      var $col = $(col);
+                      var text = $col.text();
+                      return text.replace('"', '"'); // escape double quotes                                                                 
+
+                  }).get().join(tmpColDelim);
+
+              }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);              
+
+              csv = csv_head + csv;
+
+              // Data URI
+              csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+            $(this)
+                .attr({
+                  'download': filename,
+                    'href': csvData,
+                    'target': '_blank'
+              });
+        }
+
+
+        $("a[id='out']").on('click', function (event) {
+          exportTableToCSV.apply(this, [$('#dvData>table'), 'Group_Rank_Bloggers.csv']);
+          alert("导出成功！");
+        });
   </script>
 {% endblock body %}
 

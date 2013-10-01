@@ -15,10 +15,15 @@ TD {FONT-SIZE: 12px; COLOR: #333;}
 <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
 <script type="text/javascript" src="/static/js/admin/bootstrap.js"></script>
 <script type="text/javascript" src="/static/js/admin/bootstrap.min.js"></script>
+<script type="text/javascript" src="/static/js/admin/bootstrap-fileupload.js"></script>
+<script type="text/javascript" src="/static/js/admin/bootstrap-fileupload.min.js"></script>
+
 <link href="/static/css/admin/bootstrap.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap-responsive.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap.min.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap-responsive.min.css" rel="stylesheet">
+<link href="/static/css/admin/bootstrap-fileupload.css" rel="stylesheet">
+<link href="/static/css/admin/bootstrap-fileupload.min.css" rel="stylesheet">
 <style type="text/css" media="all">
 ul{  
     list-style-type:none;  
@@ -48,7 +53,7 @@ ul{
 
 function add_field(){<!-- 添加按钮 -->
 
-               var fl=prompt("请输入要添加的新词","");
+               var fl=prompt("请输入要添加的保留词","");
                if(fl)
                {
                   $.ajax({   
@@ -59,7 +64,7 @@ function add_field(){<!-- 添加按钮 -->
                     data:{topic : fl},
                     success: function(data){
                       if(data) {
-                                alert("添加新词成功！");
+                                alert("添加保留词成功！");
                                 location.reload();
                               } 
                     }              
@@ -141,9 +146,7 @@ function declear_re(){<!-- 反选 -->
           
           <li> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >领域及话题管理</a></li>
           
-          <li  class="active" > <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >新词管理</a></li>
-
-          <li> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >情感词白名单管理</a></li>
+          <li  class="active" > <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >保留词管理</a></li>
 
           <li> <a id="Wai" href="/sysadmin/paraset/weight/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >博主权重指标管理</a></li>
 
@@ -152,16 +155,18 @@ function declear_re(){<!-- 反选 -->
           <li> <a id="Media" href="/sysadmin/paraset/media/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >重要媒体管理</a></li>
 
           <li href="/material/"> <a id="Material" href="/sysadmin/paraset/material/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >微博素材管理</a></li>
+
+          <li> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >用户权限管理</a></li>
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
 
 
         <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:900px;width:1000px;">
-        <p style="font-size:20pt;color:#FE642E;">新词管理</p>
+        <p style="font-size:20pt;color:#FE642E;">保留词管理</p>
         <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
                <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
-                    <div class="btn-group" >
+                    <div class="btn-group" style="float:left;padding-right:10px;">
                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu()">
                          选择
                        <span class="caret"></span>
@@ -172,9 +177,14 @@ function declear_re(){<!-- 反选 -->
                          <li><a href='#' onClick="declear_re()">反选</a></li>
                     </ul>
                     </div>
-                    <a id="new_out" type="button" class="btn btn-warning">导出</a>
-                    <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
-                    <button id="de_new" type="button" class="btn btn-danger">删除</button>
+                    <div class="fileupload">
+                        <input type="file" id="files" name="files[]" multiple style="display:none" onchange="handleFileSelect(this.files)"/>
+                        <a class="btn btn-success" href="#" id="fileSelect">导入</a>
+                        <a id="new_out" type="button" class="btn btn-warning">导出</a>
+                        <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
+                        <button id="de_new" type="button" class="btn btn-danger">删除</button>
+                    </div>
+                                                            
                </div>
                <div style="padding-top:10px;" id="new_table">
           
@@ -183,6 +193,49 @@ function declear_re(){<!-- 反选 -->
                 {% endfor %}
                 </div>
                 <script>
+                      function handleFileSelect(evt){
+                        var files = evt;
+
+                        for(var i=0,f;f=files[i];i++){
+                          if(confirm("您确信要批量导入？\n注意：批量导入的文件一定是CSV文件！")){
+                            var reader = new FileReader();
+                            reader.onload = function (oFREvent) {
+                              var a = oFREvent.target.result;
+                              $.ajax({   
+                                    type:"POST",  
+                                    url:"/sysadmin/new_in",
+                                    dataType: "json",
+                                    async:false,
+                                    data:{new_words : a},
+                                    success: function(data){
+                                        if( data =='Right'){
+                                          alert("批量导入成功！");
+                                        }
+                                    }           
+                                  });
+                              location.reload();
+                            };
+                            
+                            reader.readAsText(f,'GB2312');                                                        
+                            
+                          }
+                          else{
+                            alert("您已取消批量导入");
+                          }
+                        }
+
+                      }
+                      
+                      var fileSelect = document.getElementById("fileSelect"),
+                          fileElem = document.getElementById("files");
+
+                      fileSelect.addEventListener("click", function (e) {
+                        if (fileElem) {
+                            fileElem.click();
+                        }
+                        e.preventDefault(); // prevent navigation to "#"
+                        }, false);
+
                       $("#de_new").click(function() {
                           $("[name='field_new']").each(function(){
                               
@@ -206,6 +259,46 @@ function declear_re(){<!-- 反选 -->
                           location.reload();
                           //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
                     });
+                      
+                       $("[class='fileupload-preview']").click(function() {
+                            if(confirm("您确信要批量导入？\n注意：批量导入的文件一定是CSV文件！"))
+                            {//如果是true ，那么就把页面转向thcjp.cnblogs.com
+                              var f_name = $(this).html();
+                              console.log(f_name);
+                              var new_words = [];
+                              var cvsfilepath = f_name; 
+                              var fso = new ActiveXObject("Scripting.FileSystemObject"); 
+                              var MyTextFile = fso.OpenTextFile(cvsfilepath); 
+                              var sline; 
+                              var n = 0;
+                              while (!MyTextFile.AtEndOfStream) {  
+                                sline = MyTextFile.ReadLine(); 
+                                new_words[n]=sline; 
+                                n = n + 1;
+                              } 
+
+                              MyTextFile.Close();
+                                  $.ajax({   
+                                    type:"POST",  
+                                    url:"/sysadmin/new_in",
+                                    dataType: "json",
+                                    async:false,
+                                    data:{new_words : new_words},
+                                    success: function(data){
+                                        if( data =='Right'){
+                                          alert("批量导入成功！");
+                                        }
+                                    }           
+                                  });
+                              location.reload();
+                            }
+                            else
+                            {//否则说明下了，赫赫
+                              alert("您已取消批量导入");
+                            }
+
+
+                       });
 
                     function exportTableToCSV(filename) {
                         var ta = $("#new_table");

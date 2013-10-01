@@ -114,9 +114,7 @@ function declear_re(){<!-- 反选 -->
           
           <li> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >领域及话题管理</a></li>
           
-          <li > <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >新词管理</a></li>
-
-          <li> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >情感词白名单管理</a></li>
+          <li > <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >保留词管理</a></li>
 
           <li> <a id="Wai" href="/sysadmin/paraset/weight/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >博主权重指标管理</a></li>
 
@@ -125,6 +123,8 @@ function declear_re(){<!-- 反选 -->
           <li> <a id="Media" href="/sysadmin/paraset/media/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >重要媒体管理</a></li>
 
           <li   class="active"> <a id="Material" href="/sysadmin/paraset/material/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >微博素材管理</a></li>
+
+          <li> <a id="Bai" href="/sysadmin/paraset/white/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >用户权限管理</a></li>
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
@@ -184,8 +184,9 @@ function declear_re(){<!-- 反选 -->
                               if(this.checked)
                               {
                                   var fa = $(this).parent();
-                                  var ne = $(fa).next();
+                                  var ne = $(fa).prev().prev().prev().prev().prev().prev();                                  
                                   var f_id = $(ne).children().html();
+                                  
                                   $.ajax({   
                                     type:"POST",  
                                     url:"/sysadmin/material_de",

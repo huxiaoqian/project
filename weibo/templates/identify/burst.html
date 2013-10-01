@@ -88,7 +88,7 @@
 	{% endif %}
 	<div>
 	  <p>
-	    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
+	    <a class="btn btn-small btn-success" href="#" id="out"><i class="icon-download-alt"></i> 导出</a>
 	    <a id="add_kd" class="btn btn-small btn-info" href="javascript:void(0);" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
 	    <a id="remove_kd" class="btn btn-small btn-info" href="javascript:void(0);" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
 	    <a id="add_trash" class="btn btn-small btn-danger" href="javascript:void(0);" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
@@ -119,7 +119,7 @@
 	{% endif %}
 	<div>
 	  <p>
-	    <a class="btn btn-small btn-success" href="#"><i class="icon-download-alt"></i> 导出</a>
+	    <a class="btn btn-small btn-success" href="#" id="previous_out"><i class="icon-download-alt"></i> 导出</a>
 	  </p>
 	</div>
 	<div id="previous_rank_table">
@@ -137,6 +137,170 @@
     <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
+    <script>
+    		function exportTableToCSV($table, filename) {
+                
+            //	alert(filename);
+              
+                
+              if(filename=="Burst_Previous_Rank_Result.csv"){
+                  var ta=$("#previous_rank_table"); 
+
+                  var $table = ta.find("table"); 
+                  var $head = ta.find("thead");
+                  var $body = ta.find("tbody");
+                  var $r_head = $head.find("tr");
+                  var $rows = $body.find("tr");
+                  var tmpColDelim = String.fromCharCode(11); // vertical tab character
+                  var tmpRowDelim = String.fromCharCode(0); // null character
+
+              // actual delimiter characters for CSV format
+                  var colDelim = ",";
+                  var rowDelim = "\r\n";
+
+              // Grab text from table into CSV formatted string
+                  var c_head = $r_head.find("th");
+                  var csv_head = '';
+                  for(var count=0;count<c_head.length;count++){ 
+                  	if(count != 4){
+                  		if(count == (c_head.length-1)){
+                        	csv_head = csv_head + c_head[count].innerHTML + rowDelim;
+                      	}
+                      	else{
+                        	csv_head = csv_head + c_head[count].innerHTML + colDelim;
+                      	}
+                  	}
+                                      
+                  }
+                csv = $rows.map(function (i, row) {
+                  var $row = $(row),
+                    $cols = $row.find('td');
+
+                  return $cols.map(function (j, col) {
+                      var $col = $(col);
+                      if($col.find('a').length != 1){
+                      	if($col.find('i').length == 1){
+                        	var pic = $col.find('i');                        
+                        	if(pic.attr('class') == "icon-ok"){
+                            	var text = '是';
+                        	}
+                        	else{
+                            	var text = '否';
+                        	}
+                      	}
+                      	else{
+                        	var text = $col.text();
+                      	}
+                      	return text.replace('"', '"'); // escape double quotes
+                      }
+                      
+                      
+
+                      
+
+                  }).get().join(tmpColDelim);
+
+              }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);
+              }
+              else{
+                  var ta=$("#rank_table");
+                  var $table = ta.find("table"); 
+                  var $head = ta.find("thead");
+                  var $body = ta.find("tbody");
+                  var $r_head = $head.find("tr");
+                  var $rows = $body.find("tr");
+                  var tmpColDelim = String.fromCharCode(11); // vertical tab character
+                  var tmpRowDelim = String.fromCharCode(0); // null character
+
+              // actual delimiter characters for CSV format
+                  var colDelim = ",";
+                  var rowDelim = "\r\n";
+
+              // Grab text from table into CSV formatted string
+                  var c_head = $r_head.find("th");
+                  var csv_head = '';
+                  for(var count=0;count<c_head.length-1;count++){ 
+                  	if(count != 4){
+                      if(count == (c_head.length-2)){
+                        csv_head = csv_head + c_head[count].innerHTML + rowDelim;
+                      }
+                      else{
+                        csv_head = csv_head + c_head[count].innerHTML + colDelim;
+                      }
+                    }
+                
+                  }
+                csv = $rows.map(function (i, row) {
+                  var $row = $(row),
+                    $cols = $row.find('td');
+
+                  return $cols.map(function (j, col) {
+                      var $col = $(col);
+                      if($col.find('a').length != 1){
+                      	if($col.find('i').length == 1){
+                        	var pic = $col.find('i');                        
+                        	if(pic.attr('class') == "icon-ok"){
+                            	var text = '是';
+                        	}
+                        	else{
+                          		if(pic.attr('class') == "icon-arrow-down"){
+                             		var text = '下降';
+                          		}
+                          		else{
+                            		if(pic.attr('class') == "icon-arrow-up"){
+                                		var text = '上升';
+                            		}
+                            		else{
+                              			if(pic.attr('class') == "icon-minus"){
+                                  			var text = '持平';
+                             			}
+                              			else{
+                                			var text = '否';
+                              			}
+                            		}	
+                          		}                            
+                        	}
+                        }
+                    	else{
+                       		var text = $col.text();
+                    	}
+                    	return text.replace('"', '"'); // escape double quotes
+                    }
+                      
+
+                    
+
+                  }).get().join(tmpColDelim);
+
+              }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);
+               } 
+
+              
+
+              csv = csv_head + csv;
+
+              // Data URI
+              csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+            $(this)
+                .attr({
+                  'download': filename,
+                    'href': csvData,
+                    'target': '_blank'
+              });
+        }
+
+
+        $("a[id='out']").on('click', function (event) {
+          exportTableToCSV.apply(this, [$('#dvData>table'), 'Burst_Rank_Result.csv']);
+          alert("导出成功！");
+        });
+              $("a[id='previous_out']").on('click', function (event) {
+          exportTableToCSV.apply(this, [$('#dvData>table'), 'Burst_Previous_Rank_Result.csv']);
+          alert("导出成功！");
+        });
+
+	  </script>
     {% if not from_external %}
       <script>
 	//load parameters from previous page

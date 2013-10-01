@@ -50,11 +50,11 @@ def help_new():
     else:
         return redirect('/sysadmin/')
 
-@mod.route('/paraset/white/')
+@mod.route('/paraset/userlist/')
 def help_white():
     if 'logged_in' in session and session['logged_in']:
-        whites = db.session.query(WhiteList).filter().all()
-        return render_template('admin/para_white.html', whites = whites) 
+        userlists = db.session.query(UserList).filter().all()
+        return render_template('admin/para_userlist.html', userlists = userlists) 
     else:
         return redirect('/sysadmin/')
 
@@ -149,19 +149,12 @@ def add_topic():
 def add_new():
     result = 'Right'
     new_field = request.form['topic']
-    new_item = NewWords(wordsName=new_field)
+    se_weight = request.form['se_weight']
+    new_item = NewWords(wordsName=new_field,seWeight=se_weight)
     db.session.add(new_item)
     db.session.commit()
     return json.dumps(result)
 
-@mod.route('/add_white', methods=['GET','POST'])
-def add_white():
-    result = 'Right'
-    new_field = request.form['topic']
-    new_item = WhiteList(listName=new_field)
-    db.session.add(new_item)
-    db.session.commit()
-    return json.dumps(result)
 
 @mod.route('/add_black', methods=['GET','POST'])
 def add_black():
@@ -233,7 +226,7 @@ def topic_de():
 def new_de():
     result = 'Right'
     new_id = request.form['f_id']
-    old_items = db.session.query(NewWords).filter(NewWords.wordsName==new_id).all()
+    old_items = db.session.query(NewWords).filter(NewWords.id==new_id).all()
     if len(old_items):
         for old_item in old_items:
             db.session.delete(old_item)
@@ -242,18 +235,6 @@ def new_de():
         result = 'Wrong'
     return json.dumps(result)
 
-@mod.route('/white_de', methods=['GET','POST'])
-def white_de():
-    result = 'Right'
-    new_id = request.form['f_id']
-    old_items = db.session.query(WhiteList).filter(WhiteList.listName==new_id).all()
-    if len(old_items):
-        for old_item in old_items:
-            db.session.delete(old_item)
-            db.session.commit()
-    else:
-        result = 'Wrong'
-    return json.dumps(result)
 
 @mod.route('/hei_de', methods=['GET','POST'])
 def hei_de():
@@ -297,14 +278,34 @@ def material_de():
 @mod.route('/new_in', methods=['GET','POST'])
 def new_in():
     f_name = request.form['new_words']
-    print len(f_name)
+    n = 0
+    st = ''
+    wid = 'id'
+    wna = 'na'
+    wwe = 'we'
     for i in range(0,len(f_name)):
-        if f_name[i]=='\n':
-            continue
-        else:
-            new_item = NewWords(wordsName=f_name[i])
+        
+        if f_name[i] == ',':
+            if n==0:
+                wid = st
+                n = n + 1
+            else:
+                wna = st
+                n = n + 1
+            st = ''
+        elif f_name[i]=='\n':
+            new_item = NewWords(id=wid,wordsName=wna.encode('utf-8'),seWeight=wwe)
             db.session.add(new_item)
             db.session.commit()
+            n = 0
+            i = i + 1
+            st = ''
+        else:
+            st = st + f_name[i]
+            if n == 2:
+                wwe = st
+                i = i + 1
+                n = 0
 
     if len(f_name) > 0:
         result = 'Right'
@@ -312,82 +313,3 @@ def new_in():
         result = 'Wrong'
     return json.dumps(result)
 
-@mod.route('/data_out')
-def data_out():
-     return render_template('admin/out.html')
-
-@mod.route('/mydata_out', methods=['GET','POST'])
-def mydata_out():
-    result='Right'
-##    with open('RepostRelationship.csv', 'wb') as f:
-##        writer = csv.writer(f)
-##        items = db.session.query(RepostRelationship).filter().all()
-##        n=0
-##        print len(items)
-##        for item in items:
-##            id=item.id
-##            fieldId=item.fieldId
-##            topicId=item.topicId
-##            uid=item.uid
-##            sourceUid=item.sourceUid
-##            mid=item.mid
-##            sourceMid=item.sourceMid
-##            createdAt=item.createdAt
-##            writer.writerow((id,fieldId,topicId,uid,sourceUid,mid,sourceMid,createdAt))
-##            n=n+1
-##            print n
-##        print n
-
-##    with open('AreaUserIdentification.csv', 'wb') as f:
-##        writer = csv.writer(f)
-##        items = db.session.query(AreaUserIdentification).filter().all()
-##        n=0
-##        print len(items)
-##        for item in items:
-##            id=item.id
-##            topicId=item.topicId
-##            rank=item.rank
-##            userId=item.userId
-##            identifyDate=item.identifyDate
-##            identifyWindow=item.identifyWindow
-##            identifyMethod=item.identifyMethod
-##            writer.writerow((id,topicId,rank,userId,identifyDate,identifyWindow,identifyMethod))
-##            n=n+1
-##            print n
-##        print n
-##
-##    with open('Field.csv', 'wb') as f:
-##        writer = csv.writer(f)
-##        items = db.session.query(Field).filter().all()
-##        n=0
-##        print len(items)
-##        for item in items:
-##            id=item.id
-##            fieldName=item.fieldName
-##            writer.writerow((id,fieldName.encode('utf-8')))
-##            n=n+1
-##        print n
-
-    with open('WhiteList.csv', 'wb') as f:
-        writer = csv.writer(f)
-        items = db.session.query(WhiteList).filter().all()
-        n=0
-        print len(items)
-        for item in items:
-            id=item.id
-            listName=item.listName
-            writer.writerow((id,listName.encode('utf-8')))
-            n=n+1
-        print n
-        
-    
-##    n=0
-##    for line in reader:
-##        id , t_id , rank , uid , identifyDate , identifyWindow , identifyMethod , ca = line
-##        new_item = RepostRelationship(id=id,fieldId=t_id,topicId=rank,uid=uid,sourceUid=identifyDate,mid=identifyWindow,sourceMid=identifyMethod,createdAt=ca)
-##        db.session.add(new_item)
-##        db.session.commit()
-##        n=n+1
-##        print n
-
-    return json.dumps(result)

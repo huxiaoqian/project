@@ -2,14 +2,15 @@
 
 import json
 import math
+import csv
+import os
 
 def province_color_map(city_count):
-    total_count = sum(city_count.values())
-    city_sorted = sorted(city_count.iteritems(), key=lambda(k, v): v, reverse=True)
+    total_count = sum(status[1] for loc, status in city_count.items())
+    city_sorted = sorted(city_count.iteritems(), key=lambda(k, v): v[1], reverse=True)
     city_color = {}
     city_count = {}
     city_summary = []
-    #color = ['#000079', '#0f1486', '#1e2893', '#2d3ca1', '#3c51ae', '#4b65bc', '#5a79c9', '#698ed6', '#78a2e4', '#87b6f1', '#96cafe']
     color = ['#ff0000', '#ff1414', '#ff2727', '#ff3b3b', '#ff4e4e', '#ff6262', '#ff7676', '#ff8989', '#ff9d9d', '#ffb1b1', '#ffc4c4',
              '#ffd8d8', '#ffebeb', '#ffffff']
     if len(city_sorted) > len(color):
@@ -18,6 +19,9 @@ def province_color_map(city_count):
             for j in range(n):
                 if i+j < len(city_sorted):
                     city, count = city_sorted[i+j]
+                    first_count = count[0][0]
+                    repost_count = count[0][1]
+                    count = count[1]
                     if count == 0:
                         continue
                     city_color[city] = color[i/n]
@@ -25,22 +29,37 @@ def province_color_map(city_count):
                     percent = str(int(count*1000/total_count)/10.0)+'%'
                     if rank <= 10:
                         city_summary.append([rank, city, percent])
-                    city_count[city] = [count, rank, percent]
+                    city_count[city] = [count, rank, percent, first_count, repost_count]
     else:
         for index, x in enumerate(city_sorted):
             if count:
                 city, count = x
-                city_color[city] =  "%s" % color[index]
-                percent = str(int(count*1000/total_count)/10.0)+'%'
-                rank = index+1
-                if rank <= 10:
-                    city_summary.append([rank, city, percent])
-                city_count[city] = [count, rank, percent]
+                if count[1]:
+                    first_count = count[0][0]
+                    repost_count = count[0][1]
+                    count = count[1]
+                    city_color[city] =  "%s" % color[index]
+                    percent = str(int(count*1000/total_count)/10.0)+'%'
+                    rank = index+1
+                    if rank <= 10:
+                        city_summary.append([rank, city, percent])
+                    city_count[city] = [count, rank, percent, first_count, repost_count]
     data = {'count': city_count,
             'color': city_color,
             'summary': city_summary}
     
     return data
+def getProvince(place):
+    try:
+        place_str = place.split(' ')
+        province = place_str[0]
+        if province == "海外" or province == "其他":
+            return -1
+        else:
+            return province
+    except Exception, e:
+        print "get province",e
+        return -1
 
 def main():
     from BeautifulSoup import BeautifulSoup

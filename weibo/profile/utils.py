@@ -18,7 +18,215 @@ redis_port = 6379
 redis_conn = redis.Redis(redis_host, redis_port)
 
 LEVELDBPATH = '/home/mirage/leveldb'
+def get_above100_weibos(topic_id, start_ts, end_ts, page):
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
 
+    query_dict = {
+        'timestamp': {
+            '$gt': start_ts, 
+            '$lt': end_ts
+        }, 
+        '$or': [],
+        'reposts_count': {
+            '$gt': 100
+        }
+    }
+    query_dict['$or'].append({'text': [topic]})
+    fields_list = ['_id','text', 'user', 'timestamp', 'reposts_count', 'comments_count', 'attitudes_count', 'retweeted_status']
+    count, get_results = statuses_search.search(query=query_dict, sort_by=['reposts_count'], field=fields_list)
+
+    statuses = []
+    for r in get_results():
+        id = r['_id']
+        text = r['text']
+        user = r['user']
+        timestamp = r['timestamp']
+        reposts_count = r['reposts_count']
+        comments_count = r['comments_count']
+        attitudes_count = r['attitudes_count']
+        try:
+            retweeted_mid = r['retweeted_status']
+        except KeyError:
+            retweeted_mid = None
+        rt = None
+        if retweeted_mid:
+            retweeted_status = getWeiboInfoByMid(retweeted_mid)
+            if retweeted_status:
+                rt = {'text': retweeted_status['text'], 'mid': retweeted_mid}
+        weibo_url = weiboinfo2url(user, id)
+        statuses.append({'mid': id, 'text': text, 'uid': user, 'timestamp': timestamp, 'weibo_url': weibo_url, \
+            'reposts_count': reposts_count, 'comments_count': comments_count, 'attitudes_count': attitudes_count, \
+            'rt': rt})
+    startoff = 0 + (page-1) * 10
+    endoff = startoff + 9
+    pages = len(statuses) / 10
+    return statuses[startoff:endoff], pages
+def weiboinfo2url(uid, mid):
+    return "http://weibo.com/{uid}/{mid}".format(uid=uid, mid=mid_to_str(mid))
+def mid_to_str(mid):
+    mid = str(mid)
+    id1 = mid[0: 2]
+    id2 = mid[2: 9]
+    id3 = mid[9: 16]
+    id_list = [id1, id2, id3]
+    id_list = [base62_encode(int(mid)) for mid in id_list]
+    return "".join(map(str, id_list))
+ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+def base62_encode(num, alphabet=ALPHABET):
+    """Encode a number in Base X
+
+    `num`: The number to encode
+    `alphabet`: The alphabet to use for encoding
+    """
+    if (num == 0):
+        return alphabet[0]
+    arr = []
+    base = len(alphabet)
+    while num:
+        rem = num % base
+        num = num // base
+        arr.append(alphabet[rem])
+    arr.reverse()
+    return ''.join(arr)
+
+def top_keywords(get_results, top=1000):
+    keywords_with_count = keywords(get_results)
+    keywords_with_count.sort(key=operator.itemgetter(1))
+
+    return keywords_with_count[len(keywords_with_count) - top:]
+
+def make_network_graph(current_date, topic_id, window_size, key_user_labeled=True):
+    date = current_date
+
+    if key_user_labeled:
+        key_users = read_key_users(current_date, window_size, topic_id, top_n=10)
+    else:
+        key_users = []
+
+    topic = acquire_topic_name(topic_id)
+    if not topic:
+        return None
+              
+    uid_ts, G = make_network(topic_id, date, window_size, ts=True)
+
+    N = len(G.nodes())
+
+    if not N:
+        return ''
+
+    node_degree = nx.degree(G)
+
+    G = cut_network(G, node_degree)
+    
+    gexf = Gexf("Yang Han", "Topic Network")
+
+    node_id = {}
+    graph = gexf.addGraph("directed", "static", "demp graph")
+    graph.addNodeAttribute('name', type='string', force_id='name')
+    graph.addNodeAttribute('location', type='string', force_id='location')
+    graph.addNodeAttribute('timestamp', type='int', force_id='timestamp')
+
+    pos = nx.spring_layout(G)
+
+    node_counter = 0
+    edge_counter = 0
+
+    for node in G.nodes():
+        x, y = pos[node]
+        degree = node_degree[node]
+        if node not in node_id:
+            node_id[node] = node_counter
+            node_counter += 1
+        uid = node
+        if uid in key_users:
+            _node = graph.addNode(node_id[node], str(node), x=str(x), y=str(y), z='0', r='255', g='51', b='51', size=str(math.sqrt(10*degree)))
+        else:
+            _node = graph.addNode(node_id[node], str(node), x=str(x), y=str(y), z='0', r='0', g='204', b='204', size=str(math.sqrt(8*degree)))
+        user_info = acquire_user_by_id(uid)
+        if user_info:
+            _node.addAttribute('name', user_info['name'].decode('utf-8'))
+            _node.addAttribute('location', user_info['location'].decode('utf-8'))
+        else:
+            _node.addAttribute('name', 'Unknown')
+            _node.addAttribute('location', 'Unknown')
+        _node.addAttribute('timestamp', str(uid_ts[uid]))
+
+    for edge in G.edges():
+        start, end = edge
+        start_id = node_id[start]
+        end_id = node_id[end]
+        graph.addEdge(str(edge_counter), str(start_id), str(end_id))
+        edge_counter += 1
+
+    return etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
+def degree_rank(top_n, date, topic_id, window_size):
+    data = []
+    degree = prepare_data_for_degree(topic_id, date, window_size)
+
+    if not degree:
+        return data
+
+    sorted_degree = sorted(degree.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sorted_uids = []
+    count = 0
+    for uid, value in sorted_degree:
+        if count >= top_n:
+            break
+        sorted_uids.append(uid)
+        count += 1
+
+    data = save_rank_results(sorted_uids, 'area', 'degree', date, window_size, topic_id=topic_id)
+
+    return data
+def acquire_topic_id(name):
+    item = db.session.query(Topic).filter_by(topicName=name).first()
+    if not item:
+        #create a topic
+        item = Topic(topicName=name)
+        db.session.add(item)
+        db.session.commit()
+        db.session.refresh(item)
+    return item.id
+def read_rank_results(top_n, identifyRange, method, date, window, topic_id=None):
+    data = []
+    if identifyRange == 'area':
+        items = db.session.query(AreaUserIdentification).filter_by(topicId=topic_id, identifyMethod=method, identifyWindow=window, identifyDate=date).order_by(AreaUserIdentification.rank.asc()).limit(top_n)
+    else:
+        return data
+    if items.count():
+        for item in items:
+            rank = item.rank
+            uid = item.userId
+            user = acquire_user_by_id(uid)
+            if not user:
+                continue
+            name = user['name']
+            location = user['location']
+            fol_count = user['fol_count']
+            fri_count = user['fri_count']
+            status_count = user['status_count']
+            if topic_id == 1:
+                if uid in inside_sea:
+                    row = (rank, uid, name, location, fol_count, fri_count, status_count, 'inside')
+                else:
+                    row = (rank, uid, name, location, fol_count, fri_count, status_count, 'outside')
+            else:
+                row = (rank, uid, name, location, fol_count, fri_count, status_count)
+            data.append(row)
+    return data
+def pagerank_rank(top_n, date, topic_id, window_size):
+    data = []
+    tmp_file = prepare_data_for_pr(topic_id, date, window_size)
+    if not tmp_file:
+        return data
+    input_tmp_path = tmp_file.name
+    job_id = generate_job_id(datetime2ts(date), topic_id)
+    iter_count = PAGERANK_ITER_MAX
+    sorted_uids = pagerank(job_id, iter_count, input_tmp_path, top_n)
+    data = save_rank_results(sorted_uids, 'area', 'pagerank', date, window_size, topic_id=topic_id)
+    return data
 def is_in_black_list(uid):
     return False
 

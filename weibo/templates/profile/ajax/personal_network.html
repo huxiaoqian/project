@@ -1,188 +1,185 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
 {% block body %}
+<style>
+  .row-fluid [class*="span"]{
+    min-height: 34px;
+  }
+</style>
 <form class="form-inline">
     时间范围:
     <select class="span2" name="interval_network" id="nt_interval">
-      <option value="90">最近3个月</option>
-      <option value="7">最近1周</option>
-      <option value="30">最近1个月</option>
-      <option value="60">最近2个月</option>
+      <option value="270">9个月</option>
+      <option value="240">8个月</option>
+      <option value="210">7个月</option>
+    	<option value="180">6个月</option>
+    	<option value="150">5个月</option>
+    	<option value="120">4个月</option>
     </select>
-    <button type="button" class="btn btn-primary" id="generate_network" onclick="submit_form();return false;"><i class="icon-search"></i>生成网络结构图</button>(红线连接的点表示联系最紧密的关注者，绿线连接的点表示联系最紧密的粉丝)
+    <button type="button" class="btn btn-primary" id="generate_network" onclick="submit_form();return false;"><i class="icon-search"></i>分析</button>
 </form>
-<div id="community"></div>
-<script src="/static/js/profile/d3.v3.min.js"></script>
+<div id="interact_count_container" style="width: 450px; height: 250px; margin: 0 auto;float:left;"></div>
+<div id="fields_dist_container" style="width: 450px; height: 250px; margin: 0 auto;float:left;"></div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>昵称</th>
+        <th>微博数</th>
+        <th>粉丝数</th>
+        <th>关注数</th>
+        <th>领域</th>
+      </tr>
+    </thead>
+    <tbody id="user_table">
+    </tbody>
+  </table>
+  <div id="page-selection" class="pagination pagination-centered"></div>
+  <script src="/static/js/jquery.bootpag.js"></script>
 <script>
-//除法函数，用来得到精确的除法结果
-//说明：javascript的除法结果会有误差，在两个浮点数相除的时候会比较明显。这个函数返回较为精确的除法结果。
-//调用：accDiv(arg1,arg2)
-//返回值：arg1除以arg2的精确结果
-function accDiv(arg1,arg2){
-    var t1=0,t2=0,r1,r2;
-    try{t1=arg1.toString().split(".")[1].length}catch(e){}
-    try{t2=arg2.toString().split(".")[1].length}catch(e){}
-    with(Math){
-        r1=Number(arg1.toString().replace(".",""))
-        r2=Number(arg2.toString().replace(".",""))
-        return (r1/r2)*pow(10,t2-t1);
-    }
-}
-//给Number类型增加一个div方法，调用起来更加方便。
-Number.prototype.div = function (arg){
-    return accDiv(this, arg);
-}
-
-//乘法函数，用来得到精确的乘法结果
-//说明：javascript的乘法结果会有误差，在两个浮点数相乘的时候会比较明显。这个函数返回较为精确的乘法结果。
-//调用：accMul(arg1,arg2)
-//返回值：arg1乘以arg2的精确结果
-function accMul(arg1,arg2)
-{
-    var m=0,s1=arg1.toString(),s2=arg2.toString();
-    try{m+=s1.split(".")[1].length}catch(e){}
-    try{m+=s2.split(".")[1].length}catch(e){}
-    return Number(s1.replace(".",""))*Number(s2.replace(".",""))/Math.pow(10,m)
-}
-
-//给Number类型增加一个mul方法，调用起来更加方便。
-Number.prototype.mul = function (arg){
-    return accMul(arg, this);
-}
-
-//加法函数，用来得到精确的加法结果
-//说明：javascript的加法结果会有误差，在两个浮点数相加的时候会比较明显。这个函数返回较为精确的加法结果。
-//调用：accAdd(arg1,arg2)
-//返回值：arg1加上arg2的精确结果
-function accAdd(arg1,arg2){
-    var r1,r2,m;
-    try{r1=arg1.toString().split(".")[1].length}catch(e){r1=0}
-    try{r2=arg2.toString().split(".")[1].length}catch(e){r2=0}
-    m=Math.pow(10,Math.max(r1,r2))
-    return (arg1*m+arg2*m)/m
-}
-
-function scalenodeweight(maxcount, mincount){
-	var maxsize = 20;
-	var minsize = 10;
-	if(maxcount == mincount){
-	    return (maxsize + minsize) / 2.0
-	}else{
-		return minsize + (maxsize - minsize) * Math.pow((count * 1.0/ (maxcount - mincount)), 10)
+  function submit_form(){
+    var nt_interval = $('#nt_interval').val();
+    $.ajax({
+        url: "/profile/person_network/friends/{{uid}}?interval=" + nt_interval,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#interact_count_container').empty();
+          display_interact_chart(data);
+        }
+    });
+  }
+	function display_interact_chart(data){
+		var data_list = [];
+		for(var i in data){
+			data_list.push([data[i][0], data[i][1]]);
+		}
+		$('#interact_count_container').highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: '关注者交互统计'
+        },
+        tooltip: {
+    	    pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    connectorColor: '#000000',
+                    format: '<b>{point.name}</b>: {point.y}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: '交互占比',
+            data: data_list
+        }]
+    });
 	}
-}
-
-//给Number类型增加一个add方法，调用起来更加方便。
-Number.prototype.add = function (arg){
-    return accAdd(arg,this);
-}
-  function display_community(){
-	var width_1 = 900,
-		height_1 = 500
-	
-	var svg_1 = d3.select("#community").append("svg")
-		.attr("width", width_1)
-		.attr("height", height_1);
-	
-	var force = d3.layout.force()
-		.gravity(.7)
-		.linkDistance([10,10,10,10,100,100,100,100,100,100,100,100,100,100,100])
-		.distance(150)
-		.charge(-420)
-		.size([width_1, height_1]);
-	
-	d3.json("/profile/person_network/" + {{uid}} + "?interval=120", function(json) {
-	  force
-		  .nodes(json.nodes)
-		  .links(json.links)
-		  .start();
-	
-	  var link = svg_1.selectAll(".link")
-		  .data(json.links)
-		.enter().append("line")
-		  .attr("class", "link")
-		  .style("stroke", function(d) {
-		  							if(d.group == 1) {return "#C00";}
-		  							if(d.group == 2) {return "#00FF00";}
-		  							 })
-		  .style("stroke-width", function(d) {
-		  							if(d.group == 1) {return 1;}
-		  							if(d.group == 2) {return 1;}
-		  							})//(5).mul((d.value).div(10));});
-	
-	  var node = svg_1.selectAll(".node")
-		  .data(json.nodes)
-		.enter().append("g")
-		  .attr("class", "node")
-		  .call(force.drag);
-	
-	  node.append("image")
-		  .attr("xlink:href", function(d) { return d.profile_image_url })
-		  .attr("x", function(d){
-							  if(d.group == 0){return -35;}
-							  else if(d.group == 1){return -25;}
-							  else if(d.group == 2){return -15;}
-							  else {return -10};
-							  })
-		  .attr("y", function(d){
-							  if(d.group == 0){return -35;}
-							  else if(d.group == 1){return -25;}
-							  else if(d.group == 2){return -15;}
-							  else {return -10};
-							  })
-		  .attr("width", function(d){
-							  if(d.group == 0){return 70;}
-							  else if(d.group == 1){return 50;}
-							  else if(d.group == 2){return 30;}
-							  else {return 20};
-							  })
-		  .attr("height", function(d){
-							  if(d.group == 0){return 70;}
-							  else if(d.group == 1){return 50;}
-							  else if(d.group == 2){return 30;}
-							  else {return 20};
-							  })
-		  .attr("class", "profile_image");
-	  /*
-	  node.append("text")
-		  .attr("dx", 16)
-		  .attr("dy", 0)
-		  .style("font-size", function(d) { 
-								  if(d.group == 3){return 14 ;}
-								  else if(d.group == 0){return 16;}
-								   else if(d.group == 1){return 14;}
-								    else if(d.group == 2){return 14;}
-									 else if(d.group == 4){return 14;}
-									 else if(d.group == 5){return 12;}
-								  else{ return 14; }})
-		  .text(function(d) { return d.name })
-		  .style("stroke", function(d) { 
-								  if(d.group == 3){return "#219EE2" ;}
-								  else if(d.group == 0){return "#C90000";}
-								   else if(d.group == 1){return "#3C9";}
-								    else if(d.group == 2){return "rgb(193, 213, 47)";}
-									 else if(d.group == 4){return "rgb(24, 0, 204)";}
-									 else if(d.group == 5){return "black";}
-								  else{ return "#C90000"; }});
-	  node.append("text")
-	  	.attr("dx", 16)
-		.attr("dy", 18)
-		.style("font-size", 12)
-	  	.text(function(d) { return d.domain });
-	 */
-	  force.on("tick", function() {
-		link.attr("x1", function(d) { return d.source.x; })
-			.attr("y1", function(d) { return d.source.y; })
-			.attr("x2", function(d) { return d.target.x; })
-			.attr("y2", function(d) { return d.target.y; });
-	
-		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-	  });
+	function display_fields_chart(data){
+		var data_list = [];
+		for(var i in data){
+			data_list.push([data[i][0], data[i][1]]);
+		}
+		$('#fields_dist_container').highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: '关注者领域分布'
+        },
+        tooltip: {
+    	    pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    connectorColor: '#000000',
+                    format: '<b>{point.name}</b>: {point.y}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: '领域占比',
+            data: data_list
+        }]
+    });
+	}
+	$(document).ready(function(){
+    var nt_interval = $('#nt_interval').val();
+		$.ajax({
+        url: "/profile/person_network/friends/{{uid}}?interval=" + nt_interval,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          display_interact_chart(data);
+        }
+    });
+    $.ajax({
+        url: "/profile/person_fri_fol/friends/{{uid}}?page=1",
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+        	var fields_result = data['fields'];
+          display_fields_chart(fields_result);
+          display_fri_fol_table(data);
+        }
+    });
 	});
-}
-$(document).ready(function(){
-	display_community();
-});
+	function display_fri_fol_table(data){
+  	var total_page_number = parseInt(data['pages']);
+    var html = "";
+    for(var i=0;i < data['users'].length;i += 1){
+      user = data['users'][i];
+      html += "<tr><td>" + user['id'] + "</td>";
+      html += "<td>" + user['userName'] + "</td>";
+      html += "<td>" + user['statusesCount'] + "</td>";
+      html += "<td>" + user['followersCount'] + "</td>";
+      html += "<td>" + user['friendsCount'] + "</td>";
+      html += "<td>" + user['field'] + "</td></tr>";
+    }
+    $("#user_table").append(html);
+    $('#page-selection').bootpag({
+        total: total_page_number,
+        maxVisible: 10
+    }).on("page", function(event, /* page number here */ num){
+       $("#user_table").empty();
+       $.ajax({
+          url: "/profile/person_fri_fol/friends/{{uid}}?page=" + num,
+          dataType: 'json',   
+          type: "GET",
+          success: function (data) {
+            var html = "";
+            for(var i=0;i < data['users'].length;i += 1){
+              user = data['users'][i];
+              html += "<tr><td>" + user['id'] + "</td>";
+              html += "<td>" + user['userName'] + "</td>";
+              html += "<td>" + user['statusesCount'] + "</td>";
+              html += "<td>" + user['followersCount'] + "</td>";
+              html += "<td>" + user['friendsCount'] + "</td>";
+              html += "<td>" + user['field'] + "</td></tr>";
+            }
+            $("#user_table").append(html);
+          }
+        });
+    });
+  } 
 </script>
 {% endblock body %}
 

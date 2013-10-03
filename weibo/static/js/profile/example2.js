@@ -31,7 +31,7 @@ $(document).ready(function(){
 
 function init_vis(){
 	$.ajax({     
-    url:'/profile/person_network/1813080181',
+    url:'/profile/person_interact_network/1813080181',
     dataType: 'json', 
     success:function(data){ 
     	 console.log(data)    
@@ -77,12 +77,15 @@ function init(data){
             var html = ""; 
             var data = node.data;
             if("profileImageUrl" in data) {
-              html += "<li><img style=\"width: 100px; height: 100px;\" src= "+data.profileImageUrl+" ></li>";
+              html += "<li><img style=\"width: 50px; height: 50px;\" src= "+data.profileImageUrl+" ></li>";
             }
             if ("name" in data) {
               html+="<br /><b>昵称:</b> " + data.name;
 
-            };
+            }
+            if("count"in data){
+              html+="<br/><b>交互次数:</b>"+data.count;
+            }
             if("friendsCount" in data) {
               html += "<br /><b>关注数:</b> " + data.friendsCount;
             }
@@ -103,12 +106,12 @@ function init(data){
             }
             if("verified" in data) {
             	if (data.verified){
-            		   var g='认证用户'
+            		   var g='是'
             		}
             	else{
-            		   var g ='非认证用户'
+            		   var g ='否'
             		}
-              html += "<br /> "+g;
+              html += "<br /> <b>认证用户:</b>"+g;
             }
             if("id" in data) {
               html += "<br /> <b>用户id:</b> "+ data.id;
@@ -127,12 +130,15 @@ function init(data){
             var html = ""; 
             var data = node.data;
             if("profileImageUrl" in data) {
-              html += "<li><img style=\"width: 100px; height: 100px;\" src= "+data.profileImageUrl+" ></li>";
+              html += "<li><img style=\"width: 50px; height: 50px;\" src= "+data.profileImageUrl+" ></li>";
             }
             if ("name" in data) {
-              html+="<br /><b>昵称:</b> " + data.name;
+              html+="<br/><b>昵称:</b> " + data.name;
 
-            };
+            }
+            if("count"in data){
+              html+="<br/><b>交互次数:</b>"+data.count;
+            }
             if("friendsCount" in data) {
               html += "<br /><b>关注数:</b> " + data.friendsCount;
             }
@@ -153,12 +159,12 @@ function init(data){
             }
             if("verified" in data) {
               if (data.verified){
-                   var g='认证用户'
+                   var g='是'
                 }
               else{
-                   var g ='非认证用户'
+                   var g ='否'
                 }
-              html += "<br /> "+g;
+              html += "<br /> <b>认证用户：</b>"+g;
             }
             if("id" in data) {
               html += "<br /> <b>用户id:</b> "+ data.id;

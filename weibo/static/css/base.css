@@ -1,6 +1,6 @@
 
 #container {
-    width: 1000px;
+    width: 900px;
     height: 600px;
     margin:0 auto;
     position:relative;
@@ -36,7 +36,7 @@
 }
 
 #center-container {
-    width:1000px;
+    width:900px;
     left:0px;
     background-color:#f8f8ff;
     color:#f8f8ff;

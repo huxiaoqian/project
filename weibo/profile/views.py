@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from gensim import corpora, models, similarities
 #new
 from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint
@@ -95,8 +94,33 @@ def getStaticInfo():
     province = db.session.query(Province).order_by(Province.id).all()
     field = db.session.query(FieldProfile).all()
     return statuscount, friendscount, followerscount, province, field
-mod = Blueprint('profile', __name__, url_prefix='/profile')
 
+
+def yymInfo(uid):
+    query_dict = {
+        '_id': int(uid)
+    }
+    count, get_results = xapian_search_user.search(query=query_dict, fields=['created_at', '_id', 'name', \
+        'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url', 'verified', 'gender'])
+    user = None
+    if count > 0:
+        for r in get_results():
+            statusesCount = r['statuses_count']
+            followersCount = r['followers_count']
+            friendsCount = r['friends_count']
+            userName = r['name']
+            description = r['description']
+            uid = r['_id']
+            profileImageUrl = r['profile_image_url']
+            verified = r['verified']
+            gender = r['gender']
+            user = {'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': \
+            followersCount, 'friendsCount': friendsCount, 'description': description, 'profileImageUrl': profileImageUrl,
+            'verified': verified, 'gender': gender}
+            return user
+    return user
+    
+mod = Blueprint('profile', __name__, url_prefix='/profile')   
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
 def profile_search(model='hotest'):
@@ -270,6 +294,126 @@ def profile_person(uid):
 
 
 
+@mod.route('/person_interact_network/<uid>', methods=['GET', 'POST'])
+def profile_interact_network(uid):
+    if request.method == 'GET':     
+        center_uid = uid
+        friendship_bucket = get_bucket('friendship')
+        friends_key = str(uid) + '_' + 'friends'
+        followers_key = str(uid) + '_' + 'followers'
+        fri_fol = []
+        try:
+            friends = json.loads(friendship_bucket.Get(friends_key))
+        except KeyError:
+            friends = []
+        fri_fol.extend(friends)
+        try:
+            followers = json.loads(friendship_bucket.Get(followers_key))
+        except KeyError:
+            followers = []
+        fri_fol.extend(followers)
+
+        total_days = 270
+        today = datetime.datetime.today()
+        now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+        now_ts = int(now_ts)
+        during = 24 * 3600
+
+        if request.args.get('interval'):
+            total_days =  int(request.args.get('interval')) - 1
+
+        total_days = 270
+
+        interact_bucket = get_bucket('user_daily_interact_count')
+        uid_interact_count = {} 
+        for i in xrange(-total_days + 1, 1):
+            lt = now_ts + during * i
+            for f_uid in fri_fol:
+                count = 0
+                try:
+                    count += int(interact_bucket.Get(str(uid) + '_' + str(f_uid) + '_' + str(lt)))
+                except KeyError:
+                    pass
+                try:
+                    count += int(interact_bucket.Get(str(f_uid) + '_' + str(uid) + '_' + str(lt)))
+                except KeyError:
+                    pass
+                if count:
+                    try:
+                        uid_interact_count[str(f_uid)] += count
+                    except KeyError:
+                        uid_interact_count[str(f_uid)] = count
+
+        sorted_counts = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=True)
+     
+        top_8_fri = {}
+        top_36_fri = {}
+        for uid, count in sorted_counts:
+            
+            if len(top_8_fri) <8:
+               top_8_fri[uid] = count
+               uid_interact_count.pop(uid, None)
+               continue 
+            elif len(top_36_fri)<36:
+               top_36_fri[uid] = count
+               uid_interact_count.pop(uid, None)
+               if len(top_36_fri) == 36:
+                   break
+        def node(friendsCount,followersCount,statusesCount,gender,verified,profileImageUrl,count,id,name):
+            return {"children":[],"data":{"friendsCount":friendsCount,"followersCount":followersCount,"statusesCount":statusesCount,"gender":gender,"verified":verified,"profileImageUrl":profileImageUrl,"$color":"#AEA9F8","$angularWidth":1000,"count":count},"id": id,"name": name}
+        def unode(uid,name,count):
+            return {"children":[],"data":{"$color":"#AEA9F8","$angularWidth":1000,"count":count},"id": uid,"name": name}
+            #FCD9A1 AEA9F8 B0AAF6 B2ABF4 B6AEEF E0C7C0 D2BFD0 ECCFB3 D4C0CE 
+        def source(uid,name):
+            return {"children":[],"data":{"type":"none"},"id": uid,"name": name}
+        
+        first=source(center_uid ,yymInfo(center_uid)['userName'] )
+        second=[]
+        third=[]
+        order=[8,6,5,4,4,3,3,3]
+        allcounts=0
+        allorder=0
+        flag=0
+        for i in top_8_fri:
+            allcounts+=top_8_fri[i]
+
+        for i in top_8_fri:
+            if(int(top_8_fri[i]*36/allcounts)>=1 ):
+                order[flag]=int(top_8_fri[i]*36/allcounts) 
+            else:
+                order[flag]=1
+            flag+=1
+
+        for i in range(0,8):
+            allorder+=order[i]
+
+        order[0]+=(36-allorder)
+
+        for i in top_8_fri:
+            info=yymInfo(i)
+            if(info==None):
+                second.append(unode(i,i,top_8_fri[i]))
+            else:
+                second.append(node(info['friendsCount'],info['followersCount'],info['statusesCount'],info['gender'],info['verified'],info['profileImageUrl'],top_8_fri[i],info['id'],info['userName']))
+
+        for i in range(0,8):
+            second[i]['data']['$color']="#B2ABF4"
+             
+        for i in top_36_fri:
+            info=yymInfo(i)
+            if(info==None):
+                third.append(unode(i,i,top_36_fri[i]))
+            else:
+                third.append(node(info['friendsCount'],info['followersCount'],info['statusesCount'],info['gender'],info['verified'],info['profileImageUrl'],top_36_fri[i],info['id'],info['userName']))
+
+        sum=0
+        for i in range(0,8):
+            for k in range(0,order[i]):
+                (second[i]['children']).append(third[sum+k])
+            sum=sum+order[i]
+            
+        first['children'] = second
+        return json.dumps(first)
 
 @mod.route("/identify/keyweibos/", methods=['POST', 'GET'])
 def keyweibos():
@@ -463,6 +607,8 @@ def profile_person_tab_ajax(model, uid):
         return render_template('profile/ajax/personal_network.html', uid=uid)
     elif model == 'personalnetwork_follow':       
         return render_template('profile/ajax/personalnetwork_follow.html', uid=uid)
+    elif model == 'personalinteractnetwork':
+        return render_template('profile/ajax/personal_friends_followers.html', uid=uid)
     elif model == 'grouptopic':
         return render_template('profile/ajax/group_word_cloud.html', field=uid)
     elif model == 'groupweibocount':

@@ -1,161 +1,31 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
 {% block body %}
-<script src="/static/js/profile/bootstrap.min.js"></script>
-  <script src="/static/js/profile/jquery.bootpag.min.js"></script>
-  <script>
-  var fieldEn2Zh = function(name){
-    if(name == 'finance'){ return '财经'};
-    if(name == 'media'){ return '媒体'};
-    if(name == 'culture'){ return '文化'};
-    if(name == 'technology'){ return '科技'};
-    if(name == 'entertainment'){ return '娱乐'};
-    if(name == 'education'){ return '教育'};
-    if(name == 'fashion'){ return '时尚'};
-    if(name == 'sports'){ return '体育'};
-  }
-    $(document).ready(function(){
-      // init bootpag
-      var total_page_number;
-      $.ajax({
-        url: "/profile/person_fri_fol/" + {{uid}} + "?page=1",
-        dataType: 'json',   
-        type: "GET",
-        success: function (data) {
-          var fields_result = data['fields'];
-          $("#TagCloud").empty();
-          var field_html = "";
-          for(var i=0;i<fields_result.length;i+=1){
-            var fieldName = fields_result[i][0];
-            var fieldCount = fields_result[i][1];
-            field_html += "<a href=\"#\"><span class=\"label label-info\">" + fieldEn2Zh(fieldName) + "</span><span class=\"badge\">" + fieldCount + "</span></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-          }
-          $("#TagCloud").append(field_html);
-          total_page_number = parseInt(data['pages']);
-          var html = "";
-          for(var i=0;i < data['users'].length;i += 1){
-            user = data['users'][i];
-            html += "<tr><td>" + user['id'] + "</td>";
-            html += "<td>" + user['userName'] + "</td>";
-            html += "<td>" + user['statusesCount'] + "</td>";
-            html += "<td>" + user['followersCount'] + "</td>";
-            html += "<td>" + user['friendsCount'] + "</td>";
-            html += "<td>" + user['field'] + "</td></tr>";
-          }
-          $("#user_table").append(html);
-          $('#page-selection').bootpag({
-              total: total_page_number,
-              maxVisible: 10
-          }).on("page", function(event, /* page number here */ num){
-               $("#user_table").empty();
-               $.ajax({
-                  url: "/profile/person_fri_fol/" + {{uid}} + "?page=" + num,
-                  dataType: 'json',   
-                  type: "GET",
-                  success: function (data) {
-                    var html = "";
-                    for(var i=0;i < data['users'].length;i += 1){
-                      user = data['users'][i];
-                      html += "<tr><td>" + user['id'] + "</td>";
-                      html += "<td>" + user['userName'] + "</td>";
-                      html += "<td>" + user['statusesCount'] + "</td>";
-                      html += "<td>" + user['followersCount'] + "</td>";
-                      html += "<td>" + user['friendsCount'] + "</td>";
-                      html += "<td>" + fieldEn2Zh(user['field']) + "</td></tr>";
-                    }
-                    $("#user_table").append(html);
-                  }
-                });
-            });
-        }
-      });
+<form class="form-inline">
+    时间范围:
+    <select class="span2" name="interval_network" id="nt_interval">
+      <option value="90">最近3个月</option>
+      <option value="7">最近1周</option>
+      <option value="30">最近1个月</option>
+      <option value="60">最近2个月</option>
+    </select>
+    <button type="button" class="btn btn-primary" id="generate_network" onclick="init_vis();"><i class="icon-search"></i>生成网络结构图</button>
+</form>
+<div id="community" >
+<div id="center-container">
+    <div id="infovis"></div>
+    <div id="inner-details" ></div>
+</div>
+</div>
+<link type="text/css" href="/static/css/base.css" rel="stylesheet" />
+<link type="text/css" href="/static/css/Sunburst.css" rel="stylesheet" />
+<script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
 
-    });
-  function exportTableToCSV($table, filename) {
-                
-                  var ta=$("#single_table"); 
-                  //alert(ta); 
-                  var $head = ta.find("thead");
-                  var $body = ta.find("tbody");
-                  var $r_head = $head.find("tr");
-                  var $rows = $body.find("tr");
-                  var tmpColDelim = String.fromCharCode(11); // vertical tab character
-                  var tmpRowDelim = String.fromCharCode(0); // null character
+<!--[if IE]><script language="javascript" type="text/javascript" src="../../Extras/excanvas.js"></script><![endif]-->
+<!-- JIT Library File -->
+<script language="javascript" type="text/javascript" src="/static/js/profile/jit-yc.js"></script>
 
-              // actual delimiter characters for CSV format
-                  var colDelim = ",";
-                  var rowDelim = "\r\n";
-
-              // Grab text from table into CSV formatted string
-                  var c_head = $r_head.find("th");
-                  var csv_head = '';
-                  for(var count=0;count<c_head.length;count++){ 
-                      if(count == (c_head.length-1)){
-                          csv_head = csv_head + c_head[count].innerHTML + rowDelim;
-                        }
-                        else{
-                          csv_head = csv_head + c_head[count].innerHTML + colDelim;
-                        }
-                    }
-                                      
-                csv = $rows.map(function (i, row) {
-                  var $row = $(row),
-                    $cols = $row.find('td');
-
-                  return $cols.map(function (j, col) {
-                      var $col = $(col);
-                      var text = $col.text();
-                      return text.replace('"', '"'); // escape double quotes                                                                 
-
-                  }).get().join(tmpColDelim);
-
-              }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);              
-
-              csv = csv_head + csv;
-
-              // Data URI
-              csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-
-            $(this)
-                .attr({
-                  'download': filename,
-                    'href': csvData,
-                    'target': '_blank'
-              });
-        }
-
-
-        $("a[id='out']").on('click', function (event) {
-          exportTableToCSV.apply(this, [$('#dvData>table'), 'Personal_Rank_Bloggers.csv']);
-          alert("导出成功！");
-        });
-  </script>
-<style>
-  #TagCloud {
-    padding: 15px;
-    border: solid 1px #eee;
-    background: #f5f5f5;
-  }
-</style>
-  <p id="TagCloud">
-  </p>
-  <table class="table table-hover" id="single_table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>昵称</th>
-        <th>微博数</th>
-        <th>粉丝数</th>
-        <th>关注数</th>
-        <th>领域</th>
-      </tr>
-    </thead>
-    <tbody id="user_table">
-    </tbody>
-  </table>
-  <div class="inputAppend"><a class="btn btn-small" href="#" id="out"><i class="icon-download-alt"></i> 导出</a></div>
-  <div id="page-selection" class="pagination pagination-centered"></div>
-  
-
+<!-- Example File -->
+<script language="javascript" type="text/javascript" src="/static/js/profile/example2.js"></script>
 {% endblock body %}
 

@@ -5,6 +5,8 @@ LEVELDBPATH = '/home/mirage/leveldb'
 
 weibo_repost_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_global_weibo_repost'),
                                       block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+weibo_repost_20131004_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_global_weibo_repost_20131004'),
+                                      block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 from xapian_weibo.xapian_backend import XapianSearch
 statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
@@ -54,7 +56,7 @@ def getStatusByNameAndRid(name, rid, r_users):
 def prepare_from_xapian():
 	finish_set = set() #存储已经解析上层转发结构的微博
 
-	total_days = 150#260
+	total_days = 300
 	today = datetime.datetime.today()
 	now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
 	now_ts = int(now_ts)
@@ -101,15 +103,15 @@ def prepare_from_xapian():
 							finish_set.add(repost_mid)
 						else:
 							continue
-						k = str(reposts_[0]) + '_' + str(reposts_[1]) + '_' + str(reposts_[2])
+						k = str(reposts_[0])
 						v = str(repost_mid) + '_' + str(repost_uid)
-						weibo_repost_bucket.Put(k, v)
+						weibo_repost_20131004_bucket.Put(k, v)
 						reposts_ = [repost_mid, repost_uid, repost_ts]
 			if getStatusById(retweeted_status):
 				retweeted_mid, retweeted_uid = getStatusById(retweeted_status)
-				k = str(reposts_[0]) + '_' + str(reposts_[1]) + '_' + str(reposts_[2])
+				k = str(reposts_[0])
 				v = str(retweeted_mid) + '_' + str(retweeted_uid)
-				weibo_repost_bucket.Put(k, v)
+				weibo_repost_20131004_bucket.Put(k, v)
 			else:
 				continue
 		else:

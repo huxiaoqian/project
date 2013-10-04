@@ -10,6 +10,7 @@
       <option value="60">最近2个月</option>
     </select>
     <button type="button" class="btn btn-primary" id="generate_network" onclick="init_vis();"><i class="icon-search"></i>生成网络结构图</button>
+    <a2 href="javascript:void(0);" onclick="download();" class="btn btn-danger" ><i class="icon-picture"></i>下载图片</a2>
 </form>
 <div id="community" >
 <div id="center-container">
@@ -20,7 +21,18 @@
 <link type="text/css" href="/static/css/base.css" rel="stylesheet" />
 <link type="text/css" href="/static/css/Sunburst.css" rel="stylesheet" />
 <script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
+<script>
+function download(){
+var canvas=document.getElementById('infovis-canvas');
+//var ctx=canvas.getContext("2d");
+//var c=document.getElementById('sigma_nodes_1');
+//ctx.drawImage(c,0,0);
+var dataURL=canvas.toDataURL();
+window.open('', '_blank').location.href=dataURL;
 
+};
+
+ </script>
 <!--[if IE]><script language="javascript" type="text/javascript" src="../../Extras/excanvas.js"></script><![endif]-->
 <!-- JIT Library File -->
 <script language="javascript" type="text/javascript" src="/static/js/profile/jit-yc.js"></script>

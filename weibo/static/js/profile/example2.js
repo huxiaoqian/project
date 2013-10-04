@@ -79,8 +79,8 @@ function init(data){
             if("profileImageUrl" in data) {
               html += "<li><img style=\"width: 50px; height: 50px;\" src= "+data.profileImageUrl+" ></li>";
             }
-            if ("name" in data) {
-              html+="<br /><b>昵称:</b> " + data.name;
+            if ("name" in node) {
+              html+="<br /><b>昵称:</b> " + node.name;
 
             }
             if("count"in data){
@@ -132,8 +132,8 @@ function init(data){
             if("profileImageUrl" in data) {
               html += "<li><img style=\"width: 50px; height: 50px;\" src= "+data.profileImageUrl+" ></li>";
             }
-            if ("name" in data) {
-              html+="<br/><b>昵称:</b> " + data.name;
+            if ("name" in node) {
+              html+="<br/><b>昵称:</b> " + node.name;
 
             }
             if("count"in data){

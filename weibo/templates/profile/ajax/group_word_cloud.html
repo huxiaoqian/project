@@ -17,10 +17,18 @@
       作为权重显示前<input type="number" name="limit" value="200" min="1" max="1000" class="span2" id="limit">关键词
       <!--<input type='button' onclick='return false;'>-->
     <button type="button" class="btn btn-primary" id="generate_cloud" onclick="submit_form();return false;"><i class="icon-search"></i>分析</button>
+    <button2 type="button" class="btn btn-primary" id="editor_save" "><i class="icon-search"></i>下载svg</button2>
 </form>
 <div id='d3_cloud'></div>
+<canvas type="hidden" id="svgtoimg" width="1000px" height="600px"></canvas> 
+
+
 <script src="/static/js/profile/d3.v3.min.js"></script>
-  <script src="/static/js/profile/d3.layout.cloud.js"></script>
+<script src="/static/js/profile/d3.layout.cloud.js"></script>
+<script src="/static/js/profile/rgbcolor.js"></script> 
+<script src="/static/js/profile/StackBlur.js"></script>
+<script src="/static/js/profile/canvg.js"></script> 
+
 
   <script>
 function defscale(count, mincount, maxcount, minsize, maxsize){
@@ -144,6 +152,26 @@ function display_d3_cloud(data){
       });
   }
   </script>
+  <script>
+  $("#editor_save").click(function() {
+   // Get the d3js SVG element
+	 var tmp = document.getElementById("d3_cloud");
+	 var svg = tmp.getElementsByTagName("svg")[0];
+	 // Extract the data as SVG text string
+	 var svg_xml = (new XMLSerializer).serializeToString(svg);
+
+   // the canvg call that takes the svg xml and converts it to a canvas
+   canvg('svgtoimg', svg_xml);
+ 
+   // the canvas calls to output a png
+   var canvas = document.getElementById("svgtoimg");
+   //var img = canvas.toDataURL("image/png");
+   var dataURL=canvas.toDataURL();
+   window.open('', '_blank').location.href=dataURL;
+   // do what you want with the base64, write to screen, post to server, etc...
+    });
+  </script>
+   
 
 {% endblock body %}
 

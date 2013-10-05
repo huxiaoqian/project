@@ -313,3 +313,26 @@ def new_in():
         result = 'Wrong'
     return json.dumps(result)
 
+@mod.route('/rank/')
+def newwords_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(NewWords).filter((NewWords.id>startoffset)&(NewWords.id<=endoffset)).all()
+    news=[]
+    for newword in newwords:
+        if newword:
+            news.append({'id':newword.id,'wordsName':newword.wordsName.encode('utf-8'),'seWeight':newword.seWeight})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})

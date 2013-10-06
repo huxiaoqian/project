@@ -144,7 +144,7 @@
         </div>
         <div id="emotion_chart_div" class="row-fluid">
             <div class="span8">
-                <div class="control-group" id="togglecount">
+                <!--<div class="control-group" id="togglecount">
                     <div class="controls btn switch switch-two">
                         <input id="absolute" name="view" type="radio">
                         <label for="absolute" onclick="switch2('absolute');">绝对数量</label>
@@ -153,7 +153,7 @@
                         <label for="relative" onclick="switch2('relative');">相对比例</label>                       
                         <span class="slide-button btn btn-success"></span>
                     </div>
-                </div>
+                </div>-->
                 <div id="emotion_container" style="width:900px;"></div>
             </div>
             <div id="weibo_container" class="span4">
@@ -605,7 +605,7 @@
         });
     }
 
-    function switch2(status){
+    /*function switch2(status){
         if(status == 'absolute'){
             var chart = $('#emotion_container').highcharts();
             chart.series[0].update({
@@ -630,6 +630,6 @@
                 data : sad_ratio
             });
         }
-    }
+    }*/
   </script>
 {% endblock %}

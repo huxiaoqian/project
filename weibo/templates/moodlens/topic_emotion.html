@@ -118,6 +118,15 @@
         left: 90px;
         z-index: 1000;
     }
+    #vertical-ticker {
+        height: 361px;
+        width: 400px;
+        overflow: hidden;
+        margin-left: 1px;
+        margin-top: 2px;
+        padding: 0;
+        -webkit-box-shadow: 0 1px 3px rgba(0,0,0, .4);
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -136,7 +145,7 @@
         </div>
         <div id="emotion_chart_div" class="row-fluid">
             <div class="span8">
-                <div class="control-group" id="togglecount">
+                <!--<div class="control-group" id="togglecount">
                     <div class="controls btn switch switch-two">
                         <input id="absolute" name="view" type="radio">
                         <label for="absolute" onclick="switch2('absolute');">绝对数量</label>
@@ -145,32 +154,13 @@
                         <label for="relative" onclick="switch2('relative');">相对比例</label>                       
                         <span class="slide-button btn btn-success"></span>
                     </div>
-                </div>
+                </div>-->
                 <div id="emotion_container" style="width:900px;"></div>
             </div>
             <div id="weibo_container" class="span4">
-                <table border="0" cellspacing="0" cellpadding="0" width="100%">
-                    <tbody>
-                        <tr>
-                            <td id="scrollingListTd" style="width: 100%;">
-                                <div style="overflow: hidden; position: relative; width: 100%; height: 400px;">
-                                    <div style="position: relative; left: 0px; top: 0px;" id="weibos">
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">A1.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">转发微博</div><div class="chartclient-annotation-date">2013-02-27 01:44:05</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">A2.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">转发微博</div><div class="chartclient-annotation-date">2013-02-27 01:35:22</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">A3.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">转发微博</div><div class="chartclient-annotation-date">2013-02-27 01:29:02</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">A4.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">//@凯迪拉克: 备受市场关注和期待的凯迪拉克全新豪华轿车XTS在广州隆重上市发布，售价34.99万元~56.99万元。</div><div class="chartclient-annotation-date">2013-02-27 01:16:35</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">A5.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">转发微博</div><div class="chartclient-annotation-date">2013-02-27 01:25:42</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">B1.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">ZB妈妈自家制的鱼皮饺无敌好吃！这面，也无敌好吃...饿死我拉〜[晕][晕][晕]</div><div class="chartclient-annotation-date">2013-03-09 01:02:22</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">B2.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">"有滋有味女人节"，这个活动推荐给大家，点击http://t.cn/zYEuLQi 进入 地址：http://t.cn/zYEuLQi</div><div class="chartclient-annotation-date">2013-03-09 01:02:21</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">B3.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">低调做人无论在官场、商场还是政治军事斗争中都是一种进可攻、退可守，看似平淡，实则高深的处世谋略。高调做事是一种责任，一种气魄，一种精益求精的风格，一种执著追求的精神。所做的哪怕是细小的事、单调的事，也要代表自己的最高水平，体现自己的最好风格，并在做事中提高素质与能力。</div><div class="chartclient-annotation-date">2013-03-09 01:02:22</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">B4.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">【公共wifi密码，全国通用哦】中国移动：卡号：15821275836 密码：159258；卡号：15800449592 密码：159258；卡号：15800449954 密码：159258；卡号：15800449940 密码：159258。中国电信：但凡你手机能搜到电信chinanet的热点覆盖，全国公免账号07953591377 密码3591377有福同享mark下吧。</div><div class="chartclient-annotation-date">2013-03-09 01:02:22</div></td></tr></tbody></table></div>
-                                        <div class="chartclient-annotation"><table border="0" cellspacing="0" cellpadding="0" class="chartclient-annotation-table"><tbody><tr><td class="chartclient-annotation-cell-1"><div class="chartclient-annotation-letter">B5.</div></td><td class="chartclient-annotation-cell-2"><div class="chartclient-annotation-title">happy Event </div><div class="chartclient-annotation-content">烦躁不安心绪不宁，你吗杯啊[抓狂][抓狂][抓狂] 我在:http://t.cn/zYmzepg</div><div class="chartclient-annotation-date">2013-03-09 01:02:21</div></td></tr></tbody></table></div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <ul id="vertical-ticker">
+                </ul>
+                <p><span class="label label-info" id="event_title"></span><a href="#" id="ticker-previous">Previous</a> / <a href="#" id="ticker-next">Next</a> / <a id="stop" href="#">Stop</a> / <a id="start" href="#">Start</a></p>
             </div>
         </div>
         <div class="row-fluid" style="border:1px solid gray;">
@@ -192,6 +182,7 @@
   <script src="{{ url_for('static', filename='js/highstock.js') }}"></script>
   <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.min.js') }}"></script>
+  <script type="text/javascript" src="http://buildinternet.s3.amazonaws.com/projects/totem/js/jquery.totemticker.js"></script>
 
   <script>
     var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
@@ -203,17 +194,15 @@
     var happy_ratio = [];
     var angry_ratio = [];
     var sad_ratio = [];
+    var happy_list = [];
+    var angry_list = [];
+    var sad_list = [];
+    var ts_list = [];
 
     function submit_form(){
-        query_args = $("#keyword")[0].value;
-        emotion_ratio = {};
-        happy_absolute = [];
-        angry_absolute = [];
-        sad_absolute = []
-        happy_ratio = [];
-        angry_ratio = [];
-        sad_ratio = [];
-        display_realtime_emotion(query_args);
+        display_realtime_emotion();
+        redraw_tagcanvas();
+        //switch2();
     }
     
     function redraw_tagcanvas() {
@@ -249,45 +238,94 @@
         }
         redraw_tagcanvas();
     }
-    function chg_weibos(data, letter, emotion){
-        $("#weibos").empty();
+    function chg_weibos(data){
+        var html = "";
         for(var i=0;i<data.length;i+=1){
-            var time = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', parseInt(data[i]['timestamp']) * 1000);
-            var text = data[i]['text'];
-            
-            var html = "<div class=\"chartclient-annotation\">"; 
-            html += "<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\" class=\"chartclient-annotation-table\">";
-            html += "<tbody><tr>";
-            html += "<td class=\"chartclient-annotation-cell-1\">";
-            html += "<div class=\"chartclient-annotation-letter\">" + letter + (i + 1) + ".</div>";
-            html += "</td>";
-            html += "<td class=\"chartclient-annotation-cell-2\">";
-            html += "<div class=\"chartclient-annotation-title\">" + emotion + " Event </div>";
-            html += "<div class=\"chartclient-annotation-content\">" + text + "</div>";
-            html += "<div class=\"chartclient-annotation-date\">" + time + "</div>";
-            html += "</td>";
-            html += "</tr>";
-            html += "</tbody>";
-            html += "</table>";
-            html += "</div>";
-            $("#weibos").append(html);
+            var emotion = data[i][0];
+            var name = data[i][1];
+            var user_link = data[i][2];
+            var text = data[i][3];
+            var weibo_link = data[i][4];
+            var time = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', parseInt(data[i][5]) * 1000);
+            var repost_count = data[i][6];
+            var retweeted_text = data[i][7];
+            html += "<li><div class=\"chartclient-annotation-letter\"><img src='/static/img/" + emotion + "_thumb.gif'></div>"; 
+            html += "<div class=\"chartclient-annotation-title\"><a href='" + user_link + "' target='_blank' >" + name + "</a> 发布 </div>";
+            html += "<div class=\"chartclient-annotation-content\"><a href='" + weibo_link + "' target='_blank' >" + text + "</a></div>";
+            if(retweeted_text != 'None'){
+                html += "<div class=\"chartclient-annotation-content\">" + retweeted_text + "</div>";
+            }
+            html += "<div class=\"chartclient-annotation-date\"> " + time + "<span style=\"float:right\"> 转发数：" +  repost_count + "</span></div></li>";
+        }
+        $("#vertical-ticker").append(html);
+        display_vertical_list();
+    }
+
+    function chg_emotion_pie(raw_data){
+        if(raw_data[3] != 0){
+            var data = [['高兴', raw_data[0] * 100], ['愤怒', raw_data[1] * 100], ['悲伤', raw_data[2] * 100]];
+            $('#emotion_pie_container').empty();
+            display_emotion_pie(data);
         }
     }
 
-    $(document).ready(function(){    
-        //display_realtime_emotion();
-        redraw_tagcanvas();
+    function display_vertical_list(){
+        $("#vertical-ticker").totemticker({
+            row_height  :   '100px',
+            next        :   '#ticker-next',
+            previous    :   '#ticker-previous',
+            stop        :   '#stop',
+            start       :   '#start',
+            mousestop   :   true,
+        });
+    }
 
-    })
+    function init_statistics(end_ts, during){
+        var query_args = $("#keyword")[0].value;
+        var emotion = ['happy', 'angry', 'sad'];
+        for(var e in emotion){
+            $.ajax({
+                url: "/moodlens/weibos_data/" + emotion[e] + "/global/?ts=" + end_ts + "&during=" + during  + "&query=" + query_args,
+                type: "GET",
+                dataType:"json",
+                success: function(data){
+                    $("#vertical-ticker").empty();
+                    chg_weibos(data);
+                }
+            });
+        }
+        $.ajax({
+            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during + "&query=" + query_args,
+            type: "GET",
+            dataType:"json",
+            success: function(data){
+                chg_tagcloud(data);
+            }
+        });
+        $.ajax({
+            url: "/moodlens/data/global/?ts=" + end_ts + "&during=" + during + "&query=" + query_args,
+            type: "GET",
+            dataType:"json",
+            success: function(data){
+                var happy_emotion_count = data['happy'][1];
+                var angry_emotion_count = data['angry'][1];
+                var sad_emotion_count = data['sad'][1];
+                var total_count = parseInt(happy_emotion_count) + parseInt(angry_emotion_count) + parseInt(sad_emotion_count);
+                chg_emotion_pie([happy_emotion_count, angry_emotion_count, sad_emotion_count, total_count]);
+            }
+        })
+    }
 
-    function pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6, keyword){
+    function pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6){
+        var query_args = $("#keyword")[0].value;
         if(times >= total_days){
+            get_peaks(series4, series5, series6);
             return;
         }
         
         var ts = begin_ts + times * during;
         $.ajax({
-            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + "&query=" + keyword,
+            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + "&query=" + query_args,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -311,72 +349,71 @@
                     happy_ratio.push([ts * 1000, happy_emotion_ratio]);
                     angry_ratio.push([ts * 1000, angry_emotion_ratio]);
                     sad_ratio.push([ts * 1000, sad_emotion_ratio]);
+                    happy_list.push(happy_emotion_ratio);
+                    angry_list.push(angry_emotion_ratio);
+                    sad_list.push(sad_emotion_ratio);
+                    ts_list.push(ts);
                 }
                 else{
                     emotion_ratio[ts * 1000] = [0, 0, 0, 0];
                 }
-                pull_emotion_flag('happy', 'global', total_days, times, begin_ts, during, series4);
-                pull_emotion_flag('angry', 'global', total_days, times, begin_ts, during, series5);
-                pull_emotion_flag('sad', 'global', total_days, times, begin_ts, during, series6);
                 times++;
-                pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6, keyword);
+                pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6);
             }
         });
     }
 
-    function pull_emotion_flag(emotion_type, area_type, total_days, times, begin_ts, during, series){
-        if(times >= total_days){
-            return;
-        }
-        var ts = begin_ts + times * during;
-
-        if(emotion_ratio[ts * 1000][3] != 0){
-            $.ajax({
-                url: '/moodlens/flag_data/' + emotion_type + '/' + area_type + "/" + "?ts=" + ts,
-                type: "GET",
-                dataType:"json",
-                success: function(data){
-                    var isShift = false;
-                    if(data.length != 0){
-                        var d = data[0];
-                        var x = d['x'];
-                        var title = d['title'];
-                        var text = d['text'];
-                        var flagClick = function(event){
-                            var click_ts = this.x / 1000;
-                            $.ajax({
-                                url: "/moodlens/keywords_data/happy/global/?ts=" + click_ts,
-                                type: "GET",
-                                dataType:"json",
-                                success: function(data){
-                                    chg_tagcloud(data);
-                                }
-                            });
-                            $.ajax({
-                                url: "/moodlens/weibos_data/global/?ts=" + click_ts,
-                                type: "GET",
-                                dataType:"json",
-                                success: function(data){
-                                    chg_weibos(data, title, emotion_type);
-                                }
-                            });
-                            change_emotion_pie(emotion_ratio[this.x]);     
+    function get_peaks(series4, series5, series6){
+        var query_args = $("#keyword")[0].value;
+        console.log(happy_list);
+        $.ajax({
+            url: "/moodlens/emotionpeak/?happy=" + happy_list.join(',') + "&angry=" + angry_list.join(',') + "&sad=" + sad_list.join(',') + "&ts=" + ts_list + "&query=" + query_args,
+            type: "GET",
+            dataType:"json",
+            success: function(data){
+              var isShift = false;
+              for(var i in data){
+                var x = data[i]['ts'];
+                var title = data[i]['title'];
+                var happy_title = title['happy'];
+                var angry_title = title['angry'];
+                var sad_title = title['sad'];
+                var text = data[i]['text'];
+                var happy_text = text['happy'];
+                var angry_text = text['angry'];
+                var sad_text = text['sad'];
+                var flagClick = function(event){
+                    var click_ts = this.x / 1000;
+                    var emotion = this.emotion;
+                    var title = this.title;
+                    $.ajax({
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&query=" + query_args,
+                        type: "GET",
+                        dataType:"json",
+                        success: function(data){
+                            $("#vertical-ticker").empty();
+                            chg_weibos(data);
+                            $("#event_title").html(title);
                         }
-                        series.addPoint({'x': x, 'title': title, 'text': text, 'events': {'click': flagClick}}, true, isShift);
-                    }
+                    });
+                    $.ajax({
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&query=" + query_args,
+                        type: "GET",
+                        dataType:"json",
+                        success: function(data){
+                            chg_tagcloud(data);
+                        }
+                    });
+                    chg_emotion_pie(emotion_ratio[this.x]);     
                 }
-            })
-        }
+                series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
+                series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
+                series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
+              }
+            }
+        })
     }
 
-    function change_emotion_pie(raw_data){
-        if(raw_data[3] != 0){
-            var data = [['高兴', raw_data[0] * 100], ['愤怒', raw_data[1] * 100], ['悲伤', raw_data[2] * 100]];
-            $('#emotion_pie_container').empty();
-            display_emotion_pie(data);
-        }
-        
-    }
 
     function display_emotion_pie(data){
         Highcharts.setOptions({
@@ -423,7 +460,7 @@
         });
     }
 
-    function display_realtime_emotion(keyword){
+    function display_realtime_emotion(){
         Highcharts.setOptions({
             global: {
                 useUTC: false
@@ -438,7 +475,7 @@
                 marginRight: 10,
                 events: {
                     load: function() {
-                        var total_days = 90;
+                        var total_days = 180;
                         var now_date = new Date();
                         var now_year = now_date.getFullYear();
                         var now_month = now_date.getMonth();
@@ -446,7 +483,9 @@
                         var now_ts = parseInt((new Date(now_year, now_month, now_day)).getTime() / 1000) + 2 * 3600;
                         var during = 24 * 3600;
                         var begin_ts = now_ts - total_days * during;
-                        pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5], keyword);
+                        init_statistics(now_ts, total_days * during);
+                        total_days = 10;
+                        pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]);
                     }
                 }
             },
@@ -573,7 +612,7 @@
         });
     }
 
-    function switch2(status){
+   /*function switch2(status){
         if(status == 'absolute'){
             var chart = $('#emotion_container').highcharts();
             chart.series[0].update({
@@ -598,6 +637,6 @@
                 data : sad_ratio
             });
         }
-    }
+    }*/
   </script>
 {% endblock %}

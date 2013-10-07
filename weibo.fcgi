@@ -1,4 +1,6 @@
 #!/usr/bin/python
+
+
 from flup.server.fcgi import WSGIServer
 from weibo import create_app
 

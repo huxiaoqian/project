@@ -93,7 +93,9 @@ ul{
         <p style="font-size:20pt;color:#FE642E;">用户权限管理</p>
         <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:900px;">
                <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
-                    <button id="mo_new" type="button" class="btn btn-danger">修改</button>
+                    <button id="mo_new" type="button" class="btn btn-warning">修改</button>
+                    <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
+                    <button id="de_user" type="button" class="btn btn-danger">删除</button>
                </div>
                <div class="bs-docs-example">
                   <table class="table" id="new_table">
@@ -104,24 +106,148 @@ ul{
                         <th style="text-align:center">网民情绪监控与预警</th>
                         <th style="text-align:center">网民画像</th>
                         <th style="text-align:center">微博信息传播</th>
+                        <th style="text-align:center">选择</th>
                       </tr>
                     </thead>
                     <tbody>
                       {% for user in userlists %}
                       <tr>
                         
-                        <td style="text-align:center"><span class="num-id" style="font-size:15px;">{{user.id}}</span></td>
-                        <td style="text-align:center"><input type="checkbox" name="identify" style="font-size:12pt;"/></td>
-                        <td style="text-align:center"><input type="checkbox" name="moodlens" style="font-size:12pt;"/></td>
-                        <td style="text-align:center"><input type="checkbox" name="profile" style="font-size:12pt;"/></td>
-                        <td style="text-align:center"><input type="checkbox" name="propagate" style="font-size:12pt;"/></td>
+                        <td style="text-align:center">{{user.id}}</td>
+                        {% if user.identify == 1 %}
+                        <td style="text-align:center">有</td>
+                        {% else %}
+                        <td style="text-align:center">无</td>
+                        {% endif %}
+                        {% if user.moodlens == 1 %}
+                        <td style="text-align:center">有</td>
+                        {% else %}
+                        <td style="text-align:center">无</td>
+                        {% endif %}
+                        {% if user.profile == 1 %}
+                        <td style="text-align:center">有</td>
+                        {% else %}
+                        <td style="text-align:center">无</td>
+                        {% endif %}
+                        {% if user.propagate == 1 %}
+                        <td style="text-align:center">有</td>
+                        {% else %}
+                        <td style="text-align:center">无</td>
+                        {% endif %}
+                        <td style="text-align:center"><input type="checkbox" name="user_choose" style="font-size:12pt;"/></td>
                       </tr>
                       {% endfor %}
                        
                   </tbody>   
                 </table>
                 <script>
-                      
+                function add_field(){<!-- 添加按钮 -->
+
+                  var fl=prompt("请输入要添加的用户ID\n注：ID要为数字","");
+                  var f2=prompt("请输入新用户的密码","");
+                  var f3=prompt("请确认新用户的密码","");
+                  if(f2!=f3){
+                    alert("输入的新密码不匹配!");
+                  }
+                  else{
+                    var identify=prompt("请输入敏感博主识别的权限\n注：1表示有权限，0表示没权限","");
+                    var moodlens=prompt("请输入网民情绪监控与预警的权限\n注：1表示有权限，0表示没权限","");
+                    var profile=prompt("请输入网民画像的权限\n注：1表示有权限，0表示没权限","");
+                    var propagate=prompt("请输入微博信息传播的权限\n注：1表示有权限，0表示没权限","");
+                    if((identify<=1)&&(moodlens<=1)&&(profile<=1)&&(propagate<=1)){
+                      if(fl)
+                      {
+                        $.ajax({   
+                          type:"POST",  
+                          url:"/sysadmin/add_user",
+                          dataType: "json",
+                          async:false,
+                          data:{user : fl,pass: f2,identify:identify,moodlens:moodlens,profile:profile,propagate:propagate},
+                          success: function(data){
+                            if(data=='Right') {
+                                alert("添加用户成功！");
+                                location.reload();
+                            } 
+                            else{
+                              alert("您输入的用户ID有误！");
+                            }
+                          }              
+                        })
+                      }
+                    }
+                    else{
+                      alert("输入有误，请重新输入！");
+                    }                    
+                  }
+                  
+                }
+
+                $("#de_user").click(function() {
+                    $("[name='user_choose']").each(function(){                              
+                        if(this.checked)
+                        {
+                              var fa = $(this).parent();
+                              var ne = $(fa).prev().prev().prev().prev().prev();                   
+                              var f_id = $(ne).html();
+                              $.ajax({   
+                                type:"POST",  
+                                url:"/sysadmin/user_de",
+                                dataType: "json",
+                                async:false,
+                                data:{f_id : f_id},
+                                success: function(data){
+                                    if( data =='Right'){
+                                      alert("删除成功！");
+                                    }
+                                }           
+                              });
+                        }   
+                    });
+                    location.reload();
+                          //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
+                });
+                
+                $("#mo_new").click(function() {
+                    $("[name='user_choose']").each(function(){                              
+                        if(this.checked)
+                        {
+                              var fa = $(this).parent();
+                              var ne = $(fa).prev().prev().prev().prev().prev();                   
+                              var f_id = $(ne).html();
+                              if(confirm("您要修改的是"+f_id+"用户？")){
+                                var identify=prompt("请输入敏感博主识别的权限\n注：1表示有权限，0表示没权限","");
+                                var moodlens=prompt("请输入网民情绪监控与预警的权限\n注：1表示有权限，0表示没权限","");
+                                var profile=prompt("请输入网民画像的权限\n注：1表示有权限，0表示没权限","");
+                                var propagate=prompt("请输入微博信息传播的权限\n注：1表示有权限，0表示没权限","");
+                                if((identify<=1)&&(moodlens<=1)&&(profile<=1)&&(propagate<=1)){
+                                  $.ajax({   
+                                    type:"POST",  
+                                    url:"/sysadmin/user_modify",
+                                    dataType: "json",
+                                    async:false,
+                                    data:{f_id : f_id,identify:identify,moodlens:moodlens,profile:profile,propagate:propagate},
+                                    success: function(data){
+                                      if( data =='Right'){
+                                        alert("修改成功！");
+                                      }
+                                      else{
+                                        alert("修改失败，请重新修改！");
+                                      }
+                                    }            
+                                  });
+                                }
+                                else{
+                                  alert("输入有误，请重新输入！");
+                                }
+                              }
+                              else{
+                                alert("您已取消修改操作！");
+                              }
+                        }   
+                    });
+                    location.reload();
+                          //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
+                });
                 </script>
               </div>    
            </div>

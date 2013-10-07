@@ -336,3 +336,53 @@ def newwords_rank():
             news.append({'id':newword.id,'wordsName':newword.wordsName.encode('utf-8'),'seWeight':newword.seWeight})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/add_user', methods=['GET','POST'])
+def add_user():
+    user = request.form['user']
+    pas = request.form['pass']
+    identify = request.form['identify']
+    moodlens = request.form['moodlens']
+    profile = request.form['profile']
+    propagate = request.form['propagate']
+    old_items = db.session.query(UserList).filter(UserList.id==user).all()
+    if len(old_items):
+        return json.dumps('Wrong')
+    else:
+        new_item = UserList(id=user,password=pas,identify=identify,moodlens=moodlens,profile=profile,propagate=propagate)
+        db.session.add(new_item)
+        db.session.commit()
+        return json.dumps('Right')
+
+@mod.route('/user_de', methods=['GET','POST'])
+def user_de():
+    result = 'Right'
+    user_id = request.form['f_id']
+    old_items = db.session.query(UserList).filter(UserList.id==user_id).all()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
+
+@mod.route('/user_modify', methods=['GET','POST'])
+def user_modify():
+    user = request.form['f_id']
+    identify = request.form['identify']
+    moodlens = request.form['moodlens']
+    profile = request.form['profile']
+    propagate = request.form['propagate']
+    old_items = db.session.query(UserList).filter(UserList.id==user).all()
+    if len(old_items):
+        for old_item in old_items:
+            pas = old_item.password
+            db.session.delete(old_item)
+            db.session.commit()
+            new_item = UserList(id=user,password=pas,identify=identify,moodlens=moodlens,profile=profile,propagate=propagate)
+            db.session.add(new_item)
+            db.session.commit()
+        return json.dumps('Right')
+    else:        
+        return json.dumps('Wrong')

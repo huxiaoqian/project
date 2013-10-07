@@ -8,7 +8,7 @@ import os
 
 LEVELDBPATH = '/home/mirage/leveldb'
 
-weibo_repost_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_global_weibo_repost'),
+weibo_repost_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_global_weibo_repost_20131004'),
                                       block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 from xapian_weibo.xapian_backend import XapianSearch

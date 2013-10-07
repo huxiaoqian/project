@@ -18,7 +18,24 @@
   <body>
     <div id="all_content">
     {% block navbar %}
-    
+    <!-- 导航栏 -->
+      <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+          <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">***原型系统</a>
+            {% if active == 'moodlens' %} 
+            <a class="brand" href="#">网民情绪监控与预警</a>
+            {% else %}
+            <a class="brand" href="#" style="display:none;">网民情绪监控与预警</a>
+            {% endif %}
+          </div>
+    </div>
+      </div>
       {% endblock %}
   
 

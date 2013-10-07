@@ -1,6 +1,39 @@
 {% extends "master.html" %}
 {% block title %}主页{% endblock %}
 {% block content %}
+  <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+          <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">微博舆情监测平台</a>
+            <div class="nav-collapse">
+
+                <ul class="nav pull-right">
+      <li {% if active == 'about' %} class="active" {% endif %}><a href="/about/">关于</a></li>
+      <li class="divider-vertical"></li>
+      {% if ((identy == '1')and(moodlens == '1')and(profile == '1')and(propagate == '1')) %}
+      <li><a href="/sysadmin/" target="_blank">系统管理</a></li>
+      {% else %}
+      <li {% if active == 'help' %} class="active" {% endif %}><a href="/help/">帮助</a></li>
+      {% endif %}
+      <li class="divider-vertical"></li>
+      <li><a href="/logout/">退出</a></li>
+      {% if log_in == 'Ture' %}
+      <li id="log_in" style="display:none;">{{log_in}}</li>
+      <li id="log_user" style="display:none;">{{user}}</li>
+      {% else %}
+      <li id="log_in" style="display:none;">Flase</li>
+      <li id="log_user" style="display:none;">user</li>
+      {% endif %}
+                </ul>
+            </div><!--/.nav-collapse -->
+          </div>
+  </div>
+      </div>
     <div class="container">
       <header class="jumbotron subhead" id="overview">
         <h1>面向**的**及**系统</h1>
@@ -9,12 +42,12 @@
       <ul class="thumbnails child-sites">
         {% if identy == '1' %}
         <li class="span3">
-          <a class="thumbnail" href="/identify/" target="_blank">
+          <a class="thumbnail" id="identify1" target="_blank">
             <img src="/static/img/home_thumbnail/1.png" alt="敏感博主识别" width="260" height="200">
           </a>
           <h3>敏感博主识别</h3>
           <p>该模块用于找到微博中给定话题或领域下的敏感用户，并将得到的敏感用户列表进行排 序、更新、跟踪以及可视化展示。</p>
-          <p><a class="btn" href="/identify/">查看详情 »</a></p>
+          <p><a class="btn" id="identify2" target="_blank">查看详情 »</a></p>
         </li>
         {% else %}
         <li class="span3" style="display:none;">
@@ -23,37 +56,37 @@
           </a>
           <h3>敏感博主识别</h3>
           <p>该模块用于找到微博中给定话题或领域下的敏感用户，并将得到的敏感用户列表进行排 序、更新、跟踪以及可视化展示。</p>
-          <p><a class="btn" href="/identify/">查看详情 »</a></p>
+          <p><a class="btn" href="/identify/" target="_blank">查看详情 »</a></p>
         </li>
         {% endif %}
         {% if moodlens == '1' %}
         <li class="span3">
-          <a class="thumbnail" href="#" target="_blank">
+          <a class="thumbnail" id="moodlen1" target="_blank">
             <img src="/static/img/home_thumbnail/2.png" alt="情绪" width="260" height="200">
           </a>
           <h3>网民情绪监测和预警</h3>
           <p>该模块主要实现网民情绪的实时监测和精确预警，主要包括如下功能：1）微博全民情绪监控；2）全民情绪的拐点计算、标识和事件预警；3）敏感话题的情绪分类；4）话题情绪的拐点计算、标识和话题子事件预警。</p>
-          <p><a class="btn" href="#">查看详情 »</a></p>
+          <p><a class="btn" id="moodlen2" target="_blank">查看详情 »</a></p>
         </li>
         {% else %}
         <li class="span3" style="display:none;">
-          <a class="thumbnail" href="#" target="_blank">
+          <a class="thumbnail" href="/moodlens/" target="_blank">
             <img src="/static/img/home_thumbnail/2.png" alt="情绪" width="260" height="200">
           </a>
           <h3>网民情绪监测和预警</h3>
           <p>该模块主要实现网民情绪的实时监测和精确预警，主要包括如下功能：1）微博全民情绪监控；2）全民情绪的拐点计算、标识和事件预警；3）敏感话题的情绪分类；4）话题情绪的拐点计算、标识和话题子事件预警。</p>
-          <p><a class="btn" href="#">查看详情 »</a></p>
+          <p><a class="btn" href="/moodlens/" target="_blank">查看详情 »</a></p>
         </li>
         {% endif %}
 
         {% if profile == '1' %}
         <li class="span3">
-          <a class="thumbnail" href="/profile/search/" target="_blank">
+          <a class="thumbnail" id="profile1" target="_blank">
             <img src="/static/img/home_thumbnail/3.png" alt="画像" width="260" height="200">
           </a>
           <h3>网民画像</h3>
           <p>该模块主要识别各类热点舆情传播的关键人物，提供其全特征数据，可以为网民的定点监控和干预提供策略建议。</p>
-          <p><a class="btn" href="/profile/search/">查看详情 »</a></p>
+          <p><a class="btn" id="profile2" target="_blank">查看详情 »</a></p>
         </li>
         {% else %}
         <li class="span3" style="display:none;">
@@ -62,18 +95,18 @@
           </a>
           <h3>网民画像</h3>
           <p>该模块主要识别各类热点舆情传播的关键人物，提供其全特征数据，可以为网民的定点监控和干预提供策略建议。</p>
-          <p><a class="btn" href="/profile/search/">查看详情 »</a></p>
+          <p><a class="btn" href="/profile/search/" target="_blank">查看详情 »</a></p>
         </li>
         {% endif %}
 
         {% if propagate == '1' %}
         <li class="span3">
-          <a class="thumbnail" href="/propagate/" target="_blank">
+          <a class="thumbnail" id="propagate1" target="_blank">
             <img src="/static/img/home_thumbnail/4.png" alt="信息传播" width="260" height="200">
           </a>
           <h3>微博信息传播分析</h3>
           <p>该模块用于找到给定话题下的一条或几条敏感微博中的关键用户，并将结果可视化展示。</p>
-          <p><a class="btn" href="/propagate/">查看详情 »</a></p>
+          <p><a class="btn" id="propagate2" target="_blank">查看详情 »</a></p>
         </li>
         {% else %}
         <li class="span3" style="display:none;">
@@ -82,9 +115,188 @@
           </a>
           <h3>微博信息传播分析</h3>
           <p>该模块用于找到给定话题下的一条或几条敏感微博中的关键用户，并将结果可视化展示。</p>
-          <p><a class="btn" href="/propagate/">查看详情 »</a></p>
+          <p><a class="btn" href="/propagate/" target="_blank">查看详情 »</a></p>
         </li>
         {% endif %}
       </ul>
     </div>
+    <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
+    <script  LANGUAGE="javascript">
+    $("#identify1").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/identify/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../identify/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    $("#identify2").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/identify/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../identify/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    $("#moodlen1").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/moodlens/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../moodlens/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    $("#moodlen2").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/moodlens/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../moodlens/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    $("#profile1").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/profile/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../profile/search/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    $("#profile2").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/profile/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../profile/search/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    $("#propagate1").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/propagate/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../propagate/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    $("#propagate2").click(function(){
+      var f1 = document.getElementById("log_in");
+      var f2 = document.getElementById("log_user");
+      var log_in = $(f1).html();
+      var user = $(f2).html();
+      $.ajax({   
+          type:"POST",  
+          url:"/propagate/log_in",
+          dataType: "json",
+          async:false,
+          data:{log_in : log_in,user : user},
+          success: function(data){
+            if(data == 'Right'){
+              window.open('../propagate/');
+            }
+            else{
+              window.open('../');
+            }
+            
+          }              
+      });
+    })
+    </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, session, redirect
 from xapian_weibo.xapian_backend_extra import Schema
 from xapian_weibo.xapian_backend import XapianSearch
 from utils import top_keywords, getWeiboByMid, st_variation, find_topN
@@ -9,6 +9,10 @@ import datetime
 import time
 import leveldb
 import os
+import weibo.model
+from weibo.model import *
+from weibo.extensions import db
+import json
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
@@ -26,20 +30,70 @@ def get_bucket(bucket):
                                       block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     return buckets[bucket]
 
+@mod.route('/log_in', methods=['GET','POST'])
+def log_in():
+    session['logged_in'] = request.form['log_in']
+    session['user'] = request.form['user']
+    if 'logged_in' in session and session['logged_in']:
+        return json.dumps('Right')
+    else:
+        return json.dumps('Wrong')
 
 @mod.route('/')
 def index():
-    return render_template('moodlens/index.html', active='moodlens')
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            return render_template('moodlens/index.html', active='moodlens')
+        else:
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.moodlens
+                    if identy == 1:
+                        return render_template('moodlens/index.html', active='moodlens')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 
 @mod.route('/field')
 def field():
-    return render_template('moodlens/field_emotion.html', active='moodlens')
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            return render_template('moodlens/field_emotion.html', active='moodlens')
+        else:
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.moodlens
+                    if identy == 1:
+                        return render_template('moodlens/field_emotion.html', active='moodlens')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 
 @mod.route('/topic')
 def topic():
-    return render_template('moodlens/topic_emotion.html', active='moodlens')
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            return render_template('moodlens/topic_emotion.html', active='moodlens')
+        else:
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.moodlens
+                    if identy == 1:
+                        return render_template('moodlens/topic_emotion.html', active='moodlens')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 
 @mod.route('/data/<area>/')

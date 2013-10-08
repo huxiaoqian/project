@@ -12,11 +12,14 @@ mod = Blueprint('index', __name__, url_prefix='')
 def loading():
     return render_template('root/loading.html', active='loading')
 
-@mod.route('/login/')
-def index():
+@mod.route('/login/', methods=['GET','POST'])
+def index():    
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            return render_template('root/index.html', active='home',identy='1',moodlens='1',profile='1',propagate='1')
+            log_in = session['logged_in']
+            user = session['user']
+            return render_template('root/index.html', active='home',identy='1',moodlens='1',profile='1',propagate='1',
+                                   log_in=str(log_in),user=str(user))
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -25,7 +28,8 @@ def index():
                     moodlens = pa.moodlens
                     profile = pa.profile
                     propagate = pa.propagate
-            return render_template('root/index.html', active='home',identy=str(identy),moodlens=str(moodlens),profile=str(profile),propagate=str(propagate))
+            return render_template('root/index.html', active='home',identy=str(identy),moodlens=str(moodlens),profile=str(profile),propagate=str(propagate),
+                                   log_in=session['logged_in'],user=session['user'])
     else:
         return redirect('/')
     

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from gensim import corpora, models, similarities
 #new
-from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint
+from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
 
 from weibo_trend import getBurstWord, getCount
 #new
@@ -32,6 +32,8 @@ except ImportError:
 
 from weibo.extensions import db
 from weibo.model import *
+import weibo.model
+import json
 
 from utils import hot_uid_by_word, last_week, last_month, ts2date, getFieldUsersByScores, time2ts, datetime2ts
 from flask.ext.sqlalchemy import Pagination
@@ -121,176 +123,396 @@ def yymInfo(uid):
     return user
     
 mod = Blueprint('profile', __name__, url_prefix='/profile')   
+
+@mod.route('/log_in', methods=['GET','POST'])
+def log_in():
+    session['logged_in'] = request.form['log_in']
+    session['user'] = request.form['user']
+    if 'logged_in' in session and session['logged_in']:
+        return json.dumps('Right')
+    else:
+        return json.dumps('Wrong')
+
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
 def profile_search(model='hotest'):
-    if request.method == 'GET':
-        statuscount, friendscount, followerscount, province, field = getStaticInfo()
-        if model == 'person':
-            nickname = urllib2.unquote(request.args.get('nickname'))
-            return render_template('profile/profile_search.html',statuscount=statuscount,
-                                   friendscount=friendscount, followerscount=followerscount,
-                                   location=province, field=field, model=model, result=None, nickname=nickname)
-        elif model in ['statuses', 'friends', 'followers']:
-            low = int(request.args.get('low'))
-            up = int(request.args.get('up'))
-            return render_template('profile/profile_search.html',statuscount=statuscount,
-                                   friendscount=friendscount, followerscount=followerscount,
-                                   location=province, field=field, model=model, result=None, low=low, up=up)
-        elif model == 'province':
-            province_arg = request.args.get('province')
-            return render_template('profile/profile_search.html',statuscount=statuscount,
-                                   friendscount=friendscount, followerscount=followerscount,
-                                   location=province, field=field, model=model, result=None, province=province_arg)
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            if request.method == 'GET':
+                statuscount, friendscount, followerscount, province, field = getStaticInfo()
+                if model == 'person':
+                    nickname = urllib2.unquote(request.args.get('nickname'))
+                    return render_template('profile/profile_search.html',statuscount=statuscount,
+                                           friendscount=friendscount, followerscount=followerscount,
+                                           location=province, field=field, model=model, result=None, nickname=nickname)
+                elif model in ['statuses', 'friends', 'followers']:
+                    low = int(request.args.get('low'))
+                    up = int(request.args.get('up'))
+                    return render_template('profile/profile_search.html',statuscount=statuscount,
+                                           friendscount=friendscount, followerscount=followerscount,
+                                           location=province, field=field, model=model, result=None, low=low, up=up)
+                elif model == 'province':
+                    province_arg = request.args.get('province')
+                    return render_template('profile/profile_search.html',statuscount=statuscount,
+                                           friendscount=friendscount, followerscount=followerscount,
+                                           location=province, field=field, model=model, result=None, province=province_arg)
+                else:
+                    return render_template('profile/profile_search.html',statuscount=statuscount,
+                                           friendscount=friendscount, followerscount=followerscount,
+                                           location=province, field=field, model=model, result=None)
+            if request.method == 'POST' and request.form['page']:
+                if model == 'newest':
+                    page = int(request.form['page'])
+                    if page == 1:
+                        startoffset = 0
+                    else:
+                        startoffset = (page - 1) * COUNT_PER_PAGE
+
+                    total_days = 90
+                    today = datetime.datetime.today()
+                    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+                    now_ts = int(now_ts)
+                    during = 24 * 3600
+                    begin_ts = now_ts - total_days * during
+
+                    query_dict = {
+                        'created_at': {
+                            '$gt': begin_ts,
+                            '$lt': now_ts,
+                        }
+                    }
+                    count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
+                                                       fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                       sort_by=['-created_at'])
+                    users = []
+                    for r in get_results():
+                        statusesCount = r['statuses_count']
+                        followersCount = r['followers_count']
+                        friendsCount = r['friends_count']
+                        userName = r['name']
+                        description = r['description']
+                        uid = r['_id']
+                        profileImageUrl = r['profile_image_url']
+                        users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
+                                  'description': description, 'profileImageUrl': profileImageUrl})
+                    return json.dumps(users)
+                elif model == 'hotest':
+                    from utils import active_rank
+                    current_time = '2013-3-7'
+                    window_size = 1
+                    top_n = 2000
+                    rank_results = active_rank(top_n, current_time, window_size)
+                    users = []
+                    page = int(request.form['page'])
+                    if page == 1:
+                        startoffset = 0
+                    else:
+                        startoffset = (page - 1) * COUNT_PER_PAGE
+                    endoffset = startoffset + COUNT_PER_PAGE - 1
+                    for uid in rank_results:
+                        user = getUserInfoById(uid)
+                        if user:
+                            users.append(user)
+                    return json.dumps(users[startoffset:endoffset])
+                elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
+                    page = int(request.form['page'])
+                    if page == 1:
+                        startoffset = 0
+                    else:
+                        startoffset = (page - 1) * COUNT_PER_PAGE
+                    endoffset = startoffset + COUNT_PER_PAGE - 1
+                    uids = getFieldUsersByScores(model, startoffset, endoffset)
+                    uidlist = [int(uid) for uid in uids]
+                    users = User.query.filter(User.id.in_(uidlist)).all()
+                    return json.dumps([i.serialize for i in users])
+                elif model == 'person':
+                    nickname = urllib2.unquote(request.form['nickname'])
+                    users = User.query.filter(User.userName==nickname).all()
+                    return json.dumps([i.serialize for i in users])
+                elif model in ['statuses', 'friends', 'followers']:
+                    low = int(request.form['low'])
+                    up = int(request.form['up'])
+                    page = int(request.form['page'])
+                    if page == 1:
+                        startoffset = 0
+                    else:
+                        startoffset = (page - 1) * COUNT_PER_PAGE
+                    sorted_key = '%s_count' % model
+                    query_dict = { sorted_key: {
+                            '$gt': low,
+                            '$lt': up,
+                        }
+                    }
+                    count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
+                                                       fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                       sort_by=['-' + sorted_key])
+                    users = []
+                    for r in get_results():
+                        statusesCount = r['statuses_count']
+                        followersCount = r['followers_count']
+                        friendsCount = r['friends_count']
+                        userName = r['name']
+                        description = r['description']
+                        uid = r['_id']
+                        profileImageUrl = r['profile_image_url']
+                        users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
+                                      'description': description, 'profileImageUrl': profileImageUrl})
+                    return json.dumps(users)
+                elif model == 'province':
+                    province = request.form['province']
+                    basequery = User.query.filter(User.location.startswith(province)).limit(1000)#.order_by(User.followersCount.desc())
+                    page = int(request.form['page'])
+                    users = basequery.paginate(page, COUNT_PER_PAGE, False).items
+                    return json.dumps([i.serialize for i in users])
         else:
-            return render_template('profile/profile_search.html',statuscount=statuscount,
-                                   friendscount=friendscount, followerscount=followerscount,
-                                   location=province, field=field, model=model, result=None)
-    if request.method == 'POST' and request.form['page']:
-        if model == 'newest':
-            page = int(request.form['page'])
-            if page == 1:
-                startoffset = 0
-            else:
-                startoffset = (page - 1) * COUNT_PER_PAGE
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.profile
+                    if identy == 1:
+                        if request.method == 'GET':
+                            statuscount, friendscount, followerscount, province, field = getStaticInfo()
+                            if model == 'person':
+                                nickname = urllib2.unquote(request.args.get('nickname'))
+                                return render_template('profile/profile_search.html',statuscount=statuscount,
+                                                       friendscount=friendscount, followerscount=followerscount,
+                                                       location=province, field=field, model=model, result=None, nickname=nickname)
+                            elif model in ['statuses', 'friends', 'followers']:
+                                low = int(request.args.get('low'))
+                                up = int(request.args.get('up'))
+                                return render_template('profile/profile_search.html',statuscount=statuscount,
+                                                       friendscount=friendscount, followerscount=followerscount,
+                                                       location=province, field=field, model=model, result=None, low=low, up=up)
+                            elif model == 'province':
+                                province_arg = request.args.get('province')
+                                return render_template('profile/profile_search.html',statuscount=statuscount,
+                                                       friendscount=friendscount, followerscount=followerscount,
+                                                       location=province, field=field, model=model, result=None, province=province_arg)
+                            else:
+                                return render_template('profile/profile_search.html',statuscount=statuscount,
+                                                       friendscount=friendscount, followerscount=followerscount,
+                                                       location=province, field=field, model=model, result=None)
+                        if request.method == 'POST' and request.form['page']:
+                            if model == 'newest':
+                                page = int(request.form['page'])
+                                if page == 1:
+                                    startoffset = 0
+                                else:
+                                    startoffset = (page - 1) * COUNT_PER_PAGE
 
-            total_days = 90
-            today = datetime.datetime.today()
-            now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
-            now_ts = int(now_ts)
-            during = 24 * 3600
-            begin_ts = now_ts - total_days * during
+                                total_days = 90
+                                today = datetime.datetime.today()
+                                now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+                                now_ts = int(now_ts)
+                                during = 24 * 3600
+                                begin_ts = now_ts - total_days * during
 
-            query_dict = {
-                'created_at': {
-                    '$gt': begin_ts,
-                    '$lt': now_ts,
-                }
-            }
-            count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
-                                               fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                               sort_by=['-created_at'])
-            users = []
-            for r in get_results():
-                statusesCount = r['statuses_count']
-                followersCount = r['followers_count']
-                friendsCount = r['friends_count']
-                userName = r['name']
-                description = r['description']
-                uid = r['_id']
-                profileImageUrl = r['profile_image_url']
-                users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                              'description': description, 'profileImageUrl': profileImageUrl})
-            return json.dumps(users)
-        elif model == 'hotest':
-            from utils import active_rank
-            current_time = '2013-3-7'
-            window_size = 1
-            top_n = 2000
-            rank_results = active_rank(top_n, current_time, window_size)
-            users = []
-            page = int(request.form['page'])
-            if page == 1:
-                startoffset = 0
-            else:
-                startoffset = (page - 1) * COUNT_PER_PAGE
-            endoffset = startoffset + COUNT_PER_PAGE - 1
-            for uid in rank_results:
-                user = getUserInfoById(uid)
-                if user:
-                    users.append(user)
-            return json.dumps(users[startoffset:endoffset])
-        elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
-            page = int(request.form['page'])
-            if page == 1:
-                startoffset = 0
-            else:
-                startoffset = (page - 1) * COUNT_PER_PAGE
-            endoffset = startoffset + COUNT_PER_PAGE - 1
-            uids = getFieldUsersByScores(model, startoffset, endoffset)
-            uidlist = [int(uid) for uid in uids]
-            users = User.query.filter(User.id.in_(uidlist)).all()
-            return json.dumps([i.serialize for i in users])
-        elif model == 'person':
-            nickname = urllib2.unquote(request.form['nickname'])
-            users = User.query.filter(User.userName==nickname).all()
-            return json.dumps([i.serialize for i in users])
-        elif model in ['statuses', 'friends', 'followers']:
-            low = int(request.form['low'])
-            up = int(request.form['up'])
-            page = int(request.form['page'])
-            if page == 1:
-                startoffset = 0
-            else:
-                startoffset = (page - 1) * COUNT_PER_PAGE
-            sorted_key = '%s_count' % model
-            query_dict = { sorted_key: {
-                    '$gt': low,
-                    '$lt': up,
-                }
-            }
-            count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
-                                               fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                               sort_by=['-' + sorted_key])
-            users = []
-            for r in get_results():
-                statusesCount = r['statuses_count']
-                followersCount = r['followers_count']
-                friendsCount = r['friends_count']
-                userName = r['name']
-                description = r['description']
-                uid = r['_id']
-                profileImageUrl = r['profile_image_url']
-                users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                              'description': description, 'profileImageUrl': profileImageUrl})
-            return json.dumps(users)
-        elif model == 'province':
-            province = request.form['province']
-            basequery = User.query.filter(User.location.startswith(province)).limit(1000)#.order_by(User.followersCount.desc())
-            page = int(request.form['page'])
-            users = basequery.paginate(page, COUNT_PER_PAGE, False).items
-            return json.dumps([i.serialize for i in users])
+                                query_dict = {
+                                    'created_at': {
+                                        '$gt': begin_ts,
+                                        '$lt': now_ts,
+                                    }
+                                }
+                                count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
+                                                                   fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                                   sort_by=['-created_at'])
+                                users = []
+                                for r in get_results():
+                                    statusesCount = r['statuses_count']
+                                    followersCount = r['followers_count']
+                                    friendsCount = r['friends_count']
+                                    userName = r['name']
+                                    description = r['description']
+                                    uid = r['_id']
+                                    profileImageUrl = r['profile_image_url']
+                                    users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
+                                              'description': description, 'profileImageUrl': profileImageUrl})
+                                return json.dumps(users)
+                            elif model == 'hotest':
+                                from utils import active_rank
+                                current_time = '2013-3-7'
+                                window_size = 1
+                                top_n = 2000
+                                rank_results = active_rank(top_n, current_time, window_size)
+                                users = []
+                                page = int(request.form['page'])
+                                if page == 1:
+                                    startoffset = 0
+                                else:
+                                    startoffset = (page - 1) * COUNT_PER_PAGE
+                                endoffset = startoffset + COUNT_PER_PAGE - 1
+                                for uid in rank_results:
+                                    user = getUserInfoById(uid)
+                                    if user:
+                                        users.append(user)
+                                return json.dumps(users[startoffset:endoffset])
+                            elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
+                                page = int(request.form['page'])
+                                if page == 1:
+                                    startoffset = 0
+                                else:
+                                    startoffset = (page - 1) * COUNT_PER_PAGE
+                                endoffset = startoffset + COUNT_PER_PAGE - 1
+                                uids = getFieldUsersByScores(model, startoffset, endoffset)
+                                uidlist = [int(uid) for uid in uids]
+                                users = User.query.filter(User.id.in_(uidlist)).all()
+                                return json.dumps([i.serialize for i in users])
+                            elif model == 'person':
+                                nickname = urllib2.unquote(request.form['nickname'])
+                                users = User.query.filter(User.userName==nickname).all()
+                                return json.dumps([i.serialize for i in users])
+                            elif model in ['statuses', 'friends', 'followers']:
+                                low = int(request.form['low'])
+                                up = int(request.form['up'])
+                                page = int(request.form['page'])
+                                if page == 1:
+                                    startoffset = 0
+                                else:
+                                    startoffset = (page - 1) * COUNT_PER_PAGE
+                                sorted_key = '%s_count' % model
+                                query_dict = { sorted_key: {
+                                        '$gt': low,
+                                        '$lt': up,
+                                    }
+                                }
+                                count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
+                                                                   fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                                   sort_by=['-' + sorted_key])
+                                users = []
+                                for r in get_results():
+                                    statusesCount = r['statuses_count']
+                                    followersCount = r['followers_count']
+                                    friendsCount = r['friends_count']
+                                    userName = r['name']
+                                    description = r['description']
+                                    uid = r['_id']
+                                    profileImageUrl = r['profile_image_url']
+                                    users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
+                                                  'description': description, 'profileImageUrl': profileImageUrl})
+                                return json.dumps(users)
+                            elif model == 'province':
+                                province = request.form['province']
+                                basequery = User.query.filter(User.location.startswith(province)).limit(1000)#.order_by(User.followersCount.desc())
+                                page = int(request.form['page'])
+                                users = basequery.paginate(page, COUNT_PER_PAGE, False).items
+                                return json.dumps([i.serialize for i in users])
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 @mod.route('/micro_ajax_tab/<module>/', methods=['POST', 'GET'])
 def micro_ajax_tab(module):
-    if request.method == 'GET':
-        form = request.args
-        query = form.get('query', None)
-        startstr = form.get('startdate', None)
-        endstr = form.get('enddate', None)
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            if request.method == 'GET':
+                form = request.args
+                query = form.get('query', None)
+                startstr = form.get('startdate', None)
+                endstr = form.get('enddate', None)
 
-        window_size = (datetime.date.fromtimestamp(time2ts(endstr)) - datetime.date.fromtimestamp(time2ts(startstr))).days
+                window_size = (datetime.date.fromtimestamp(time2ts(endstr)) - datetime.date.fromtimestamp(time2ts(startstr))).days
         
-        if query:
-            topic_id = acquire_topic_id(query)
+                if query:
+                    topic_id = acquire_topic_id(query)
 
-        if module == 'identify':
-            return render_template('profile/ajax/micro_identify.html', window_size=window_size, page_num=10, top_n=2000, topic=query, enddate=endstr)
-        if module == 'keyweibo':
-            return render_template('profile/ajax/micro_keyweibo.html')
-        if module == 'subevent':
-            return render_template('profile/ajax/micro_subevent.html')
+                if module == 'identify':
+                    return render_template('profile/ajax/micro_identify.html', window_size=window_size, page_num=10, top_n=2000, topic=query, enddate=endstr)
+                if module == 'keyweibo':
+                    return render_template('profile/ajax/micro_keyweibo.html')
+                if module == 'subevent':
+                    return render_template('profile/ajax/micro_subevent.html')
+                else:
+                    pass
         else:
-            pass
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.profile
+                    if identy == 1:
+                        if request.method == 'GET':
+                            form = request.args
+                            query = form.get('query', None)
+                            startstr = form.get('startdate', None)
+                            endstr = form.get('enddate', None)
+
+                            window_size = (datetime.date.fromtimestamp(time2ts(endstr)) - datetime.date.fromtimestamp(time2ts(startstr))).days
+        
+                            if query:
+                                topic_id = acquire_topic_id(query)
+
+                            if module == 'identify':
+                                return render_template('profile/ajax/micro_identify.html', window_size=window_size, page_num=10, top_n=2000, topic=query, enddate=endstr)
+                            if module == 'keyweibo':
+                                return render_template('profile/ajax/micro_keyweibo.html')
+                            if module == 'subevent':
+                                return render_template('profile/ajax/micro_subevent.html')
+                            else:
+                                pass
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 #new
 @mod.route('/group/<fieldEnName>', methods=['GET', 'POST'])
 def profile_group(fieldEnName):
-    field = FieldProfile.query.all()
-    return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            field = FieldProfile.query.all()
+            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
+        else:
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.profile
+                    if identy == 1:
+                        field = FieldProfile.query.all()
+                        return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):
-    if uid:
-        count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
-                                          'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
-        if count > 0:
-            for r in get_results():
-                user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  unicode(r['name'], 'utf-8'), 'friends_count': r['friends_count'], \
-                        'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
-                        'verified': r['verified'], 'created_at': r['created_at'], 'location': unicode(r['location'], "utf-8")}
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            if uid:
+                count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
+                                                  'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
+                if count > 0:
+                    for r in get_results():
+                        user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  unicode(r['name'], 'utf-8'), 'friends_count': r['friends_count'], \
+                                'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
+                                'verified': r['verified'], 'created_at': r['created_at'], 'location': unicode(r['location'], "utf-8")}
+                else:
+                    return 'no such user'
+            return render_template('profile/profile_person.html', user=user)
         else:
-            return 'no such user'
-    return render_template('profile/profile_person.html', user=user)
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.profile
+                    if identy == 1:
+                        if uid:
+                            count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
+                                                              'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
+                            if count > 0:
+                                for r in get_results():
+                                    user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  unicode(r['name'], 'utf-8'), 'friends_count': r['friends_count'], \
+                                            'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
+                                            'verified': r['verified'], 'created_at': r['created_at'], 'location': unicode(r['location'], "utf-8")}
+                            else:
+                                return 'no such user'
+                        return render_template('profile/profile_person.html', user=user)
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 
 
@@ -565,62 +787,143 @@ def search_uid_by_username(username):
 
 @mod.route('/topic/', methods=['POST', 'GET'])
 def index():
-    error = None
-    if request.method == 'GET':
-        return render_template('index.html')
-    elif request.method == 'POST':
-        form = request.form
-        query = form.get('keyword', None)
-        level = form.get('level', None)
-        startstr = form.get('startdate', None)
-        endstr = form.get('enddate', None)
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            error = None
+            if request.method == 'GET':
+                return render_template('index.html')
+            elif request.method == 'POST':
+                form = request.form
+                query = form.get('keyword', None)
+                level = form.get('level', None)
+                startstr = form.get('startdate', None)
+                endstr = form.get('enddate', None)
 
-        if query:
-            topic_id = acquire_topic_id(query)
-            if level == 'macroview':
-                return render_template('macroview.html', keyword=query, startdate=startstr, enddate=endstr)
-            elif level == 'microview':
-                return render_template('microview.html', keyword=query, startdate=startstr, enddate=endstr)
-            else:
-                pass
+                if query:
+                    topic_id = acquire_topic_id(query)
+                    if level == 'macroview':
+                        return render_template('macroview.html', keyword=query, startdate=startstr, enddate=endstr)
+                    elif level == 'microview':
+                        return render_template('microview.html', keyword=query, startdate=startstr, enddate=endstr)
+                    else:
+                        pass
+                else:
+                    flash(u'请输入事件关键词！')
+                    return render_template('index.html')
         else:
-            flash(u'请输入事件关键词！')
-            return render_template('index.html')
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.profile
+                    if identy == 1:
+                        error = None
+                        if request.method == 'GET':
+                            return render_template('index.html')
+                        elif request.method == 'POST':
+                            form = request.form
+                            query = form.get('keyword', None)
+                            level = form.get('level', None)
+                            startstr = form.get('startdate', None)
+                            endstr = form.get('enddate', None)
+
+                            if query:
+                                topic_id = acquire_topic_id(query)
+                                if level == 'macroview':
+                                    return render_template('macroview.html', keyword=query, startdate=startstr, enddate=endstr)
+                                elif level == 'microview':
+                                    return render_template('microview.html', keyword=query, startdate=startstr, enddate=endstr)
+                                else:
+                                    pass
+                            else:
+                                flash(u'请输入事件关键词！')
+                                return render_template('index.html')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
+    
 @mod.route('/person_tab_ajax/<model>/<uid>')
 def profile_person_tab_ajax(model, uid):
-    if model == 'personaltopic':
-        field_bucket = get_bucket('user_daily_field')
-        try:
-            fields = field_bucket.Get(str(uid) + '_' + '20130430')
-            field1, field2 = fields.split(',')
-            field1 = unicode(fieldsEn2Zh(field1), 'utf-8')
-            field2 = unicode(fieldsEn2Zh(field2), 'utf-8')
-        except KeyError:
-            field1 = 'unknown'
-            field2 = 'unknown'
-            field1 = unicode('未知', 'utf-8')
-            field2 = unicode('未知', 'utf-8')
-        return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=field1 + ',' + field2)
-    elif model == 'personalweibocount':
-        return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
-    elif model == 'personalnetwork':
-        return render_template('profile/ajax/personal_network.html', uid=uid)
-    elif model == 'personalnetwork_follow':       
-        return render_template('profile/ajax/personalnetwork_follow.html', uid=uid)
-    elif model == 'personalinteractnetwork':
-        return render_template('profile/ajax/personal_friends_followers.html', uid=uid)
-    elif model == 'grouptopic':
-        return render_template('profile/ajax/group_word_cloud.html', field=uid)
-    elif model == 'groupweibocount':
-        return render_template('profile/ajax/group_weibo_count.html', field=uid)
-    elif model == 'grouprank':
-        return render_template('profile/ajax/group_rank_bloggers.html', field=uid)
-    elif model == 'grouplocation':
-        return render_template('profile/ajax/group_location.html', field=uid)
-    elif model == 'groupactive':
-        return render_template('profile/ajax/group_active.html', field=uid)
-    elif model == 'groupemotion':
-        return render_template('profile/ajax/group_emotion.html', field=uid)
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            if model == 'personaltopic':
+                field_bucket = get_bucket('user_daily_field')
+                try:
+                    fields = field_bucket.Get(str(uid) + '_' + '20130430')
+                    field1, field2 = fields.split(',')
+                    field1 = unicode(fieldsEn2Zh(field1), 'utf-8')
+                    field2 = unicode(fieldsEn2Zh(field2), 'utf-8')
+                except KeyError:
+                    field1 = 'unknown'
+                    field2 = 'unknown'
+                    field1 = unicode('未知', 'utf-8')
+                    field2 = unicode('未知', 'utf-8')
+                return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=field1 + ',' + field2)
+            elif model == 'personalweibocount':
+                return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
+            elif model == 'personalnetwork':
+                return render_template('profile/ajax/personal_network.html', uid=uid)
+            elif model == 'personalnetwork_follow':       
+                return render_template('profile/ajax/personalnetwork_follow.html', uid=uid)
+            elif model == 'personalinteractnetwork':
+                return render_template('profile/ajax/personal_friends_followers.html', uid=uid)
+            elif model == 'grouptopic':
+                return render_template('profile/ajax/group_word_cloud.html', field=uid)
+            elif model == 'groupweibocount':
+                return render_template('profile/ajax/group_weibo_count.html', field=uid)
+            elif model == 'grouprank':
+                return render_template('profile/ajax/group_rank_bloggers.html', field=uid)
+            elif model == 'grouplocation':
+                return render_template('profile/ajax/group_location.html', field=uid)
+            elif model == 'groupactive':
+                return render_template('profile/ajax/group_active.html', field=uid)
+            elif model == 'groupemotion':
+                return render_template('profile/ajax/group_emotion.html', field=uid)
+        else:
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.profile
+                    if identy == 1:
+                        if model == 'personaltopic':
+                            field_bucket = get_bucket('user_daily_field')
+                            try:
+                                fields = field_bucket.Get(str(uid) + '_' + '20130430')
+                                field1, field2 = fields.split(',')
+                                field1 = unicode(fieldsEn2Zh(field1), 'utf-8')
+                                field2 = unicode(fieldsEn2Zh(field2), 'utf-8')
+                            except KeyError:
+                                field1 = 'unknown'
+                                field2 = 'unknown'
+                                field1 = unicode('未知', 'utf-8')
+                                field2 = unicode('未知', 'utf-8')
+                            return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=field1 + ',' + field2)
+                        elif model == 'personalweibocount':
+                            return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
+                        elif model == 'personalnetwork':
+                            return render_template('profile/ajax/personal_network.html', uid=uid)
+                        elif model == 'personalnetwork_follow':       
+                            return render_template('profile/ajax/personalnetwork_follow.html', uid=uid)
+                        elif model == 'personalinteractnetwork':
+                            return render_template('profile/ajax/personal_friends_followers.html', uid=uid)
+                        elif model == 'grouptopic':
+                            return render_template('profile/ajax/group_word_cloud.html', field=uid)
+                        elif model == 'groupweibocount':
+                            return render_template('profile/ajax/group_weibo_count.html', field=uid)
+                        elif model == 'grouprank':
+                            return render_template('profile/ajax/group_rank_bloggers.html', field=uid)
+                        elif model == 'grouplocation':
+                            return render_template('profile/ajax/group_location.html', field=uid)
+                        elif model == 'groupactive':
+                            return render_template('profile/ajax/group_active.html', field=uid)
+                        elif model == 'groupemotion':
+                            return render_template('profile/ajax/group_emotion.html', field=uid)
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 def last_day(day_num=1):
     from datetime import date, timedelta

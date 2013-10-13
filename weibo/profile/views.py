@@ -21,7 +21,6 @@ import model
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url
 from time_utils import ts2datetime, datetime2ts, window2time, ts2HMS
 from utils import top_keywords
-from xapian_weibo.xapian_backend_extra import Schema
 from xapian_weibo.xapian_backend import XapianSearch
 #new
 import time

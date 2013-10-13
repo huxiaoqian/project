@@ -25,7 +25,7 @@
     <a class="brand" href="/">***原型系统</a>
     <div class="nav-collapse">
       <ul class="nav">
-        <!--<li><a href="/">首页</a></li>-->
+        <li><a href="/">首页</a></li>
         <li class="active"><a href="/profile/person/1813080181">单个用户特征展示</a></li>
         <li><a href="/profile/group/finance">领域特征展示</a></li>
         <li><a href="/profile/search/">博主特征搜索与分领域展示</a></li>   
@@ -72,10 +72,11 @@
         </div>
         <div class="span9" id="index-tabs">
           <ul class="nav nav-tabs">
-            <li><a href="/profile/person_tab_ajax/personaltopic/{{user.id}}" >话题兴趣</a></li>
-            <li><a href="/profile/person_tab_ajax/personalnetwork/{{user.id}}">社会网络结构</a></li>
-            <li><a href="/profile/person_tab_ajax/personal_friends_followers/{{user.id}}">关注及粉丝领域分布</a></li>
-            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">微博数量走势</a></li>
+            <li><a href="/profile/person_tab_ajax/personaltopic/{{user.id}}" >兴趣偏好</a></li>
+            <li><a href="/profile/person_tab_ajax/personalnetwork/{{user.id}}">关注结构</a></li>
+            <li><a href="/profile/person_tab_ajax/personal_friends_followers/{{user.id}}">粉丝结构</a></li>
+            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">行为信息</a></li>
+            <li><a href="/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}">交互结构</a></li>
           </ul>
         </div>
       </div><!--.row-fluid end--> 
@@ -95,8 +96,5 @@
       }
     });
   })
-  
   </script>
 {% endblock script %}
-
-

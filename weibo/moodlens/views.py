@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from flask import Blueprint, render_template, request, session, redirect
-from xapian_weibo.xapian_backend_extra import Schema
 from xapian_weibo.xapian_backend import XapianSearch
 from utils import top_keywords, getWeiboByMid, st_variation, find_topN
 import simplejson as json

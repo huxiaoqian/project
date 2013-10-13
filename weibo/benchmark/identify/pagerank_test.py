@@ -15,7 +15,7 @@ from xapian_weibo.xapian_backend import XapianSearch
 
 from pagerank import pagerank
 
-statuses_search = XapianSearch(path='/opt/xapian_weibo/data/faked/', name='master_timeline_weibo', schema_version=2)
+statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 
 users_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
@@ -188,150 +188,150 @@ def main():
     '''仿真网络 PageRank并行计算性能测试
     '''
     # #50,000 nodes pagerank
-    # #time: 129.24s
-    # tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    # tmp_file = emulate(tmp_file, size=50000)
-    # input_path = tmp_file.name
-    # pagerank_simluation_test(input_path)
+    # #time: 129.24s(multi 126.01)
+    #tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    #tmp_file = emulate(tmp_file, size=50000)
+    #input_path = tmp_file.name
+    #pagerank_simluation_test(input_path)
 
     # #100,000 nodes pagerank
-    # #time: 134.65s
-    # tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    # tmp_file = emulate(tmp_file, size=100000)
-    # input_path = tmp_file.name
-    # pagerank_simluation_test(input_path)
+    # #time: 134.65s（multi 148.18)
+    #tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    #tmp_file = emulate(tmp_file, size=100000)
+    #input_path = tmp_file.name
+    #pagerank_simluation_test(input_path)
 
     # #500,000 nodes pagerank
-    # #time: 231.92s
-    # tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    # tmp_file = emulate(tmp_file, size=500000)
-    # input_path = tmp_file.name
-    # pagerank_simluation_test(input_path)
+    # #time: 231.92s(multi 134.70)
+    #tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    #tmp_file = emulate(tmp_file, size=500000)
+    #input_path = tmp_file.name
+    #pagerank_simluation_test(input_path)
 
     # #1000,000 nodes pagerank
-    # #time: 358.85s
-    # tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    # tmp_file = emulate(tmp_file, size=1000000)
-    # input_path = tmp_file.name
-    # pagerank_simluation_test(input_path)
+    # #time: 358.85s(multi 168.27)
+    #tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    #tmp_file = emulate(tmp_file, size=1000000)
+    #input_path = tmp_file.name
+    #pagerank_simluation_test(input_path)
 
     # #3000,000 nodes pagerank
-    # #time: 764.14s
-    # tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    # tmp_file = emulate(tmp_file, size=3000000)
-    # input_path = tmp_file.name
-    # pagerank_simluation_test(input_path)
+    # #time: 764.14s(multi 239.23)
+    #tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    #tmp_file = emulate(tmp_file, size=3000000)
+    #input_path = tmp_file.name
+    #pagerank_simluation_test(input_path)
 
 
     '''话题网络 PageRank并行计算性能测试
     '''
     # #search statuses
-    # #time: 6.96s
-    # #hit: 100000
-    # topic = u'两会'
-    # date = '2013-5-1' 
-    # window = 90
-    # results = search_topic_statuses(topic, date, window, max_size=100000)
+    # #time: 6.96s(multi 6.54)
+    # #hit: 100000(multi 33940)
+    #topic = u'两会'
+    #date = '2013-5-1' 
+    #window = 90
+    #results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
-    # #time: 305.66s
-    # g = load_topic_statuses(results)
+    # #time: 305.66s(multi 41.90)
+    #g = load_topic_statuses(results)
     # #prepartion for hadoop
-    # #time: 0.08s
-    # input_file = prepare_topic_statusesfor_hadoop(g)
-    # input_path = input_file.name
+    # #time: 0.08s(multi 0.07)
+    #input_file = prepare_topic_statusesfor_hadoop(g)
+    #input_path = input_file.name
     # #mapreduce on hadoop
-    # #time: 108.94s
-    # pagerank_simluation_test(input_path)
+    # #time: 108.94s(multi 3.01)
+    #pagerank_simluation_test(input_path)
 
     # #search statuses max_size=100000
-    # #time: 43.81s
-    # #hit: 100000
-    # topic = u'春节'
-    # date = '2013-3-1'
-    # window = 90
-    # results = search_topic_statuses(topic, date, window, max_size=100000)
+    # #time: 43.81s(multi 10.15)
+    # #hit: 100000(multi 100000)
+    #topic = u'春节'
+    #date = '2013-3-1'
+    #window = 90
+    #results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
-    # #time: 66.52s
-    # g = load_topic_statuses(results)
+    # #time: 66.52s(multi 45.68)
+    #g = load_topic_statuses(results)
     # #prepartion for hadoop
-    # #time: 0.00s
-    # input_file = prepare_topic_statusesfor_hadoop(g)
-    # input_path = input_file.name
+    # #time: 0.00s(multi 0.24)
+    #input_file = prepare_topic_statusesfor_hadoop(g)
+    #input_path = input_file.name
     # #mapreduce on hadoop
-    # #time: 107.95s
-    # pagerank_simluation_test(input_path)
+    # #time: 107.95s(multi 122.36)
+    #pagerank_simluation_test(input_path)
 
     # #search statuses max_size=100000
-    # #time: 5.39s
-    # #hit: 29149
-    # topic = u'钓鱼岛'
-    # date = '2013-5-1'
-    # window = 90
-    # results = search_topic_statuses(topic, date, window, max_size=100000)
+    # #time: 5.39s(multi 1.89)
+    # #hit: 29149(multi 10851)
+    #topic = u'钓鱼岛'
+    #date = '2013-5-1'
+    #window = 90
+    #results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
-    # #time: 5.14s
-    # g = load_topic_statuses(results)
+    # #time: 5.14s(multi 3.80)
+    #g = load_topic_statuses(results)
     # #prepartion for hadoop
-    # #time: 0.03s
-    # input_file = prepare_topic_statusesfor_hadoop(g)
-    # input_path = input_file.name
+    # #time: 0.03s(multi 0.03)
+    #input_file = prepare_topic_statusesfor_hadoop(g)
+    #input_path = input_file.name
     # #mapreduce on hadoop
-    # #time: 108.19s
-    # pagerank_simluation_test(input_path)
+    # #time: 108.19s(multi 140.67)
+    #pagerank_simluation_test(input_path)
 
     # #search statuses max_size=100000
-    # #time: 73.63s
-    # #hit: 100000
-    # topic = u'新浪'
-    # date = '2013-5-1'
-    # window = 90
-    # results = search_topic_statuses(topic, date, window, max_size=100000)
+    # #time: 73.63s(multi 9.67)
+    # #hit: 100000(multi 100000)
+    #topic = u'新浪'
+    #date = '2013-5-1'
+    #window = 90
+    #results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
-    # #time: 105.09s
-    # g = load_topic_statuses(results)
+    # #time: 105.09s(multi 69.75)
+    #g = load_topic_statuses(results)
     # #prepartion for hadoop
-    # #time: 0.15s
-    # input_file = prepare_topic_statusesfor_hadoop(g)
-    # input_path = input_file.name
+    # #time: 0.15s(multi 0.06)
+    #input_file = prepare_topic_statusesfor_hadoop(g)
+    #input_path = input_file.name
     # #mapreduce on hadoop
-    # #time: 118s
-    # pagerank_simluation_test(input_path)
+    # #time: 118s(multi 114.84)
+    #pagerank_simluation_test(input_path)
 
     # #search statuses max_size=100000
-    # #time: 1.43s
-    # #hit: 2130
-    # topic = u'神舟'
-    # date = '2013-5-1'
-    # window = 90
-    # results = search_topic_statuses(topic, date, window, max_size=100000)
+    # #time: 1.43s(multi 0.41)
+    # #hit: 2130(multi 796)
+    #topic = u'神舟'
+    #date = '2013-5-1'
+    #window = 90
+    #results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
-    # #time: 21.87s
-    # g = load_topic_statuses(results)
+    # #time: 21.87s(multi 5.82)
+    #g = load_topic_statuses(results)
     # #prepartion for hadoop
-    # #time: 0.05s
-    # input_file = prepare_topic_statusesfor_hadoop(g)
-    # input_path = input_file.name
+    # #time: 0.05s(multi 0.00)
+    #input_file = prepare_topic_statusesfor_hadoop(g)
+    #input_path = input_file.name
     # #mapreduce on hadoop
-    # #time: 105.85s
-    # pagerank_simluation_test(input_path)
+    # #time: 105.85s(multi )(multi 145.97)
+    #pagerank_simluation_test(input_path)
 
     # #search statuses max_size=100000
-    # #time: 21.48s
-    # #hit: 76200
-    # topic = u'黄金'
-    # date = '2013-5-1'
-    # window = 90
-    # results = search_topic_statuses(topic, date, window, max_size=100000)
+    # #time: 21.48s(multi 4.24)
+    # #hit: 76200(multi 27914)
+    topic = u'黄金'
+    date = '2013-5-1'
+    window = 90
+    results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
-    # #time: 548.06s
-    # g = load_topic_statuses(results)
+    # #time: 548.06s(multi 89.45)
+    g = load_topic_statuses(results)
     # #prepartion for hadoop
-    # #time: 0.06s
-    # input_file = prepare_topic_statusesfor_hadoop(g)
-    # input_path = input_file.name
+    # #time: 0.06s(multi 0.06)
+    input_file = prepare_topic_statusesfor_hadoop(g)
+    input_path = input_file.name
     # #mapreduce on hadoop
-    # #time: 106.85s
-    # pagerank_simluation_test(input_path)
+    # #time: 106.85s(multi 109.60)
+    pagerank_simluation_test(input_path)
 
 
     '''

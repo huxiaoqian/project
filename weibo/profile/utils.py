@@ -2,22 +2,32 @@
 
 import time
 from datetime import datetime, timedelta, date
-from config import db
-from config import app as current_app
 from flask import request
-from model import *
+from weibo.extensions import db
+from weibo.model import *
 from sqlalchemy import func
 import json
-import redis
 import leveldb
 import os
 import operator
+import re
+from xapian_weibo.xapian_backend import XapianSearch
 
-redis_host = 'localhost'
-redis_port = 6379
-redis_conn = redis.Redis(redis_host, redis_port)
+xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+xapian_search_domain  = XapianSearch(path='/home/xapian/var/lib/xapian_weibo/data/liumengni', name='master_timeline_domain',schema_version=4)
+fields_id = {'culture':1,'education':2,'entertainment':3,'fashion':4,'finance':5,'media':6,'sports':7,'technology':8}
 
 LEVELDBPATH = '/home/mirage/leveldb'
+
+def datetime2ts(date):
+    return time.mktime(time.strptime(date, '%Y-%m-%d'))
+
+def ts2HMS(ts):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))
+
+def ts2hour(ts):
+    return int(time.strftime('%H', time.localtime(ts)))
+
 def get_above100_weibos(topic_id, start_ts, end_ts, page):
     topic = acquire_topic_name(topic_id)
     if not topic:
@@ -90,12 +100,6 @@ def base62_encode(num, alphabet=ALPHABET):
         arr.append(alphabet[rem])
     arr.reverse()
     return ''.join(arr)
-
-def top_keywords(get_results, top=1000):
-    keywords_with_count = keywords(get_results)
-    keywords_with_count.sort(key=operator.itemgetter(1))
-
-    return keywords_with_count[len(keywords_with_count) - top:]
 
 def make_network_graph(current_date, topic_id, window_size, key_user_labeled=True):
     date = current_date
@@ -180,6 +184,7 @@ def degree_rank(top_n, date, topic_id, window_size):
     data = save_rank_results(sorted_uids, 'area', 'degree', date, window_size, topic_id=topic_id)
 
     return data
+
 def acquire_topic_id(name):
     item = db.session.query(Topic).filter_by(topicName=name).first()
     if not item:
@@ -250,7 +255,7 @@ def active_rank(top_n, date, window_size):
     if window_size == 1:
         db_name = get_leveldb('active', date_time)
         daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
-                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
         
         for uid, active in daily_user_active_bucket.RangeIter():
             uid = int(uid)
@@ -284,10 +289,13 @@ def active_rank(top_n, date, window_size):
     return data
 
 def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='20130430'):
-    sorted_key = 'followers_count'
-    sortedset_key = 'linhao_dailyfielduser_%s_%s_%s' % (update_date, fieldName, sorted_key)
-    result = redis_conn.zrevrange(sortedset_key, start_offset, end_offset, withscores=False)
-    return result
+    query_dict = {
+        'domain': str(fields_id[fieldName]),
+        'followers_count': {'$gt': 1000}
+    }
+    count, get_results = xapian_search_domain.search(query=query_dict, sort_by =['followers_count'], fields=['_id'], max_offset=10000)
+    fields_list = [user['_id'] for user in get_results()]
+    return fields_list[start_offset:end_offset]
 
 def timeit(method):
     def timed(*args, **kw):
@@ -333,10 +341,9 @@ def local2datetime(time_str):
     return datetime.fromtimestamp(int(time.mktime(time.strptime(time_str, time_format))))
 
 def ts2datetime(ts):
-     return datetime.fromtimestamp(int(float(ts)))
+    return time.strftime('%Y-%m-%d', time.localtime(ts))
 
-def datetime2ts(date):
-    return time.mktime(time.strptime(date, '%Y-%m-%d'))
+
 
 def ts2date(ts):
     return date.fromtimestamp(int(float(ts)))
@@ -380,6 +387,26 @@ def last_day(day_num=1):
     now_date = date.today()
     last_date = now_date - timedelta(days=day_num)
     return last_date.isoformat(), now_date.isoformat()
+
+def emoticon_find(text):
+    seed_set = get_official_seed_set()
+    emotion_pattern = r'\[(\S+?)\]'
+    remotions = re.findall(emotion_pattern, text)
+
+    emoticons = []
+    if remotions:
+        for e in remotions:
+            if e in seed_set:
+                emoticons.append(e.decode('utf-8'))
+
+    return emoticons
+
+def get_official_seed_set():
+    seed_set = set([])
+    with open('weibo/profile/data/official_emoticons.txt') as f:
+        for l in f:
+            seed_set.add(l.rstrip())
+    return seed_set
 
 def main():
     #last_week()

@@ -56,9 +56,9 @@
             user = data['users'][i];
             html += "<tr><td>" + user['id'] + "</td>";
             html += "<td>" + user['userName'] + "</td>";
-            html += "<td>" + user['statusesCount'] + "</td>";
-            html += "<td>" + user['followersCount'] + "</td>";
-            html += "<td>" + user['friendsCount'] + "</td>";
+            html += "<td>" + user['statuses_count'] + "</td>";
+            html += "<td>" + user['followers_count'] + "</td>";
+            html += "<td>" + user['friends_count'] + "</td>";
             html += "<td>" + v_kv[user['verified']] + "</td>";
             html += "<td>" + sex_kv[user['gender']] + "</td></tr>";
           }
@@ -79,9 +79,9 @@
                       user = data['users'][i];
                       html += "<tr><td>" + user['id'] + "</td>";
                       html += "<td>" + user['userName'] + "</td>";
-                      html += "<td>" + user['statusesCount'] + "</td>";
-                      html += "<td>" + user['followersCount'] + "</td>";
-                      html += "<td>" + user['friendsCount'] + "</td>";
+                      html += "<td>" + user['statuses_count'] + "</td>";
+                      html += "<td>" + user['followers_count'] + "</td>";
+                      html += "<td>" + user['friends_count'] + "</td>";
                       html += "<td>" + v_kv[user['verified']] + "</td>";
                       html += "<td>" + sex_kv[user['gender']] + "</td></tr>";
                     }

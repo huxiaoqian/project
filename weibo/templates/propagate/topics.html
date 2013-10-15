@@ -11,7 +11,7 @@
             	<h4>{{ field.field_name }}</h4>
               <ul class="inline">
               {% for topic in field.topics %}
-		            <li><a href="/propagate/showTopicResult/{{ topic }}/">{{ topic }}</a></li>
+		            <li><a href="/propagate/showresult/?topic={{ topic }}/">{{ topic }}</a></li>
 				      {% endfor %}
               </ul>
             {% endfor %}

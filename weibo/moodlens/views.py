@@ -19,6 +19,7 @@ LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/20130807', name='master_timeline_sentiment', schema_version=3)
+xapian_search_domain  = XapianSearch(path='/home/xapian/var/lib/xapian_weibo/data/liumengni', name='master_timeline_domain', schema_version=4)
 total_days = 90
 
 
@@ -129,6 +130,37 @@ def data(area='global'):
 
     return json.dumps(emotions_data)
 
+@mod.route('/field_data/<area>/')
+def field_data(area):
+    """
+    /keywords_data 接口已备好，只是差领域数据
+    """
+
+    ts = request.args.get('ts', '')
+    ts = long(ts)
+    during = request.args.get('during', 24*3600)
+    during = int(during)
+
+    begin_ts = ts - during
+    end_ts = ts
+    print begin_ts, end_ts
+
+    emotions_data = {}
+    count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
+    
+    query_dict = {
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+        '$or': [],
+    }
+    if count:
+        for user in field_users():
+            query_dict['$or'].append({'user': user['_id']})
+    for k, v in emotions_kv.iteritems():
+        query_dict['sentiment'] = v
+        count = xapian_search_sentiment.search(query=query_dict, count_only=True)
+        emotions_data[k] = [end_ts * 1000, count] 
+
+    return json.dumps(emotions_data)
 
 @mod.route('/flag_data/<emotion>/<area>/')
 def flag_data(emotion, area='global'):
@@ -170,7 +202,6 @@ def flag_data(emotion, area='global'):
 
     return json.dumps(data)
 
-
 @mod.route('/keywords_data/<area>/')
 def keywords_data(area='global'):
     """
@@ -197,6 +228,38 @@ def keywords_data(area='global'):
         for term in query.split(','):
             if term:
                 query_dict['$or'].append({'text': term})
+
+    count, get_results = xapian_search_sentiment.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
+    keywords_with_count = top_keywords(get_results, top=50)
+    keywords_with_count = [list(i) for i in keywords_with_count]
+
+    return json.dumps(keywords_with_count)
+
+@mod.route('/field_keywords_data/<area>/')
+def field_keywords_data(area):
+    """
+    /keywords_data 接口已备好，只是差领域数据
+    """
+    ts = request.args.get('ts', '')
+    ts = long(ts)
+    emotion = request.args.get('emotion', 'all')
+    during = request.args.get('during', 24*3600)
+    during = int(during)
+
+    begin_ts = ts - during
+    end_ts = ts
+    
+    query_dict = {
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+    }
+    if emotion != 'all':
+        query_dict['sentiment'] = emotions_kv[emotion]
+
+    count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
+    if count:
+        query_dict['$or'] = []
+        for user in field_users():
+            query_dict['$or'].append({'user': user['_id']})
 
     count, get_results = xapian_search_sentiment.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
     keywords_with_count = top_keywords(get_results, top=50)
@@ -242,6 +305,41 @@ def weibos_data(emotion, area='global'):
             data.append(weibo_data)
     return json.dumps(data)
 
+@mod.route('/field_weibos_data/<emotion>/<area>/')
+def field_weibos_data(emotion, area):
+    """
+    此接口差领域数据，并且还跟另外的接口差领域数据检索途径不大一样
+    """
+    ts = request.args.get('ts', '')
+    ts = long(ts)
+    during = request.args.get('during', 24*3600)
+    during = int(during)
+
+    begin_ts = ts - during
+    end_ts = ts
+    query_dict = {
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+        #'reposts_count': {'$gt': 100},
+        'sentiment': emotions_kv[emotion]
+    }
+
+    count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
+    if count:
+        query_dict['$or'] = []
+        for user in field_users():
+            query_dict['$or'].append({'user': user['_id']})
+
+    count, get_results = xapian_search_sentiment.search(query=query_dict, max_offset=10, sort_by=['-reposts_count'], fields=['_id'])
+    data = []
+    count = 0
+    for r in get_results():
+        if count == 10:
+            break
+        count += 1
+        weibo_data = getWeiboByMid(r['_id'], emotion)
+        if weibo_data:
+            data.append(weibo_data)
+    return json.dumps(data)
 
 @mod.route('/emotionpeak/')
 def getPeaks():

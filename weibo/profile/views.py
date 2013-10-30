@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+try:
+    import simplejosn as json
+except ImportError:
+    import json
 import os
 import re
 import sys
@@ -14,18 +18,11 @@ from flask import Flask, url_for, render_template, request, make_response, flash
 from city_color import province_color_map
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
 from datetime import date
-from utils import ts2date, getFieldUsersByScores, time2ts, datetime2ts, last_day, ts2datetime, ts2HMS
+from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS
 from xapian_weibo.xapian_backend import Schema, XapianSearch
 from ldamodel import lda_topic
-
-try:
-    import simplejosn as json
-except ImportError:
-    import json
-
 from weibo.extensions import db
 from weibo.model import *
-import weibo.model
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
@@ -43,7 +40,9 @@ fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', '
 fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
 
 mod = Blueprint('profile', __name__, url_prefix='/profile')
-COUNT_PER_PAGE = 20  
+COUNT_PER_PAGE = 20
+
+statusbound_list = []
 
 def get_bucket(bucket):
     if bucket in buckets:
@@ -75,8 +74,9 @@ def getStaticInfo():
     friendscount = db.session.query(RangeCount).filter(RangeCount.countType=='friends').all()
     followerscount = db.session.query(RangeCount).filter(RangeCount.countType=='followers').all()
     province = db.session.query(Province).order_by(Province.id).all()
-    field = db.session.query(FieldProfile).all()
-    return statuscount, friendscount, followerscount, province, field
+    fields = [{'fieldEnName': f, 'fieldZhName': unicode(fieldsEn2Zh(f), 'utf-8')} for f in fields_value]
+    
+    return statuscount, friendscount, followerscount, province, fields
 
 
 def yymInfo(uid):
@@ -203,21 +203,26 @@ def profile_search(model='hotest'):
                             if user:
                                 users.append(user)
                     return json.dumps(users[startoffset:endoffset])
-                elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
+                elif model in fields_value:
                     page = int(request.form['page'])
                     if page == 1:
                         startoffset = 0
                     else:
                         startoffset = (page - 1) * COUNT_PER_PAGE
                     endoffset = startoffset + COUNT_PER_PAGE - 1
-                    uids = getFieldUsersByScores(model, startoffset, endoffset)
-                    uidlist = [int(uid) for uid in uids]
-                    users = User.query.filter(User.id.in_(uidlist)).all()
-                    return json.dumps([i.serialize for i in users])
+                    fieldEnName = model
+                    count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=['followers_count'], fields=['_id'], max_offset=10000)
+                    field_users_list = [user['_id'] for user in field_users()]
+                    users = []
+                    for uid in field_users_list[startoffset: endoffset]:
+                        user = xapian_search_user.search_by_id(int(uid), fields=['name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
+                        if user:
+                            users.append({'id': int(uid), 'profileImageUrl': user['profile_image_url'], 'userName': user['name'], 'statusesCount': user['statuses_count'], 'friendsCount': user['friends_count'], 'followersCount': user['followers_count'], 'description': user['description']})
+                    return json.dumps(users)
                 elif model == 'person':
                     nickname = urllib2.unquote(request.form['nickname'])
-                    users = User.query.filter(User.userName==nickname).all()
-                    return json.dumps([i.serialize for i in users])
+                    users = []
+                    return json.dumps(users)
                 elif model in ['statuses', 'friends', 'followers']:
                     low = int(request.form['low'])
                     up = int(request.form['up'])
@@ -248,11 +253,23 @@ def profile_search(model='hotest'):
                                       'description': description, 'profileImageUrl': profileImageUrl})
                     return json.dumps(users)
                 elif model == 'province':
-                    province = request.form['province']
-                    basequery = User.query.filter(User.location.startswith(province)).limit(1000)#.order_by(User.followersCount.desc())
                     page = int(request.form['page'])
-                    users = basequery.paginate(page, COUNT_PER_PAGE, False).items
-                    return json.dumps([i.serialize for i in users])
+                    if page == 1:
+                        startoffset = 0
+                    else:
+                        startoffset = (page - 1) * COUNT_PER_PAGE
+                    endoffset = startoffset + COUNT_PER_PAGE - 1
+                    province = request.form['province']
+                    count, get_results = xapian_search_user.search(query={'province': province}, sort_by=['_id', 'followers_count'], max_offset=10000, fields=['name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
+                    users = []
+                    offset = 0
+                    for r in get_results():
+                        if offset >= startoffset and offset <= endoffset:
+                            users.append({'id': r['_id'], 'profileImageUrl': r['profile_image_url'], 'userName': r['name'], 'statusesCount': r['statuses_count'], 'friendsCount': r['friends_count'], 'followersCount': r['followers_count'], 'description': r['description']})
+                        if offset >= endoffset:
+                            break
+                        offset += 1
+                    return json.dumps(users)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -335,7 +352,7 @@ def profile_search(model='hotest'):
                                     if user:
                                         users.append(user)
                                 return json.dumps(users[startoffset:endoffset])
-                            elif db.session.query(FieldProfile).filter(FieldProfile.fieldEnName==model).count():
+                            elif model in fields_value:
                                 page = int(request.form['page'])
                                 if page == 1:
                                     startoffset = 0
@@ -391,65 +408,11 @@ def profile_search(model='hotest'):
     else:
         return redirect('/')
 
-@mod.route('/micro_ajax_tab/<module>/', methods=['POST', 'GET'])
-def micro_ajax_tab(module):
-    if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin':
-            if request.method == 'GET':
-                form = request.args
-                query = form.get('query', None)
-                startstr = form.get('startdate', None)
-                endstr = form.get('enddate', None)
-
-                window_size = (datetime.date.fromtimestamp(time2ts(endstr)) - datetime.date.fromtimestamp(time2ts(startstr))).days
-        
-                if query:
-                    topic_id = acquire_topic_id(query)
-
-                if module == 'identify':
-                    return render_template('profile/ajax/micro_identify.html', window_size=window_size, page_num=10, top_n=2000, topic=query, enddate=endstr)
-                if module == 'keyweibo':
-                    return render_template('profile/ajax/micro_keyweibo.html')
-                if module == 'subevent':
-                    return render_template('profile/ajax/micro_subevent.html')
-                else:
-                    pass
-        else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.profile
-                    if identy == 1:
-                        if request.method == 'GET':
-                            form = request.args
-                            query = form.get('query', None)
-                            startstr = form.get('startdate', None)
-                            endstr = form.get('enddate', None)
-
-                            window_size = (datetime.date.fromtimestamp(time2ts(endstr)) - datetime.date.fromtimestamp(time2ts(startstr))).days
-        
-                            if query:
-                                topic_id = acquire_topic_id(query)
-
-                            if module == 'identify':
-                                return render_template('profile/ajax/micro_identify.html', window_size=window_size, page_num=10, top_n=2000, topic=query, enddate=endstr)
-                            if module == 'keyweibo':
-                                return render_template('profile/ajax/micro_keyweibo.html')
-                            if module == 'subevent':
-                                return render_template('profile/ajax/micro_subevent.html')
-                            else:
-                                pass
-                    else:
-                        return redirect('/')
-            return redirect('/')
-    else:
-        return redirect('/')
-#new
 @mod.route('/group/<fieldEnName>', methods=['GET', 'POST'])
 def profile_group(fieldEnName):
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            field = FieldProfile.query.all()
+            field = fields_value
             return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -457,7 +420,7 @@ def profile_group(fieldEnName):
                 for pa in pas:
                     identy = pa.profile
                     if identy == 1:
-                        field = FieldProfile.query.all()
+                        field = fields_value
                         return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
                     else:
                         return redirect('/')
@@ -623,154 +586,6 @@ def profile_interact_network(uid):
             
         first['children'] = second
         return json.dumps(first)
-
-@mod.route("/identify/keyweibos/", methods=['POST', 'GET'])
-def keyweibos():
-    if request.method == 'POST':
-        form = request.form
-        topic = form.get('topic', None)
-        topic_id = form.get('topic_id', None)
-        startdate = form.get('startdate', None)
-        enddate = form.get('enddate', None)
-        page = int(form.get('page', 1))
-        start_ts = datetime2ts(startdate)
-        end_ts = datetime2ts(enddate)
-
-        if not topic_id:
-            if topic:
-                topic_id = acquire_topic_id(topic)
-        results, pages = get_above100_weibos(topic_id, start_ts, end_ts, page)
-        return json.dumps({'results': results, 'pages': pages, 'page': page})
-
-@mod.route("/identify/area/", methods=["GET", "POST"])
-def area():
-    request_method = request.method
-    if request_method == 'POST':
-        #form data
-        form = request.form
-
-        topic = form.get('topic', None)
-        topic_id = form.get('topic_id', None)
-        startdate = form.get('startdate', None)
-        enddate = form.get('enddate', None)
-
-        top_n = int(form.get('top_n', 2000))
-        page_num = int(form.get('page_num', 20))
-        window_size = int(form.get('window_size', 1))
-        action = form.get('action', None)
-
-        #acquire topic id
-        if not topic_id:
-            if topic:
-                topic_id = acquire_topic_id(topic)
-            else:
-                pass
-
-        if window_size <= 7:
-            rank_method = 'pagerank'
-        else:
-            rank_method = 'degree'
-
-        current_time = datetime2ts(enddate)
-
-        if action == 'rank':
-            current_date = ts2datetime(current_time)
-            current_data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id)
-            if not current_data:
-                if rank_method == 'pagerank':
-                    rank_func = pagerank_rank
-                    if rank_func:
-                        current_data = rank_func(top_n, current_date, topic_id, window_size)
-                elif rank_method == 'degree':
-                    rank_func = degree_rank
-                    if rank_func:
-                        current_data = rank_func(top_n, current_date, topic_id, window_size)
-            return json.dumps({'status': 'current finished', 'data': current_data})
-
-        elif action == 'check_rank_status':
-            #check Hadoop Job Status
-            job_id = form.get('job_id', None)
-            if not job_id:
-                return json.dumps({'error': 'need a job'})
-            status = monitor(job_id)
-            return json.dumps({'status': status})
-
-        else:
-            abort(404)
-    else:
-        abort(404)
-
-@mod.route("/identify/area/network/", methods=["POST"])
-def area_network():
-    request_method = request.method
-    if request_method == 'POST':
-        form = request.form
-
-        window_size = int(form.get('window_size', 1))
-        topic = form.get('topic', None)
-        topic_id = form.get('topic_id', None)
-        enddate = form.get('enddate', None)
-
-        #acquire topic id
-        if not topic_id:
-            if topic:
-                topic_id = acquire_topic_id(topic)
-            else:
-                pass
-                
-        current_time = datetime2ts(enddate)
-        current_date = ts2datetime(current_time)
-        gexf = None
-        
-        if not topic_id:
-            gexf = ''
-        else:
-            gexf = make_network_graph(current_date, topic_id, window_size)
-        response = make_response(gexf)
-        response.headers['Content-Type'] = 'text/xml'
-        return response
-    else:
-        abort(404)
-
-@mod.route("/subevent/", methods=["GET", "POST"])
-def subevent():
-    from events_discovery import events
-    if request.method == 'POST':
-        form = request.form
-        topic = form.get('topic', None)
-        topic_id = form.get('topic_id', None)
-        startdate = form.get('startdate', None)
-        enddate = form.get('enddate', None)
-
-        if not topic_id:
-            if topic:
-                topic_id = acquire_topic_id(topic)
-
-        event_results = events(topic, startdate, enddate)
-        return json.dumps(event_results)
-def time2ts(date):
-    return time.mktime(time.strptime(date, '%Y-%m-%d'))
-
-def ts2datestr(ts):
-    return date.fromtimestamp(float(ts)).isoformat()
-
-def search_user_by_mid(mid):
-    r_c, r_re = xapian_search_weibo.search(query={'_id': int(mid)}, fields=['user'])
-    if r_c:
-        for r in r_re():
-            uid = r['user']
-            return uid
-    else:
-        return None
-
-def search_uid_by_username(username):
-    u_c, u_re = xapian_search_user.search(query={'name': username}, fields=['_id'])
-    if u_c:
-        for r in u_re():
-            uid = r['_id']
-            return uid
-    else:
-        return None
 
 @mod.route('/topic/', methods=['POST', 'GET'])
 def index():
@@ -980,30 +795,23 @@ def profile_person_topic(uid):
         action = 'nonupdate'
         window_size = 24*60*60
         current_date = date.today().isoformat()
+        start_timestamp = 1356969600#2013-01-01
         if request.args.get('interval') and request.args.get('topic_limit') and request.args.get('keyword_limit') and request.args.get('action'):
             interval =  int(request.args.get('interval'))
             topic_limit =  int(request.args.get('topic_limit'))
             keyword_limit = int(request.args.get('keyword_limit'))
             action = request.args.get('action')
-        lda_topic_bucket = get_bucket('user_lda_topics_20130808')
-        if action == 'nonupdate':
-            for topic_date in range(20130808, int(''.join(current_date.split('-'))) + 1):
-                topic_key = str(uid) + '_' + str(topic_date) + '_' + str(window_size) + '_' + str(interval)
-                lda_results = {}
-                try:
-                    lda_results = json.loads(lda_topic_bucket.Get(topic_key))
-                    #sortedtopics = sorted(topics.iteritems(), key=operator.itemgetter(1), reverse=True)
-                    #for k, v in sortedtopics[:limit]:
-                    #    result_arr.append({'text': k, 'size': float(v)})
-                    return json.dumps(lda_results)
-                except KeyError:
-                    continue
-            topic_key = str(uid) + '_' + str(current_date) + '_' + str(window_size) + '_' + str(interval)
-            startstr, endstr = last_day(interval)
-            lda_results = lda_topic(uid, startstr, endstr)
-            lda_topic_bucket.Put(topic_key, json.dumps(lda_results))
-            return json.dumps(lda_results)
-        return json.dumps(result_arr)
+        result = db.session.query(PersonalLdaWords).filter((PersonalLdaWords.windowTimestamp==interval*window_size) & (PersonalLdaWords.startTimestamp==start_timestamp)).first()
+        if result:
+            lda_results = result.word
+            return lda_results
+        startstr = date.fromtimestamp(start_timestamp).isoformat()
+        endstr = date.fromtimestamp(start_timestamp + interval*window_size).isoformat()
+        lda_results = lda_topic(uid, startstr, endstr)
+        lda_word = PersonalLdaWords(uid=uid, windowTimestamp=interval*window_size, startTimestamp=start_timestamp, word=json.dumps(lda_results))
+        db.session.add(lda_word)
+        db.session.commit()
+        return json.dumps(lda_results)
     else:
         return json.dumps([])
 
@@ -1061,7 +869,6 @@ def profile_network(friendship, uid):
             result.append([label, count])
         return json.dumps(result)
 
-#new
 @mod.route('/person_fri_fol/<friendship>/<uid>', methods=['GET', 'POST'])
 def profile_person_fri_fol(friendship, uid):
     if request.method == 'GET' and uid and request.args.get('page'):

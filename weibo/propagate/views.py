@@ -7,6 +7,7 @@ try:
     import simplejosn as json
 except ImportError:
     import json
+    
 import re
 import calendar
 import time
@@ -26,6 +27,9 @@ import json
 from autocalculate import calculate
 from calculate_single import calculate_single,get_user
 from calculatetopic import calculate_topic
+
+sys.path.append('./weibo/propagate/graph')
+from tree import *
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
 
@@ -761,6 +765,8 @@ def single_ajax_path():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
+                mid = int(request.args.get('mid', ""))
+                tree_main(mid)
                 return render_template('propagate/ajax/single_retweetpath.html')
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -769,6 +775,8 @@ def single_ajax_path():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
+                            mid = int(request.args.get('mid', ""))
+                            tree_main(mid)
                             return render_template('propagate/ajax/single_retweetpath.html')
                     else:
                         return redirect('/')

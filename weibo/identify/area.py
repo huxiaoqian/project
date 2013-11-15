@@ -7,7 +7,8 @@ import networkx as nx
 
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, read_key_users, load_scws, cut
+from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, read_key_users
+from xapian_weibo.utils import load_scws, cut
 from config import PAGERANK_ITER_MAX
 
 from xapian_weibo.xapian_backend import XapianSearch

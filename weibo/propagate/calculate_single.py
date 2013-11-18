@@ -180,7 +180,10 @@ def calculate_single(_id):
                 perday_repost_count.append(0)
             perday_repost_count[-1] = 1
         reposts_sum += r['reposts_count']
-        comments_sum += r['comments_count']
+        if 'comments_count' not in r:
+            comments_sum += 0
+        else:
+            comments_sum += r['comments_count']
 
     totalRepost = reposts_sum + 1
     avg = (float(totalRepost))/len(date_list)
@@ -205,9 +208,9 @@ def calculate_single(_id):
        else:
           pass
 
-    print city_count
+    #print city_count
     map_data = province_color_map(city_count)
-    print map_data
+    #print map_data
     leader_index = len(key_reposter)
     
     blog_info['status'] = status_ori

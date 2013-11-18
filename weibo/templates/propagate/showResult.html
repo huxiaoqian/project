@@ -24,7 +24,7 @@
             </div>
             <div style="float:left;padding-top:10px;">
               <label style="font-size:18px">开始时间：<span class="badge badge-success" style="font-size:18px"> {{ return_beg_str }} </span> </label>
-              <label class="appendedInput" style="font-size:18px;padding-top:10px;">截止时间：<span class="badge badge-success style="font-size:18px"> {{ return_end_str }} </span></label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">截止时间：<span class="badge badge-success" style="font-size:18px"> {{ return_end_str }} </span></label>
             </div>
             <div style="float:left;padding-top:10px;">
               <label style="font-size:18px">发起人：<span class="badge badge-success" style="font-size:18px"> {{ topic_ori_screen_name }} </span> </label>
@@ -50,7 +50,7 @@
           <li><a href="/propagate/topic_ajax_weibos/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >相关微博</a></li>
           <li><a href="/propagate/topic_ajax_spatial/" >地理分布</a></li>
           <li><a href="/propagate/topic_ajax_stat/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >主要指标</a></li>
-          <li><a href="/propagate/topic_ajax_path/" >传播路径</a></li>
+          <li><a href="/propagate/topic_ajax_path/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >传播路径</a></li>
           <li><a href="/propagate/topic_ajax_userfield/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >人员领域分布</a></li>
         </ul>
       </div>

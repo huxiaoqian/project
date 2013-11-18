@@ -74,24 +74,24 @@
             <div class="WB_feed_type SW_fun  S_line2" action-type="feed_list_item" >
               <div class="WB_feed_datail S_line2 clearfix">
                 <div class="WB_face">
-                  <a class="W_face_radius" title="{{ status.user.name }}"><img title="{{ status.user.name }}" alt="" width="50" height="50" src="{{ status.user.profile_image_url }}"></a>
+                  <a class="W_face_radius" title="{{ status['user']['name'] }}"><img title="{{ status['user']['name'] }}" alt="" width="50" height="50" src="{{ status['user']['profile_image_url'] }}"></a>
                 </div>
                 <div class="WB_detail">
                   <div class="WB_info">
-                    <a class="WB_name S_func1" nick-name="{{ status.user.name }}" title="{{ status.user.name }}" href="{{ status.weibo_url }}">{{ status.user.name }}</a>
+                    <a class="WB_name S_func1" nick-name="{{ status['user']['name'] }}" title="{{ status['user']['name'] }}" href="{{ status['weibo_url']}}">{{ status['user']['name'] }}</a>
                   </div>
-                  <div class="WB_text" node-type="feed_list_content">{{ status.status.text }}</div>
+                  <div class="WB_text" node-type="feed_list_content">{{ status['status']['text'] }}</div>
                   <div class="WB_func clearfix">
                     <div class="WB_handle">
-                      <a action-type="feed_list_like" title="赞"><em class="W_ico20 icon_praised_b"></em>赞:{{ status.status.attitudesCount }}</a><i class="S_txt3">|</i>
-                      <a action-type="feed_list_forward">转发:{{ status.status.repostsCount }}</a><i class="S_txt3">|</i>
-                      <a action-type="feed_list_comment">评论:{{ status.status.commentsCount }}</a><i class="S_txt3">|</i>
-                      <a href="/propagate/showresult_single/{{ status.status.id }}/" action-type="feed_list_comment" style="color:#FF8000;">分析</a><i class="S_txt3">|</i>
-                      <a id="ma{{ status.status.id }}" name ="{{ status.status.id }}" style="color:red;">导入素材库</a>
+                      <a action-type="feed_list_like" title="赞"><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
+                      <a action-type="feed_list_forward">转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
+                      <a action-type="feed_list_comment">评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
+                      <a href="/propagate/showresult_single/{{ status['status']['_id'] }}/" action-type="feed_list_comment" style="color:#FF8000;">分析</a><i class="S_txt3">|</i>
+                      <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
                       <script>
-                          $("#ma{{ status.status.id }}").click(function () {
+                          $("#ma{{ status['status']['_id'] }}").click(function () {
                               var id=this.getAttribute("name");
-                              
+                              console.log(id);
                               $.ajax({   
                                   type:"POST",  
                                   url:"/propagate/add_material",
@@ -111,9 +111,9 @@
                       </script>
                     </div>
                     <div class="WB_from">
-                      <a target="_blank" class="S_link2 WB_time" node-type="feed_list_item_date">{{ status.status.postDate }}</a> 
+                      <a target="_blank" class="S_link2 WB_time" node-type="feed_list_item_date">{{ status['status']['timestamp'] }}</a> 
                       <em class="S_txt2">来自</em>
-                      <a class="S_link2" target="_blank">{{ status.status.sourcePlatform }}</a>              
+                      <a class="S_link2" target="_blank">{{ status['status']['source']}}</a>              
                     </div>
                   </div>
                   <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>

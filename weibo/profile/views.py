@@ -36,7 +36,7 @@ LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
-fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
+fields_value = [{'fieldZhName': u'文化', 'fieldEnName': 'culture'}, {'fieldZhName': u'教育', 'fieldEnName': 'education'}, {'fieldZhName': u'娱乐', 'fieldEnName': 'entertainment'}, {'fieldZhName': u'时尚', 'fieldEnName': 'fashion'}, {'fieldZhName': u'财经', 'fieldEnName': 'finance'}, {'fieldZhName': u'媒体', 'fieldEnName': 'media'}, {'fieldZhName': u'体育', 'fieldEnName': 'sports'}, {'fieldZhName': u'技术', 'fieldEnName': 'technology'}]
 fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
 
 mod = Blueprint('profile', __name__, url_prefix='/profile')
@@ -74,9 +74,7 @@ def getStaticInfo():
     friendscount = db.session.query(RangeCount).filter(RangeCount.countType=='friends').all()
     followerscount = db.session.query(RangeCount).filter(RangeCount.countType=='followers').all()
     province = db.session.query(Province).order_by(Province.id).all()
-    fields = [{'fieldEnName': f, 'fieldZhName': unicode(fieldsEn2Zh(f), 'utf-8')} for f in fields_value]
-    
-    return statuscount, friendscount, followerscount, province, fields
+    return statuscount, friendscount, followerscount, province, fields_value
 
 
 def yymInfo(uid):
@@ -1076,8 +1074,9 @@ def group_status_count(fieldEnName):
         interval =  int(request.args.get('interval'))
         total_days = interval - 180
 
-    count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
-    fields_set = set([user['_id'] for user in field_users()])
+    startoffset = 0
+    endoffset = 10000
+    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
     for i in xrange(-total_days + 1, 1, 7):
         lt = now_ts + during * i
         post_count = {}
@@ -1114,8 +1113,9 @@ def group_active_count(fieldEnName):
     if request.args.get('interval'):
         interval =  int(request.args.get('interval'))
     total_days = interval
-    count, field_users = xapian_search_domain.search(query={'domain': str(fields_id[str(fieldEnName)])}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
-    fields_set = set([user['_id'] for user in field_users()])
+    startoffset = 0
+    endoffset = 10000
+    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
     user_count = {}
     for uid in fields_set:
         query_dict = {
@@ -1167,8 +1167,9 @@ def profile_group_emotion(fieldEnName):
         interval =  int(request.args.get('interval'))
         total_days = interval - 180
 
-    count, field_users = xapian_search_domain.search(query={'domain': str(fields_id[str(fieldEnName)])}, sort_by=['-followers_count'], max_offset=10000, fields=['_id'])
-    fields_set = set([user['_id'] for user in field_users()])
+    startoffset = 0
+    endoffset = 10000
+    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
     for i in xrange(-total_days + 1, 1, 7):
         lt = now_ts + during * i
         emotion_count = {}
@@ -1192,18 +1193,17 @@ def profile_group_emotion(fieldEnName):
 
 @mod.route('/group_verify/<fieldEnName>')
 def profile_group_verify(fieldEnName):
-    count, field_users = xapian_search_domain.search(query={'domain': str(fields_id[str(fieldEnName)])}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
-    fields_set = set([user['_id'] for user in field_users()])
+    startoffset = 0
+    endoffset = 10000
+    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
     verified_count = 0
     uverified_count = 0
     for uid in fields_set:
-        count, get_results = xapian_search_user.search(query={'_id': uid}, fields=['verified'])
-        for r in get_results():
-            verified = r['verified']
-            if verified:
-                verified_count += 1
-            else:
-                uverified_count += 1
+        user = xapian_search_user.search_by_id(uid, fields=['verified'])
+        if user['verified']:
+            verified_count += 1
+        else:
+            uverified_count += 1
     result_list = ''
     if sum([verified_count, uverified_count]) > 0:
         sumcount = sum([verified_count, uverified_count])
@@ -1239,8 +1239,9 @@ def profile_group_rank(fieldEnName):
 @mod.route('/group_location/<fieldEnName>')
 def profile_group_location(fieldEnName):
     city_count = {}
-    count, field_users = xapian_search_domain.search(query={'domain': str(fields_id[str(fieldEnName)])}, sort_by=['-followers_count'], max_offset=10000, fields=['_id'])
-    fields_set = set([user['_id'] for user in field_users()])
+    startoffset = 0
+    endoffset = 10000
+    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
     for uid in fields_set:
         user = xapian_search_user.search_by_id(uid, fields=['location'])
         province = user['location'].split(' ')[0]

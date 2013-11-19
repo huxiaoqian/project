@@ -70,6 +70,10 @@ def fieldsEn2Zh(name):
         return '体育'
 
 def getStaticInfo():
+    statuscount = [0, 2000000, 4000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000]
+    friendscount = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
+    followerscount = [0, 6000000, 12000000, 18000000, 24000000, 30000000, 36000000, 42000000, 48000000, 54000000, 60000000]
+    province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外']
     statuscount = db.session.query(RangeCount).filter(RangeCount.countType=='statuses').all()
     friendscount = db.session.query(RangeCount).filter(RangeCount.countType=='friends').all()
     followerscount = db.session.query(RangeCount).filter(RangeCount.countType=='followers').all()

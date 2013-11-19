@@ -6,17 +6,27 @@ import time
 import codecs
 import random
 import math
+import sys
 
 from collections import defaultdict
 
 from gexf import Gexf
 from lxml import etree
+from xapian_weibo.xapian_backend import XapianSearch
+
+sys.path.append('./weibo/propagate/')
+from autocalculate import calculate
+from calculate_single import calculate_single,get_user
+from calculatetopic import calculate_topic
 
 MAX_COUNT = 15000
-START_DATE = '2012-9-10'
-END_DATE = '2012-10-30'
+START_DATE = '2012-9-1'
+#END_DATE = '2012-10-30'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
+
+xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 
 def date2ts(date):
     return int(time.mktime(time.strptime(date, '%Y-%m-%d')))
@@ -24,23 +34,40 @@ def date2ts(date):
 def unix2local(ts):
     return time.strftime('%Y-%m-%d %H:00', time.localtime(ts))
 
-def load_data():
+def load_data(keyword,beg_time,end_time):
     dataset = []
-    fnames = [fname for fname in os.listdir('./data') if fname.endswith('.txt')]
-    # fnames = sorted(fnames, key=lambda x: int(x.strip('.txt')), reverse=False)
-    #sorted by tree size
-    fnames = sorted(fnames, key=lambda x: os.stat('./data/'+x).st_size, reverse=True)
+    fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count']
+    number, get_results = s.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+    topic_info = calculate(get_results())
+    blog_rel_list = topic_info['topic_rel_blog'][0:100]
+
     ts = []
-    for fname in fnames:
-        f = codecs.open('./data/'+fname, 'r', encoding='gbk')
-        data = f.readlines()
-        f.close()
-        ts.append(int(data[-1].strip('\n').split('\t')[3]))
-        reposts = []
-        for status in data:
-            reposts.append(status)
+    for status in blog_rel_list:
+        print status['status']['_id']
+        ts.append(status['status']['timestamp'])
+        number,source_weibo = s.search(query={'retweeted_status': status['status']['_id']})#查找热门微博的转发微博
+        repost_ids = []
+        for sw in source_weibo():
+            repost_ids.append(sw['_id']) 
+        if not number:
+            continue
+        number,source_users = xapian_search_user.search(query={'_id': status['status']['user']}, fields=['name'])
+        for source_user in source_users():
+            su = source_user['name']
+        count = 0
+        reposts = []#存储转发微博的信息
+        for sid in repost_ids:
+            if count % 10 == 0:
+                print '%s tweets loaded...' % count
+            n,ws = s.search(query={'_id': sid})#查找转发微博的信息
+            for w in ws():
+                number,get_users = xapian_search_user.search(query={'_id': w['user']}, fields=['name'])
+                for user in get_users():
+                    line = unicode(user['name'], 'utf-8') + '\t'+ unicode(w['text'], 'utf-8') + '\t' + unicode(su, 'utf-8') +'\t'+ str(int(w['timestamp']))
+                    reposts.append(line)
+                count += 1
         dataset.append(reposts)
-    return min(ts), dataset
+    return min(ts), dataset  
 
 def random_color(colors):
     r  = str(int(random.random()*255))
@@ -150,12 +177,9 @@ class Node(object):
     def append(self, child):
         self.childern.append(child)
 
-def build_tree(repost_data, counter, start=START_DATE, end=END_DATE):
+def build_tree(repost_data, counter, _start_ts, _end_ts):
     if not repost_data:
         return None
-
-    _start_ts = date2ts(start)
-    _end_ts = date2ts(end)
 
     source_user = repost_data[0].strip('\n').split('\t')[2]
     end_ts = int(repost_data[0].strip('\n').split('\t')[3])
@@ -206,8 +230,16 @@ def build_tree(repost_data, counter, start=START_DATE, end=END_DATE):
                 r.append(Node(user, ts, nid=counter))
     return root, start_ts, end_ts, count, counter
 
-def main():
-    first_start_ts, dataset = load_data()
+def forest_main(keyword,beg_time,end_time):
+    
+    _start_ts = date2ts(START_DATE)
+    if beg_time < _start_ts:
+        beg_time = _start_ts
+
+    if end_time <= beg_time:
+        end_time = int(time.time())
+
+    first_start_ts, dataset = load_data(keyword,beg_time,end_time)
 
     height = 0
     counter = 0
@@ -223,17 +255,19 @@ def main():
     for reposts in dataset:
         if not len(reposts):
             continue
-        root, start_ts, end_ts, count, counter = build_tree(reposts, counter)
+        
+        root, start_ts, end_ts, count, counter = build_tree(reposts, counter, beg_time, end_time)
         _color = random_color(colors)
+
         build_graph(graph, root, start_ts, end_ts, node_y_table, x_count, y_count, y_name, x=ts2x(start_ts-first_start_ts), y=height, color=_color)
         height += 1
 
         counter = build_x_chart(graph, x_count, counter, -SEG, first_start_ts)
         counter = build_y_chart(graph, y_count, y_name, counter, -SEG)
 
+    #print gexf.getXML()
     graph = etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
 
-    with open('forest.gexf', 'w') as gf:
+    with open('./weibo/static/gexf/forest.gexf', 'w') as gf:
         gf.write(graph)
 
-if __name__ == '__main__': main()

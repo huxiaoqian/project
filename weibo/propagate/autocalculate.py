@@ -159,8 +159,11 @@ def calculate(results):
                     pass
         else:
             pass
-            
-        comments_sum = comments_sum + r['comments_count']
+
+        if r['comments_count'] != None:
+            comments_sum = comments_sum + r['comments_count']
+        else:
+            comments_sum = comments_sum + 0
         blogs_sum += 1
 
     print 'loop is done in %s seconds' % (time.time() - start_time)

@@ -30,6 +30,10 @@ from calculatetopic import calculate_topic
 
 sys.path.append('./weibo/propagate/graph')
 from tree import *
+from forest import *
+
+sys.path.append('./weibo/profile')
+from utils import *
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
 
@@ -42,16 +46,21 @@ def getFieldTopics():
         topic_names = []
         for topic in topics:
             topic_names.append(topic.topicName)
-        field_topics.append({'field_name': field_name, 'topics': topic_names})
+        field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
     return field_topics
 
 def getHotStatus():
-    statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(5)
+    #statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(5)
+    count,statuses = search_weibo.search(query={'timestamp': {'$gt': time.mktime(time.strptime('2013-01-01','%Y-%m-%d')), '$lt': time.mktime(time.strptime('2013-01-01 23:59:59','%Y-%m-%d  %H:%M:%S'))}}, sort_by=['reposts_count'], fields=['_id','text','timestamp','user','reposts_count','comments_count','attitudes_count','retweeted_status','source'], max_offset=5)
     status_hot = []             
-    for status in statuses:
-        uid = status.uid
+    for status in statuses():
+        uid = status['user']
         user = get_user(uid)
-        status_hot.append({'status': status, 'user': user})
+        weibo_url = weiboinfo2url(uid,status['_id'])
+        status['text'] = unicode(status['text'], 'utf-8')
+        status['source'] = unicode(status['source'], 'utf-8')
+        status['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(status['timestamp']))
+        status_hot.append({'status': status, 'user': user, 'weibo_url': weibo_url})
     return status_hot
 
 @mod.route('/log_in', methods=['GET','POST'])
@@ -67,10 +76,20 @@ def log_in():
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            field_topics = getFieldTopics()
-            status_hot = getHotStatus()
-     
-            return render_template('propagate/search.html', field_topics=field_topics, status_hot=status_hot)
+            field_topics = getFieldTopics() 
+            field_topics.sort(key=lambda x:x['len'],reverse=True)
+
+            i = 0
+            fields = []
+            for field_topic in field_topics:
+                if i > 3:
+                    break
+                i = i + 1
+                fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+                
+            #status_hot = getHotStatus()
+            
+            return render_template('propagate/search.html', field_topics=fields)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -78,9 +97,18 @@ def index():
                     identy = pa.propagate
                     if identy == 1:
                         field_topics = getFieldTopics()
-                        status_hot = getHotStatus()
+                        field_topics.sort(key=lambda x:x['len'],reverse=True)
+                        i = 0
+                        fields = []
+                        for field_topic in field_topics:
+                            if i > 3:
+                                break
+                            i = i + 1
+                            fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+                            
+                        #status_hot = getHotStatus()
      
-                        return render_template('propagate/search.html', field_topics=field_topics, status_hot=status_hot)
+                        return render_template('propagate/search.html', field_topics=fields)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -108,9 +136,7 @@ def showresult_by_topic():
     
             if keyword == "":
                 flash(u'关键字（词）不能为空')
-                field_topics = getFieldTopics()
-                status_hot = getHotStatus()
-                return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                return redirect('/propagate/')
             if keyuser == "":
                 keyuser_str = u'无'
             if beg_time == "":
@@ -137,9 +163,7 @@ def showresult_by_topic():
 
             if count == 0:
                 flash(u'您搜索的话题结果为空')
-                field_topics = getFieldTopics()
-                status_hot = getHotStatus()
-                return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                return redirect('/propagate/')
             else:
                 print count
                 topic_info = calculate(get_results())
@@ -185,9 +209,7 @@ def showresult_by_topic():
     
                         if keyword == "":
                             flash(u'关键字（词）不能为空')
-                            field_topics = getFieldTopics()
-                            status_hot = getHotStatus()
-                            return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                            return redirect('/propagate/')
                         if keyuser == "":
                             keyuser_str = u'无'
                         if beg_time == "":
@@ -214,9 +236,7 @@ def showresult_by_topic():
 
                         if count == 0:
                             flash(u'您搜索的话题结果为空')
-                            field_topics = getFieldTopics()
-                            status_hot = getHotStatus()
-                            return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                            return redirect('/propagate/')
                         else:
                             print count
                             topic_info = calculate(get_results())
@@ -453,6 +473,11 @@ def topic_ajax_path():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
+                keyword = request.args.get('keyword', "")
+                keyuser = request.args.get('keyuser', "")
+                beg_time = int(request.args.get('beg_time', ""))
+                end_time = int(request.args.get('end_time', ""))
+                forest_main(keyword,beg_time,end_time)
                 return render_template('propagate/ajax/topic_retweetpath.html')
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -461,6 +486,11 @@ def topic_ajax_path():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
+                            keyword = request.args.get('keyword', "")
+                            keyuser = request.args.get('keyuser', "")
+                            beg_time = int(request.args.get('beg_time', ""))
+                            end_time = int(request.args.get('end_time', ""))
+                            forest_main(keyword,beg_time,end_time)
                             return render_template('propagate/ajax/topic_retweetpath.html')
                     else:
                         return redirect('/')
@@ -765,7 +795,7 @@ def single_ajax_path():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                mid = int(request.args.get('mid', ""))
+                mid = int(request.args.get('mid', ""))                
                 tree_main(mid)
                 return render_template('propagate/ajax/single_retweetpath.html')
         else:
@@ -822,6 +852,7 @@ def single_ajax_userfield():
 
 @mod.route("/add_material", methods = ["GET","POST"])
 def add_material():
+    print 'yuan'
     result = 'Right'
     mid = request.form['mid']
     mid = int(mid)
@@ -832,15 +863,14 @@ def add_material():
     blog_time = blog_info['status']['postDate']
     blog_text = blog_info['status']['text']
     blog_id = blog_info['status']['id']
-    bloger_ids = db.session.query(HotStatus).filter(HotStatus.id==blog_id).all()
+    #bloger_ids = db.session.query(HotStatus).filter(HotStatus.id==blog_id).all()
     ma_ids = db.session.query(M_Weibo).filter(M_Weibo.weibo_id==blog_id).all()
     if len(ma_ids):
         result = 'Wrong'
     else:
-        for bloger_id in bloger_ids:
-            new_item = M_Weibo(weibo_id=blog_id,text=blog_text.encode('utf-8'),repostsCount=blog_reposts_count,commentsCount=blog_comments_count,postDate=blog_time,uid=bloger_id.uid)
-            db.session.add(new_item)
-            db.session.commit()
+        new_item = M_Weibo(weibo_id=blog_id,text=blog_text,repostsCount=blog_reposts_count,commentsCount=blog_comments_count,postDate=blog_time,uid=blog_info['user']['id'])
+        db.session.add(new_item)
+        db.session.commit()
     return json.dumps(result)
 
 @mod.route("/topics")
@@ -855,7 +885,9 @@ def topics():
                 topic_names = []
                 for topic in topics:
                     topic_names.append(topic.topicName)
-                field_topics.append({'field_name': field_name, 'topics': topic_names})
+                field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
+
+            field_topics.sort(key=lambda x:x['len'],reverse=True)
             return render_template('propagate/topics.html',field_topics = field_topics)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -871,7 +903,8 @@ def topics():
                             topic_names = []
                             for topic in topics:
                                 topic_names.append(topic.topicName)
-                            field_topics.append({'field_name': field_name, 'topics': topic_names})
+                            field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
+                        field_topics.sort(key=lambda x:x['len'],reverse=True)
                         return render_template('propagate/topics.html',field_topics = field_topics)
                     else:
                         return redirect('/')
@@ -883,12 +916,7 @@ def topics():
 def hot_status():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(100)
-            status_hot = []             
-            for status in statuses:
-                uid = status.uid
-                user = get_user(uid)
-                status_hot.append({'status': status, 'user': user}) 
+            status_hot = getHotStatus()
             return render_template('propagate/hot_status.html',status_hot = status_hot)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -896,12 +924,7 @@ def hot_status():
                 for pa in pas:
                     identy = pa.propagate
                     if identy == 1:
-                        statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(100)
-                        status_hot = []             
-                        for status in statuses:
-                            uid = status.uid
-                            user = get_user(uid)
-                            status_hot.append({'status': status, 'user': user}) 
+                        status_hot = getHotStatus()
                         return render_template('propagate/hot_status.html',status_hot = status_hot)
                     else:
                         return redirect('/')

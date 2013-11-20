@@ -1,8 +1,10 @@
 {% extends "propagate/base.html" %}
 {% block title %}热门微博列表{% endblock %}
-{% block content %}
-<link href="{{ url_for('static', filename='css/propagate/microblog.css') }}" rel="stylesheet">
 
+{% block head %}
+<link href="{{ url_for('static', filename='css/propagate/microblog.css') }}" rel="stylesheet">
+{% endblock head%}
+{% block content %}
 <div class="container">
     <h3>热门微博</h3>
       <div class="well">

@@ -165,4 +165,3 @@ def rank_comparison(previous, current):
     else:
         comparison = 1
     return comparison
-

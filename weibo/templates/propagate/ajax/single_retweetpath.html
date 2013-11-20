@@ -9,7 +9,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.parseGexf.js') }}"></script>
 <script>
-	$.get("/static/gexf/tree.gexf", function(data) {
+	$.get("/static/gexf/tree{{mid}}.gexf", function(data) {
 	  var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
 	  	defaultLabelColor: '#fff'
     }).graphProperties({

@@ -5,7 +5,7 @@ DEBUG = True
 ADMINS = frozenset(['youremail@yourdomain.com'])
 SECRET_KEY = 'SecretKeyForSessionSigning'
 
-SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
+SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8&passwd=Bh123456'
 SQLALCHEMY_ECHO = False
 DATABASE_CONNECT_OPTIONS = {}
 

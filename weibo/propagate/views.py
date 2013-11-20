@@ -480,7 +480,7 @@ def topic_ajax_path():
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
                 forest_main(keyword,beg_time,end_time)
-                return render_template('propagate/ajax/topic_retweetpath.html')
+                return render_template('propagate/ajax/topic_retweetpath.html',keyword = keyword)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -493,7 +493,7 @@ def topic_ajax_path():
                             beg_time = int(request.args.get('beg_time', ""))
                             end_time = int(request.args.get('end_time', ""))
                             forest_main(keyword,beg_time,end_time)
-                            return render_template('propagate/ajax/topic_retweetpath.html')
+                            return render_template('propagate/ajax/topic_retweetpath.html',keyword = keyword)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -799,7 +799,7 @@ def single_ajax_path():
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))                
                 tree_main(mid)
-                return render_template('propagate/ajax/single_retweetpath.html')
+                return render_template('propagate/ajax/single_retweetpath.html',mid = mid)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -809,7 +809,7 @@ def single_ajax_path():
                         if request.method == "GET":
                             mid = int(request.args.get('mid', ""))
                             tree_main(mid)
-                            return render_template('propagate/ajax/single_retweetpath.html')
+                            return render_template('propagate/ajax/single_retweetpath.html',mid = mid)
                     else:
                         return redirect('/')
             return redirect('/')

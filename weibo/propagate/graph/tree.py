@@ -32,7 +32,6 @@ def reposts2tree(source_weibo, reposts):
     tree_nodes = []
     count, get_results = xapian_search_user.search(query={'_id': source_weibo['user']}, fields=['profile_image_url', 'name' , 'location'])#查找原创微博的用户信息
     for result in get_results():
-    
         node = result['name'].decode('utf-8')
         location = result['location'].decode('utf-8') 
         datetime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(source_weibo['timestamp'])) 
@@ -150,5 +149,5 @@ def tree_main(mid):
         tree = reposts2tree(source_weibo, reposts)
         graph = tree2graph(tree)
 
-        with open('./weibo/static/gexf/tree.gexf', 'w') as gf:
+        with open('./weibo/static/gexf/tree%s.gexf'%mid, 'w') as gf:
             gf.write(graph)

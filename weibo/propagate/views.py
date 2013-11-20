@@ -15,8 +15,10 @@ from datetime import date
 from datetime import datetime
 
 from xapian_weibo.xapian_backend import XapianSearch
-search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-
+try:
+    search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+except:
+    print 'sth. wrong with xapian, please check propagate/views.py'
 from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
 
 from weibo.model import *
@@ -46,7 +48,7 @@ def getFieldTopics():
         topic_names = []
         for topic in topics:
             topic_names.append(topic.topicName)
-        field_topics.append({'field_name': field_name, 'topics': topic_names})
+        field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
     return field_topics
 
 def getHotStatus():
@@ -76,10 +78,20 @@ def log_in():
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            field_topics = getFieldTopics()
-            status_hot = getHotStatus()
+            field_topics = getFieldTopics() 
+            field_topics.sort(key=lambda x:x['len'],reverse=True)
+
+            i = 0
+            fields = []
+            for field_topic in field_topics:
+                if i > 3:
+                    break
+                i = i + 1
+                fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+                
+            #status_hot = getHotStatus()
             
-            return render_template('propagate/search.html', field_topics=field_topics, status_hot=status_hot)
+            return render_template('propagate/search.html', field_topics=fields)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -87,9 +99,18 @@ def index():
                     identy = pa.propagate
                     if identy == 1:
                         field_topics = getFieldTopics()
-                        status_hot = getHotStatus()
+                        field_topics.sort(key=lambda x:x['len'],reverse=True)
+                        i = 0
+                        fields = []
+                        for field_topic in field_topics:
+                            if i > 3:
+                                break
+                            i = i + 1
+                            fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+                            
+                        #status_hot = getHotStatus()
      
-                        return render_template('propagate/search.html', field_topics=field_topics, status_hot=status_hot)
+                        return render_template('propagate/search.html', field_topics=fields)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -117,9 +138,7 @@ def showresult_by_topic():
     
             if keyword == "":
                 flash(u'关键字（词）不能为空')
-                field_topics = getFieldTopics()
-                status_hot = getHotStatus()
-                return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                return redirect('/propagate/')
             if keyuser == "":
                 keyuser_str = u'无'
             if beg_time == "":
@@ -146,9 +165,7 @@ def showresult_by_topic():
 
             if count == 0:
                 flash(u'您搜索的话题结果为空')
-                field_topics = getFieldTopics()
-                status_hot = getHotStatus()
-                return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                return redirect('/propagate/')
             else:
                 print count
                 topic_info = calculate(get_results())
@@ -194,9 +211,7 @@ def showresult_by_topic():
     
                         if keyword == "":
                             flash(u'关键字（词）不能为空')
-                            field_topics = getFieldTopics()
-                            status_hot = getHotStatus()
-                            return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                            return redirect('/propagate/')
                         if keyuser == "":
                             keyuser_str = u'无'
                         if beg_time == "":
@@ -223,9 +238,7 @@ def showresult_by_topic():
 
                         if count == 0:
                             flash(u'您搜索的话题结果为空')
-                            field_topics = getFieldTopics()
-                            status_hot = getHotStatus()
-                            return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                            return redirect('/propagate/')
                         else:
                             print count
                             topic_info = calculate(get_results())
@@ -857,7 +870,6 @@ def add_material():
     if len(ma_ids):
         result = 'Wrong'
     else:
-        #for bloger_id in bloger_ids:
         new_item = M_Weibo(weibo_id=blog_id,text=blog_text,repostsCount=blog_reposts_count,commentsCount=blog_comments_count,postDate=blog_time,uid=blog_info['user']['id'])
         db.session.add(new_item)
         db.session.commit()
@@ -875,7 +887,9 @@ def topics():
                 topic_names = []
                 for topic in topics:
                     topic_names.append(topic.topicName)
-                field_topics.append({'field_name': field_name, 'topics': topic_names})
+                field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
+
+            field_topics.sort(key=lambda x:x['len'],reverse=True)
             return render_template('propagate/topics.html',field_topics = field_topics)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -891,7 +905,8 @@ def topics():
                             topic_names = []
                             for topic in topics:
                                 topic_names.append(topic.topicName)
-                            field_topics.append({'field_name': field_name, 'topics': topic_names})
+                            field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
+                        field_topics.sort(key=lambda x:x['len'],reverse=True)
                         return render_template('propagate/topics.html',field_topics = field_topics)
                     else:
                         return redirect('/')
@@ -903,14 +918,7 @@ def topics():
 def hot_status():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            #statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(100)
-            count,statuses = search_weibo.search(query={'timestamp': {'$gt': time.mktime(time.strptime('2013-01-01','%Y-%m-%d')), '$lt': time.mktime(time.strptime('2013-01-07','%Y-%m-%d'))}}, sort_by=['reposts_count'], fields=['_id','text','timestamp','user','reposts_count','comments_count','attitudes_count','retweeted_status','source'],limit=100)
-            status_hot = []             
-            for status in statuses():
-                uid = status.uid
-                user = get_user(uid)
-                weibo_url = weiboinfo2url(uid,status['_id'])
-                status_hot.append({'status': status, 'user': user, 'weibo_url':weibo_url}) 
+            status_hot = getHotStatus()
             return render_template('propagate/hot_status.html',status_hot = status_hot)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -918,14 +926,7 @@ def hot_status():
                 for pa in pas:
                     identy = pa.propagate
                     if identy == 1:
-                        #statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(100)
-                        count,statuses = search_weibo.search(query={'timestamp': {'$gt': time.mktime(time.strptime('2013-01-01','%Y-%m-%d')), '$lt': time.mktime(time.strptime('2013-01-07','%Y-%m-%d'))}}, sort_by=['reposts_count'], fields=['_id','text','timestamp','user','reposts_count','comments_count','attitudes_count','retweeted_status','source'],limit=100)
-                        status_hot = []             
-                        for status in statuses():
-                            uid = status.uid
-                            user = get_user(uid)
-                            weibo_url = weiboinfo2url(uid,status['_id'])
-                            status_hot.append({'status': status, 'user': user, 'weibo_url':weibo_urlsh}) 
+                        status_hot = getHotStatus()
                         return render_template('propagate/hot_status.html',status_hot = status_hot)
                     else:
                         return redirect('/')

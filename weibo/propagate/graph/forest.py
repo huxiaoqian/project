@@ -39,35 +39,45 @@ def load_data(keyword,beg_time,end_time):
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count']
     number, get_results = s.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
     topic_info = calculate(get_results())
-    blog_rel_list = topic_info['topic_rel_blog'][:10]
+    blog_rel_list = topic_info['topic_rel_blog'][:5]
 
     ts = []
     for status in blog_rel_list:
         print status['status']['_id']
-        ts.append(status['status']['timestamp'])
+        ts.append(int(time.mktime(time.strptime(str(status['status']['created_at']), '%Y-%m-%d %H:%M:%S'))))
         number,source_weibo = s.search(query={'retweeted_status': status['status']['_id']})#查找热门微博的转发微博
-        repost_ids = []
-        for sw in source_weibo():
-            repost_ids.append(sw['_id']) 
+        #repost_ids = []
         if not number:
             continue
-        number,source_users = xapian_search_user.search(query={'_id': status['status']['user']}, fields=['name'])
-        for source_user in source_users():
-            su = source_user['name']
+
         count = 0
         reposts = []#存储转发微博的信息
-        for sid in repost_ids:
+        for sw in source_weibo():
             if count % 10 == 0:
                 print '%s tweets loaded...' % count
-            n,ws = s.search(query={'_id': sid})#查找转发微博的信息
-            for w in ws():
-                number,get_users = xapian_search_user.search(query={'_id': w['user']}, fields=['name'])
-                for user in get_users():
-                    print user['name'], type(user['name'])
-                    line = unicode(user['name'], 'utf-8') + '\t'+ unicode(w['text'], 'utf-8') + '\t' + unicode(su, 'utf-8') +'\t'+ str(int(w['timestamp']))
-                    reposts.append(line)
-                count += 1
+            number,get_users = xapian_search_user.search(query={'_id': sw['user']}, fields=['name'])
+            for user in get_users():
+                line = unicode(user['name'], 'utf-8') + '\t'+ unicode(sw['text'], 'utf-8') + '\t' + unicode(status['user']['name'], 'utf-8') +'\t'+ str(int(sw['timestamp']))
+                reposts.append(line)
+            count += 1
         dataset.append(reposts)
+            #repost_ids.append(sw['_id'])         
+        #number,source_users = xapian_search_user.search(query={'_id': status['status']['user']['id']}, fields=['name'])
+        #for source_user in source_users():
+            #su = source_user['name']
+##        count = 0
+##        reposts = []#存储转发微博的信息
+##        for sid in repost_ids:
+##            if count % 10 == 0:
+##                print '%s tweets loaded...' % count
+##            n,ws = s.search(query={'_id': sid})#查找转发微博的信息
+##            for w in ws():
+##                number,get_users = xapian_search_user.search(query={'_id': w['user']}, fields=['name'])
+##                for user in get_users():
+##                    line = unicode(user['name'], 'utf-8') + '\t'+ unicode(w['text'], 'utf-8') + '\t' + unicode(status['status']['user']['name'], 'utf-8') +'\t'+ str(int(w['timestamp']))
+##                    reposts.append(line)
+##                count += 1
+##        dataset.append(reposts)
     return min(ts), dataset  
 
 def random_color(colors):

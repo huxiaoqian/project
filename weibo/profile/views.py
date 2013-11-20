@@ -27,10 +27,13 @@ from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
 
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/20130807', name='master_timeline_sentiment', schema_version=3)
-xapian_search_domain  = XapianSearch(path='/home/xapian/var/lib/xapian_weibo/data/liumengni', name='master_timeline_domain', schema_version=4)
+try:
+    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+    xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/20130807', name='master_timeline_sentiment', schema_version=3)
+    xapian_search_domain  = XapianSearch(path='/home/xapian/var/lib/xapian_weibo/data/liumengni', name='master_timeline_domain', schema_version=4)
+except:
+    print 'sth. wrong with xapian, please check'
 
 LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
@@ -74,11 +77,11 @@ def getStaticInfo():
     friendscount = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
     followerscount = [0, 6000000, 12000000, 18000000, 24000000, 30000000, 36000000, 42000000, 48000000, 54000000, 60000000]
     province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外']
-    statuscount = db.session.query(RangeCount).filter(RangeCount.countType=='statuses').all()
-    friendscount = db.session.query(RangeCount).filter(RangeCount.countType=='friends').all()
-    followerscount = db.session.query(RangeCount).filter(RangeCount.countType=='followers').all()
-    province = db.session.query(Province).order_by(Province.id).all()
-    return statuscount, friendscount, followerscount, province, fields_value
+    statusRange = [{'lowBound': statuscount[i], 'upBound': statuscount[i+1]} for i in range(len(statuscount)-1)]
+    friendsRange = [{'lowBound': friendscount[i], 'upBound': friendscount[i+1]} for i in range(len(friendscount)-1)]
+    followersRange = [{'lowBound': followerscount[i], 'upBound': followerscount[i+1]} for i in range(len(followerscount)-1)]
+    province = [{'province': unicode(i, 'utf-8')} for i in province]
+    return statusRange, friendsRange, followersRange, province, fields_value
 
 
 def yymInfo(uid):

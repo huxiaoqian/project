@@ -7,6 +7,8 @@ from weibo.extensions import db
 import json
 import csv
 import os
+from xapian_weibo.xapian_backend import XapianSearch
+xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 mod = Blueprint('sysadmin', __name__, url_prefix='/sysadmin')
 
@@ -120,7 +122,7 @@ def ch_pass():
             for old_item in old_items:
                 db.session.delete(old_item)
                 db.session.commit()
-            new_item = Manager(password=new_pass,managerName=session['user'],managerGender='男',managerAge='30',managerPosition='系统管理员')
+            new_item = Manager(password=new_pass,managerName=session['user'])
             db.session.add(new_item)
             db.session.commit()
             return json.dumps(result)
@@ -160,10 +162,10 @@ def add_new():
 def add_black():
     result = 'Right'
     new_field = request.form['topic']
-    new_names = db.session.query(User).filter(User.id==new_field).all()
-    if len(new_names):
-        for new_name in new_names:
-            new_item = BlackList(blackID=new_field,blackName=new_name.userName)
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = BlackList(blackID=get_result['_id'],blackName=get_result['name'])
             db.session.add(new_item)
             db.session.commit()
     else:
@@ -174,10 +176,10 @@ def add_black():
 def add_media():
     result = 'Right'
     new_field = request.form['topic']
-    new_names = db.session.query(User).filter(User.id==new_field).all()
-    if len(new_names):
-        for new_name in new_names:
-            new_item = IMedia(mediaID=new_field,mediaName=new_name.userName)
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = IMedia(mediaID=get_result['_id'],mediaName=get_result['name'])
             db.session.add(new_item)
             db.session.commit()
     else:
@@ -317,7 +319,7 @@ def new_in():
 def newwords_rank():
     page = 1
     countperpage = 10
-    limit = 1000
+    limit = 1000000
     if request.args.get('page'):
         page = int(request.args.get('page'))
     if request.args.get('countperpage'):
@@ -386,3 +388,4 @@ def user_modify():
         return json.dumps('Right')
     else:        
         return json.dumps('Wrong')
+

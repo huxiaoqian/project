@@ -18,9 +18,11 @@ from lxml import etree
 
 from gexf import Gexf
 from gen import Tree
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-s = XapianSearch(path='/opt/xapian_weibo/data/',name='master_timeline_weibo',schema_version=2)
-
+try:
+    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+    s = XapianSearch(path='/opt/xapian_weibo/data/',name='master_timeline_weibo',schema_version=2)
+except:
+    print 'sth. wrong with xapian, please check propagate/graph/tree.py'
 class Count:
     def __init__(self, count=0):
         self.count = count

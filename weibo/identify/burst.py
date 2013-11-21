@@ -27,6 +27,7 @@ def save_to_db(method):
         return data
     return func
 
+@save_to_db
 def followers_rank(top_n, date, window_size):
     user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
     count, get_results = user_search.search(query={'followers_count': {'$gt': FOLLOWERS_MIN_SUPPORT}}, sort_by=['-followers_count'], fields=['_id'], max_offset=top_n)
@@ -36,6 +37,7 @@ def followers_rank(top_n, date, window_size):
 
     return sorted_uids
 
+@save_to_db
 def active_rank(top_n, date, window_size):
     date_time = datetime2ts(date)
     uid_active = {}
@@ -72,6 +74,7 @@ def active_rank(top_n, date, window_size):
 
     return sorted_uids
 
+@save_to_db
 def important_rank(top_n, date, window_size):
     date_time = datetime2ts(date)
     uid_important = {}

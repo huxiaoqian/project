@@ -210,10 +210,10 @@ def main():
 
     # #1000,000 nodes pagerank
     # #time: 358.85s(multi 168.27)
-    #tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    #tmp_file = emulate(tmp_file, size=1000000)
-    #input_path = tmp_file.name
-    #pagerank_simluation_test(input_path)
+    tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    tmp_file = emulate(tmp_file, size=1000000)
+    input_path = tmp_file.name
+    Spagerank_simluation_test(input_path)
 
     # #3000,000 nodes pagerank
     # #time: 764.14s(multi 239.23)
@@ -318,20 +318,20 @@ def main():
     # #search statuses max_size=100000
     # #time: 21.48s(multi 4.24)
     # #hit: 76200(multi 27914)
-    topic = u'黄金'
-    date = '2013-5-1'
-    window = 90
-    results = search_topic_statuses(topic, date, window, max_size=100000)
+    #topic = u'黄金'
+    #date = '2013-5-1'
+    #window = 90
+    #results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
     # #time: 548.06s(multi 89.45)
-    g = load_topic_statuses(results)
+    #g = load_topic_statuses(results)
     # #prepartion for hadoop
     # #time: 0.06s(multi 0.06)
-    input_file = prepare_topic_statusesfor_hadoop(g)
-    input_path = input_file.name
+    #input_file = prepare_topic_statusesfor_hadoop(g)
+    #input_path = input_file.name
     # #mapreduce on hadoop
     # #time: 106.85s(multi 109.60)
-    pagerank_simluation_test(input_path)
+    #pagerank_simluation_test(input_path)
 
 
     '''

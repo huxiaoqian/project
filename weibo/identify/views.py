@@ -183,6 +183,7 @@ def burst():
                         rank_func = getattr(burstModule, '%s_rank' % rank_method, None)
                         if rank_func:
                             data = rank_func(top_n, current_date, window_size)
+                    print data
                     return json.dumps({'status': 'current finished', 'data': data})
                 elif action == 'previous_rank':
                     previous_date = ts2datetime(current_time-window2time(window_size))

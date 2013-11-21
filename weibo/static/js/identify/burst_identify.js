@@ -136,10 +136,12 @@ function show_user_statuses(uid) {
 	var table = '<table class="table table-bordered">';
 	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>同比</th><th>敏感状态</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
 	var tbody = '<tbody>';
+	console.log(data);
 	for (var i = start_row;i < end_row;i++) {
-            var tr = '<tr>';
+        var tr = '<tr>';
+        console.log(data[i]);
 	    if (data[i][3].match("海外")) {
-		tr = '<tr class="success">';
+			tr = data[i][3];
 	    }
 	    var uid = data[i][1];
             for(var j = 0;j < cellCount;j++) {

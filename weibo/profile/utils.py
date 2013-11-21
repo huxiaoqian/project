@@ -291,9 +291,9 @@ def active_rank(top_n, date, window_size):
 def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='20130430'):
     query_dict = {
         'domain': str(fields_id[fieldName]),
-        #'followers_count': {'$gt': 1000}
+        'followers_count': {'$gt': 1000}
     }
-    count, get_results = xapian_search_domain.search(query=query_dict, fields=['_id'], max_offset=10000)#, sort_by =['followers_count']
+    count, get_results = xapian_search_domain.search(query=query_dict, sort_by =['-followers_count'], fields=['_id'], max_offset=10000)
     fields_list = [user['_id'] for user in get_results()]
     return fields_list[start_offset:end_offset]
 

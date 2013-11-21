@@ -39,7 +39,7 @@ LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
-fields_value = [{'fieldZhName': u'文化', 'fieldEnName': 'culture'}, {'fieldZhName': u'教育', 'fieldEnName': 'education'}, {'fieldZhName': u'娱乐', 'fieldEnName': 'entertainment'}, {'fieldZhName': u'时尚', 'fieldEnName': 'fashion'}, {'fieldZhName': u'财经', 'fieldEnName': 'finance'}, {'fieldZhName': u'媒体', 'fieldEnName': 'media'}, {'fieldZhName': u'体育', 'fieldEnName': 'sports'}, {'fieldZhName': u'技术', 'fieldEnName': 'technology'}]
+fields_value = {'culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology'}
 fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
 
 mod = Blueprint('profile', __name__, url_prefix='/profile')
@@ -56,21 +56,21 @@ def get_bucket(bucket):
 
 def fieldsEn2Zh(name):
     if name == 'finance':
-        return '财经'
+        return u'财经'
     if name == 'media':
-        return '媒体'
+        return u'媒体'
     if name == 'culture':
-        return '文化'
+        return u'文化'
     if name == 'technology':
-        return '科技'
+        return u'科技'
     if name == 'entertainment':
-        return '娱乐'
+        return u'娱乐'
     if name == 'education':
-        return '教育'
+        return u'教育'
     if name == 'fashion':
-        return '时尚'
+        return u'时尚'
     if name == 'sports':
-        return '体育'
+        return u'体育'
 
 def getStaticInfo():
     statuscount = [0, 2000000, 4000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000]
@@ -81,7 +81,8 @@ def getStaticInfo():
     friendsRange = [{'lowBound': friendscount[i], 'upBound': friendscount[i+1]} for i in range(len(friendscount)-1)]
     followersRange = [{'lowBound': followerscount[i], 'upBound': followerscount[i+1]} for i in range(len(followerscount)-1)]
     province = [{'province': unicode(i, 'utf-8')} for i in province]
-    return statusRange, friendsRange, followersRange, province, fields_value
+    fields = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
+    return statusRange, friendsRange, followersRange, province, fields
 
 
 def yymInfo(uid):
@@ -417,16 +418,16 @@ def profile_search(model='hotest'):
 def profile_group(fieldEnName):
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            field = fields_value
-            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
+            field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
+            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.profile
                     if identy == 1:
-                        field = fields_value
-                        return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=unicode(fieldsEn2Zh(fieldEnName), 'utf-8'))
+                        field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
+                        return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
                     else:
                         return redirect('/')
             return redirect('/')
@@ -661,12 +662,12 @@ def profile_person_tab_ajax(model, uid):
                     d_ = domain.split(',')
                     if len(d_) == 2:
                         field1, field2 = d_
-                        field1 = unicode(fieldsEn2Zh(fields_value[int(field1)-1]), 'utf-8')
-                        field2 = unicode(ieldsEn2Zh(fields_value[int(field2)-1]), 'utf-8')
+                        field1 = fieldsEn2Zh(fields_value[int(field1)-1])
+                        field2 = fieldsEn2Zh(fields_value[int(field2)-1])
                     else:
                         field1 = d_[0]
-                        field1 = unicode(fieldsEn2Zh(fields_value[int(field1)-1]), 'utf-8')
-                        field2 = unicode('未知', 'utf-8')
+                        field1 = fieldsEn2Zh(fields_value[int(field1)-1])
+                        field2 = u'未知'
                 else:
                     field1 = unicode('未知', 'utf-8')
                     field2 = unicode('未知', 'utf-8')
@@ -704,15 +705,15 @@ def profile_person_tab_ajax(model, uid):
                                 d_ = domain.split(',')
                                 if len(d_) == 2:
                                     field1, field2 = d_
-                                    field1 = unicode(fieldsEn2Zh(fields_value[int(field1)-1]), 'utf-8')
-                                    field2 = unicode(ieldsEn2Zh(fields_value[int(field2)-1]), 'utf-8')
+                                    field1 = fieldsEn2Zh(fields_value[int(field1)-1])
+                                    field2 = fieldsEn2Zh(fields_value[int(field2)-1])
                                 else:
                                     field1 = d_[0]
-                                    field1 = unicode(fieldsEn2Zh(fields_value[int(field1)-1]), 'utf-8')
-                                    field2 = unicode('未知', 'utf-8')
+                                    field1 = fieldsEn2Zh(fields_value[int(field1)-1])
+                                    field2 = u'未知'
                             else:
-                                field1 = unicode('未知', 'utf-8')
-                                field2 = unicode('未知', 'utf-8')
+                                field1 = u'未知'
+                                field2 = u'未知'
                                 return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=field1 + ',' + field2)
                         elif model == 'personalweibocount':
                             return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
@@ -907,7 +908,7 @@ def profile_person_fri_fol(friendship, uid):
                 try:
                     fields = field_bucket.Get(str(user_id) + '_' + '20130430')
                     field = fields.split(',')[0]
-                    field = unicode(fieldsEn2Zh(field), 'utf-8')
+                    field = fieldsEn2Zh(field)
                 except KeyError:
                     continue
                 try:

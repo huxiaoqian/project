@@ -365,7 +365,6 @@
 
     function get_peaks(series4, series5, series6){
         var query_args = $("#keyword")[0].value;
-        console.log(happy_list);
         $.ajax({
             url: "/moodlens/emotionpeak/?happy=" + happy_list.join(',') + "&angry=" + angry_list.join(',') + "&sad=" + sad_list.join(',') + "&ts=" + ts_list + "&query=" + query_args,
             type: "GET",

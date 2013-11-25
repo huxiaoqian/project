@@ -31,9 +31,9 @@ try:
     xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
     xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
     xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/20130807', name='master_timeline_sentiment', schema_version=3)
-    xapian_search_domain  = XapianSearch(path='/home/xapian/var/lib/xapian_weibo/data/liumengni', name='master_timeline_domain', schema_version=4)
+    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120', name='master_timeline_domain', schema_version=4)
 except:
-    print 'sth. wrong with xapian, please check'
+    print 'sth. wrong with xapian, please check profile/views.py'
 
 LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
@@ -154,12 +154,11 @@ def profile_search(model='hotest'):
                         startoffset = (page - 1) * COUNT_PER_PAGE
 
                     total_days = 90
-                    today = datetime.datetime.today()
-                    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
-                    now_ts = int(now_ts)
+                    begin_ts = int(time.mktime(datetime.datetime(2013, 1, 1, 2, 0).timetuple()))
+                    now_ts = int(time.mktime(datetime.datetime(2013, 4, 1, 2, 0).timetuple()))
                     during = 24 * 3600
-                    begin_ts = now_ts - total_days * during
-
+                    total_days = (now_ts - begin_ts) / during
+                    
                     query_dict = {
                         'created_at': {
                             '$gt': begin_ts,
@@ -167,8 +166,8 @@ def profile_search(model='hotest'):
                         }
                     }
                     count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
-                                                       fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                       sort_by=['-created_at'])
+                                                                   fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                                   sort_by=['created_at'])
                     users = []
                     for r in get_results():
                         statusesCount = r['statuses_count']
@@ -254,6 +253,10 @@ def profile_search(model='hotest'):
                         userName = r['name']
                         description = r['description']
                         uid = r['_id']
+                        try:
+                            print r['province']
+                        except:
+                            pass
                         profileImageUrl = r['profile_image_url']
                         users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
                                       'description': description, 'profileImageUrl': profileImageUrl})
@@ -266,8 +269,12 @@ def profile_search(model='hotest'):
                         startoffset = (page - 1) * COUNT_PER_PAGE
                     endoffset = startoffset + COUNT_PER_PAGE - 1
                     province = request.form['province']
-                    count, get_results = xapian_search_user.search(query={'province': province}, sort_by=['_id', 'followers_count'], max_offset=10000, fields=['name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
+                    if type(province) is unicode:
+                        province = province.encode('utf-8')
+                        print province
+                    count, get_results = xapian_search_user.search(query={'province': u'北京'}, sort_by=['followers_count'], max_offset=10000, fields=['name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
                     users = []
+                    print count
                     offset = 0
                     for r in get_results():
                         if offset >= startoffset and offset <= endoffset:

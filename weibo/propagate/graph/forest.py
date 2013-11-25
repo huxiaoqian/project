@@ -223,7 +223,7 @@ def build_tree(repost_data, counter, _start_ts, _end_ts):
                 r.append(Node(user, ts, nid=counter))
     return root, start_ts, end_ts, count, counter
 
-def forest_main(keyword,beg_time,end_time):
+def forest_main(keyword,beg_time,end_time,keyid):
 
     _start_ts = date2ts(START_DATE)
     if beg_time < _start_ts:
@@ -259,6 +259,7 @@ def forest_main(keyword,beg_time,end_time):
         counter = build_y_chart(graph, y_count, y_name, counter, -SEG)
 
     graph = etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
-
-    with open('./weibo/static/gexf/forest%s.gexf'%keyword, 'w') as gf:
+    
+    #print type(keyword)
+    with open('./weibo/static/gexf/forest%s.gexf'% keyid, 'w') as gf:
         gf.write(graph)

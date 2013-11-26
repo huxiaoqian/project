@@ -19,6 +19,7 @@ try:
     search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 except:
     print 'sth. wrong with xapian, please check propagate/views.py'
+xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
 
 from weibo.model import *
@@ -472,6 +473,7 @@ def topic_ajax_stat():
     
 @mod.route("/topic_ajax_path/", methods=['GET', 'POST'])
 def topic_ajax_path():
+    import urllib2
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
@@ -479,8 +481,19 @@ def topic_ajax_path():
                 keyuser = request.args.get('keyuser', "")
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
-                forest_main(keyword,beg_time,end_time)
-                return render_template('propagate/ajax/topic_retweetpath.html',keyword = keyword)
+                topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                if len(topics):
+                    for topic in topics:
+                        keyid = topic.id
+                else:        
+                    new_item = Topic(topicName=keyword)
+                    db.session.add(new_item)
+                    db.session.commit()
+                    topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                    for topic in topics:
+                        keyid = topic.id
+                forest_main(keyword,beg_time,end_time,keyid)
+                return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -492,8 +505,19 @@ def topic_ajax_path():
                             keyuser = request.args.get('keyuser', "")
                             beg_time = int(request.args.get('beg_time', ""))
                             end_time = int(request.args.get('end_time', ""))
-                            forest_main(keyword,beg_time,end_time)
-                            return render_template('propagate/ajax/topic_retweetpath.html',keyword = keyword)
+                            topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                            if len(topics):
+                                for topic in topics:
+                                    keyid = topic.id
+                            else:        
+                                new_item = Topic(topicName=keyword)
+                                db.session.add(new_item)
+                                db.session.commit()
+                                topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                                for topic in topics:
+                                    keyid = topic.id
+                            forest_main(keyword,beg_time,end_time,keyid)
+                            return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -512,10 +536,18 @@ def topic_ajax_userfield():
     
                 fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
                 count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+##                print 'yuan',count
+##                topic_info = calculate(get_results())
+##                topic_key_user_list = topic_info['topic_leader']
+##                print len(topic_key_user_list)
+                topic_key_user_list = []
+                for result in get_results():
+                    number, users = xapian_search_user.search(query={'_id': result['user']}, fields=['_id','name','location','friends_count','followers_count'])
+                    if not number:
+                        continue
+                    for user in users():
 
-                topic_info = calculate(get_results())
-                topic_key_user_list = topic_info['topic_leader']
-
+                        topic_key_user_list.append({'id':user['_id'],'name':unicode(user['name'], 'utf-8'),'location':unicode(user['location'], 'utf-8'),'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
                 return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list)
             else:
                 pass
@@ -534,9 +566,14 @@ def topic_ajax_userfield():
                             fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
                             count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
-                            topic_info = calculate(get_results())
-                            topic_key_user_list = topic_info['topic_leader']
+                            topic_key_user_list = []
+                            for result in get_results():
+                                number, users = xapian_search_user.search(query={'_id': result['user']}, fields=['_id','name','location','friends_count','followers_count'])
+                                if not number:
+                                    continue
+                                for user in users():
 
+                                    topic_key_user_list.append({'id':user['_id'],'name':unicode(user['name'], 'utf-8'),'location':unicode(user['location'], 'utf-8'),'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
                             return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list)
                         else:
                             pass
@@ -827,7 +864,7 @@ def single_ajax_userfield():
                 repost_bloger = blog_info['repost_users']
                 blog_key_user_list = repost_bloger
 
-                return render_template('propagate/ajax/single_userfield.html',  blog_key_user_list=blog_key_user_list)
+                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list)
             else:
                 pass
         else:
@@ -843,7 +880,7 @@ def single_ajax_userfield():
                             repost_bloger = blog_info['repost_users']
                             blog_key_user_list = repost_bloger
 
-                            return render_template('propagate/ajax/single_userfield.html',  blog_key_user_list=blog_key_user_list)
+                            return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list)
                         else:
                             pass
                     else:
@@ -933,3 +970,70 @@ def hot_status():
             return redirect('/')
     else:
         return redirect('/')
+
+@mod.route('/single_rank/')
+def single_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if request.args.get('mid'):
+        mid = int(request.args.get('mid'))
+    blog_info = calculate_single(mid)
+    repost_bloger = blog_info['repost_users']
+    blog_key_user_list = repost_bloger
+
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+
+    news=[]
+    n = 0
+    for user in blog_key_user_list:
+        if user:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break
+                news.append({'id':user['id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['bi_followers_count']})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/topic_rank/')
+def topic_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if request.args.get('topic_key_user_list'):
+        blog_key_user_list = request.args.get('topic_key_user_list')
+
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+
+    news=[]
+    n = 0
+    for user in blog_key_user_list:
+        if user:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break
+                news.append({'id':user['id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['bi_followers_count']})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})

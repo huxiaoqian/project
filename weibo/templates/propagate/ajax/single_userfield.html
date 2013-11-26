@@ -77,8 +77,8 @@
         </tr>
       </thead>
       <div id="users_area">
-        <tbody>
-          {% for user in blog_key_user_list %}
+        <tbody id="word_table">
+          <!--{% for user in blog_key_user_list %}
             <tr>
               <td>{{ user.id }}</td>
               <td>{{ user.name }}</td>
@@ -88,11 +88,12 @@
               <td>二级</td>
               <td><i class="icon-ok"></i></td>
             </tr>
-          {% endfor %} 
+          {% endfor %} -->
         </tbody>
       </div>
     </table>
     <div id="page-selection" class="pagination pagination-centered"></div>
+    <script src="/static/js/profile/jquery.bootpag.min.js"></script>
   </div>
 </div>
 <div class = "span12" >
@@ -121,13 +122,13 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
 <script>
   // init bootpag
-  $('#page-selection').bootpag({
+  /*$('#page-selection').bootpag({
       total: 23,
       page: 1,
       maxVisible: 10 
-  }).on("page", function(event, /* page number here */ num){
+  }).on("page", function(event, /* page number here  num){
        $("#users_area").html("Insert content"); // some ajax content loading...
-  });
+  });*/
 
   display_user_field_dist();
 
@@ -216,6 +217,63 @@
       });
     }
   });  
+
+var countperpage_args = 10;
+var limit_arg = 1000000;
+
+function getRankData(countperpage_args, limit_arg){
+    var total_page_number;
+    $.ajax({
+        url: "/propagate/single_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg + "&mid=" + {{mid}},
+        dataType: 'json',   
+        type: "GET",
+        success: function (data) {
+        total_page_number = parseInt(data['pages']);
+        var html = "";
+        for(var i=0;i < data['news'].length;i += 1){
+            user = data['news'][i];
+            html += "<tr><td style='text-align:center'>" + user['id'] + "</td>";
+            html += "<td style='text-align:center'>" + user['name'] + "</td>";
+            html += "<td style='text-align:center'>" + user['location'] + "</td>";
+            html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
+            html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
+            html += "<td>二级</td>";
+            html += "<td><i class='icon-ok'></i></td>";
+        }
+        $("#word_table").empty();
+        $("#word_table").append(html);
+        $('#page-selection').bootpag({
+            total: total_page_number,
+            maxVisible: 10
+        }).on("page", function(event, /* page number here */ num){
+        $("#word_table").empty();
+        $.ajax({
+            url: "/propagate/single_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg+ "&mid=" + {{mid}},
+            dataType: 'json',   
+            type: "GET",
+            success: function (data) {
+            var html = "";
+            for(var i=0;i < data['news'].length;i += 1){
+                user = data['news'][i];
+                            //console.log(user['id'],user['wordsName'],user['seWeight']);
+                html += "<tr><td style='text-align:center'>" + user['id'] + "</td>";
+                html += "<td style='text-align:center'>" + user['name'] + "</td>";
+                html += "<td style='text-align:center'>" + user['location'] + "</td>";
+                html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
+                html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
+                html += "<td>二级</td>";
+                html += "<td><i class='icon-ok'></i></td>";
+            }
+            $("#word_table").append(html);
+            }
+        });
+      });
+    }
+  });
+}
+$(document).ready(function(){
+    getRankData(countperpage_args, limit_arg);
+})
 function exportTableToCSV($table, filename) {
                 
             //  alert(filename);

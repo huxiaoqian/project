@@ -20,9 +20,9 @@ buckets = {}
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 try:
     xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/20130807', name='master_timeline_sentiment', schema_version=3)
-    xapian_search_domain  = XapianSearch(path='/home/xapian/var/lib/xapian_weibo/data/liumengni', name='master_timeline_domain', schema_version=4)
+    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120', name='master_timeline_domain', schema_version=4)
 except:
-    print 'sth. wrong with xapian, please check'
+    print 'sth. wrong with xapian, please check moodlens/views.py'
 total_days = 90
 
 

@@ -216,13 +216,24 @@ def profile_search(model='hotest'):
                         startoffset = (page - 1) * COUNT_PER_PAGE
                     endoffset = startoffset + COUNT_PER_PAGE - 1
                     fieldEnName = model
-                    count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=['followers_count'], fields=['_id'], max_offset=10000)
-                    field_users_list = [user['_id'] for user in field_users()]
+                    count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=['followers_count'], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=10000)
                     users = []
-                    for uid in field_users_list[startoffset: endoffset]:
-                        user = xapian_search_user.search_by_id(int(uid), fields=['name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
-                        if user:
-                            users.append({'id': int(uid), 'profileImageUrl': user['profile_image_url'], 'userName': user['name'], 'statusesCount': user['statuses_count'], 'friendsCount': user['friends_count'], 'followersCount': user['followers_count'], 'description': user['description']})
+                    count = 0
+                    for field_user in field_users():#[startoffset: endoffset]:
+                        if count < startoffset:
+                            count += 1
+                            continue
+                        if count > endoffset:
+                            break
+                        field_user['id'] = field_user['_id']
+                        field_user['profileImageUrl'] = field_user['profile_image_url']
+                        field_user['userName'] = field_user['name']
+                        field_user['statusesCount'] = field_user['statuses_count']
+                        field_user['friendsCount'] = field_user['friends_count']
+                        field_user['followersCount'] = field_user['followers_count']
+                        field_user['description'] = field_user['description']
+                        users.append(field_user)
+                        count += 1
                     return json.dumps(users)
                 elif model == 'person':
                     nickname = urllib2.unquote(request.form['nickname'])
@@ -244,7 +255,7 @@ def profile_search(model='hotest'):
                     }
                     count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
                                                        fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                       sort_by=['-' + sorted_key])
+                                                       sort_by=[sorted_key])
                     users = []
                     for r in get_results():
                         statusesCount = r['statuses_count']
@@ -253,10 +264,6 @@ def profile_search(model='hotest'):
                         userName = r['name']
                         description = r['description']
                         uid = r['_id']
-                        try:
-                            print r['province']
-                        except:
-                            pass
                         profileImageUrl = r['profile_image_url']
                         users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
                                       'description': description, 'profileImageUrl': profileImageUrl})
@@ -271,10 +278,8 @@ def profile_search(model='hotest'):
                     province = request.form['province']
                     if type(province) is unicode:
                         province = province.encode('utf-8')
-                        print province
-                    count, get_results = xapian_search_user.search(query={'province': u'北京'}, sort_by=['followers_count'], max_offset=10000, fields=['name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
+                    count, get_results = xapian_search_user.search(query={'location': province}, sort_by=['followers_count'], max_offset=10000, fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
                     users = []
-                    print count
                     offset = 0
                     for r in get_results():
                         if offset >= startoffset and offset <= endoffset:

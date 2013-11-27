@@ -339,6 +339,151 @@ def newwords_rank():
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
+@mod.route('/material_rank/')
+def material_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(M_Weibo).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'weibo_id':newword.weibo_id,'text':newword.text.encode('utf-8'),'repostsCount':newword.repostsCount,'commentsCount':newword.commentsCount,'postDate':str(newword.postDate),'uid':newword.uid})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/hei_rank/')
+def hei_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(BlackList).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'blackName':newword.blackName.encode('utf-8'),'blackID':newword.blackID})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/media_rank/')
+def media_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(IMedia).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'mediaName':newword.mediaName.encode('utf-8'),'mediaID':newword.mediaID})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/f_rank/')
+def f_rank():
+    page = 1
+    countperpage = 5
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(Field).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'fieldName':newword.fieldName.encode('utf-8')})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/t_rank/')
+def t_rank():
+    page = 1
+    countperpage = 5
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(Topic).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'topicName':newword.topicName.encode('utf-8'),'fieldId':newword.fieldId})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
 @mod.route('/add_user', methods=['GET','POST'])
 def add_user():
     user = request.form['user']

@@ -13,8 +13,11 @@ import operator
 import re
 from xapian_weibo.xapian_backend import XapianSearch
 
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-xapian_search_domain  = XapianSearch(path='/home/xapian/var/lib/xapian_weibo/data/liumengni', name='master_timeline_domain',schema_version=4)
+try:
+    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120/', name='master_timeline_domain',schema_version=4)
+except:
+    print 'sth. wrong with xapian, please check profile/utils.py'
 fields_id = {'culture':1,'education':2,'entertainment':3,'fashion':4,'finance':5,'media':6,'sports':7,'technology':8}
 
 LEVELDBPATH = '/home/mirage/leveldb'

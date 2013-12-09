@@ -8,7 +8,7 @@ try:
     #xapian_search_sentiment = XapianSearch(stub=stub, name='master_timeline_sentiment', schema_version=3)
     xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131130/', name='master_timeline_domain', schema_version=4)
 except:
-   print 'sth. wrong with xapian, please check xapian module'
+    print 'sth. wrong with xapian, please check xapian module'
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}

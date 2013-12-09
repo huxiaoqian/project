@@ -14,8 +14,15 @@ import time
 from datetime import date
 from datetime import datetime
 
+from xapian_weibo.xapian_backend import XapianSearch
 from xapian_config import xapian_search_user,xapian_search_weibo,xapian_search_domain
 from xapian_config import beg_y,beg_m,beg_d,end_y,end_m,end_d
+##try:
+##    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+##    search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+##    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120', name='master_timeline_domain', schema_version=4)
+##except:
+##    print 'sth. wrong with xapian, please check propagate/views.py'
 
 from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
 
@@ -512,6 +519,7 @@ def topic_ajax_path():
                     topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
                     for topic in topics:
                         keyid = topic.id
+                
                 forest_main(keyword,beg_time,end_time,keyid)
                 return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid)
         else:
@@ -565,7 +573,7 @@ def topic_ajax_userfield():
                         continue
                     for user in users():
 
-                        topic_key_user_list.append({'id':user['_id'],'name':unicode(user['name'], 'utf-8'),'location':unicode(user['location'], 'utf-8'),'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+                        topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
                     n, domains = xapian_search_domain.search(query={'_id': result['user']}, fields=['domain'])
                     if not n:
                         domain['其他'] = domain['其他'] + 1
@@ -621,7 +629,7 @@ def topic_ajax_userfield():
                                     continue
                                 for user in users():
 
-                                    topic_key_user_list.append({'id':user['_id'],'name':unicode(user['name'], 'utf-8'),'location':unicode(user['location'], 'utf-8'),'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+                                    topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
                                     n, domains = xapian_search_domain.search(query={'_id': result['user']}, fields=['domain'])
                                     if not n:
                                         domain['其他'] = domain['其他'] + 1
@@ -1174,7 +1182,7 @@ def topic_rank():
             continue
         for user in users():
 
-            topic_key_user_list.append({'id':user['_id'],'name':unicode(user['name'], 'utf-8'),'location':unicode(user['location'], 'utf-8'),'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+            topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
 
     if page == 1:
         startoffset = 0

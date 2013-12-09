@@ -78,17 +78,6 @@
       </thead>
       <div id="users_area">
         <tbody id="word_table">
-          <!--{% for user in blog_key_user_list %}
-            <tr>
-              <td>{{ user.id }}</td>
-              <td>{{ user.name }}</td>
-              <td>{{ user.location }}</td>
-              <td>{{ user.followers_count }}</td>
-              <td>{{ user.bi_followers_count }}</td>
-              <td>二级</td>
-              <td><i class="icon-ok"></i></td>
-            </tr>
-          {% endfor %} -->
         </tbody>
       </div>
     </table>
@@ -121,15 +110,6 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
 <script>
-  // init bootpag
-  /*$('#page-selection').bootpag({
-      total: 23,
-      page: 1,
-      maxVisible: 10 
-  }).on("page", function(event, /* page number here  num){
-       $("#users_area").html("Insert content"); // some ajax content loading...
-  });*/
-
   display_user_field_dist();
 
   function display_user_field_dist(){
@@ -164,17 +144,15 @@
         type: 'pie',
         name: '占比',
         data: [
-            ['金融',   45.0],
-            ['房地产',       26.8],
-            {
-                name: '媒体',
-                y: 12.8,
-                sliced: true,
-                selected: true
-            },
-            ['科技',    8.5],
-            ['教育',     6.2],
-            ['未知领域',   0.7]
+            ['财经',   {{data[0]['finance']}}],
+            ['媒体',   {{data[1]['media_domain']}}],
+            ['文化',   {{data[2]['culture']}}],
+            ['科技',   {{data[3]['technology']}}],
+            ['娱乐',   {{data[4]['entertainment']}}],
+            ['教育',   {{data[5]['education']}}],
+            ['时尚',   {{data[6]['fashion']}}],
+            ['体育',   {{data[7]['sports']}}],
+            ['其他',   {{data[8]['unknown']}}]
         ]
       }]
     });
@@ -220,11 +198,13 @@
 
 var countperpage_args = 10;
 var limit_arg = 1000000;
+//var topic_key_user_list = '{{topic_key_user_list}}';
 
 function getRankData(countperpage_args, limit_arg){
     var total_page_number;
+    
     $.ajax({
-        url: "/propagate/topic_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg + "&topic_key_user_list=" + {{topic_key_user_list}},
+        url: "/propagate/topic_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg + "&keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}",
         dataType: 'json',   
         type: "GET",
         success: function (data) {
@@ -248,21 +228,21 @@ function getRankData(countperpage_args, limit_arg){
           }).on("page", function(event, /* page number here */ num){
             $("#word_table").empty();
         $.ajax({
-            url: "/propagate/topic_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg+ "&topic_key_user_list=" + {{topic_key_user_list}},
+            url: "/propagate/topic_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg+ "&keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}",
             dataType: 'json',   
             type: "GET",
             success: function (data) {
               var html = "";
+              //var user_list = topic_key_user_list[data['start']:data['end']];
               for(var i=0;i < data['news'].length;i += 1){
-                user = data['news'][i];
-                            //console.log(user['id'],user['wordsName'],user['seWeight']);
-                html += "<tr><td style='text-align:center'>" + user['id'] + "</td>";
-                html += "<td style='text-align:center'>" + user['name'] + "</td>";
-                html += "<td style='text-align:center'>" + user['location'] + "</td>";
-                html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
-                html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
-                html += "<td>二级</td>";
-                html += "<td><i class='icon-ok'></i></td>";
+                  user = data['news'][i];
+                  html += "<tr><td style='text-align:center'>" + user['id'] + "</td>";
+                  html += "<td style='text-align:center'>" + user['name'] + "</td>";
+                  html += "<td style='text-align:center'>" + user['location'] + "</td>";
+                  html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
+                  html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
+                  html += "<td>二级</td>";
+                  html += "<td><i class='icon-ok'></i></td>";
               }
               $("#word_table").append(html);
             }

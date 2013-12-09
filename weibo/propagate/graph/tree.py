@@ -18,11 +18,12 @@ from lxml import etree
 
 from gexf import Gexf
 from gen import Tree
-try:
-    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-    s = XapianSearch(path='/opt/xapian_weibo/data/',name='master_timeline_weibo',schema_version=2)
-except:
-    print 'sth. wrong with xapian, please check propagate/graph/tree.py'
+from xapian_config import xapian_search_user,xapian_search_weibo
+##try:
+##    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+##    s = XapianSearch(path='/opt/xapian_weibo/data/',name='master_timeline_weibo',schema_version=2)
+##except:
+##    print 'sth. wrong with xapian, please check propagate/graph/tree.py'
 class Count:
     def __init__(self, count=0):
         self.count = count
@@ -121,7 +122,7 @@ def tree_main(mid):
     
     for mid in mids:
         users = set()
-        number,source_weibo = s.search(query={'retweeted_status': mid})#读取以mid为原创微博的转发微博
+        number,source_weibo = xapian_search_weibo.search(query={'retweeted_mid': mid})#读取以mid为原创微博的转发微博
         assert source_weibo, 'Source Weibo exist ???'
         repost_ids = []
         for sw in source_weibo():
@@ -133,7 +134,7 @@ def tree_main(mid):
         for sid in repost_ids:
             if count % 10 == 0:
                 print '%s tweets loaded...' % count
-            n,ws = s.search(query={'_id': sid})#查找转发微博的信息
+            n,ws = xapian_search_weibo.search(query={'_id': sid})#查找转发微博的信息
             for w in ws():
                 try:
                     users.add(w['user'])
@@ -142,7 +143,7 @@ def tree_main(mid):
                 reposts.append(w)
                 count += 1
 
-        n,m_weibo = s.search(query={'_id': mid})#查找原创微博的信息
+        n,m_weibo = xapian_search_weibo.search(query={'_id': mid})#查找原创微博的信息
         for m_w in m_weibo():
             source_weibo = m_w
 

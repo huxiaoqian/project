@@ -243,24 +243,63 @@ function declear_re(he){<!-- 反选 -->
                           <th style="text-align:center">领域名称</th>
                         </tr>
                       </thead>  
-                      <tbody>
-                        {% for fi in fields %}
-                        <tr>
-                            <td style="text-align:center">
-                              <input type="checkbox" name="field_f" style="font-size:12pt;"/>
-                            </td>
-                            <td style="text-align:center">
-                              <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 50px">{{fi.id}}</span>
-                            </td>
-                            <td style="text-align:center">
-                              <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;"> <link>{{fi.fieldName}}</link></span>
-                            </td>
-                        </tr>    
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                  <script>
+                    <tbody id="word_table">
+                       
+                    </tbody>   
+                </table>
+                <div id="page-selection" class="pagination pagination-centered"></div>
+                <script src="/static/js/profile/jquery.bootpag.min.js"></script>
+                </div>
+                <script>
+                var countperpage_args = 5;
+                var limit_arg = 1000000;
+
+                function getRankData_f(countperpage_args, limit_arg){
+                    var total_page_number;
+                    $.ajax({
+                        url: "/sysadmin/f_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        dataType: 'json',   
+                        type: "GET",
+                        success: function (data) {
+                        total_page_number = parseInt(data['pages']);
+                        var html = "";
+                        for(var i=0;i < data['news'].length;i += 1){
+                            user = data['news'][i];
+                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_f' style='font-size:12pt;'/></td>";
+                            html += "<td style='text-align:center'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['fieldName'] + "</td></tr>";
+                        }
+                    $("#word_table").empty();
+                    $("#word_table").append(html);
+                    $('#page-selection').bootpag({
+                        total: total_page_number,
+                        maxVisible: 10
+                    }).on("page", function(event, /* page number here */ num){
+                    $("#word_table").empty();
+                    $.ajax({
+                        url: "/sysadmin/f_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        dataType: 'json',   
+                        type: "GET",
+                        success: function (data) {
+                          var html = "";
+                          for(var i=0;i < data['news'].length;i += 1){
+                            user = data['news'][i];
+                            //console.log(user['id'],user['wordsName'],user['seWeight']);
+                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_f' style='font-size:12pt;'/></td>";
+                            html += "<td style='text-align:center'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['fieldName'] + "</td></tr>";
+                          }
+                          $("#word_table").append(html);
+                        }
+                    });
+                });
+            }
+          });
+        }
+        $(document).ready(function(){
+          getRankData_f(countperpage_args, limit_arg);
+          getRankData_t(countperpage_args, limit_arg);
+        })
                       $("#de_field").click(function() {
                           $("[name='field_f']").each(function(){
                               
@@ -268,7 +307,7 @@ function declear_re(he){<!-- 反选 -->
                               {
                                   var fa = $(this).parent();
                                   var ne = $(fa).next();
-                                  var f_id = $(ne).children().html();
+                                  var f_id = $(ne).html();
                                   $.ajax({   
                                     type:"POST",  
                                     url:"/sysadmin/field_de",
@@ -315,27 +354,58 @@ function declear_re(he){<!-- 反选 -->
                           <th style="text-align:center">话题名称</th>
                         </tr>
                       </thead>  
-                      <tbody>
-                        {% for to in topics %}
-                        <tr>
-                            <td style="text-align:center">
-                              <input type="checkbox" name="field_t" style="font-size:12pt;"/>
-                            </td>
-                            <td style="text-align:center;display:none">
-                              <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 50px">{{to.id}}</span>
-                            </td>
-                            <td style="text-align:center">
-                              <span class="num-top" style="font-size:15px;width:280px;height:30px;padding-left:0px;padding-top: 50px">{{to.fieldId}}</span>
-                            </td>
-                            <td style="text-align:center">
-                              <span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;"> {{to.topicName}}</span>
-                            </td>
-                        </tr>     
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                  <script>
+                    <tbody id="word_t">
+                       
+                    </tbody>   
+                </table>
+                <div id="page-selection_t" class="pagination pagination-centered"></div>
+                <script src="/static/js/profile/jquery.bootpag.min.js"></script>
+                </div>
+                <script>
+                function getRankData_t(countperpage_args, limit_arg){
+                    var total_page_number;
+                    $.ajax({
+                        url: "/sysadmin/t_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        dataType: 'json',   
+                        type: "GET",
+                        success: function (data) {
+                        total_page_number = parseInt(data['pages']);
+                        var html = "";
+                        for(var i=0;i < data['news'].length;i += 1){
+                            user = data['news'][i];
+                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td>";
+                            html += "<td style='text-align:center;display:none'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['fieldId'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['topicName'] + "</td></tr>";
+                        }
+                    $("#word_t").empty();
+                    $("#word_t").append(html);
+                    $('#page-selection_t').bootpag({
+                        total: total_page_number,
+                        maxVisible: 10
+                    }).on("page", function(event, /* page number here */ num){
+                    $("#word_t").empty();
+                    $.ajax({
+                        url: "/sysadmin/t_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        dataType: 'json',   
+                        type: "GET",
+                        success: function (data) {
+                          var html = "";
+                          for(var i=0;i < data['news'].length;i += 1){
+                            user = data['news'][i];
+                            //console.log(user['id'],user['wordsName'],user['seWeight']);
+                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td>";
+                            html += "<td style='text-align:center;display:none'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['fieldId'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['topicName'] + "</td></tr>";
+                          }
+                          $("#word_t").append(html);
+                        }
+                    });
+                });
+            }
+          });
+        }
                       $("#de_topic").click(function() {
                           $("[name='field_t']").each(function(){
                               
@@ -343,7 +413,7 @@ function declear_re(he){<!-- 反选 -->
                               {
                                   var fa = $(this).parent();
                                   var ne = $(fa).next();
-                                  var f_id = $(ne).children().html();
+                                  var f_id = $(ne).html();
 
                                   $.ajax({   
                                     type:"POST",  

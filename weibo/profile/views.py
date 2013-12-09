@@ -19,7 +19,8 @@ from city_color import province_color_map
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
 from datetime import date
 from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS
-from xapian_weibo.xapian_backend import Schema, XapianSearch
+from xapian_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
+                        fields_value, fields_id, emotions_zh_kv, emotions_kv
 from ldamodel import lda_topic
 from weibo.extensions import db
 from weibo.model import *
@@ -27,25 +28,11 @@ from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
 
-try:
-    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-    xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/20130807', name='master_timeline_sentiment', schema_version=3)
-    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120', name='master_timeline_domain', schema_version=4)
-except:
-    print 'sth. wrong with xapian, please check profile/views.py'
 
-LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
-emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
-emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
-fields_value = {'culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology'}
-fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
-
 mod = Blueprint('profile', __name__, url_prefix='/profile')
 COUNT_PER_PAGE = 20
 
-statusbound_list = []
 
 def get_bucket(bucket):
     if bucket in buckets:
@@ -154,11 +141,12 @@ def profile_search(model='hotest'):
                         startoffset = (page - 1) * COUNT_PER_PAGE
 
                     total_days = 90
-                    begin_ts = int(time.mktime(datetime.datetime(2013, 1, 1, 2, 0).timetuple()))
-                    now_ts = int(time.mktime(datetime.datetime(2013, 4, 1, 2, 0).timetuple()))
+                    begin_ts = int(time.mktime(datetime.datetime(2012,1, 1, 2, 0).timetuple()))
+                    now_ts = int(time.mktime(datetime.datetime(2014, 1, 1, 2, 0).timetuple()))
                     during = 24 * 3600
                     total_days = (now_ts - begin_ts) / during
-                    
+                    print begin_ts
+                    print now_ts
                     query_dict = {
                         'created_at': {
                             '$gt': begin_ts,
@@ -169,6 +157,7 @@ def profile_search(model='hotest'):
                                                                    fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
                                                                    sort_by=['created_at'])
                     users = []
+                    print count
                     for r in get_results():
                         statusesCount = r['statuses_count']
                         followersCount = r['followers_count']
@@ -208,6 +197,24 @@ def profile_search(model='hotest'):
                             if user:
                                 users.append(user)
                     return json.dumps(users[startoffset:endoffset])
+                elif model == 'oversea':
+                    page = int(request.form['page'])
+                    if page == 1:
+                        startoffset = 0
+                    else:
+                        startoffset = (page - 1) * COUNT_PER_PAGE
+                    endoffset = startoffset + COUNT_PER_PAGE - 1
+                    province = '海外'
+                    count, get_results = xapian_search_user.search(query={'location': province}, sort_by=['followers_count'], max_offset=10000, fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
+                    users = []
+                    offset = 0
+                    for r in get_results():
+                        if offset >= startoffset and offset <= endoffset:
+                            users.append({'id': r['_id'], 'profileImageUrl': r['profile_image_url'], 'userName': r['name'], 'statusesCount': r['statuses_count'], 'friendsCount': r['friends_count'], 'followersCount': r['followers_count'], 'description': r['description']})
+                        if offset >= endoffset:
+                            break
+                        offset += 1
+                    return json.dumps(users)
                 elif model in fields_value:
                     page = int(request.form['page'])
                     if page == 1:
@@ -484,25 +491,99 @@ def profile_person(uid):
     else:
         return redirect('/')
 
-@mod.route('/person_interact_network/<uid>', methods=['GET', 'POST'])
-def profile_interact_network(uid):
-    if request.method == 'GET':     
-        center_uid = uid
-        friendship_bucket = get_bucket('friendship')
-        friends_key = str(uid) + '_' + 'friends'
-        followers_key = str(uid) + '_' + 'followers'
-        fri_fol = []
-        try:
-            friends = json.loads(friendship_bucket.Get(friends_key))
-        except KeyError:
-            friends = []
+
+def getFriendship(uid, schema='friends'):
+    if uid:
+        user = xapian_search_user.search_by_id(int(uid), fields=[schema])
+        if user:
+            return user[schema]
+        else:
+            return []
+    else:
+        return []
+
+
+def getUidByMid(mid):
+    weibo = xapian_search_weibo.search_by_id(int(mid), fields=['user'])
+    if weibo:
+        return weibo['user']
+    else:
+        return None
+
+def getUidByName(name):
+    user = xapian_search_user.search(query={'name': name}, fields=['_id'])
+    if user:
+        return user['_id']
+    else:
+        return None
+
+
+def getInteractCount(uid, start_ts, end_ts, schema='repost', amongfriends=True, amongfollowers=True):
+    fri_fol = []
+    if amongfriends:
+        friends = getFriendship(uid, 'friends')
         fri_fol.extend(friends)
-        try:
-            followers = json.loads(friendship_bucket.Get(followers_key))
-        except KeyError:
-            followers = []
+    if amongfollowers:
+        followers = getFriendship(uid, 'followers')
         fri_fol.extend(followers)
 
+    interact_dict = {}
+    if uid:
+        count, results = xapian_search_weibo.search(query={'user': int(uid), 'timestamp': {'$gt': start_ts, '$lt': end_ts}}, fields=['text', 'retweeted_status'])
+        
+        if schema == 'repost':
+            for r in results():
+                text = r['text']
+                repost_users = re.findall(u'//@([a-zA-Z-_\u0391-\uFFE5]+)', text)
+                for name in repost_users:
+                    repost_uid = getUidByName(name)
+                    if repost_uid:
+                        try:
+                            interact_dict[repost_uid] += 1
+                        except KeyError:
+                            interact_dict[repost_uid] = 1
+                retweeted_status = r['retweeted_status']
+                retweeted_uid = getUidByMid(retweeted_status)
+                if retweeted_uid:
+                    try:
+                        interact_dict[retweeted_uid] += 1
+                    except KeyError:
+                        interact_dict[retweeted_uid] = 1
+
+        elif schema == 'at':
+            for r in results():
+                text = r['text']
+                at_users = re.findall(u'@([a-zA-Z-_\u0391-\uFFE5]+)', text)
+                for name in at_users:
+                    at_uid = getUidByName(name)
+                    if at_uid:
+                        try:
+                            interact_dict[at_uid] += 1
+                        except KeyError:
+                            interact_dict[at_uid] = 1
+                retweeted_status = r['retweeted_status']
+                retweeted_uid = getUidByMid(retweeted_status)
+                if retweeted_uid:
+                    try:
+                        interact_dict[retweeted_uid] += 1
+                    except KeyError:
+                        interact_dict[retweeted_uid] = 1
+    
+    results = {}
+
+    if fri_fol != []:
+        for k, v in interact_dict.iteritems():
+            if k in fri_fol:
+                results[k] = v
+    else:
+        results = interact_dict
+    
+    return results
+
+
+@mod.route('/person_interact_network/<uid>', methods=['GET', 'POST'])
+def profile_interact_network(uid):
+    if request.method == 'GET':
         total_days = 270
         today = datetime.datetime.today()
         now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
@@ -510,11 +591,16 @@ def profile_interact_network(uid):
         during = 24 * 3600
 
         if request.args.get('interval'):
-            total_days =  int(request.args.get('interval')) - 1
+            total_days =  int(request.args.get('interval')) - 1   
+        
+        center_uid = uid
+        fri_fol = []
+        friends = getFriendship('friends')
+        followers = getFriendship('followers')
+        fri_fol.extend(friends)
+        fri_fol.extend(followers)
 
-        total_days = 270
-
-        interact_bucket = get_bucket('user_daily_interact_count')
+    
         uid_interact_count = {} 
         for i in xrange(-total_days + 1, 1):
             lt = now_ts + during * i
@@ -1033,6 +1119,11 @@ def personal_weibo_count(uid):
         'total_tweets': total_post_count, 'retweets_ratio': int(retweets_count * 100 / total_post_count) / 100.0, \
         'emoticons_ratio': int(emoticons_count * 100 / total_post_count) / 100.0})
 
+def _utf_8_decode(stri):
+    if isinstance(stri, str):
+        return unicode(stri,'utf-8')
+    return stri
+
 
 def getUserInfoById(uid):
     count, get_results = xapian_search_user.search(query={'_id': uid}, fields=['profile_image_url', 'name', 'friends_count', \
@@ -1041,7 +1132,7 @@ def getUserInfoById(uid):
         for r in get_results():
             user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  r['name'], 'friends_count': r['friends_count'], \
                     'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
-                    'verified': r['verified'], 'created_at': r['created_at'], 'location': unicode(r['location'], "utf-8")}
+                    'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
             return user
     else:
         return None

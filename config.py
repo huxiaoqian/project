@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+# the debug toolbar is only enabled in debug mode
 DEBUG = True
 
 ADMINS = frozenset(['youremail@yourdomain.com'])

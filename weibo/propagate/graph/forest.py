@@ -13,6 +13,7 @@ from collections import defaultdict
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_user,xapian_search_weibo
 
 sys.path.append('./weibo/propagate/')
 from autocalculate import calculate
@@ -20,13 +21,13 @@ from calculate_single import calculate_single,get_user
 from calculatetopic import calculate_topic
 
 MAX_COUNT = 15000
-START_DATE = '2012-9-1'
+START_DATE = '2013-1-1'
 #END_DATE = '2012-10-30'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
 
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+##xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+##s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 
 def date2ts(date):
     return int(time.mktime(time.strptime(date, '%Y-%m-%d')))
@@ -36,8 +37,8 @@ def unix2local(ts):
 
 def load_data(keyword,beg_time,end_time):
     dataset = []
-    fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count']
-    number, get_results = s.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+    fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count']
+    number, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
     topic_info = calculate(get_results())
     blog_rel_list = topic_info['topic_rel_blog'][:5]
 
@@ -45,7 +46,7 @@ def load_data(keyword,beg_time,end_time):
     for status in blog_rel_list:
         print status['status']['_id']
         ts.append(int(time.mktime(time.strptime(str(status['status']['created_at']), '%Y-%m-%d %H:%M:%S'))))
-        number,source_weibo = s.search(query={'retweeted_status': status['status']['_id']})#查找热门微博的转发微博
+        number,source_weibo = xapian_search_weibo.search(query={'retweeted_mid': status['status']['_id']})#查找热门微博的转发微博
         if not number:
             continue
 

@@ -8,7 +8,8 @@ import json
 import csv
 import os
 from xapian_weibo.xapian_backend import XapianSearch
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+from xapian_config import xapian_search_user
+#xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 mod = Blueprint('sysadmin', __name__, url_prefix='/sysadmin')
 

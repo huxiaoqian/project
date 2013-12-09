@@ -13,8 +13,8 @@ from weibo.extensions import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
-
-user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
+from xapian_config import xapian_search_user as user_search
+#user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
 
 def get_user(uid):
     user = {}
@@ -122,7 +122,7 @@ def calculate(results):
                 if uid not in topic_participents_uid:
                     topic_participents_uid.add(uid)
                     topic_participents.append(user)
-                if r['retweeted_status'] == None:
+                if r['retweeted_mid'] == None:
                     temp_ori = {}
                     temp_ori['status'] = r
                     temp_ori['user'] = user

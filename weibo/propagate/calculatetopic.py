@@ -14,10 +14,12 @@ from weibo.extensions import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
+from xapian_config import xapian_search_user as s
+from xapian_config import xapian_search_weibo as s_weibo
 
 def get_user(uid):
     user = {}
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
+    #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
     count,get_results = s.search(query={'_id': uid})
     for r in get_results():
         user['id'] = r['_id']
@@ -78,8 +80,8 @@ def calculate_topic(kw):
     gt = calendar.timegm(datetime(2012, 1, 1).timetuple())
     lt = calendar.timegm(datetime(2012, 1, 10).timetuple())
 
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count, get_results = s.search(query={'text': [u'%s'%kw], 'timestamp': {'$gt': gt, '$lt': lt}}, sort_by=['timestamp'], fields=['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'])
+    #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    count, get_results = s_weibo.search(query={'text': [u'%s'%kw], 'timestamp': {'$gt': gt, '$lt': lt}}, sort_by=['timestamp'], fields=['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'])
     
     for r in get_results():
         # 获取时间与每天微博数量
@@ -123,7 +125,7 @@ def calculate_topic(kw):
             if user != None:
                 if user not in topic_participents:
                     topic_participents.append(user)
-                if r['retweeted_status'] == None:
+                if r['retweeted_mid'] == None:
                     temp_ori = {}
                     temp_ori['status'] = r
                     temp_ori['user'] = user

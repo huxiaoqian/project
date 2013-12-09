@@ -156,6 +156,7 @@ def profile_search(model='hotest'):
                                                                    fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
                                                                    sort_by=['created_at'])
                     users = []
+                    print count
                     for r in get_results():
                         statusesCount = r['statuses_count']
                         followersCount = r['followers_count']
@@ -1134,9 +1135,15 @@ def getUserInfoById(uid):
                                           'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location', 'description'])
     if count:
         for r in get_results():
+<<<<<<< HEAD
+            user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  r['name'], 'friends_count': r['friends_count'], \
+                    'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
+                    'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
+=======
             user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  r['name'], 'friendsCount': r['friends_count'], \
                     'statusesCount': r['statuses_count'], 'followersCount': r['followers_count'], 'gender': r['gender'], \
                     'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location']), 'description': r['description']}
+>>>>>>> 527280a4edc4b47cdff0d6f1f5a68d8827a1b270
             return user
     else:
         return None

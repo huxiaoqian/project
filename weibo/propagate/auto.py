@@ -8,7 +8,7 @@ from xapian_weibo.xapian_backend import XapianSearch
 
 from weibo.model import HotStatus
 from weibo.extensions import db
-
+from xapian_config import xapian_search_weibo as s
 def auto():
     
     #清除原数据
@@ -29,7 +29,7 @@ def auto():
     begin_ts1 = time.mktime(datetime.datetime(int(bg.year),int(bg.month),int(bg.day)).timetuple())
     
     
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
     count,get_results = s.search(query={'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['-reposts_count'], max_offset = 10000,fields=['text','attitudes_count', 'source', 'timestamp','reposts_count','comments_count','user', '_id','retweeted_status'])
     print count
     i = 0

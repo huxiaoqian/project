@@ -182,18 +182,62 @@ function declear_re(){<!-- 反选 -->
                         <th style="text-align:center">用户昵称</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {% for im in medias %}
-                      <tr>
-                        <td style="text-align:center"><input type="checkbox" name="field_media" style="font-size:12pt;"/></td>
-                        <td style="text-align:center"><span class="num-top" style="font-size:15px;">{{im.mediaID}}</span></td>
-                        <td style="text-align:center"><span class="onecity2" onMouseOver="this.className='onecity1'" onMouseOut="this.className='onecity2'" align="center" style="font-size:15px;"> <link>{{im.mediaName}}</link></span></td>
-                      </tr>
-                      {% endfor %}
+                <tbody id="word_table">
                        
-                  </tbody>   
+                    </tbody>   
                 </table>
+                <div id="page-selection" class="pagination pagination-centered"></div>
+                <script src="/static/js/profile/jquery.bootpag.min.js"></script>
                 <script>
+                var countperpage_args = 10;
+                var limit_arg = 1000000;
+
+                function getRankData(countperpage_args, limit_arg){
+                    var total_page_number;
+                    $.ajax({
+                        url: "/sysadmin/media_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        dataType: 'json',   
+                        type: "GET",
+                        success: function (data) {
+                        total_page_number = parseInt(data['pages']);
+                        var html = "";
+                        for(var i=0;i < data['news'].length;i += 1){
+                            user = data['news'][i];
+                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_media' style='font-size:12pt;'/></td>";
+                            html += "<td style='text-align:center'>" + user['mediaID'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['mediaName'] + "</td></tr>";
+                            
+                        }
+                    $("#word_table").empty();
+                    $("#word_table").append(html);
+                    $('#page-selection').bootpag({
+                        total: total_page_number,
+                        maxVisible: 10
+                    }).on("page", function(event, /* page number here */ num){
+                    $("#word_table").empty();
+                    $.ajax({
+                        url: "/sysadmin/media_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        dataType: 'json',   
+                        type: "GET",
+                        success: function (data) {
+                          var html = "";
+                          for(var i=0;i < data['news'].length;i += 1){
+                            user = data['news'][i];
+                            //console.log(user['id'],user['wordsName'],user['seWeight']);
+                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_media' style='font-size:12pt;'/></td>";
+                            html += "<td style='text-align:center'>" + user['mediaID'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['mediaName'] + "</td></tr>";
+                          }
+                          $("#word_table").append(html);
+                        }
+                    });
+                });
+            }
+          });
+        }
+        $(document).ready(function(){
+          getRankData(countperpage_args, limit_arg);
+        })
                       $("#de_media").click(function() {
                           $("[name='field_media']").each(function(){
                               
@@ -201,7 +245,7 @@ function declear_re(){<!-- 反选 -->
                               {
                                   var fa = $(this).parent();
                                   var ne = $(fa).next();
-                                  var f_id = $(ne).children().html();
+                                  var f_id = $(ne).html();
                                   $.ajax({   
                                     type:"POST",  
                                     url:"/sysadmin/media_de",

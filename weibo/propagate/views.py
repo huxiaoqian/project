@@ -17,9 +17,10 @@ from datetime import datetime
 from xapian_weibo.xapian_backend import XapianSearch
 try:
     search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 except:
-    print 'sth. wrong with xapian, please check propagate/views.py'
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+    print 'sth wrong with xapian, please check propagate/views.py'
+
 from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
 
 from weibo.model import *

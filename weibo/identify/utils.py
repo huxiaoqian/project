@@ -11,13 +11,8 @@ except ImportError:
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
-from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_weibo as status_search, xapian_search_user as user_search
 
-try:
-    status_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-except:
-    print 'sth. wrong with xapian, please check identify/utils.py'
 
 def acquire_topic_id(name):
     item = db.session.query(Topic).filter_by(topicName=name).first()

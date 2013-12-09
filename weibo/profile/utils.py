@@ -11,16 +11,8 @@ import leveldb
 import os
 import operator
 import re
-from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH
 
-try:
-    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120/', name='master_timeline_domain',schema_version=4)
-except:
-    print 'sth. wrong with xapian, please check profile/utils.py'
-fields_id = {'culture':1,'education':2,'entertainment':3,'fashion':4,'finance':5,'media':6,'sports':7,'technology':8}
-
-LEVELDBPATH = '/home/mirage/leveldb'
 
 def datetime2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))

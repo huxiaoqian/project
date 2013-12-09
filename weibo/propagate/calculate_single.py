@@ -101,6 +101,7 @@ def calculate_single(_id):
     #初始化
     blog_info = {}
     city_count = {}
+    province_name=dict()
     html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option>
                 <option value="44">广东</option><option value="45">广西</option><option value="52">贵州</option><option value="46">海南</option><option value="13">河北</option>
                 <option value="23">黑龙江</option><option value="41">河南</option><option value="42">湖北</option><option value="43">湖南</option><option value="15">内蒙古</option><option value="32">江苏</option>
@@ -110,6 +111,8 @@ def calculate_single(_id):
     province_soup = BeautifulSoup(html)
     for province in province_soup.findAll('option'):
         pp = province.string
+        key = province['value']
+        province_name[key] = pp
         if pp == u'海外' or pp == u'其他':
             continue
         city_count[pp] = 0
@@ -146,14 +149,13 @@ def calculate_single(_id):
       
         if r['user']:
             user = get_user(r['user'])
-            if user['location'] != None:
-                p = user['location']
-                tp = p.split(' ')
-                ppp = tp[0]
-                if ppp == u'海外' or ppp == u'其他':
+            if user['province'] != None:
+                p = province_name[user['province']]
+                print user['province']
+                if p == u'海外' or p == u'其他':
                     pass
                 else:
-                    city_count[ppp] += 1
+                    city_count[p] += 1
             if user not in reposter:
                 reposter.append(user)
             if r['reposts_count'] > 1000:

@@ -26,6 +26,9 @@ START_DATE = '2013-1-1'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
 
+##xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+##s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+
 def date2ts(date):
     return int(time.mktime(time.strptime(date, '%Y-%m-%d')))
 
@@ -44,6 +47,7 @@ def load_data(keyword,beg_time,end_time):
         print status['status']['_id']
         ts.append(int(time.mktime(time.strptime(str(status['status']['created_at']), '%Y-%m-%d %H:%M:%S'))))
         number,source_weibo = xapian_search_weibo.search(query={'retweeted_mid': status['status']['_id']})#查找热门微博的转发微博
+        print number
         if not number:
             continue
 
@@ -229,7 +233,7 @@ def forest_main(keyword,beg_time,end_time,keyid):
 
     if end_time <= beg_time:
         end_time = int(time.time())
-
+    print 'yuan'
     first_start_ts, dataset = load_data(keyword,beg_time,end_time)
 
     height = 0
@@ -258,6 +262,6 @@ def forest_main(keyword,beg_time,end_time,keyid):
 
     graph = etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
     
-    #print type(keyword)
+    print keyid
     with open('./weibo/static/gexf/forest%s.gexf'% keyid, 'w') as gf:
         gf.write(graph)

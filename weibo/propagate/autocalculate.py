@@ -14,7 +14,7 @@ from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
 
-user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
+#user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
 
 def get_user(uid):
     user = {}

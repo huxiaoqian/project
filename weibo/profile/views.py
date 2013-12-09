@@ -114,6 +114,7 @@ def profile_search(model='hotest'):
                 statuscount, friendscount, followerscount, province, field = getStaticInfo()
                 if model == 'person':
                     nickname = urllib2.unquote(request.args.get('nickname'))
+                    print nickname.encode('utf-8')
                     return render_template('profile/profile_search.html',statuscount=statuscount,
                                            friendscount=friendscount, followerscount=followerscount,
                                            location=province, field=field, model=model, result=None, nickname=nickname)
@@ -141,12 +142,10 @@ def profile_search(model='hotest'):
                         startoffset = (page - 1) * COUNT_PER_PAGE
 
                     total_days = 90
-                    begin_ts = int(time.mktime(datetime.datetime(2012,1, 1, 2, 0).timetuple()))
+                    begin_ts = int(time.mktime(datetime.datetime(2013,1, 1, 2, 0).timetuple()))
                     now_ts = int(time.mktime(datetime.datetime(2014, 1, 1, 2, 0).timetuple()))
                     during = 24 * 3600
                     total_days = (now_ts - begin_ts) / during
-                    print begin_ts
-                    print now_ts
                     query_dict = {
                         'created_at': {
                             '$gt': begin_ts,
@@ -244,7 +243,12 @@ def profile_search(model='hotest'):
                     return json.dumps(users)
                 elif model == 'person':
                     nickname = urllib2.unquote(request.form['nickname'])
+                    uid = getUidByName(nickname)
                     users = []
+                    if uid:
+                        user = getUserInfoById(uid)
+                        if user:
+                            users.append(user)                    
                     return json.dumps(users)
                 elif model in ['statuses', 'friends', 'followers']:
                     low = int(request.form['low'])
@@ -511,9 +515,16 @@ def getUidByMid(mid):
         return None
 
 def getUidByName(name):
+<<<<<<< HEAD
     user = xapian_search_user.search(query={'name': name}, fields=['_id'])
     if user:
         return user['_id']
+=======
+    count, users = xapian_search_user.search(query={'name': name}, fields=['_id'])
+    if count:
+        for user in users():
+            return user['_id']
+>>>>>>> 527280a4edc4b47cdff0d6f1f5a68d8827a1b270
     else:
         return None
 
@@ -1127,12 +1138,18 @@ def _utf_8_decode(stri):
 
 def getUserInfoById(uid):
     count, get_results = xapian_search_user.search(query={'_id': uid}, fields=['profile_image_url', 'name', 'friends_count', \
-                                          'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
+                                          'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location', 'description'])
     if count:
         for r in get_results():
+<<<<<<< HEAD
             user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  r['name'], 'friends_count': r['friends_count'], \
                     'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
                     'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
+=======
+            user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  r['name'], 'friendsCount': r['friends_count'], \
+                    'statusesCount': r['statuses_count'], 'followersCount': r['followers_count'], 'gender': r['gender'], \
+                    'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location']), 'description': r['description']}
+>>>>>>> 527280a4edc4b47cdff0d6f1f5a68d8827a1b270
             return user
     else:
         return None
@@ -1168,10 +1185,10 @@ def profile_group_topic(fieldEnName):
     return json.dumps(result_arr)
 
 @mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
-def group_status_count(fieldEnName):
+def profile_group_status_count(fieldEnName):
     total_days = 89
     today = datetime.datetime.today()
-    now_ts = time.mktime(datetime.datetime(2013, 4, 10, 2, 0).timetuple())
+    now_ts = time.mktime(datetime.datetime(2013, 12, 31, 2, 0).timetuple())
     now_ts = int(now_ts)
     during = 24 * 3600
 
@@ -1184,6 +1201,8 @@ def group_status_count(fieldEnName):
     if request.args.get('interval'):
         interval =  int(request.args.get('interval'))
         total_days = interval - 180
+
+    total_days = 240
 
     startoffset = 0
     endoffset = 10000
@@ -1311,7 +1330,7 @@ def profile_group_verify(fieldEnName):
     uverified_count = 0
     for uid in fields_set:
         user = xapian_search_user.search_by_id(uid, fields=['verified'])
-        if user['verified']:
+        if user and user['verified']:
             verified_count += 1
         else:
             uverified_count += 1
@@ -1354,8 +1373,11 @@ def profile_group_location(fieldEnName):
     endoffset = 10000
     fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
     for uid in fields_set:
-        user = xapian_search_user.search_by_id(uid, fields=['location'])
-        province = user['location'].split(' ')[0]
+        user = xapian_search_user.search_by_id(uid, fields=['location', '_id'])
+        if user and user['location']:
+            province = user['location'].split(' ')[0]
+        else:
+            continue
         try:
             city_count[province] += 1
         except:

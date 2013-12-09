@@ -2,10 +2,13 @@
 
 from xapian_weibo.xapian_backend import XapianSearch
 
+#try:
 xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/20131208/', name='master_timeline_user', schema_version=1)
 xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/20131207/', name='master_timeline_weibo', schema_version=2)
 #xapian_search_sentiment = XapianSearch(stub=stub, name='master_timeline_sentiment', schema_version=3)
 xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131130/', name='master_timeline_domain', schema_version=4)
+#except:
+#   print 'sth. wrong with xapian, please check xapian module'
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}

@@ -25,8 +25,8 @@ START_DATE = '2012-9-1'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
 
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+#xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+#s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 
 def date2ts(date):
     return int(time.mktime(time.strptime(date, '%Y-%m-%d')))

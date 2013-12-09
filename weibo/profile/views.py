@@ -515,16 +515,10 @@ def getUidByMid(mid):
         return None
 
 def getUidByName(name):
-<<<<<<< HEAD
-    user = xapian_search_user.search(query={'name': name}, fields=['_id'])
-    if user:
-        return user['_id']
-=======
     count, users = xapian_search_user.search(query={'name': name}, fields=['_id'])
     if count:
         for user in users():
             return user['_id']
->>>>>>> 527280a4edc4b47cdff0d6f1f5a68d8827a1b270
     else:
         return None
 

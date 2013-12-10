@@ -585,6 +585,17 @@ def topic_ajax_userfield():
                         else:
                             domain['其他'] = domain['其他'] + 1
                 data=[]
+                if len(topic_key_user_list) == 0:
+                    data.append({'finance':0})
+                    data.append({'media_domain':0})
+                    data.append({'culture':0})
+                    data.append({'technology':0})
+                    data.append({'entertainment':0})
+                    data.append({'education':0})
+                    data.append({'fashion':0})
+                    data.append({'sports':0})
+                    data.append({'unknown':0})
+                    return render_template('propagate/ajax/single_userfield.html',  mid=mid, topic_key_user_list=topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
                 if domain['财经'] >= 0:
                     data.append({'finance':int((domain['财经']/float(count))*1000)/10.0})
                 if domain['媒体'] >= 0:
@@ -641,6 +652,17 @@ def topic_ajax_userfield():
                                         else:
                                             domain['其他'] = domain['其他'] + 1
                             data=[]
+                            if len(topic_key_user_list) == 0:
+                                data.append({'finance':0})
+                                data.append({'media_domain':0})
+                                data.append({'culture':0})
+                                data.append({'technology':0})
+                                data.append({'entertainment':0})
+                                data.append({'education':0})
+                                data.append({'fashion':0})
+                                data.append({'sports':0})
+                                data.append({'unknown':0})
+                                return render_template('propagate/ajax/single_userfield.html',  mid=mid, topic_key_user_list=topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
                             if domain['财经'] >= 0:
                                 data.append({'finance':int((domain['财经']/float(count))*1000)/10.0})
                             if domain['媒体'] >= 0:
@@ -961,7 +983,20 @@ def single_ajax_userfield():
                             domain[text] = domain[text] + 1
                         else:
                             domain['其他'] = domain['其他'] + 1
+
                 data=[]
+                if len(blog_key_user_list) == 0:
+                    data.append({'finance':0})
+                    data.append({'media_domain':0})
+                    data.append({'culture':0})
+                    data.append({'technology':0})
+                    data.append({'entertainment':0})
+                    data.append({'education':0})
+                    data.append({'fashion':0})
+                    data.append({'sports':0})
+                    data.append({'unknown':0})
+                    return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
+                
                 if domain['财经'] >= 0:
                     data.append({'finance':int((domain['财经']/float(len(blog_key_user_list)))*1000)/10.0})
                 if domain['媒体'] >= 0:
@@ -1010,6 +1045,18 @@ def single_ajax_userfield():
                                     else:
                                         domain['其他'] = domain['其他'] + 1
                             data=[]
+                            if len(blog_key_user_list) == 0:
+                                data.append({'finance':0})
+                                data.append({'media_domain':0})
+                                data.append({'culture':0})
+                                data.append({'technology':0})
+                                data.append({'entertainment':0})
+                                data.append({'education':0})
+                                data.append({'fashion':0})
+                                data.append({'sports':0})
+                                data.append({'unknown':0})
+                                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
+
                             if domain['财经'] >= 0:
                                 data.append({'finance':int((domain['财经']/float(len(blog_key_user_list)))*1000)/10.0})
                             if domain['媒体'] >= 0:

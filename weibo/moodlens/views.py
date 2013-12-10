@@ -1,28 +1,24 @@
 # -*- coding: utf-8 -*-
 
+
+
+from weibo.model import *
+from weibo.extensions import db
+from xapian_config import xapian_search_weibo, emotions_kv, xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
-from xapian_weibo.xapian_backend import XapianSearch
-from utils import top_keywords, getWeiboByMid, st_variation, find_topN
+from utils import getWeiboByMid, st_variation, find_topN
+from xapian_weibo.utils import top_keywords
 import simplejson as json
 import datetime
 import time
 import leveldb
 import os
 import weibo.model
-from weibo.model import *
-from weibo.extensions import db
 import json
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
-LEVELDBPATH = '/home/mirage/leveldb'
 buckets = {}
-emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
-try:
-    xapian_search_sentiment = XapianSearch(path='/opt/xapian_weibo/data/20130807', name='master_timeline_sentiment', schema_version=3)
-    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120', name='master_timeline_domain', schema_version=4)
-except:
-    print 'sth. wrong with xapian, please check moodlens/views.py'
 total_days = 90
 
 
@@ -102,7 +98,7 @@ def topic():
 @mod.route('/data/<area>/')
 def data(area='global'):
     """
-    /keywords_data 接口已备好，只是差领域数据
+    分类情感数据
     """
 
     query = request.args.get('query', '')
@@ -128,8 +124,9 @@ def data(area='global'):
                 query_dict['$or'].append({'text': [term]})
     for k, v in emotions_kv.iteritems():
         query_dict['sentiment'] = v
-        count = xapian_search_sentiment.search(query=query_dict, count_only=True)
-        emotions_data[k] = [end_ts * 1000, count]
+        count = xapian_search_weibo.search(query=query_dict, count_only=True)
+        emotions_data[k] = [end_ts, count]
+    print emotions_data
 
     return json.dumps(emotions_data)
 
@@ -160,7 +157,7 @@ def field_data(area):
             query_dict['$or'].append({'user': user['_id']})
     for k, v in emotions_kv.iteritems():
         query_dict['sentiment'] = v
-        count = xapian_search_sentiment.search(query=query_dict, count_only=True)
+        count = xapian_search_weibo.search(query=query_dict, count_only=True)
         emotions_data[k] = [end_ts * 1000, count] 
 
     return json.dumps(emotions_data)
@@ -193,7 +190,7 @@ def flag_data(emotion, area='global'):
             'timestamp': {'$gt': begin_ts, '$lt': end_ts},
             'sentiment': emotions_kv[emotion],
         }
-        count, get_results = xapian_search_sentiment.search(query=query_dict, fields=['terms'])
+        count, get_results = xapian_search_weibo.search(query=query_dict, fields=['terms'])
         print count
         keywords_with_count = top_keywords(get_results, top=10)
         text = ','.join([tp[0] for tp in keywords_with_count])
@@ -232,7 +229,7 @@ def keywords_data(area='global'):
             if term:
                 query_dict['$or'].append({'text': term})
 
-    count, get_results = xapian_search_sentiment.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
+    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
     keywords_with_count = top_keywords(get_results, top=50)
     keywords_with_count = [list(i) for i in keywords_with_count]
 
@@ -264,7 +261,7 @@ def field_keywords_data(area):
         for user in field_users():
             query_dict['$or'].append({'user': user['_id']})
 
-    count, get_results = xapian_search_sentiment.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
+    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
     keywords_with_count = top_keywords(get_results, top=50)
     keywords_with_count = [list(i) for i in keywords_with_count]
 
@@ -296,7 +293,7 @@ def weibos_data(emotion, area='global'):
             if term:
                 query_dict['$or'].append({'text': term})
 
-    count, get_results = xapian_search_sentiment.search(query=query_dict, max_offset=10, sort_by=['-reposts_count'], fields=['_id'])
+    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=10, sort_by=['-reposts_count'], fields=['_id'])
     data = []
     count = 0
     for r in get_results():
@@ -332,7 +329,7 @@ def field_weibos_data(emotion, area):
         for user in field_users():
             query_dict['$or'].append({'user': user['_id']})
 
-    count, get_results = xapian_search_sentiment.search(query=query_dict, max_offset=10, sort_by=['-reposts_count'], fields=['_id'])
+    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=10, sort_by=['-reposts_count'], fields=['_id'])
     data = []
     count = 0
     for r in get_results():
@@ -352,7 +349,9 @@ def getPeaks():
     ts_lis = request.args.get('ts', '')
     query = request.args.get('query', '')
     query = query.strip()
-
+    
+    if not happy_lis or not angry_lis or not sad_lis:
+        return 'Null Data'
     happy_lis = [float(da) for da in happy_lis.split(',')]
     angry_lis = [float(da) for da in angry_lis.split(',')]
     sad_lis = [float(da) for da in sad_lis.split(',')]
@@ -361,7 +360,10 @@ def getPeaks():
     sentiment_variation = st_variation(happy_lis, angry_lis, sad_lis)
     ##peak_x返回前N个点的在list中的序数0,1.
     ##peak_y返回前N个点的情绪波动值
-    peak_x, peak_y = find_topN(sentiment_variation,topN)
+    try:
+        peak_x, peak_y = find_topN(sentiment_variation,topN)
+    except:
+        return 'Null Data'
     sorted_peak_x = sorted(peak_x)
     time_lis = {}
     for i in peak_x:
@@ -380,7 +382,7 @@ def getPeaks():
             for term in query.split(','):
                 if term:
                     query_dict['$or'].append({'text': [term]})
-            count, get_results = xapian_search_sentiment.search(query=query_dict, fields=['terms', 'text', 'user'])
+            count, get_results = xapian_search_weibo.search(query=query_dict, fields=['terms', 'text', 'user'])
             keywords_with_10count = top_keywords(get_results, top=10)
             title_text[emotion] = ','.join([tp[0] for tp in keywords_with_10count])
             title[emotion] = title[emotion] + str(sorted_peak_x.index(i))

@@ -68,8 +68,12 @@ def get_above100_weibos(topic_id, start_ts, end_ts, page):
     endoff = startoff + 9
     pages = len(statuses) / 10
     return statuses[startoff:endoff], pages
+
+
 def weiboinfo2url(uid, mid):
     return "http://weibo.com/{uid}/{mid}".format(uid=uid, mid=mid_to_str(mid))
+
+
 def mid_to_str(mid):
     mid = str(mid)
     id1 = mid[0: 2]
@@ -78,7 +82,10 @@ def mid_to_str(mid):
     id_list = [id1, id2, id3]
     id_list = [base62_encode(int(mid)) for mid in id_list]
     return "".join(map(str, id_list))
+
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
 def base62_encode(num, alphabet=ALPHABET):
     """Encode a number in Base X
 
@@ -284,6 +291,12 @@ def active_rank(top_n, date, window_size):
     return data
 
 def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='20130430'):
+    if fieldName == 'oversea':
+        count, get_results = xapian_search_user.search(query={'location': '海外'}, sort_by=['followers_count'], max_offset=10000, fields=['_id'])
+        fields_list = []
+        for r in get_results():
+            fields_list.append(r['_id'])
+        return fields_list[start_offset:end_offset]
     query_dict = {
         'domain': str(fields_id[fieldName]),
         'followers_count': {'$gt': 1000}

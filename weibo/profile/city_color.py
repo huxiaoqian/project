@@ -29,14 +29,13 @@ def province_color_map(city_count):
                     city_count[city] = [count, rank, percent]
     else:
         for index, x in enumerate(city_sorted):
-            if count:
-                city, count = x
-                city_color[city] =  "%s" % color[index]
-                percent = str(int(count*1000/total_count)/10.0)+'%'
-                rank = index+1
-                if rank <= 10:
-                    city_summary.append([rank, city, percent])
-                city_count[city] = [count, rank, percent]
+            city, count = x
+            city_color[city] =  "%s" % color[index]
+            percent = str(int(count*1000/total_count)/10.0)+'%'
+            rank = index+1
+            if rank <= 10:
+                city_summary.append([rank, city, percent])
+            city_count[city] = [count, rank, percent]
     data = {'count': city_count,
             'color': city_color,
             'summary': city_summary}

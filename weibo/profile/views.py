@@ -466,9 +466,9 @@ def profile_person(uid):
                                                   'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
                 if count > 0:
                     for r in get_results():
-                        user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  unicode(r['name'], 'utf-8'), 'friends_count': r['friends_count'], \
+                        user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  _utf_8_decode(r['name']), 'friends_count': r['friends_count'], \
                                 'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
-                                'verified': r['verified'], 'created_at': r['created_at'], 'location': unicode(r['location'], "utf-8")}
+                                'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
                 else:
                     return 'no such user'
             return render_template('profile/profile_person.html', user=user)
@@ -1269,9 +1269,9 @@ def group_active_count(fieldEnName):
 
 @mod.route('/group_emotion/<fieldEnName>')
 def profile_group_emotion(fieldEnName):
-    total_days = 270
+    total_days = 30
     today = datetime.datetime.today()
-    now_ts = time.mktime(datetime.datetime(2013, 4, 10, 2, 0).timetuple())
+    now_ts = time.mktime(datetime.datetime(2013, 10, 1, 2, 0).timetuple())
     now_ts = int(now_ts)
     during = 24 * 3600
 
@@ -1299,7 +1299,7 @@ def profile_group_emotion(fieldEnName):
                     'sentiment': emotion,
                     'user': uid
                 }
-                e_count += xapian_search_sentiment.search(query=query_dict, count_only=True)
+                e_count += xapian_search_weibo.search(query=query_dict, count_only=True)
             emotion_count[emotion] = e_count
         if sum(emotion_count.values()) > 0:
             sumcount = sum(emotion_count.values())

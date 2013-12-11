@@ -14,8 +14,8 @@ from weibo.extensions import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
-from xapian_config import xapian_search_user as s
-from xapian_config import xapian_search_weibo as s_weibo
+from weibo.global_config import xapian_search_user as s
+from weibo.global_config import xapian_search_weibo as s_weibo
 
 def get_user(uid):
     user = {}

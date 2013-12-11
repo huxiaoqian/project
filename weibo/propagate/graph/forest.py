@@ -13,7 +13,7 @@ from collections import defaultdict
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
-from xapian_config import xapian_search_user,xapian_search_weibo
+from weibo.global_config import xapian_search_user,xapian_search_weibo
 
 sys.path.append('./weibo/propagate/')
 from autocalculate import calculate
@@ -262,6 +262,6 @@ def forest_main(keyword,beg_time,end_time,keyid):
 
     graph = etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
     
-    print keyid
+    #print keyid
     with open('./weibo/static/gexf/forest%s.gexf'% keyid, 'w') as gf:
         gf.write(graph)

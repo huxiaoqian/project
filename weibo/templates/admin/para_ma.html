@@ -225,6 +225,7 @@ function declear_re(){<!-- 反选 -->
           getRankData(countperpage_args, limit_arg);
         })
                       $("#de_material").click(function() {
+                          n = 0;
                           $("[name='field_material']").each(function(){
                               
                               if(this.checked)
@@ -241,12 +242,15 @@ function declear_re(){<!-- 反选 -->
                                     data:{f_id : f_id},
                                     success: function(data){
                                       if( data =='Right'){
-                                          alert("删除成功！");
+                                          n = n + 1;
                                         }
                                     }           
                                   });
                               }   
-                          })
+                          });
+                          if(n > 0){
+                            alert("删除成功！");
+                          }
                           
                           location.reload();
                     });

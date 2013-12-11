@@ -21,7 +21,7 @@ def index():
             return render_template('root/index.html', active='home',identy='1',moodlens='1',profile='1',propagate='1',
                                    log_in=str(log_in),user=str(user))
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.identify
@@ -64,7 +64,7 @@ def user_in():
                 else:
                     result = 'Wrong_pass'
         else:
-            pas = db.session.query(UserList).filter(UserList.id==request.form['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==request.form['user']).all()
             if pas != []:
                 for pa in pas:
                     if request.form['para'] == pa.password:

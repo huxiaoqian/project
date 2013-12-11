@@ -5,7 +5,7 @@ from xapian_weibo.xapian_backend import XapianSearch
 xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/20131208/', name='master_timeline_user', schema_version=1)
 #xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/20131207/', name='master_timeline_weibo', schema_version=2)
 #xapian_search_sentiment = XapianSearch(stub=stub, name='master_timeline_sentiment', schema_version=3)
-xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/20131210/', name='master_timeline_weibo_csv', schema_version=5)
+xapian_search_weibo = XapianSearch(path='/home/mirage/dev/data/20131210/', name='master_timeline_weibo_csv', schema_version=5)
 xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131130/', name='master_timeline_domain', schema_version=4)
 
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}

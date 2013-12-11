@@ -13,7 +13,7 @@ from weibo.extensions import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
-from xapian_config import xapian_search_user as user_search
+from weibo.global_config import xapian_search_user as user_search
 #user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
 
 def get_user(uid):
@@ -147,20 +147,12 @@ def calculate(results):
                     topic_rel_blog.append(temp)
                 if r['bmiddle_pic']:
                     topic_url.append(r['bmiddle_pic'])
-                #print 'yuan',user['province']
                 if user['province'] != None:
-                    #p = r['geo']['province_name'].split('省')[0]
                     p = province_name[user['province']]
                     if p == u'海外' or p == u'其他':
                         pass
                     else:
                         city_count[p] += 1
-##                elif user['location']:
-##                    p = user['location'].split(' ')[0]
-##                    if p == u'海外' or p == u'其他':
-##                        pass
-##                    else:
-##                        city_count[p] += 1
                 else:
                     pass
         else:

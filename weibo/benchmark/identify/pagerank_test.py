@@ -243,6 +243,26 @@ def main():
     # #time: 108.94s(multi 3.01)
     #pagerank_simluation_test(input_path)
 
+
+    # #search statuses
+    # #time: 6.96s(multi 6.54)
+    # #hit: 100000(multi 33940)
+    topic = u'中国'
+    date = '2013-5-1' 
+    window = 90
+    results = search_topic_statuses(topic, date, window, max_size=1000000)
+    # #load statuses
+    # #time: 305.66s(multi 41.90)
+    g = load_topic_statuses(results)
+    # #prepartion for hadoop
+    # #time: 0.08s(multi 0.07)
+    input_file = prepare_topic_statusesfor_hadoop(g)
+    input_path = input_file.name
+    # #mapreduce on hadoop
+    # #time: 108.94s(multi 3.01)
+    pagerank_simluation_test(input_path)
+    
+
     # #search statuses max_size=100000
     # #time: 43.81s(multi 10.15)
     # #hit: 100000(multi 100000)
@@ -318,20 +338,20 @@ def main():
     # #search statuses max_size=100000
     # #time: 21.48s(multi 4.24)
     # #hit: 76200(multi 27914)
-    topic = u'黄金'
-    date = '2013-5-1'
-    window = 90
-    results = search_topic_statuses(topic, date, window, max_size=100000)
+    #topic = u'黄金'
+    #date = '2013-5-1'
+    #window = 90
+    #results = search_topic_statuses(topic, date, window, max_size=100000)
     # #load statuses
     # #time: 548.06s(multi 89.45)
-    g = load_topic_statuses(results)
+    #g = load_topic_statuses(results)
     # #prepartion for hadoop
     # #time: 0.06s(multi 0.06)
-    input_file = prepare_topic_statusesfor_hadoop(g)
-    input_path = input_file.name
+    #input_file = prepare_topic_statusesfor_hadoop(g)
+    #input_path = input_file.name
     # #mapreduce on hadoop
     # #time: 106.85s(multi 109.60)
-    pagerank_simluation_test(input_path)
+    #pagerank_simluation_test(input_path)
 
 
     '''

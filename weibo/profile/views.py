@@ -19,8 +19,8 @@ from city_color import province_color_map
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
 from datetime import date
 from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS
-#from xapian_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
-#                        fields_value, fields_id, emotions_zh_kv, emotions_kv
+from xapian_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
+                        fields_value, fields_id, emotions_zh_kv, emotions_kv
 from ldamodel import lda_topic
 from weibo.extensions import db
 from weibo.model import *
@@ -30,7 +30,6 @@ from utils import last_day
 
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
-
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
 COUNT_PER_PAGE = 20
@@ -302,7 +301,8 @@ def profile_search(model='hotest'):
                         offset += 1
                     return json.dumps(users)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            #pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.profile

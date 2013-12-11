@@ -44,7 +44,7 @@ def index():
         if session['user'] == 'admin':
             return render_template('moodlens/index.html', active='moodlens')
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
@@ -63,7 +63,7 @@ def field():
         if session['user'] == 'admin':
             return render_template('moodlens/field_emotion.html', active='moodlens')
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
@@ -82,7 +82,7 @@ def topic():
         if session['user'] == 'admin':
             return render_template('moodlens/topic_emotion.html', active='moodlens')
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens

@@ -7,10 +7,11 @@ import networkx as nx
 
 from time_utils import datetime2ts, window2time
 from hadoop_utils import generate_job_id
-from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, read_key_users, load_scws, cut
+from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, read_key_users
+from xapian_weibo.utils import load_scws, cut
 from config import PAGERANK_ITER_MAX
 
-from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_weibo as statuses_search, xapian_search_user as user_search
 
 from pagerank import pagerank
 
@@ -191,7 +192,6 @@ def make_network(topic, date, window_size, max_size=100000, ts=False):
 
     #need repost index
     topic = cut(s, topic.encode('utf-8'))
-    statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
     query_dict = {'text': topic, 'timestamp': {'$gt': start_time, '$lt': end_time}}
 
     if ts:

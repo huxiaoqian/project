@@ -1,26 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import time, os, operator, datetime
-from xapian_weibo.utils import SimpleMapReduce, count_words
-from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_weibo, xapian_search_user
 import numpy as np
 
-xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-def getStopWds(filename):
-    swds = set()
-    f = open(filename, 'r')
-    count = 0
-    for line in f.readlines():
-        word = line.split()[0]
-        swds.add(word)
-        count += 1
-    return swds
-
-swds = getStopWds('./weibo/moodlens/stpwds_linhao_20130826.txt')#os.path.join(os.getcwd(), 'stpwds_linhao_20130826.txt'))
 
 def timeit(method):
     def timed(*args, **kw):
@@ -30,38 +15,12 @@ def timeit(method):
         print '%r %2.2f sec' % (method.__name__, te - ts)
         return result
     return timed
-
-
-def top_keywords(get_results, top=1000):
-    keywords_with_count = keywords(get_results)
-    keywords_with_count.sort(key=operator.itemgetter(1))
-
-    return keywords_with_count[len(keywords_with_count) - top:]
-
-
-@timeit
-def keywords(get_results):
-    origin_data = []
-    for r in get_results():
-        origin_data.append(r['terms'].items())
-
-    mapper = SimpleMapReduce(addcount2keywords, count_words)
-    keywords_with_count = mapper(origin_data)
-
-    return keywords_with_count
-
-
-def addcount2keywords(origin_keywords_with_count):
-    keywords_with_count = []
-    for k, v in origin_keywords_with_count:
-        if k not in swds:
-            keywords_with_count.append((k, v))
-    return keywords_with_count
-
+    
 
 def getWeiboByMid(mid, emotion):
-    count, get_results = xapian_search_weibo.search(query={'_id': int(mid)}, fields=['text', 'timestamp', 'user', 'retweeted_status', 'reposts_count'])
-    for r in get_results():
+    weibo = xapian_search_weibo.search_by_id(int(mid), fields=['text', 'timestamp', 'user', 'retweeted_status', 'reposts_count'])
+    if weibo:
+        r = weibo
         uid = r['user']
         name = 'Unknown'
         text = r['text']
@@ -69,9 +28,9 @@ def getWeiboByMid(mid, emotion):
         retweeted_mid = r['retweeted_status']
         retweeted_text = 'None'
         if retweeted_mid:
-            r_count, r_get_results = xapian_search_weibo.search(query={'_id': int(retweeted_mid)}, fields=['text'])
-            for rr in r_get_results():
-                retweeted_text = rr['text']
+            rweibo = xapian_search_weibo.search_by_id(int(retweeted_mid), fields=['text'])
+            if rweibo:
+                retweeted_text = rweibo['text']                
         ts = r['timestamp']
         date = datetime.date.fromtimestamp(int(ts)).isoformat()
         if getUsernameByUid(uid):
@@ -84,9 +43,9 @@ def getWeiboByMid(mid, emotion):
 def getUsernameByUid(uid):
     if not uid:
         return None
-    count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['name'])
-    for r in get_results():
-        name = r['name']
+    user = xapian_search_user.search_by_id(int(uid), fields=['name'])
+    if user:
+        name = user['name']
         return name
     return None
 

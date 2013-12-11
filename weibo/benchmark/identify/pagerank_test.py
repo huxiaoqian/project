@@ -210,10 +210,10 @@ def main():
 
     # #1000,000 nodes pagerank
     # #time: 358.85s(multi 168.27)
-    #tmp_file = tempfile.NamedTemporaryFile(delete=False)
-    #tmp_file = emulate(tmp_file, size=1000000)
-    #input_path = tmp_file.name
-    #pagerank_simluation_test(input_path)
+    tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    tmp_file = emulate(tmp_file, size=1000000)
+    input_path = tmp_file.name
+    Spagerank_simluation_test(input_path)
 
     # #3000,000 nodes pagerank
     # #time: 764.14s(multi 239.23)

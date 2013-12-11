@@ -11,24 +11,8 @@ except ImportError:
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
-from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_weibo as status_search, xapian_search_user as user_search
 
-import scws
-
-SCWS_ENCODING = 'utf-8'
-SCWS_RULES = '/usr/local/scws/etc/rules.utf8.ini'
-CHS_DICT_PATH = '/usr/local/scws/etc/dict.utf8.xdb'
-CHT_DICT_PATH = '/usr/local/scws/etc/dict_cht.utf8.xdb'
-IGNORE_PUNCTUATION = 1
-
-ABSOLUTE_DICT_PATH = '/opt/xapian_weibo/dict/'
-CUSTOM_DICT_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'userdic.txt')
-EXTRA_STOPWORD_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'stopword.dic')
-EXTRA_EMOTIONWORD_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'emotionlist.txt')
-EXTRA_ONE_WORD_WHITE_LIST_PATH = os.path.join(ABSOLUTE_DICT_PATH, 'one_word_white_list.txt')
-
-status_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 def acquire_topic_id(name):
     item = db.session.query(Topic).filter_by(topicName=name).first()
@@ -176,32 +160,3 @@ def rank_comparison(previous, current):
     else:
         comparison = 1
     return comparison
-
-def load_scws():
-    s = scws.Scws()
-    s.set_charset(SCWS_ENCODING)
-
-    s.set_dict(CHS_DICT_PATH, scws.XDICT_MEM)
-    s.add_dict(CHT_DICT_PATH, scws.XDICT_MEM)
-    s.add_dict(CUSTOM_DICT_PATH, scws.XDICT_TXT)
-
-    # 把停用词全部拆成单字，再过滤掉单字，以达到去除停用词的目的
-    s.add_dict(EXTRA_STOPWORD_PATH, scws.XDICT_TXT)
-    # 即基于表情表对表情进行分词，必要的时候在返回结果处或后剔除
-    s.add_dict(EXTRA_EMOTIONWORD_PATH, scws.XDICT_TXT)
-
-    s.set_rules(SCWS_RULES)
-    s.set_ignore(IGNORE_PUNCTUATION)
-    return s
-
-def cut(s, text, f=None):
-    if f:
-        tks = [token for token
-               in s.participle(text)
-               if token[1] in f]
-    else:
-        tks = [token for token
-               in s.participle(text)]
-    return [tk[0].decode('utf-8') for tk in tks]
-
-

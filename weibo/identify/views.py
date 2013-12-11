@@ -167,14 +167,13 @@ def burst():
                 action = form.get('action', 'run')
 
                 top_n = int(form.get('top_n', 2000))
-        #limit max results count to 2000
+
                 if top_n > 2000:
                     top_n = 2000
                 page_num = int(form.get('page_num', 20))
                 rank_method = form.get('rank_method', 'followers')
                 window_size = int(form.get('window_size', 1))
 
-        # current_time = time.time()
                 current_time = datetime2ts('2013-3-7')
                 if action == 'rank':
                     current_date = ts2datetime(current_time)

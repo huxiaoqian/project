@@ -7,7 +7,7 @@
       </select>
     时间范围:
     <select class="span2" name="interval" id="rb_interval">
-      <option value="-1">最近一周</option>
+      <option value="-1" disabled></option>
     </select>
     前<input type="number" name="limit" value="1000" min="1" max="1000" class="span2" id="limit" disabled>条，
       每页<input type="text" id="countperpage" name="countperpage" value="8" class="span1" disabled>
@@ -79,9 +79,9 @@
                       user = data['users'][i];
                       html += "<tr><td>" + user['id'] + "</td>";
                       html += "<td>" + user['userName'] + "</td>";
-                      html += "<td>" + user['statusesCount'] + "</td>";
-                      html += "<td>" + user['followersCount'] + "</td>";
-                      html += "<td>" + user['friendsCount'] + "</td>";
+                      html += "<td>" + user['statuses_count'] + "</td>";
+                      html += "<td>" + user['followers_count'] + "</td>";
+                      html += "<td>" + user['friends_count'] + "</td>";
                       html += "<td>" + v_kv[user['verified']] + "</td>";
                       html += "<td>" + sex_kv[user['gender']] + "</td></tr>";
                     }

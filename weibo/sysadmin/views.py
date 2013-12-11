@@ -7,6 +7,8 @@ from weibo.extensions import db
 import json
 import csv
 import os
+from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_user
 
 mod = Blueprint('sysadmin', __name__, url_prefix='/sysadmin')
 
@@ -120,7 +122,7 @@ def ch_pass():
             for old_item in old_items:
                 db.session.delete(old_item)
                 db.session.commit()
-            new_item = Manager(password=new_pass,managerName=session['user'],managerGender='男',managerAge='30',managerPosition='系统管理员')
+            new_item = Manager(password=new_pass,managerName=session['user'])
             db.session.add(new_item)
             db.session.commit()
             return json.dumps(result)
@@ -160,10 +162,10 @@ def add_new():
 def add_black():
     result = 'Right'
     new_field = request.form['topic']
-    new_names = db.session.query(User).filter(User.id==new_field).all()
-    if len(new_names):
-        for new_name in new_names:
-            new_item = BlackList(blackID=new_field,blackName=new_name.userName)
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = BlackList(blackID=get_result['_id'],blackName=get_result['name'])
             db.session.add(new_item)
             db.session.commit()
     else:
@@ -174,10 +176,10 @@ def add_black():
 def add_media():
     result = 'Right'
     new_field = request.form['topic']
-    new_names = db.session.query(User).filter(User.id==new_field).all()
-    if len(new_names):
-        for new_name in new_names:
-            new_item = IMedia(mediaID=new_field,mediaName=new_name.userName)
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = IMedia(mediaID=get_result['_id'],mediaName=get_result['name'])
             db.session.add(new_item)
             db.session.commit()
     else:
@@ -317,7 +319,7 @@ def new_in():
 def newwords_rank():
     page = 1
     countperpage = 10
-    limit = 1000
+    limit = 1000000
     if request.args.get('page'):
         page = int(request.args.get('page'))
     if request.args.get('countperpage'):
@@ -334,6 +336,151 @@ def newwords_rank():
     for newword in newwords:
         if newword:
             news.append({'id':newword.id,'wordsName':newword.wordsName.encode('utf-8'),'seWeight':newword.seWeight})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/material_rank/')
+def material_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(M_Weibo).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'weibo_id':newword.weibo_id,'text':newword.text.encode('utf-8'),'repostsCount':newword.repostsCount,'commentsCount':newword.commentsCount,'postDate':str(newword.postDate),'uid':newword.uid})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/hei_rank/')
+def hei_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(BlackList).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'blackName':newword.blackName.encode('utf-8'),'blackID':newword.blackID})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/media_rank/')
+def media_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(IMedia).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'mediaName':newword.mediaName.encode('utf-8'),'mediaID':newword.mediaID})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/f_rank/')
+def f_rank():
+    page = 1
+    countperpage = 5
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(Field).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'fieldName':newword.fieldName.encode('utf-8')})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/t_rank/')
+def t_rank():
+    page = 1
+    countperpage = 5
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    newwords = db.session.query(Topic).filter().all()
+    news=[]
+    n = 0
+    for newword in newwords:
+        if newword:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'topicName':newword.topicName.encode('utf-8'),'fieldId':newword.fieldId})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
@@ -386,3 +533,4 @@ def user_modify():
         return json.dumps('Right')
     else:        
         return json.dumps('Wrong')
+

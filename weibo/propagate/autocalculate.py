@@ -13,8 +13,8 @@ from weibo.extensions import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
-
-user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
+from xapian_config import xapian_search_user as user_search
+#user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
 
 def get_user(uid):
     user = {}
@@ -22,20 +22,20 @@ def get_user(uid):
     for r in get_results():
         user['id'] = r['_id']
         user['province'] = r['province']
-        user['bi_followers_count'] = r['bi_followers_count']
+        user['bi_followers_count'] = 'None'
         user['verified'] = r['verified']
-        user['description'] = r['description'].decode("utf-8")
+        user['description'] = r['description']
         user['friends_count'] = r['friends_count']
         user['city'] = r['city']
         user['gender']  = r['gender']
         user['profile_image_url'] = r['profile_image_url']
-        user['verified_reason'] = r['verified_reason'].decode("utf-8")
+        user['verified_reason'] = 'None'
         user['followers_count'] = r['followers_count']
-        user['location'] = r['location'].decode("utf-8")
-        user['active'] = r['active']
+        user['location'] = r['location']
+        #user['active'] = r['active']
         user['statuses_count'] = r['statuses_count']
         if r['name']:
-            user['name'] = r['name'].decode("utf-8")
+            user['name'] = r['name']
         else:
             user['name'] = u'未知用户'
         user['userField'] = u'未知领域'
@@ -66,6 +66,7 @@ def calculate(results):
     topic_participents_uid = set()
     
     city_count={}
+    province_name=dict()
     html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option>
                 <option value="44">广东</option><option value="45">广西</option><option value="52">贵州</option><option value="46">海南</option><option value="13">河北</option>
                 <option value="23">黑龙江</option><option value="41">河南</option><option value="42">湖北</option><option value="43">湖南</option><option value="15">内蒙古</option><option value="32">江苏</option>
@@ -75,9 +76,12 @@ def calculate(results):
     province_soup = BeautifulSoup(html)
     for province in province_soup.findAll('option'):
         pp = province.string
+        key = province['value']
+        province_name[key] = pp
         if pp == u'海外' or pp == u'其他':
             continue
         city_count[pp] = 0
+        
 
     for r in results:
         # 获取时间与每天微博数量
@@ -122,7 +126,7 @@ def calculate(results):
                 if uid not in topic_participents_uid:
                     topic_participents_uid.add(uid)
                     topic_participents.append(user)
-                if r['retweeted_status'] == None:
+                if r['retweeted_mid'] == None:
                     temp_ori = {}
                     temp_ori['status'] = r
                     temp_ori['user'] = user
@@ -137,30 +141,35 @@ def calculate(results):
                     temp = {}
                     temp['status'] = r
                     temp['status']['created_at'] = datetime.fromtimestamp(r['timestamp'])
-                    temp['status']['text'] = r['text'].decode("utf-8")
-                    temp['status']['source'] = re.match('<.*?>(.*)<.*?>', r['source']).group(1).decode("utf-8")
+                    temp['status']['text'] = r['text']
+                    temp['status']['source'] = 'None'
                     temp['user'] = user
                     topic_rel_blog.append(temp)
                 if r['bmiddle_pic']:
                     topic_url.append(r['bmiddle_pic'])
-                if r['geo'] != None and r['geo'].has_key('province_name'):
-                    p = r['geo']['province_name'].split('省')[0]
+                #print 'yuan',user['province']
+                if user['province'] != None:
+                    #p = r['geo']['province_name'].split('省')[0]
+                    p = province_name[user['province']]
                     if p == u'海外' or p == u'其他':
                         pass
                     else:
                         city_count[p] += 1
-                elif user['location']:
-                    p = user['location'].split(' ')[0]
-                    if p == u'海外' or p == u'其他':
-                        pass
-                    else:
-                        city_count[p] += 1
+##                elif user['location']:
+##                    p = user['location'].split(' ')[0]
+##                    if p == u'海外' or p == u'其他':
+##                        pass
+##                    else:
+##                        city_count[p] += 1
                 else:
                     pass
         else:
             pass
-            
-        comments_sum = comments_sum + r['comments_count']
+
+        if r['comments_count'] != None:
+            comments_sum = comments_sum + r['comments_count']
+        else:
+            comments_sum = comments_sum + 0
         blogs_sum += 1
 
     print 'loop is done in %s seconds' % (time.time() - start_time)

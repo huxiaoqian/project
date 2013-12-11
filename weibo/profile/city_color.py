@@ -6,8 +6,8 @@ import csv
 import os
 
 def province_color_map(city_count):
-    total_count = sum(status[1] for loc, status in city_count.items())
-    city_sorted = sorted(city_count.iteritems(), key=lambda(k, v): v[1], reverse=True)
+    total_count = sum(city_count.values())
+    city_sorted = sorted(city_count.iteritems(), key=lambda(k, v): v, reverse=True)
     city_color = {}
     city_count = {}
     city_summary = []
@@ -19,9 +19,6 @@ def province_color_map(city_count):
             for j in range(n):
                 if i+j < len(city_sorted):
                     city, count = city_sorted[i+j]
-                    first_count = count[0][0]
-                    repost_count = count[0][1]
-                    count = count[1]
                     if count == 0:
                         continue
                     city_color[city] = color[i/n]
@@ -29,26 +26,23 @@ def province_color_map(city_count):
                     percent = str(int(count*1000/total_count)/10.0)+'%'
                     if rank <= 10:
                         city_summary.append([rank, city, percent])
-                    city_count[city] = [count, rank, percent, first_count, repost_count]
+                    city_count[city] = [count, rank, percent]
     else:
         for index, x in enumerate(city_sorted):
-            if count:
-                city, count = x
-                if count[1]:
-                    first_count = count[0][0]
-                    repost_count = count[0][1]
-                    count = count[1]
-                    city_color[city] =  "%s" % color[index]
-                    percent = str(int(count*1000/total_count)/10.0)+'%'
-                    rank = index+1
-                    if rank <= 10:
-                        city_summary.append([rank, city, percent])
-                    city_count[city] = [count, rank, percent, first_count, repost_count]
+            city, count = x
+            city_color[city] =  "%s" % color[index]
+            percent = str(int(count*1000/total_count)/10.0)+'%'
+            rank = index+1
+            if rank <= 10:
+                city_summary.append([rank, city, percent])
+            city_count[city] = [count, rank, percent]
     data = {'count': city_count,
             'color': city_color,
             'summary': city_summary}
     
     return data
+
+    
 def getProvince(place):
     try:
         place_str = place.split(' ')

@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask
-
-import model
-
+from flask_debugtoolbar import DebugToolbarExtension
 from extensions import db, admin
 from model_view import SQLModelView
-
 from weibo.root.views import mod as rootModule
 from weibo.identify.views import mod as identifyModule
 from weibo.moodlens.views import mod as moodlensModule
 from weibo.profile.views import mod as profileModule
 from weibo.propagate.views import mod as propagateModule
 from weibo.sysadmin.views import mod as adminModule
+
+import model
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +24,8 @@ def create_app():
     app.register_blueprint(profileModule)
     app.register_blueprint(propagateModule)
     app.register_blueprint(adminModule)
+    
+    #toolbar = DebugToolbarExtension(app)
 
     # Create database
     db.init_app(app)

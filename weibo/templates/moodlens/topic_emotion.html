@@ -365,12 +365,12 @@
 
     function get_peaks(series4, series5, series6){
         var query_args = $("#keyword")[0].value;
-        console.log(happy_list);
         $.ajax({
             url: "/moodlens/emotionpeak/?happy=" + happy_list.join(',') + "&angry=" + angry_list.join(',') + "&sad=" + sad_list.join(',') + "&ts=" + ts_list + "&query=" + query_args,
             type: "GET",
             dataType:"json",
             success: function(data){
+              if ( data != 'Null Data'){
               var isShift = false;
               for(var i in data){
                 var x = data[i]['ts'];
@@ -411,6 +411,7 @@
                 series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
             }
+        }
         })
     }
 
@@ -475,17 +476,12 @@
                 marginRight: 10,
                 events: {
                     load: function() {
-                        var total_days = 180;
-                        var now_date = new Date();
-                        var now_year = now_date.getFullYear();
-                        var now_month = now_date.getMonth();
-                        var now_day = now_date.getDate();
-                        var now_ts = parseInt((new Date(now_year, now_month, now_day)).getTime() / 1000) + 2 * 3600;
+                        var total_days = 30;
+                        var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
+                        var now_ts = parseInt((new Date(2013, 9, 30)).getTime() / 1000) + 2 * 3600;
                         var during = 24 * 3600;
-                        var begin_ts = now_ts - total_days * during;
                         init_statistics(now_ts, total_days * during);
-                        total_days = 10;
-                        pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]);
+                        pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]);                        
                     }
                 }
             },

@@ -15,28 +15,30 @@ from weibo.extensions import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
+from xapian_config import xapian_search_user as s
+from xapian_config import xapian_search_weibo as s_weibo
 
 def get_user(uid):
     user = {}
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
+    #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user')
     count,get_results = s.search(query={'_id': uid},fields = ['_id','province','bi_followers_count','verified','description','friends_count','city','gender','created_at','profile_image_url','verified_reason','followers_count','location','name','active','statuses_count'])
     for r in get_results():
         user['id'] = r['_id']
         user['province'] = r['province']
         user['bi_followers_count'] = r['bi_followers_count']
         user['verified'] = r['verified']
-        user['description'] = r['description'].decode("utf-8")
+        user['description'] = r['description']
         user['friends_count'] = r['friends_count']
         user['city'] = r['city']
         user['gender']  = r['gender']
         user['created_at'] = r['created_at']
         user['profile_image_url'] = r['profile_image_url']
-        user['verified_reason'] = r['verified_reason'].decode("utf-8")
+        #user['verified_reason'] = r['verified_reason'].decode("utf-8")
         user['followers_count'] = r['followers_count']
-        user['location'] = r['location'].decode("utf-8")
+        user['location'] = r['location']
         user['active'] = r['active']
         user['statuses_count'] = r['statuses_count']
-        user['name'] = r['name'].decode("utf-8")
+        user['name'] = r['name']
         user['userField'] = u'未知领域'
         break
     if user == {}:
@@ -50,7 +52,7 @@ def get_user(uid):
         user['gender']  = None
         user['created_at'] = None
         user['profile_image_url'] = None
-        user['verified_reason'] = None
+        #user['verified_reason'] = None
         user['followers_count'] = None
         user['location'] = None
         user['active'] = None
@@ -65,18 +67,20 @@ def get_ori_status(_id):
     
     status ={}
     
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count,get_results = s.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_status','reposts_count','comments_count','attitudes_count','user','timestamp'])
+    #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    count,get_results = s_weibo.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_mid','reposts_count','comments_count','attitudes_count','user','timestamp'])
+    print 'yuan',count
     for r in get_results():
-        status['text'] = r['text'].decode("utf-8")
+        status['text'] = r['text']
         status['id'] = r['_id']
         if r['geo']:
-            status['geo'] = r['geo']['province']
+            status['geo'] = r['geo']
         else:
             status['geo'] = None
-        status['sourcePlatform'] = re.match('<.*?>(.*)<.*?>', r['source']).group(1).decode("utf-8")
-        if r['retweeted_status']:
-            status['retweetedMid'] = r['retweeted_status']
+        #print r['source']
+        status['sourcePlatform'] = 'None'#re.match('<.*?>(.*)<.*?>', r['source']).group(1).decode("utf-8")
+        if r['retweeted_mid']:
+            status['retweetedMid'] = r['retweeted_mid']
         else:
             status['retweetedMid'] = None
         status['repostsCount'] = r['reposts_count']
@@ -86,6 +90,7 @@ def get_ori_status(_id):
             status['user'] = get_user(r['user'])
         else:
             status['user'] = {'name':'未知用户'}
+
         status['timestamp'] =r['timestamp']
         status['postDate'] = datetime.fromtimestamp(r['timestamp'])
         break
@@ -96,6 +101,7 @@ def calculate_single(_id):
     #初始化
     blog_info = {}
     city_count = {}
+    province_name=dict()
     html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option>
                 <option value="44">广东</option><option value="45">广西</option><option value="52">贵州</option><option value="46">海南</option><option value="13">河北</option>
                 <option value="23">黑龙江</option><option value="41">河南</option><option value="42">湖北</option><option value="43">湖南</option><option value="15">内蒙古</option><option value="32">江苏</option>
@@ -105,12 +111,14 @@ def calculate_single(_id):
     province_soup = BeautifulSoup(html)
     for province in province_soup.findAll('option'):
         pp = province.string
+        key = province['value']
+        province_name[key] = pp
         if pp == u'海外' or pp == u'其他':
             continue
         city_count[pp] = 0
 
         
-    begin_ts1 = time.mktime(datetime(2011, 1, 1).timetuple())
+    begin_ts1 = time.mktime(datetime(2013, 1, 1).timetuple())
     now = date.today()
     now_year = int(now.year)
     now_month = int(now.month)
@@ -121,8 +129,8 @@ def calculate_single(_id):
     status_ori = get_ori_status(_id)
 
     #获取相关微博
-    s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count,get_results = s.search(query={'retweeted_status': _id, 'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
+    #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+    count,get_results = s_weibo.search(query={'retweeted_mid': _id,'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
 
     print count
     reposter = []
@@ -141,14 +149,13 @@ def calculate_single(_id):
       
         if r['user']:
             user = get_user(r['user'])
-            if user['location'] != None:
-                p = user['location']
-                tp = p.split(' ')
-                ppp = tp[0]
-                if ppp == u'海外' or ppp == u'其他':
+            if user['province'] != None:
+                p = province_name[user['province']]
+                print user['province']
+                if p == u'海外' or p == u'其他':
                     pass
                 else:
-                    city_count[ppp] += 1
+                    city_count[p] += 1
             if user not in reposter:
                 reposter.append(user)
             if r['reposts_count'] > 1000:
@@ -180,7 +187,10 @@ def calculate_single(_id):
                 perday_repost_count.append(0)
             perday_repost_count[-1] = 1
         reposts_sum += r['reposts_count']
-        comments_sum += r['comments_count']
+        if 'comments_count' not in r:
+            comments_sum += 0
+        else:
+            comments_sum += r['comments_count']
 
     totalRepost = reposts_sum + 1
     avg = (float(totalRepost))/len(date_list)
@@ -205,9 +215,9 @@ def calculate_single(_id):
        else:
           pass
 
-    print city_count
+    #print city_count
     map_data = province_color_map(city_count)
-    print map_data
+    #print map_data
     leader_index = len(key_reposter)
     
     blog_info['status'] = status_ori

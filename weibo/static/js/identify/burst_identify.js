@@ -33,16 +33,15 @@ function get_selected_uids() {
     var uids_str = arr.join(',');
     return uids_str;
 }
-
 function show_user_statuses(uid) {
     $.fancybox({
-	ajax: {
-	    type: "GET",
-	},
+		ajax: {
+		    type: "GET",
+		},
         'href':'/identify/statuses/'+uid+'/1/',
         'transitionIn': 'none',
         'transitionOut': 'fade',
-        'onClosed': function(){},
+        'onClosed': function(){}
     });
 }
 (function ($) {
@@ -135,62 +134,63 @@ function show_user_statuses(uid) {
 	var cellCount = 9;
 	var table = '<table class="table table-bordered">';
 	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>同比</th><th>敏感状态</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
+	table += thead;
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
-            var tr = '<tr>';
+        var tr = '<tr>';
 	    if (data[i][3].match("海外")) {
-		tr = '<tr class="success">';
+			tr = '<tr class="success">';
 	    }
 	    var uid = data[i][1];
-            for(var j = 0;j < cellCount;j++) {
-		if (j == 8) {
-		    // checkbox
-		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
-		}
-		else if (j == 7) {
-		    // identify status
-		    if (data[i][j])
-			var td = '<td><i class="icon-ok"></i></td>';
-		    else
-			var td = '<td><i class="icon-remove"></i></td>';
-		}
-		else if(j == 6) {
-		    // comparsion
-		    if (data[i][j] > 0)
-			var td = '<td><i class="icon-arrow-up"></i></td>';
-		    else if (data[i][j] < 0)
-			var td = '<td><i class="icon-arrow-down"></i></td>';
-		    else
-			var td = '<td><i class="icon-minus"></i></td>';
-		}
-		else if(j == 0) {
-		    // rank status
-		    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
-		}
-		else{
-		    var td = '<td>'+data[i][j]+'</td>';
-		}
-		tr += td;
-		if(j == 3) {
-		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
-		    var td_show_user = '<td>' + td_a + '</td>';
-		    tr += td_show_user;
-		}
-            }
+        for(var j = 0;j < cellCount;j++) {
+			if (j == 8) {
+			    // checkbox
+			    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
+			}
+			else if (j == 7) {
+			    // identify status
+			    if (data[i][j])
+				var td = '<td><i class="icon-ok"></i></td>';
+			    else
+				var td = '<td><i class="icon-remove"></i></td>';
+			}
+			else if(j == 6) {
+			    // comparsion
+			    if (data[i][j] > 0)
+				var td = '<td><i class="icon-arrow-up"></i></td>';
+			    else if (data[i][j] < 0)
+				var td = '<td><i class="icon-arrow-down"></i></td>';
+			    else
+				var td = '<td><i class="icon-minus"></i></td>';
+			}
+			else if(j == 0) {
+			    // rank status
+			    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
+			}
+			else{
+			    var td = '<td>'+data[i][j]+'</td>';
+			}
+			tr += td;
+			if(j == 3) {
+			    // user statuses
+			    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
+			    var td_show_user = '<td>' + td_a + '</td>';
+			    tr += td_show_user;
+			}
+        }
 	    tr += '</tr>';
 	    tbody += tr;
 	}
 	tbody += '</tbody>';
-	table += thead + tbody;
-	table += '</table>'
+	table += tbody;
+	table += '</table>';
 	$("#rank_table").html(table);
 	$('#select_all').click(function(){
 	    var $this = $(this);
 	    this.checked = !this.checked;
 	    $.each($('#rank_table :checkbox'), function(i, val) {
-		if ($(this) != $this)
-		    this.checked = !this.checked;
+			if ($(this) != $this)
+			    this.checked = !this.checked;
 	    });  
 	});
     }

@@ -7,6 +7,7 @@ try:
     import simplejosn as json
 except ImportError:
     import json
+    
 import re
 import calendar
 import time
@@ -14,7 +15,14 @@ from datetime import date
 from datetime import datetime
 
 from xapian_weibo.xapian_backend import XapianSearch
-search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+from xapian_config import xapian_search_user,xapian_search_weibo,xapian_search_domain
+from xapian_config import beg_y,beg_m,beg_d,end_y,end_m,end_d
+##try:
+##    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+##    search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+##    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120', name='master_timeline_domain', schema_version=4)
+##except:
+##    print 'sth. wrong with xapian, please check propagate/views.py'
 
 from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
 
@@ -27,6 +35,16 @@ from autocalculate import calculate
 from calculate_single import calculate_single,get_user
 from calculatetopic import calculate_topic
 
+sys.path.append('./weibo/propagate/graph')
+from tree import *
+from forest import *
+
+sys.path.append('./weibo/profile')
+from utils import *
+
+fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
+fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
+
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
 
 def getFieldTopics():
@@ -38,17 +56,42 @@ def getFieldTopics():
         topic_names = []
         for topic in topics:
             topic_names.append(topic.topicName)
-        field_topics.append({'field_name': field_name, 'topics': topic_names})
+        field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
     return field_topics
 
 def getHotStatus():
-    statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(5)
+    #statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(5)
+    start = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+    end = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+    count,statuses = xapian_search_weibo.search(query={'timestamp': {'$gt': time.mktime(time.strptime(start,'%Y-%m-%d')), '$lt': time.mktime(time.strptime(end,'%Y-%m-%d'))}}, sort_by=['reposts_count'], fields=['_id','text','timestamp','user','reposts_count','comments_count','attitudes_count','retweeted_mid','source'], max_offset=10)
     status_hot = []             
-    for status in statuses:
-        uid = status.uid
+    for status in statuses():
+        uid = status['user']
         user = get_user(uid)
-        status_hot.append({'status': status, 'user': user})
+        weibo_url = weiboinfo2url(uid,status['_id'])
+        status['text'] = status['text']
+        status['source'] = status['source']
+        status['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(status['timestamp']))
+        status_hot.append({'status': status, 'user': user, 'weibo_url': weibo_url})
     return status_hot
+
+def fieldsEn2Zh(name):
+    if name == 'finance':
+        return '财经'
+    if name == 'media':
+        return '媒体'
+    if name == 'culture':
+        return '文化'
+    if name == 'technology':
+        return '科技'
+    if name == 'entertainment':
+        return '娱乐'
+    if name == 'education':
+        return '教育'
+    if name == 'fashion':
+        return '时尚'
+    if name == 'sports':
+        return '体育'
 
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
@@ -63,10 +106,20 @@ def log_in():
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            field_topics = getFieldTopics()
-            status_hot = getHotStatus()
-     
-            return render_template('propagate/search.html', field_topics=field_topics, status_hot=status_hot)
+            field_topics = getFieldTopics() 
+            field_topics.sort(key=lambda x:x['len'],reverse=True)
+
+            i = 0
+            fields = []
+            for field_topic in field_topics:
+                if i > 3:
+                    break
+                i = i + 1
+                fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+                
+            #status_hot = getHotStatus()
+            
+            return render_template('propagate/search.html', field_topics=fields)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -74,9 +127,18 @@ def index():
                     identy = pa.propagate
                     if identy == 1:
                         field_topics = getFieldTopics()
-                        status_hot = getHotStatus()
+                        field_topics.sort(key=lambda x:x['len'],reverse=True)
+                        i = 0
+                        fields = []
+                        for field_topic in field_topics:
+                            if i > 3:
+                                break
+                            i = i + 1
+                            fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+                            
+                        #status_hot = getHotStatus()
      
-                        return render_template('propagate/search.html', field_topics=field_topics, status_hot=status_hot)
+                        return render_template('propagate/search.html', field_topics=fields)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -104,14 +166,12 @@ def showresult_by_topic():
     
             if keyword == "":
                 flash(u'关键字（词）不能为空')
-                field_topics = getFieldTopics()
-                status_hot = getHotStatus()
-                return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                return redirect('/propagate/')
             if keyuser == "":
                 keyuser_str = u'无'
             if beg_time == "":
-                beg_time = calendar.timegm(datetime(2013, 1, 1).timetuple())
-                return_beg_str = '2013-01-01'
+                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
             else:
                 beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
                 beg_time_year = int(beg_time.year)
@@ -119,8 +179,8 @@ def showresult_by_topic():
                 beg_time_day = int(beg_time.day)
                 beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
             if end_time == "":
-                end_time = calendar.timegm(datetime(2013, 1, 7).timetuple())
-                return_end_str = '2013-01-07'
+                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
             else:
                 end_time = datetime.strptime(end_time,"%Y-%m-%d")
                 end_time_year = int(end_time.year)
@@ -128,14 +188,12 @@ def showresult_by_topic():
                 end_time_day = int(end_time.day)
                 end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
         
-            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-            count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
             if count == 0:
                 flash(u'您搜索的话题结果为空')
-                field_topics = getFieldTopics()
-                status_hot = getHotStatus()
-                return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                return redirect('/propagate/')
             else:
                 print count
                 topic_info = calculate(get_results())
@@ -181,14 +239,12 @@ def showresult_by_topic():
     
                         if keyword == "":
                             flash(u'关键字（词）不能为空')
-                            field_topics = getFieldTopics()
-                            status_hot = getHotStatus()
-                            return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                            return redirect('/propagate/')
                         if keyuser == "":
                             keyuser_str = u'无'
                         if beg_time == "":
-                            beg_time = calendar.timegm(datetime(2013, 1, 1).timetuple())
-                            return_beg_str = '2013-01-01'
+                            beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                            return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
                         else:
                             beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
                             beg_time_year = int(beg_time.year)
@@ -196,8 +252,8 @@ def showresult_by_topic():
                             beg_time_day = int(beg_time.day)
                             beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
                         if end_time == "":
-                            end_time = calendar.timegm(datetime(2013, 1, 7).timetuple())
-                            return_end_str = '2013-01-07'
+                            end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                            return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
                         else:
                             end_time = datetime.strptime(end_time,"%Y-%m-%d")
                             end_time_year = int(end_time.year)
@@ -205,14 +261,12 @@ def showresult_by_topic():
                             end_time_day = int(end_time.day)
                             end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
         
-                        fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                        count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                        fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                        count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                         if count == 0:
                             flash(u'您搜索的话题结果为空')
-                            field_topics = getFieldTopics()
-                            status_hot = getHotStatus()
-                            return render_template('propagate/search.html',field_topics = field_topics,status_hot = status_hot)
+                            return redirect('/propagate/')
                         else:
                             print count
                             topic_info = calculate(get_results())
@@ -254,8 +308,8 @@ def topic_ajax_trend():
                 beg_time = int(request.form.get('beg_time', ""))
                 end_time = int(request.form.get('end_time', ""))
     
-                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                 topic_info = calculate(get_results())
                 perday_blog_count = topic_info['perday_count_list']
@@ -277,8 +331,8 @@ def topic_ajax_trend():
                             beg_time = int(request.form.get('beg_time', ""))
                             end_time = int(request.form.get('end_time', ""))
     
-                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                            count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                             topic_info = calculate(get_results())
                             perday_blog_count = topic_info['perday_count_list']
@@ -302,8 +356,8 @@ def topic_ajax_weibos():
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
     
-                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                 topic_info = calculate(get_results())
                 blog_rel_list = topic_info['topic_rel_blog'][:5]
@@ -321,8 +375,8 @@ def topic_ajax_weibos():
                             beg_time = int(request.args.get('beg_time', ""))
                             end_time = int(request.args.get('end_time', ""))
     
-                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                            count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                             topic_info = calculate(get_results())
                             blog_rel_list = topic_info['topic_rel_blog'][:5]
@@ -346,8 +400,8 @@ def topic_ajax_spatial():
                 beg_time = int(request.form.get('beg_time', ""))
                 end_time = int(request.form.get('end_time', ""))
     
-                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                 topic_info = calculate(get_results())
                 topic_area_list = topic_info['geo']
@@ -367,8 +421,8 @@ def topic_ajax_spatial():
                             beg_time = int(request.form.get('beg_time', ""))
                             end_time = int(request.form.get('end_time', ""))
     
-                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                            count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                             topic_info = calculate(get_results())
                             topic_area_list = topic_info['geo']
@@ -390,8 +444,8 @@ def topic_ajax_stat():
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
     
-                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                 topic_info = calculate(get_results())
 
@@ -420,8 +474,8 @@ def topic_ajax_stat():
                             beg_time = int(request.args.get('beg_time', ""))
                             end_time = int(request.args.get('end_time', ""))
     
-                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                            count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
                             topic_info = calculate(get_results())
 
@@ -446,10 +500,28 @@ def topic_ajax_stat():
     
 @mod.route("/topic_ajax_path/", methods=['GET', 'POST'])
 def topic_ajax_path():
+    import urllib2
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                return render_template('propagate/ajax/topic_retweetpath.html')
+                keyword = request.args.get('keyword', "")
+                keyuser = request.args.get('keyuser', "")
+                beg_time = int(request.args.get('beg_time', ""))
+                end_time = int(request.args.get('end_time', ""))
+                topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                if len(topics):
+                    for topic in topics:
+                        keyid = topic.id
+                else:        
+                    new_item = Topic(topicName=keyword)
+                    db.session.add(new_item)
+                    db.session.commit()
+                    topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                    for topic in topics:
+                        keyid = topic.id
+                
+                forest_main(keyword,beg_time,end_time,keyid)
+                return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -457,7 +529,23 @@ def topic_ajax_path():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            return render_template('propagate/ajax/topic_retweetpath.html')
+                            keyword = request.args.get('keyword', "")
+                            keyuser = request.args.get('keyuser', "")
+                            beg_time = int(request.args.get('beg_time', ""))
+                            end_time = int(request.args.get('end_time', ""))
+                            topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                            if len(topics):
+                                for topic in topics:
+                                    keyid = topic.id
+                            else:        
+                                new_item = Topic(topicName=keyword)
+                                db.session.add(new_item)
+                                db.session.commit()
+                                topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
+                                for topic in topics:
+                                    keyid = topic.id
+                            forest_main(keyword,beg_time,end_time,keyid)
+                            return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -474,13 +562,60 @@ def topic_ajax_userfield():
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
     
-                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
-                topic_info = calculate(get_results())
-                topic_key_user_list = topic_info['topic_leader']
+                topic_key_user_list = []
+                domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
+                for result in get_results():
+                    number, users = xapian_search_user.search(query={'_id': result['user']}, fields=['_id','name','location','friends_count','followers_count'])
+                    if not number:
+                        continue
+                    for user in users():
 
-                return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list)
+                        topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+                    n, domains = xapian_search_domain.search(query={'_id': result['user']}, fields=['domain'])
+                    if not n:
+                        domain['其他'] = domain['其他'] + 1
+                        continue
+                    for do in domains():
+                        if int(do['domain']) <= 7:
+                            text = fieldsEn2Zh(fields_value[int(do['domain'])])
+                            domain[text] = domain[text] + 1
+                        else:
+                            domain['其他'] = domain['其他'] + 1
+                data=[]
+                if len(topic_key_user_list) == 0:
+                    data.append({'finance':0})
+                    data.append({'media_domain':0})
+                    data.append({'culture':0})
+                    data.append({'technology':0})
+                    data.append({'entertainment':0})
+                    data.append({'education':0})
+                    data.append({'fashion':0})
+                    data.append({'sports':0})
+                    data.append({'unknown':0})
+                    return render_template('propagate/ajax/single_userfield.html',  mid=mid, topic_key_user_list=topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
+                if domain['财经'] >= 0:
+                    data.append({'finance':int((domain['财经']/float(count))*1000)/10.0})
+                if domain['媒体'] >= 0:
+                    data.append({'media_domain':int((domain['媒体']/float(count))*1000)/10.0})
+                if domain['文化'] >= 0:
+                    data.append({'culture':int((domain['文化']/float(count))*1000)/10.0})
+                if domain['科技'] >= 0:
+                    data.append({'technology':int((domain['科技']/float(count))*1000)/10.0})
+                if domain['娱乐'] >= 0:
+                    data.append({'entertainment':int((domain['娱乐']/float(count))*1000)/10.0})
+                if domain['教育'] >= 0:
+                    data.append({'education':int((domain['教育']/float(count))*1000)/10.0})
+                if domain['时尚'] >= 0:
+                    data.append({'fashion':int((domain['时尚']/float(count))*1000)/10.0})
+                if domain['体育'] >= 0:
+                    data.append({'sports':int((domain['体育']/float(count))*1000)/10.0})
+                if domain['其他'] >= 0:
+                    data.append({'unknown':int((domain['其他']/float(count))*1000)/10.0})
+                    
+                return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
             else:
                 pass
         else:
@@ -495,13 +630,58 @@ def topic_ajax_userfield():
                             beg_time = int(request.args.get('beg_time', ""))
                             end_time = int(request.args.get('end_time', ""))
     
-                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_status','bmiddle_pic','geo','source','attitudes_count'] 
-                            count, get_results = search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+                            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
-                            topic_info = calculate(get_results())
-                            topic_key_user_list = topic_info['topic_leader']
+                            topic_key_user_list = []
+                            for result in get_results():
+                                number, users = xapian_search_user.search(query={'_id': result['user']}, fields=['_id','name','location','friends_count','followers_count'])
+                                if not number:
+                                    continue
+                                for user in users():
 
-                            return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list)
+                                    topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+                                    n, domains = xapian_search_domain.search(query={'_id': result['user']}, fields=['domain'])
+                                    if not n:
+                                        domain['其他'] = domain['其他'] + 1
+                                        continue
+                                    for do in domains():
+                                        if int(do['domain']) <= 7:
+                                            text = fieldsEn2Zh(fields_value[int(do['domain'])])
+                                            domain[text] = domain[text] + 1
+                                        else:
+                                            domain['其他'] = domain['其他'] + 1
+                            data=[]
+                            if len(topic_key_user_list) == 0:
+                                data.append({'finance':0})
+                                data.append({'media_domain':0})
+                                data.append({'culture':0})
+                                data.append({'technology':0})
+                                data.append({'entertainment':0})
+                                data.append({'education':0})
+                                data.append({'fashion':0})
+                                data.append({'sports':0})
+                                data.append({'unknown':0})
+                                return render_template('propagate/ajax/single_userfield.html',  mid=mid, topic_key_user_list=topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
+                            if domain['财经'] >= 0:
+                                data.append({'finance':int((domain['财经']/float(count))*1000)/10.0})
+                            if domain['媒体'] >= 0:
+                                data.append({'media_domain':int((domain['媒体']/float(count))*1000)/10.0})
+                            if domain['文化'] >= 0:
+                                data.append({'culture':int((domain['文化']/float(count))*1000)/10.0})
+                            if domain['科技'] >= 0:
+                                data.append({'technology':int((domain['科技']/float(count))*1000)/10.0})
+                            if domain['娱乐'] >= 0:
+                                data.append({'entertainment':int((domain['娱乐']/float(count))*1000)/10.0})
+                            if domain['教育'] >= 0:
+                                data.append({'education':int((domain['教育']/float(count))*1000)/10.0})
+                            if domain['时尚'] >= 0:
+                                data.append({'fashion':int((domain['时尚']/float(count))*1000)/10.0})
+                            if domain['体育'] >= 0:
+                                data.append({'sports':int((domain['体育']/float(count))*1000)/10.0})
+                            if domain['其他'] >= 0:
+                                data.append({'unknown':int((domain['其他']/float(count))*1000)/10.0})
+                            return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
                         else:
                             pass
                     else:
@@ -761,7 +941,9 @@ def single_ajax_path():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                return render_template('propagate/ajax/single_retweetpath.html')
+                mid = int(request.args.get('mid', ""))                
+                tree_main(mid)
+                return render_template('propagate/ajax/single_retweetpath.html',mid = mid)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -769,7 +951,9 @@ def single_ajax_path():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            return render_template('propagate/ajax/single_retweetpath.html')
+                            mid = int(request.args.get('mid', ""))
+                            tree_main(mid)
+                            return render_template('propagate/ajax/single_retweetpath.html',mid = mid)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -787,7 +971,52 @@ def single_ajax_userfield():
                 repost_bloger = blog_info['repost_users']
                 blog_key_user_list = repost_bloger
 
-                return render_template('propagate/ajax/single_userfield.html',  blog_key_user_list=blog_key_user_list)
+                domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
+                for result in blog_key_user_list:                    
+                    n, domains = xapian_search_domain.search(query={'_id': result['id']}, fields=['domain'])
+                    if not n:
+                        domain['其他'] = domain['其他'] + 1
+                        continue
+                    for do in domains():
+                        if int(do['domain']) <= 7:
+                            text = fieldsEn2Zh(fields_value[int(do['domain'])])
+                            domain[text] = domain[text] + 1
+                        else:
+                            domain['其他'] = domain['其他'] + 1
+
+                data=[]
+                if len(blog_key_user_list) == 0:
+                    data.append({'finance':0})
+                    data.append({'media_domain':0})
+                    data.append({'culture':0})
+                    data.append({'technology':0})
+                    data.append({'entertainment':0})
+                    data.append({'education':0})
+                    data.append({'fashion':0})
+                    data.append({'sports':0})
+                    data.append({'unknown':0})
+                    return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
+                
+                if domain['财经'] >= 0:
+                    data.append({'finance':int((domain['财经']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['媒体'] >= 0:
+                    data.append({'media_domain':int((domain['媒体']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['文化'] >= 0:
+                    data.append({'culture':int((domain['文化']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['科技'] >= 0:
+                    data.append({'technology':int((domain['科技']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['娱乐'] >= 0:
+                    data.append({'entertainment':int((domain['娱乐']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['教育'] >= 0:
+                    data.append({'education':int((domain['教育']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['时尚'] >= 0:
+                    data.append({'fashion':int((domain['时尚']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['体育'] >= 0:
+                    data.append({'sports':int((domain['体育']/float(len(blog_key_user_list)))*1000)/10.0})
+                if domain['其他'] >= 0:
+                    data.append({'unknown':int((domain['其他']/float(len(blog_key_user_list)))*1000)/10.0})
+                
+                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
             else:
                 pass
         else:
@@ -803,7 +1032,51 @@ def single_ajax_userfield():
                             repost_bloger = blog_info['repost_users']
                             blog_key_user_list = repost_bloger
 
-                            return render_template('propagate/ajax/single_userfield.html',  blog_key_user_list=blog_key_user_list)
+                            domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
+                            for result in blog_key_user_list:                    
+                                n, domains = xapian_search_domain.search(query={'_id': result['id']}, fields=['domain'])
+                                if not n:
+                                    domain['其他'] = domain['其他'] + 1
+                                    continue
+                                for do in domains():
+                                    if int(do['domain']) <= 7:
+                                        text = fieldsEn2Zh(fields_value[int(do['domain'])])
+                                        domain[text] = domain[text] + 1
+                                    else:
+                                        domain['其他'] = domain['其他'] + 1
+                            data=[]
+                            if len(blog_key_user_list) == 0:
+                                data.append({'finance':0})
+                                data.append({'media_domain':0})
+                                data.append({'culture':0})
+                                data.append({'technology':0})
+                                data.append({'entertainment':0})
+                                data.append({'education':0})
+                                data.append({'fashion':0})
+                                data.append({'sports':0})
+                                data.append({'unknown':0})
+                                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
+
+                            if domain['财经'] >= 0:
+                                data.append({'finance':int((domain['财经']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['媒体'] >= 0:
+                                data.append({'media_domain':int((domain['媒体']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['文化'] >= 0:
+                                data.append({'culture':int((domain['文化']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['科技'] >= 0:
+                                data.append({'technology':int((domain['科技']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['娱乐'] >= 0:
+                                data.append({'entertainment':int((domain['娱乐']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['教育'] >= 0:
+                                data.append({'education':int((domain['教育']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['时尚'] >= 0:
+                                data.append({'fashion':int((domain['时尚']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['体育'] >= 0:
+                                data.append({'sports':int((domain['体育']/float(len(blog_key_user_list)))*1000)/10.0})
+                            if domain['其他'] >= 0:
+                                data.append({'unknown':int((domain['其他']/float(len(blog_key_user_list)))*1000)/10.0})
+
+                            return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
                         else:
                             pass
                     else:
@@ -814,6 +1087,7 @@ def single_ajax_userfield():
 
 @mod.route("/add_material", methods = ["GET","POST"])
 def add_material():
+    print 'yuan'
     result = 'Right'
     mid = request.form['mid']
     mid = int(mid)
@@ -824,15 +1098,14 @@ def add_material():
     blog_time = blog_info['status']['postDate']
     blog_text = blog_info['status']['text']
     blog_id = blog_info['status']['id']
-    bloger_ids = db.session.query(HotStatus).filter(HotStatus.id==blog_id).all()
+    #bloger_ids = db.session.query(HotStatus).filter(HotStatus.id==blog_id).all()
     ma_ids = db.session.query(M_Weibo).filter(M_Weibo.weibo_id==blog_id).all()
     if len(ma_ids):
         result = 'Wrong'
     else:
-        for bloger_id in bloger_ids:
-            new_item = M_Weibo(weibo_id=blog_id,text=blog_text.encode('utf-8'),repostsCount=blog_reposts_count,commentsCount=blog_comments_count,postDate=blog_time,uid=bloger_id.uid)
-            db.session.add(new_item)
-            db.session.commit()
+        new_item = M_Weibo(weibo_id=blog_id,text=blog_text,repostsCount=blog_reposts_count,commentsCount=blog_comments_count,postDate=blog_time,uid=blog_info['user']['id'])
+        db.session.add(new_item)
+        db.session.commit()
     return json.dumps(result)
 
 @mod.route("/topics")
@@ -847,7 +1120,9 @@ def topics():
                 topic_names = []
                 for topic in topics:
                     topic_names.append(topic.topicName)
-                field_topics.append({'field_name': field_name, 'topics': topic_names})
+                field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
+
+            field_topics.sort(key=lambda x:x['len'],reverse=True)
             return render_template('propagate/topics.html',field_topics = field_topics)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -863,7 +1138,8 @@ def topics():
                             topic_names = []
                             for topic in topics:
                                 topic_names.append(topic.topicName)
-                            field_topics.append({'field_name': field_name, 'topics': topic_names})
+                            field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
+                        field_topics.sort(key=lambda x:x['len'],reverse=True)
                         return render_template('propagate/topics.html',field_topics = field_topics)
                     else:
                         return redirect('/')
@@ -875,12 +1151,7 @@ def topics():
 def hot_status():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(100)
-            status_hot = []             
-            for status in statuses:
-                uid = status.uid
-                user = get_user(uid)
-                status_hot.append({'status': status, 'user': user}) 
+            status_hot = getHotStatus()
             return render_template('propagate/hot_status.html',status_hot = status_hot)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
@@ -888,15 +1159,92 @@ def hot_status():
                 for pa in pas:
                     identy = pa.propagate
                     if identy == 1:
-                        statuses = db.session.query(HotStatus).order_by(HotStatus.repostsCount.desc()).limit(100)
-                        status_hot = []             
-                        for status in statuses:
-                            uid = status.uid
-                            user = get_user(uid)
-                            status_hot.append({'status': status, 'user': user}) 
+                        status_hot = getHotStatus()
                         return render_template('propagate/hot_status.html',status_hot = status_hot)
                     else:
                         return redirect('/')
             return redirect('/')
     else:
         return redirect('/')
+
+@mod.route('/single_rank/')
+def single_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if request.args.get('mid'):
+        mid = int(request.args.get('mid'))
+    blog_info = calculate_single(mid)
+    repost_bloger = blog_info['repost_users']
+    blog_key_user_list = repost_bloger
+
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+
+    news=[]
+    n = 0
+    for user in blog_key_user_list:
+        if user:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break
+                news.append({'id':user['id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['bi_followers_count']})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/topic_rank/')
+def topic_rank():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+
+    keyword = request.args.get('keyword', "")
+    keyuser = request.args.get('keyuser', "")
+    beg_time = int(request.args.get('beg_time', ""))
+    end_time = int(request.args.get('end_time', ""))
+    
+    fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
+    count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+
+    topic_key_user_list = []
+    for result in get_results():
+        number, users = xapian_search_user.search(query={'_id': result['user']}, fields=['_id','name','location','friends_count','followers_count'])
+        if not number:
+            continue
+        for user in users():
+
+            topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+
+    news=[]
+    n = 0
+    for user in topic_key_user_list:
+        if user:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break
+                news.append({'id':user['id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['bi_followers_count']})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})

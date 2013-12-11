@@ -8,9 +8,8 @@ import datetime
 from operator import itemgetter, attrgetter
 from time_utils import datetime2ts
 
-from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import xapian_search_weibo
 
-xapian_search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 ##提取已保存的模型
 dictionary = gensim.corpora.Dictionary.load('weibo/profile/ldamodel/100000U2M50T.dict')
 lda = gensim.models.ldamodel.LdaModel.load('weibo/profile/ldamodel/100000U2M50T.lda')

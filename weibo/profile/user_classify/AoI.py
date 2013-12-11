@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*-coding:utf-8-*-
-
+'''用户领域分类模型
+'''
 
 from operator import itemgetter, attrgetter  
 import pymongo
@@ -23,33 +24,8 @@ mbr = {"culture":0, "entertainment":0, "fashion":0,'education':0,"finance":0, "s
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
 
 
-def readFriendsByUid(uid):
-    uid = int(uid)
-    count, get_results = xapian_search_weibo.search(query={'user': uid}, fields=['friends'])
-    friends = set()
-    for user in get_results():
-        if user['friends']!= []:
-            try:
-                friends = set(user['friends'])
-            except TypeError:
-                continue
-    return {'_id': uid, 'friends':friends}
-
-def getUids():
-    query_dict = {
-        '_id':{
-            '$gt': 0,
-            '$lt': 100000000000000
-        }
-    }
-    count, get_results = xapian_search_user.search(query=query_dict, max_offset=100, fields=['_id'])
-    uidlist = []
-    for r in get_results():
-        uidlist.append(r['_id'])
-    return uidlist
-
 def readProtoUser():
-    f=open("./protou.txt","r")
+    f=open("/home/mirage/linhao/project_bishe/weibo/profile/user_classify/protou.txt","r")
     protou={}
     for line in f:
         area=line.split(":")[0]
@@ -60,7 +36,7 @@ def readProtoUser():
     return protou
 
 def readProtoWord():
-    f=open("./protow.txt","r")
+    f=open("/home/mirage/linhao/project_bishe/weibo/profile/user_classify/protow.txt","r")
     protow={}
     for line in f:
         area=line.split(":")[0]
@@ -150,11 +126,3 @@ if __name__ == '__main__':
             print user_count, '%s sec' % (te - ts)
             ts = te
         user_count += 1
-
-        
-    '''
-    for uid in uidlist:
-        
-    uf.getWithoutTp()
-    uf.getWithoutStatus()
-    '''

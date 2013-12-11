@@ -31,98 +31,40 @@
     </div>
 	  <div class="row well">
       <ul id="TopicTab" class="nav nav-tabs">
-        <li class="active"><a href="#area_1" data-toggle="tab">时政</a></li>
-        <li><a href="#area_2" data-toggle="tab">财经</a></li>
-        <li><a href="#area_3" data-toggle="tab">体育</a></li>
-        <li><a href="#area_4" data-toggle="tab">互联网</a></li>
+        {% for field in field_topics %}
+          {% if field.index == 1 %}
+            <li class="active"><a href="#area_1" data-toggle="tab">{{field.field_name}}</a></li>
+          {% else %}
+            <li><a href="#area_{{field.index}}" data-toggle="tab">{{field.field_name}}</a></li>
+          {% endif %}
+        {% endfor %}  
+        <!--<li><a href="#area_3" data-toggle="tab">体育</a></li>
+        <li><a href="#area_4" data-toggle="tab">互联网</a></li>-->
         <li><a href="/sysadmin/" target="_blank"><i class="icon-cog"></i></a></li>
         <li><a href="/propagate/topics" >查看更多话题</a></li>
-        <li><a href="#热门微博" data-toggle="tab">热门微博</a></li>
+        <li><a href="/propagate/hot_status">热门微博</a></li>
       </ul>
 
       <div id="TopicTabContent" class="tab-content">
-        <div class="tab-pane fade active in" id="area_1">
-          <ul class="inline">
-            <li><input type="checkbox"> 两会 </li>
-            <li><input type="checkbox"> 长春婴儿 </li>
-            <li><input type="checkbox"> 异地高考 </li>
-          </ul>
-        </div>
-        <div class="tab-pane fade" id="area_2">
-          <ul class="inline">
-            <li><input type="checkbox"> 黄金 </li>
-            <li><input type="checkbox"> A股 </li>
-            <li><input type="checkbox"> 存款利率 </li>
-          </ul>
-        </div>
-        <div class="tab-pane fade" id="area_3">
-          <ul class="inline">
-            <li><input type="checkbox"> NBA总决赛 </li>
-            <li><input type="checkbox"> 法网 </li>
-            <li><input type="checkbox"> 世界杯预选赛 </li>
-          </ul>
-        </div>
-        <div class="tab-pane fade" id="area_4">
-          <ul class="inline">
-            <li><input type="checkbox"> iOS7 </li>
-            <li><input type="checkbox"> WWDC </li>
-            <li><input type="checkbox"> 微信5.0 </li>
-          </ul>
-        </div>
-        <div class="tab-pane fade" id="热门微博">
-          {% for status in status_hot %}
-            <div class="WB_feed_type SW_fun  S_line2" action-type="feed_list_item" >
-              <div class="WB_feed_datail S_line2 clearfix">
-                <div class="WB_face">
-                  <a class="W_face_radius" title="{{ status.user.name }}"><img title="{{ status.user.name }}" alt="" width="50" height="50" src="{{ status.user.profile_image_url }}"></a>
-                </div>
-                <div class="WB_detail">
-                  <div class="WB_info">
-                    <a class="WB_name S_func1" nick-name="{{ status.user.name }}" title="{{ status.user.name }}" href="{{ status.weibo_url }}">{{ status.user.name }}</a>
-                  </div>
-                  <div class="WB_text" node-type="feed_list_content">{{ status.status.text }}</div>
-                  <div class="WB_func clearfix">
-                    <div class="WB_handle">
-                      <a action-type="feed_list_like" title="赞"><em class="W_ico20 icon_praised_b"></em>赞:{{ status.status.attitudesCount }}</a><i class="S_txt3">|</i>
-                      <a action-type="feed_list_forward">转发:{{ status.status.repostsCount }}</a><i class="S_txt3">|</i>
-                      <a action-type="feed_list_comment">评论:{{ status.status.commentsCount }}</a><i class="S_txt3">|</i>
-                      <a href="/propagate/showresult_single/{{ status.status.id }}/" action-type="feed_list_comment" style="color:#FF8000;">分析</a><i class="S_txt3">|</i>
-                      <a id="ma{{ status.status.id }}" name ="{{ status.status.id }}" style="color:red;">导入素材库</a>
-                      <script>
-                          $("#ma{{ status.status.id }}").click(function () {
-                              var id=this.getAttribute("name");
-                              
-                              $.ajax({   
-                                  type:"POST",  
-                                  url:"/propagate/add_material",
-                                  dataType: "json",
-                                  async:false,
-                                  data:{mid : id},
-                                  success: function(data){
-                                      if(data == 'Right') {
-                                        alert("导入成功！");
-                                      }
-                                      else{
-                                        alert("该微博已在素材库中！");
-                                      } 
-                                  }              
-                              });
-                          });
-                      </script>
-                    </div>
-                    <div class="WB_from">
-                      <a target="_blank" class="S_link2 WB_time" node-type="feed_list_item_date">{{ status.status.postDate }}</a> 
-                      <em class="S_txt2">来自</em>
-                      <a class="S_link2" target="_blank">{{ status.status.sourcePlatform }}</a>              
-                    </div>
-                  </div>
-                  <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
-                </div>
-              </div>
+        {% for field in field_topics %}
+          {% if field.index == 1 %}
+            <div class="tab-pane fade active in" id="area_1">
+              <ul class="inline">
+                {% for topic in field.topics %}
+                <li><input type="checkbox"> {{ topic }} </li>
+                {% endfor %}
+              </ul>
             </div>
-          {% endfor %}  
-          <div><a href="/hot_status" >查看更多微博</a></div>
-        </div>
+          {% else %}
+            <div class="tab-pane fade" id="area_{{field.index}}">
+              <ul class="inline">
+                {% for topic in field.topics %}
+                <li><input type="checkbox"> {{ topic }} </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endfor %}
       </div>
     </div>
   </div> <!-- /container -->

@@ -15,14 +15,10 @@ from datetime import date
 from datetime import datetime
 
 from xapian_weibo.xapian_backend import XapianSearch
-from xapian_config import xapian_search_user,xapian_search_weibo,xapian_search_domain
+from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
+                                fields_value, fields_id, emotions_zh_kv, emotions_kv
+#from xapian_config import xapian_search_user,xapian_search_weibo,xapian_search_domain
 from xapian_config import beg_y,beg_m,beg_d,end_y,end_m,end_d
-##try:
-##    xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-##    search_weibo = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-##    xapian_search_domain  = XapianSearch(path='/opt/xapian_weibo/data/20131120', name='master_timeline_domain', schema_version=4)
-##except:
-##    print 'sth. wrong with xapian, please check propagate/views.py'
 
 from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
 
@@ -121,7 +117,7 @@ def index():
             
             return render_template('propagate/search.html', field_topics=fields)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -218,7 +214,7 @@ def showresult_by_topic():
                                         return_beg_str=return_beg_str, return_end_str=return_end_str, keyuser_str=keyuser_str
                 )
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -307,7 +303,7 @@ def topic_ajax_trend():
                 keyuser = request.form.get('keyuser', "")
                 beg_time = int(request.form.get('beg_time', ""))
                 end_time = int(request.form.get('end_time', ""))
-    
+
                 fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
                 count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
 
@@ -315,10 +311,9 @@ def topic_ajax_trend():
                 perday_blog_count = topic_info['perday_count_list']
                 date_list = topic_info['date_list']
                 date_list = [int(time.mktime(d.timetuple()))*1000 for d in date_list]
-
                 return json.dumps({'perday_blog_count': zip(date_list, perday_blog_count)})
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -364,7 +359,7 @@ def topic_ajax_weibos():
 
                 return render_template('propagate/ajax/topic_weibos.html', blog_rel_list= blog_rel_list)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -408,7 +403,7 @@ def topic_ajax_spatial():
 
                 return json.dumps({'map_data': topic_area_list})
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -463,7 +458,7 @@ def topic_ajax_stat():
                                         topic_leader_count = topic_leader_count
                 )
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -523,7 +518,7 @@ def topic_ajax_path():
                 forest_main(keyword,beg_time,end_time,keyid)
                 return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -585,41 +580,31 @@ def topic_ajax_userfield():
                         else:
                             domain['其他'] = domain['其他'] + 1
                 data=[]
-                if len(topic_key_user_list) == 0:
-                    data.append({'finance':0})
-                    data.append({'media_domain':0})
-                    data.append({'culture':0})
-                    data.append({'technology':0})
-                    data.append({'entertainment':0})
-                    data.append({'education':0})
-                    data.append({'fashion':0})
-                    data.append({'sports':0})
-                    data.append({'unknown':0})
-                    return render_template('propagate/ajax/single_userfield.html',  mid=mid, topic_key_user_list=topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
+                
                 if domain['财经'] >= 0:
-                    data.append({'finance':int((domain['财经']/float(count))*1000)/10.0})
+                    data.append({'finance':domain['财经']})
                 if domain['媒体'] >= 0:
-                    data.append({'media_domain':int((domain['媒体']/float(count))*1000)/10.0})
+                    data.append({'media_domain':domain['媒体']})
                 if domain['文化'] >= 0:
-                    data.append({'culture':int((domain['文化']/float(count))*1000)/10.0})
+                    data.append({'culture':domain['文化']})
                 if domain['科技'] >= 0:
-                    data.append({'technology':int((domain['科技']/float(count))*1000)/10.0})
+                    data.append({'technology':domain['科技']})
                 if domain['娱乐'] >= 0:
-                    data.append({'entertainment':int((domain['娱乐']/float(count))*1000)/10.0})
+                    data.append({'entertainment':domain['娱乐']})
                 if domain['教育'] >= 0:
-                    data.append({'education':int((domain['教育']/float(count))*1000)/10.0})
+                    data.append({'education':domain['教育']})
                 if domain['时尚'] >= 0:
-                    data.append({'fashion':int((domain['时尚']/float(count))*1000)/10.0})
+                    data.append({'fashion':domain['时尚']})
                 if domain['体育'] >= 0:
-                    data.append({'sports':int((domain['体育']/float(count))*1000)/10.0})
+                    data.append({'sports':domain['体育']})
                 if domain['其他'] >= 0:
-                    data.append({'unknown':int((domain['其他']/float(count))*1000)/10.0})
+                    data.append({'unknown':domain['其他']})
                     
                 return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
             else:
                 pass
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -652,35 +637,25 @@ def topic_ajax_userfield():
                                         else:
                                             domain['其他'] = domain['其他'] + 1
                             data=[]
-                            if len(topic_key_user_list) == 0:
-                                data.append({'finance':0})
-                                data.append({'media_domain':0})
-                                data.append({'culture':0})
-                                data.append({'technology':0})
-                                data.append({'entertainment':0})
-                                data.append({'education':0})
-                                data.append({'fashion':0})
-                                data.append({'sports':0})
-                                data.append({'unknown':0})
-                                return render_template('propagate/ajax/single_userfield.html',  mid=mid, topic_key_user_list=topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
+
                             if domain['财经'] >= 0:
-                                data.append({'finance':int((domain['财经']/float(count))*1000)/10.0})
+                                data.append({'finance':domain['财经']})
                             if domain['媒体'] >= 0:
-                                data.append({'media_domain':int((domain['媒体']/float(count))*1000)/10.0})
+                                data.append({'media_domain':domain['媒体']})
                             if domain['文化'] >= 0:
-                                data.append({'culture':int((domain['文化']/float(count))*1000)/10.0})
+                                data.append({'culture':domain['文化']})
                             if domain['科技'] >= 0:
-                                data.append({'technology':int((domain['科技']/float(count))*1000)/10.0})
+                                data.append({'technology':domain['科技']})
                             if domain['娱乐'] >= 0:
-                                data.append({'entertainment':int((domain['娱乐']/float(count))*1000)/10.0})
+                                data.append({'entertainment':domain['娱乐']})
                             if domain['教育'] >= 0:
-                                data.append({'education':int((domain['教育']/float(count))*1000)/10.0})
+                                data.append({'education':domain['教育']})
                             if domain['时尚'] >= 0:
-                                data.append({'fashion':int((domain['时尚']/float(count))*1000)/10.0})
+                                data.append({'fashion':domain['时尚']})
                             if domain['体育'] >= 0:
-                                data.append({'sports':int((domain['体育']/float(count))*1000)/10.0})
+                                data.append({'sports':domain['体育']})
                             if domain['其他'] >= 0:
-                                data.append({'unknown':int((domain['其他']/float(count))*1000)/10.0})
+                                data.append({'unknown':domain['其他']})
                             return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
                         else:
                             pass
@@ -717,7 +692,7 @@ def single_analysis(mid):
                                    blog_date_list = blog_date_list,
                                    )
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -765,7 +740,7 @@ def single_ajax_trend():
 
                 return json.dumps({'perday_blog_count': zip(date_list, perday_repost_count)})
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -817,7 +792,7 @@ def single_ajax_weibos():
                                        tar_id = blog_id
                                       )
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -867,7 +842,7 @@ def single_ajax_spatial():
 
                 return json.dumps({'map_data': area_list})
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -908,7 +883,7 @@ def single_ajax_stat():
                                         tar_leader_count = tar_leader_count
                 )
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -945,7 +920,7 @@ def single_ajax_path():
                 tree_main(mid)
                 return render_template('propagate/ajax/single_retweetpath.html',mid = mid)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -985,42 +960,31 @@ def single_ajax_userfield():
                             domain['其他'] = domain['其他'] + 1
 
                 data=[]
-                if len(blog_key_user_list) == 0:
-                    data.append({'finance':0})
-                    data.append({'media_domain':0})
-                    data.append({'culture':0})
-                    data.append({'technology':0})
-                    data.append({'entertainment':0})
-                    data.append({'education':0})
-                    data.append({'fashion':0})
-                    data.append({'sports':0})
-                    data.append({'unknown':0})
-                    return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
-                
+
                 if domain['财经'] >= 0:
-                    data.append({'finance':int((domain['财经']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'finance':domain['财经']})
                 if domain['媒体'] >= 0:
-                    data.append({'media_domain':int((domain['媒体']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'media_domain':domain['媒体']})
                 if domain['文化'] >= 0:
-                    data.append({'culture':int((domain['文化']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'culture':domain['文化']})
                 if domain['科技'] >= 0:
-                    data.append({'technology':int((domain['科技']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'technology':domain['科技']})
                 if domain['娱乐'] >= 0:
-                    data.append({'entertainment':int((domain['娱乐']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'entertainment':domain['娱乐']})
                 if domain['教育'] >= 0:
-                    data.append({'education':int((domain['教育']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'education':domain['教育']})
                 if domain['时尚'] >= 0:
-                    data.append({'fashion':int((domain['时尚']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'fashion':domain['时尚']})
                 if domain['体育'] >= 0:
-                    data.append({'sports':int((domain['体育']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'sports':domain['体育']})
                 if domain['其他'] >= 0:
-                    data.append({'unknown':int((domain['其他']/float(len(blog_key_user_list)))*1000)/10.0})
+                    data.append({'unknown':domain['其他']})
                 
                 return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
             else:
                 pass
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -1045,36 +1009,25 @@ def single_ajax_userfield():
                                     else:
                                         domain['其他'] = domain['其他'] + 1
                             data=[]
-                            if len(blog_key_user_list) == 0:
-                                data.append({'finance':0})
-                                data.append({'media_domain':0})
-                                data.append({'culture':0})
-                                data.append({'technology':0})
-                                data.append({'entertainment':0})
-                                data.append({'education':0})
-                                data.append({'fashion':0})
-                                data.append({'sports':0})
-                                data.append({'unknown':0})
-                                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
 
                             if domain['财经'] >= 0:
-                                data.append({'finance':int((domain['财经']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'finance':domain['财经']})
                             if domain['媒体'] >= 0:
-                                data.append({'media_domain':int((domain['媒体']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'media_domain':domain['媒体']})
                             if domain['文化'] >= 0:
-                                data.append({'culture':int((domain['文化']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'culture':domain['文化']})
                             if domain['科技'] >= 0:
-                                data.append({'technology':int((domain['科技']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'technology':domain['科技']})
                             if domain['娱乐'] >= 0:
-                                data.append({'entertainment':int((domain['娱乐']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'entertainment':domain['娱乐']})
                             if domain['教育'] >= 0:
-                                data.append({'education':int((domain['教育']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'education':domain['教育']})
                             if domain['时尚'] >= 0:
-                                data.append({'fashion':int((domain['时尚']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'fashion':domain['时尚']})
                             if domain['体育'] >= 0:
-                                data.append({'sports':int((domain['体育']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'sports':domain['体育']})
                             if domain['其他'] >= 0:
-                                data.append({'unknown':int((domain['其他']/float(len(blog_key_user_list)))*1000)/10.0})
+                                data.append({'unknown':domain['其他']})
 
                             return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
                         else:
@@ -1098,7 +1051,6 @@ def add_material():
     blog_time = blog_info['status']['postDate']
     blog_text = blog_info['status']['text']
     blog_id = blog_info['status']['id']
-    #bloger_ids = db.session.query(HotStatus).filter(HotStatus.id==blog_id).all()
     ma_ids = db.session.query(M_Weibo).filter(M_Weibo.weibo_id==blog_id).all()
     if len(ma_ids):
         result = 'Wrong'
@@ -1125,7 +1077,7 @@ def topics():
             field_topics.sort(key=lambda x:x['len'],reverse=True)
             return render_template('propagate/topics.html',field_topics = field_topics)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
@@ -1154,7 +1106,7 @@ def hot_status():
             status_hot = getHotStatus()
             return render_template('propagate/hot_status.html',status_hot = status_hot)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate

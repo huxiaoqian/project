@@ -8,7 +8,8 @@ import json
 import csv
 import os
 from xapian_weibo.xapian_backend import XapianSearch
-from xapian_config import xapian_search_user
+from weibo.global_config import xapian_search_user
+#xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 mod = Blueprint('sysadmin', __name__, url_prefix='/sysadmin')
 
@@ -132,9 +133,13 @@ def ch_pass():
 def add_field():
     result = 'Right'
     new_field = request.form['topic']
-    new_item = Field(fieldName=new_field)
-    db.session.add(new_item)
-    db.session.commit()
+    old_items = db.session.query(Field).filter(Field.fieldName==new_field).all()
+    if len(old_items):
+        result = 'Wrong'
+    else:
+        new_item = Field(fieldName=new_field)
+        db.session.add(new_item)
+        db.session.commit()
     return json.dumps(result)
 
 @mod.route('/add_topic', methods=['GET','POST'])
@@ -142,9 +147,13 @@ def add_topic():
     result = 'Right'
     new_field = request.form['topic']
     new_fid = request.form['field_id']
-    new_item = Topic(topicName=new_field,fieldId=new_fid)
-    db.session.add(new_item)
-    db.session.commit()
+    old_items = db.session.query(Topic).filter(Topic.topicName==new_field).all()
+    if len(old_items):
+        result = 'Wrong'
+    else:
+        new_item = Topic(topicName=new_field,fieldId=new_fid)
+        db.session.add(new_item)
+        db.session.commit()
     return json.dumps(result)
 
 @mod.route('/add_new', methods=['GET','POST'])
@@ -152,9 +161,13 @@ def add_new():
     result = 'Right'
     new_field = request.form['topic']
     se_weight = request.form['se_weight']
-    new_item = NewWords(wordsName=new_field,seWeight=se_weight)
-    db.session.add(new_item)
-    db.session.commit()
+    old_items = db.session.query(NewWords).filter(NewWords.wordsName==new_field).all()
+    if len(old_items):
+        result = 'Wrong'
+    else:
+        new_item = NewWords(wordsName=new_field,seWeight=se_weight)
+        db.session.add(new_item)
+        db.session.commit()
     return json.dumps(result)
 
 
@@ -280,34 +293,38 @@ def material_de():
 @mod.route('/new_in', methods=['GET','POST'])
 def new_in():
     f_name = request.form['new_words']
-    n = 0
-    st = ''
-    wid = 'id'
-    wna = 'na'
-    wwe = 'we'
-    for i in range(0,len(f_name)):
-        
-        if f_name[i] == ',':
-            if n==0:
-                wid = st
-                n = n + 1
-            else:
-                wna = st
-                n = n + 1
-            st = ''
-        elif f_name[i]=='\n':
-            new_item = NewWords(id=wid,wordsName=wna.encode('utf-8'),seWeight=wwe)
-            db.session.add(new_item)
-            db.session.commit()
+    flag = request.form['flag']
+    if flag == '1':
+        line = f_name.split('\n')
+        for li in line:
+            item = li.split(',')
             n = 0
-            i = i + 1
-            st = ''
-        else:
-            st = st + f_name[i]
-            if n == 2:
-                wwe = st
-                i = i + 1
-                n = 0
+            name = 'na'
+            weight = 'we'
+            for it in item:
+                if n == 0:
+                    name = it
+                    n = 1
+                else:
+                    weight = it
+            old_items = db.session.query(NewWords).filter(NewWords.wordsName==name.encode('utf-8')).all()
+            if len(old_items):
+                pass
+            else:
+                new_item = NewWords(wordsName=name.encode('utf-8'),seWeight=weight)
+                db.session.add(new_item)
+                db.session.commit()
+    else:
+        line = f_name.split('\n')
+        for li in line:
+            name = li           
+            old_items = db.session.query(NewWords).filter(NewWords.wordsName==name.encode('utf-8')).all()
+            if len(old_items):
+                pass
+            else:
+                new_item = NewWords(wordsName=name.encode('utf-8'),seWeight=1)
+                db.session.add(new_item)
+                db.session.commit()
 
     if len(f_name) > 0:
         result = 'Right'
@@ -331,11 +348,16 @@ def newwords_rank():
     else:
         startoffset = (page - 1) * countperpage
     endoffset = startoffset + countperpage
-    newwords = db.session.query(NewWords).filter((NewWords.id>startoffset)&(NewWords.id<=endoffset)).all()
+    newwords = db.session.query(NewWords).filter().all()
     news=[]
+    n = 0
     for newword in newwords:
         if newword:
-            news.append({'id':newword.id,'wordsName':newword.wordsName.encode('utf-8'),'seWeight':newword.seWeight})
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break 
+                news.append({'id':newword.id,'wordsName':newword.wordsName.encode('utf-8'),'seWeight':newword.seWeight})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
@@ -492,11 +514,11 @@ def add_user():
     moodlens = request.form['moodlens']
     profile = request.form['profile']
     propagate = request.form['propagate']
-    old_items = db.session.query(UserList).filter(UserList.id==user).all()
+    old_items = db.session.query(UserList).filter(UserList.username==user).all()
     if len(old_items):
         return json.dumps('Wrong')
     else:
-        new_item = UserList(id=user,password=pas,identify=identify,moodlens=moodlens,profile=profile,propagate=propagate)
+        new_item = UserList(username=user,password=pas,identify=identify,moodlens=moodlens,profile=profile,propagate=propagate)
         db.session.add(new_item)
         db.session.commit()
         return json.dumps('Right')
@@ -517,6 +539,7 @@ def user_de():
 @mod.route('/user_modify', methods=['GET','POST'])
 def user_modify():
     user = request.form['f_id']
+    uname = request.form['uname']
     identify = request.form['identify']
     moodlens = request.form['moodlens']
     profile = request.form['profile']
@@ -527,7 +550,7 @@ def user_modify():
             pas = old_item.password
             db.session.delete(old_item)
             db.session.commit()
-            new_item = UserList(id=user,password=pas,identify=identify,moodlens=moodlens,profile=profile,propagate=propagate)
+            new_item = UserList(username=uname,password=pas,identify=identify,moodlens=moodlens,profile=profile,propagate=propagate)
             db.session.add(new_item)
             db.session.commit()
         return json.dumps('Right')

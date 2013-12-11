@@ -21,6 +21,7 @@ from datetime import date
 from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
+
 from ldamodel import lda_topic
 from weibo.extensions import db
 from weibo.model import *
@@ -28,6 +29,8 @@ from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
 
+from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
+                                fields_value, fields_id, emotions_zh_kv, emotions_kv
 
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')

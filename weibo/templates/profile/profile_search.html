@@ -1,5 +1,5 @@
 {% extends 'profile/profile_layout.html' %}
-{% block title %}博主多维特征搜索与分领域展示{% endblock %}
+{% block title %}博主特征展示{% endblock %}
 {% block head %}
 <style>
   body{
@@ -300,9 +300,9 @@
 </style>
 {% endblock head %}
 {% block top_navbar_active %}
-    <li><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+    <!--<li><a href="/profile/person/1813080181">单个用户特征展示</a></li>-->
     <li><a href="/profile/group/finance">领域特征展示</a></li>
-    <li class="active"><a href="/profile/search">博主特征搜索与分领域展示</a></li>
+    <li class="active"><a href="/profile/search">博主特征展示</a></li>
 {% endblock top_navbar_active %}
 
 {% block content %}
@@ -319,10 +319,10 @@
           <a class="brand" href="/">***原型系统</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <!--<li><a href="/">首页</a></li>-->
-              <li><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+              <li><a href="/">网民画像首页</a></li>
+              <!--<li><a href="/profile/person/1813080181">单个用户特征展示</a></li>-->
               <li><a href="/profile/group/finance">领域特征展示</a></li>
-              <li class="active"><a href="/profile/search/">博主特征搜索与分领域展示</a></li>   
+              <li class="active"><a href="/profile/search/">博主特征展示</a></li>   
             </ul>
             <form class="navbar-search pull-left" action='/profile/search/person'>
                 <input type="text" name='nickname' class="search-query" placeholder="按博主昵称搜索">

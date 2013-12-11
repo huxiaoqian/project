@@ -90,12 +90,14 @@
         </li>
         {% else %}
         <li class="span3" style="display:none;">
-          <a class="thumbnail" href="/profile/search/" target="_blank">
+          <!--<a class="thumbnail" href="/profile/search/" target="_blank">-->
+            <a class="thumbnail" href="/profile/" target="_blank">
             <img src="/static/img/home_thumbnail/3.png" alt="画像" width="260" height="200">
           </a>
           <h3>网民画像</h3>
           <p>该模块主要识别各类热点舆情传播的关键人物，提供其全特征数据，可以为网民的定点监控和干预提供策略建议。</p>
-          <p><a class="btn" href="/profile/search/" target="_blank">查看详情 »</a></p>
+          <!--<p><a class="btn" href="/profile/search/" target="_blank">查看详情 »</a></p>-->
+          <p><a class="btn" href="/profile/" target="_blank">查看详情 »</a></p>
         </li>
         {% endif %}
 
@@ -223,7 +225,8 @@
           data:{log_in : log_in,user : user},
           success: function(data){
             if(data == 'Right'){
-              window.open('../profile/search/');
+              //window.open('../profile/search/');添加主页
+              window.open('../profile/');
             }
             else{
               window.open('../');
@@ -245,7 +248,8 @@
           data:{log_in : log_in,user : user},
           success: function(data){
             if(data == 'Right'){
-              window.open('../profile/search/');
+              //window.open('../profile/search/');添加主页
+              window.open('../profile/');
             }
             else{
               window.open('../');

@@ -35,22 +35,15 @@ def csv2reposts():
                 retweeted_uid = itemdict['retweeted_uid']
                 mid = itemdict['_id']
                 user = itemdict['user']
-                ts = itemdict['timestamp']
-                key = str(retweeted_mid) + '_' + str(retweeted_uid)
+                timestamp = itemdict['timestamp']
+                key = str(retweeted_mid) 
                 try:
-                    print '1: ', weibo_repost_bucket.Get(key)
-                    print '2: ', str(mid) + '_' + str(user) + '_' + str(ts)
             	    reposts = json.loads(weibo_repost_bucket.Get(key))
-                    if reposts and len(reposts):
-                        value = json.dumps(reposts.extend([str(mid) + '_' + str(user) + '_' + str(ts)]))
-                    else:
-                	    value = json.dumps([str(mid) + '_' + str(user) + '_' + str(ts)])
+                    reposts.extend([str(mid) + '_' + str(user) + '_' + str(timestamp)])
                 except KeyError:
-                    value = json.dumps([str(mid) + '_' + str(user) + '_' + str(ts)])
+                    reposts = [str(mid) + '_' + str(user) + '_' + str(timestamp)]
 
-                if value and value != 'null':
-                    print '3: ', value
-                    weibo_repost_bucket.Put(key, value)
+                weibo_repost_bucket.Put(key, json.dumps(reposts))
 
         f.close()
 

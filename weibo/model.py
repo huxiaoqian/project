@@ -4,7 +4,7 @@ from extensions import db
 
 __all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', 
            'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', 
-           'UserWeight', 'BlackList', 'IMedia', 'M_Weibo', 'UserList']
+           'UserWeight', 'BlackList', 'IMedia', 'M_Weibo', 'UserList','Topic_Search']
 
 
 class Field(db.Model):
@@ -226,7 +226,8 @@ class M_Weibo(db.Model):
 
 class UserList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    password = db.Column(db.String(20), unique=True)
+    username = db.Column(db.String(20), unique=True)
+    password = db.Column(db.String(20))
     identify = db.Column(db.Integer)
     moodlens = db.Column(db.Integer)
     profile = db.Column(db.Integer)
@@ -235,6 +236,18 @@ class UserList(db.Model):
     @classmethod
     def _name(cls):
         return u'用户权限列表'
+
+    def __repr__(self):
+        return self.id
+
+class Topic_Search(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    uname = db.Column(db.String(20))
+    topicName = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'用户搜索话题列表'
 
     def __repr__(self):
         return self.id

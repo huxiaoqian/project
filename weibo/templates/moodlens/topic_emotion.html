@@ -263,7 +263,13 @@
 
     function chg_emotion_pie(raw_data){
         if(raw_data[3] != 0){
-            var data = [['高兴', raw_data[0] * 100], ['愤怒', raw_data[1] * 100], ['悲伤', raw_data[2] * 100]];
+            var percent_happy=raw_data[0]/raw_data[3];
+            percent_happy=Number(percent_happy.toFixed(2));
+            var percent_angry=raw_data[1]/raw_data[3];
+            percent_angry=Number(percent_angry.toFixed(2));
+            var percent_sad=raw_data[2]/raw_data[3];
+            percent_sad=Number(percent_sad.toFixed(2));
+            var data = [['高兴', percent_happy], ['愤怒', percent_angry], ['悲伤', percent_sad]];
             $('#emotion_pie_container').empty();
             display_emotion_pie(data);
         }
@@ -430,18 +436,25 @@
             title: {
                 text: '微博情绪饼图',
             },
-            tooltip: {
-                pointFormat: '{series.name}: <b>{point.percentage}%</b>',
-                percentageDecimals: 1
-            },
+            //tooltip: {
+              //  pointFormat: '{series.name}: <b>{point.percentage}%</b>',
+                //percentageDecimals: 1,
+                //valueDecimals: 2,
+                //enabled: true
+            //},
             plotOptions: {
                 pie: {
                     allowPointSelect: true,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: false
-                    },
-                    showInLegend: true
+                        enabled:true,
+                        formatter:function(){
+                            return '<b>'+this.point.name+'</b>'+this.percentage+'%';
+
+                        }
+                   },
+
+                    showInLegend:true
                 }
             },
             series: [{

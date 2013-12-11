@@ -19,8 +19,9 @@ from city_color import province_color_map
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
 from datetime import date
 from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS
-#from xapian_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
-#                        fields_value, fields_id, emotions_zh_kv, emotions_kv
+from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
+                                fields_value, fields_id, emotions_zh_kv, emotions_kv
+
 from ldamodel import lda_topic
 from weibo.extensions import db
 from weibo.model import *
@@ -106,6 +107,27 @@ def log_in():
         return json.dumps('Right')
     else:
         return json.dumps('Wrong')
+
+#添加画像主页
+@mod.route('/', methods=['GET','POST'])
+def test_index():
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            return render_template('profile/index.html')
+        else:
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
+            #pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.identify
+                    if identy == 1:
+                        return render_template('profile/index.html')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
+#添加画像主页
 
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
@@ -302,7 +324,8 @@ def profile_search(model='hotest'):
                         offset += 1
                     return json.dumps(users)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            #pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.profile

@@ -9,9 +9,9 @@
   </style>
 {% endblock head%}
 {% block top_navbar_active %}
-    <li class="active"><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+    <!--<li class="active"><a href="/profile/person/1813080181">单个用户特征展示</a></li>-->
     <li><a href="/profile/group/finance">领域特征展示</a></li>
-    <li><a href="/profile/search">博主特征搜索与分领域展示</a></li>
+    <li><a href="/profile/search">博主特征展示</a></li>
 {% endblock top_navbar_active %}
 {% block content %}
 <div class="navbar navbar-fixed-top">
@@ -25,10 +25,10 @@
     <a class="brand" href="/">***原型系统</a>
     <div class="nav-collapse">
       <ul class="nav">
-        <li><a href="/">首页</a></li>
-        <li class="active"><a href="/profile/person/1813080181">单个用户特征展示</a></li>
+        <li><a href="/">网民画像首页</a></li>
+        <!--<li class="active"><a href="/profile/person/1813080181">单个用户特征展示</a></li>-->
         <li><a href="/profile/group/finance">领域特征展示</a></li>
-        <li><a href="/profile/search/">博主特征搜索与分领域展示</a></li>   
+        <li><a href="/profile/search/">博主特征展示</a></li>   
       </ul>
       <form class="navbar-search pull-left" action='/profile/search/person'>
         <input type="text" name='nickname' class="search-query" placeholder="按博主昵称搜索">
@@ -72,11 +72,18 @@
         </div>
         <div class="span9" id="index-tabs">
           <ul class="nav nav-tabs">
+            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">行为信息</a></li>
             <li><a href="/profile/person_tab_ajax/personaltopic/{{user.id}}" >兴趣偏好</a></li>
             <li><a href="/profile/person_tab_ajax/personalnetwork/{{user.id}}">关注结构</a></li>
             <li><a href="/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}">粉丝结构</a></li>
-            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">行为信息</a></li>
             <li><a href="/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}">交互结构</a></li>
+            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">传播结构</a></li>
+
+            <!--<li><a href="/profile/person_tab_ajax/personaltopic/{{user.id}}" >兴趣偏好</a></li>
+            <li><a href="/profile/person_tab_ajax/personalnetwork/{{user.id}}">关注结构</a></li>
+            <li><a href="/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}">粉丝结构</a></li>
+            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">行为信息</a></li>
+            <li><a href="/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}">交互结构</a></li>-->
           </ul>
         </div>
       </div><!--.row-fluid end--> 

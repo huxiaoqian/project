@@ -1,0 +1,200 @@
+{% extends "profile/base.html" %}
+{% block title %}主页{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="well">
+    <legend>领域特征</legend>
+    <form id="profile_group" action="/profile/group/" class="form-inline" method="POST">
+      领域:
+      <div class="btn-group">
+	<a id="profile_group_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
+	  财经
+	  <span class="caret"></span>
+	</a>
+	<ul id="profile_group_rank_method_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_method('profile_group', 'finance');" data-toggle="tab">财经</a></li>
+      	  <li><a href="#" onclick="choose_method('profile_group', 'media');" data-toggle="tab">媒体</a></li>
+      	  <li><a href="#" onclick="choose_method('profile_group', 'culture');" data-toggle="tab">文化</a></li>
+          <li><a href="#" onclick="choose_method('profile_group', 'technology');" data-toggle="tab">科技</a></li>
+          <li><a href="#" onclick="choose_method('profile_group', 'entertainment');" data-toggle="tab">娱乐</a></li>
+          <li><a href="#" onclick="choose_method('profile_group', 'education');" data-toggle="tab">教育</a></li>
+          <li><a href="#" onclick="choose_method('profile_group', 'fashion');" data-toggle="tab">时尚</a></li>
+          <li><a href="#" onclick="choose_method('profile_group', 'sports');" data-toggle="tab">体育</a></li>
+	</ul>
+      </div>
+      时间范围:
+      <div class="btn-group">
+	<a  id="profile_group_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	  1周
+	  <span class="caret"></span>
+	</a>
+	<ul id="profile_group_window_size_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_window('profile_group', 1);" data-toggle="tab">1天</a></li>
+      	  <li><a href="#" onclick="choose_window('profile_group', 7);" data-toggle="tab">1周</a></li>
+      	  <li><a href="#" onclick="choose_window('profile_group', 30);" data-toggle="tab">1个月</a></li>
+      	  <li><a href="#" onclick="choose_window('profile_group', 90);" data-toggle="tab">3个月</a></li>
+	</ul>
+      </div>
+      按粉丝数前<input name="top_n" type="text" value="10000" class="span1">
+      人
+      <input type="hidden" name="action" value="run">
+      <input id="profile_group_rank_method" type="hidden" name="rank_method" value="followers">
+      <input id="profile_group_window_size" type="hidden" name="window_size" value="7">
+      <input type="submit" class="btn btn-primary" value="分析">
+    </form>
+  </div>
+
+  <div class="well">
+    <legend>博主特征</legend>
+    <form id="profile_search" action="/profile/search/" class="form-inline" method="POST">
+      <input id="topic_keywords" name="topic" type="text" class="span2 search-query" placeholder="子领域、话题">
+      时间范围:
+      <div class="btn-group">
+	<a  id="area_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	  1周
+	  <span class="caret"></span>
+	</a>
+	<ul id="area_window_size_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_window('area', 1);" data-toggle="tab">1天</a></li>
+      	  <li><a href="#" onclick="choose_window('area', 7);" data-toggle="tab">1周</a></li>
+      	  <li><a href="#" onclick="choose_window('area', 30);" data-toggle="tab">1个月</a></li>
+      	  <li><a href="#" onclick="choose_window('area', 90);" data-toggle="tab">3个月</a></li>
+	</ul>
+      </div>
+      前<input name="top_n" type="text" value="500" class="span1">
+      条结果
+      每页<input name="page_num" type="text" value="20" class="span1">
+      条结果
+      <input type="hidden" name="action" value="run">
+      <input id="area_window_size" type="hidden" name="window_size" value="7">
+      <input type="submit" class="btn btn-primary" value="识别">
+    </form>
+    <ul id="TopicTab" class="nav nav-tabs">
+      <li class="active"><a href="#area_1" data-toggle="tab">时政</a></li>
+      <li><a href="#area_2" data-toggle="tab">财经</a></li>
+      <li><a href="#area_3" data-toggle="tab">体育</a></li>
+      <li><a href="#area_4" data-toggle="tab">互联网</a></li>
+      <li><a href="/sysadmin/" target="_blank"><i class="icon-cog"></i></a></li> 
+    </ul>
+    <div id="TopicTabContent" class="tab-content">
+      <div class="tab-pane fade active in" id="area_1">
+	<ul class="inline">
+      	  <li>
+      	    <input type="checkbox"> 两会
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> 长春婴儿
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> 异地高考
+      	  </li>
+	</ul>
+      </div>
+      <div class="tab-pane fade" id="area_2">
+	<ul class="inline">
+      	  <li>
+      	    <input type="checkbox"> 黄金
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> A股
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> 存款利率
+      	  </li>
+	</ul>
+      </div>
+      <div class="tab-pane fade" id="area_3">
+	<ul class="inline">
+      	  <li>
+      	    <input type="checkbox"> NBA总决赛
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> 法网
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> 世界杯预选赛
+      	  </li>
+	</ul>
+      </div>
+      <div class="tab-pane fade" id="area_4">
+	<ul class="inline">
+      	  <li>
+      	    <input type="checkbox"> iOS7
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> WWDC
+      	  </li>
+      	  <li>
+      	    <input type="checkbox"> 微信5.0
+      	  </li>
+	</ul>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="well">
+    <legend>突发识别</legend>
+    <form id="burst_identify" action="/identify/burst/" class="form-inline" method="POST">
+      排序标准:
+      <div class="btn-group">
+	<a id="burst_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
+	  粉丝数
+	  <span class="caret"></span>
+	</a>
+	<ul id="burst_rank_method_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_method('burst', 'followers');" data-toggle="tab">粉丝数</a></li>
+      	  <li><a href="#" onclick="choose_method('burst', 'active');" data-toggle="tab">活跃度</a></li>
+      	  <li><a href="#" onclick="choose_method('burst', 'important');" data-toggle="tab">重要度</a></li>
+	</ul>
+      </div>
+      时间范围:
+      <div class="btn-group">
+	<a  id="burst_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	  1周
+	  <span class="caret"></span>
+	</a>
+	<ul id="burst_window_size_dropdown_menu" class="dropdown-menu">
+	  <li><a href="#" onclick="choose_window('burst', 1);" data-toggle="tab">1天</a></li>
+      	  <li><a href="#" onclick="choose_window('burst', 7);" data-toggle="tab">1周</a></li>
+      	  <li><a href="#" onclick="choose_window('burst', 30);" data-toggle="tab">1个月</a></li>
+      	  <li><a href="#" onclick="choose_window('burst', 90);" data-toggle="tab">3个月</a></li>
+	</ul>
+      </div>
+      前<input name="top_n" type="text" value="500" class="span1">
+      条结果
+      每页<input name="page_num" type="text" value="20" class="span1">
+      条结果
+      <input type="hidden" name="action" value="run">
+      <input id="burst_rank_method" type="hidden" name="rank_method" value="followers">
+      <input id="burst_window_size" type="hidden" name="window_size" value="7">
+      <input type="submit" class="btn btn-primary" value="识别">
+    </form>
+
+    <div>
+      <a href="javascript:void(0);" onclick="show_burst_user();" class="pull-right" title="实时突发用户识别">
+	<i class="icon-exclamation-sign"></i>
+      </a>
+    </div>
+
+    <div id="realtime_burst_user" class="collapse out">
+      <div id="burst_user_progress" class="progress progress-striped active">
+	<div class="bar" style="width: 100%;"></div>
+      </div>
+      <div id="loading_burst_data">
+      </div>
+      <div id="burst_user_table">
+	<table class="table table-bordered">
+	</table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+  <script src="{{ url_for('static', filename='js/profile/choose.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/burst.js') }}"></script>
+{% endblock %}

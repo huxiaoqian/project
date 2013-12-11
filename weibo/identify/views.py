@@ -49,7 +49,7 @@ def index():
         if session['user'] == 'admin':
             return render_template('identify/index.html')
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.identify
@@ -105,7 +105,7 @@ def whole():
             else:
                 abort(404)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.identify
@@ -199,7 +199,7 @@ def burst():
             else:
                 abort(404)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.identify
@@ -336,7 +336,7 @@ def area():
             else:
                 abort(404)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.identify

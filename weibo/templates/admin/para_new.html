@@ -64,10 +64,13 @@ function add_field(){<!-- 添加按钮 -->
                     async:false,
                     data:{topic : fl,se_weight: f2},
                     success: function(data){
-                      if(data) {
+                      if(data == 'Right') {
                                 alert("添加保留词成功！");
                                 location.reload();
                               } 
+                      else{
+                        alert("保留词已存在！");
+                      }
                     }              
                   })
                }
@@ -260,6 +263,7 @@ function declear_re(){<!-- 反选 -->
 
                         for(var i=0,f;f=files[i];i++){
                           if(confirm("您确定要批量导入？\n注意：批量导入的文件一定是CSV文件！")){
+                            var fl=prompt("是否含有敏感等级(1表示有，0表示没有)","");
                             var reader = new FileReader();
                             reader.onload = function (oFREvent) {
                               var a = oFREvent.target.result;
@@ -268,7 +272,7 @@ function declear_re(){<!-- 反选 -->
                                     url:"/sysadmin/new_in",
                                     dataType: "json",
                                     async:false,
-                                    data:{new_words : a},
+                                    data:{new_words : a,flag : fl},
                                     success: function(data){
                                         if( data =='Right'){
                                           alert("批量导入成功！");
@@ -299,6 +303,7 @@ function declear_re(){<!-- 反选 -->
                         }, false);
 
                       $("#de_new").click(function() {
+                          n = 0;
                           $("[name='field_new']").each(function(){
                               
                               if(this.checked)
@@ -314,12 +319,15 @@ function declear_re(){<!-- 反选 -->
                                     data:{f_id : f_id},
                                     success: function(data){
                                         if( data =='Right'){
-                                          alert("删除成功！");
+                                          n = n+1;
                                         }
                                     }           
                                   });
                               }   
                           });
+                          if(n > 0){
+                            alert("删除成功！");
+                          }
                           location.reload();
                           //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
                     });

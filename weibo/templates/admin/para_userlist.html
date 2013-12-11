@@ -100,8 +100,9 @@ ul{
                <div class="bs-docs-example">
                   <table class="table" id="new_table">
                     <thead>
-                      <tr>                        
-                        <th style="text-align:center">用户ID</th>
+                      <tr> 
+                        <th style="text-align:center;display:none;">ID</th>                       
+                        <th style="text-align:center">用户</th>
                         <th style="text-align:center">敏感用户识别</th>
                         <th style="text-align:center">网民情绪监控与预警</th>
                         <th style="text-align:center">网民画像</th>
@@ -113,7 +114,8 @@ ul{
                       {% for user in userlists %}
                       <tr>
                         
-                        <td style="text-align:center">{{user.id}}</td>
+                        <td style="text-align:center;display:none;">{{user.id}}</td>
+                        <td style="text-align:center">{{user.username}}</td>
                         {% if user.identify == 1 %}
                         <td style="text-align:center">有</td>
                         {% else %}
@@ -143,7 +145,7 @@ ul{
                 <script>
                 function add_field(){<!-- 添加按钮 -->
 
-                  var fl=prompt("请输入要添加的用户ID\n注：ID要为数字","");
+                  var fl=prompt("请输入要添加的用户名","");
                   var f2=prompt("请输入新用户的密码","");
                   var f3=prompt("请确认新用户的密码","");
                   if(f2!=f3){
@@ -183,11 +185,12 @@ ul{
                 }
 
                 $("#de_user").click(function() {
+                    n = 0;
                     $("[name='user_choose']").each(function(){                              
                         if(this.checked)
                         {
                               var fa = $(this).parent();
-                              var ne = $(fa).prev().prev().prev().prev().prev();                   
+                              var ne = $(fa).prev().prev().prev().prev().prev().prev();                   
                               var f_id = $(ne).html();
                               $.ajax({   
                                 type:"POST",  
@@ -197,12 +200,15 @@ ul{
                                 data:{f_id : f_id},
                                 success: function(data){
                                     if( data =='Right'){
-                                      alert("删除成功！");
+                                      n = n + 1;
                                     }
                                 }           
                               });
                         }   
                     });
+                    if(n > 0){
+                            alert("删除成功！");
+                          }
                     location.reload();
                           //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
                 });
@@ -212,9 +218,10 @@ ul{
                         if(this.checked)
                         {
                               var fa = $(this).parent();
-                              var ne = $(fa).prev().prev().prev().prev().prev();                   
-                              var f_id = $(ne).html();
-                              if(confirm("您要修改的是"+f_id+"用户？")){
+                              var ne = $(fa).prev().prev().prev().prev().prev();
+                              var uname = $(ne).html();                  
+                              var f_id = $(uname).html();
+                              if(confirm("您要修改的是"+uname+"用户？")){
                                 var identify=prompt("请输入敏感博主识别的权限\n注：1表示有权限，0表示没权限","");
                                 var moodlens=prompt("请输入网民情绪监控与预警的权限\n注：1表示有权限，0表示没权限","");
                                 var profile=prompt("请输入网民画像的权限\n注：1表示有权限，0表示没权限","");
@@ -225,7 +232,7 @@ ul{
                                     url:"/sysadmin/user_modify",
                                     dataType: "json",
                                     async:false,
-                                    data:{f_id : f_id,identify:identify,moodlens:moodlens,profile:profile,propagate:propagate},
+                                    data:{f_id : f_id,uname:uname,identify:identify,moodlens:moodlens,profile:profile,propagate:propagate},
                                     success: function(data){
                                       if( data =='Right'){
                                         alert("修改成功！");

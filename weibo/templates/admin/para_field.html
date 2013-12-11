@@ -58,10 +58,13 @@ function add_field(nu){<!-- 添加按钮 -->
                     async:false,
                     data:{topic : fl},
                     success: function(data){
-                      if(data) {
+                      if(data == 'Right') {
                                 alert("添加领域成功！");
                                 location.reload();
                               } 
+                      else{
+                        alert("领域已存在！");
+                      }
                     }              
                   })
                }
@@ -77,10 +80,13 @@ function add_field(nu){<!-- 添加按钮 -->
                     async:false,
                     data:{topic : fl, field_id : f_id},
                     success: function(data){
-                      if(data) {
+                      if(data == 'Right') {
                                 alert("添加话题成功！");
                                 location.reload();
                               } 
+                      else{
+                        alert("话题已存在！");
+                      }
                     }              
                   })
                }
@@ -301,6 +307,7 @@ function declear_re(he){<!-- 反选 -->
           getRankData_t(countperpage_args, limit_arg);
         })
                       $("#de_field").click(function() {
+                          n = 0;
                           $("[name='field_f']").each(function(){
                               
                               if(this.checked)
@@ -319,12 +326,15 @@ function declear_re(he){<!-- 反选 -->
                                         alert("删除错误！该领域中有子话题，请先删除对应的子话题！");
                                       }
                                       else{
-                                        alert("删除成功！");
+                                        n = n + 1;
                                       }
                                     }           
                                   });
                               }   
-                          })
+                          });
+                          if(n > 0){
+                            alert("删除成功！");
+                          }
                           location.reload();
                     });
                   </script>
@@ -407,6 +417,7 @@ function declear_re(he){<!-- 反选 -->
           });
         }
                       $("#de_topic").click(function() {
+                          n = 0;
                           $("[name='field_t']").each(function(){
                               
                               if(this.checked)
@@ -426,14 +437,16 @@ function declear_re(he){<!-- 反选 -->
                                         alert("删除错误！该话题被其他数据关联！");
                                       }
                                       else{
-                                        alert("删除成功！");
+                                        n = n + 1;
                                       }
                                     }           
                                   });
                               }   
-                          })
+                          });
+                          if(n > 0){
+                            alert("删除成功！");
+                          }
                           location.reload();
-                          //window.location.href="/sysadmin/paraset/";
                     });
                   </script>
             </div>

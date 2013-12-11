@@ -11,7 +11,7 @@ import leveldb
 import os
 import operator
 import re
-from xapian_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH
+from weibo.global_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH
 
 
 def datetime2ts(date):

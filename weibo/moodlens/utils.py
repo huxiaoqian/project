@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time, os, operator, datetime
-from xapian_config import xapian_search_weibo, xapian_search_user
+from weibo.global_config import xapian_search_weibo, xapian_search_user
 import numpy as np
 
 

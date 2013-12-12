@@ -4,7 +4,7 @@
 
 from weibo.model import *
 from weibo.extensions import db
-from xapian_config import xapian_search_weibo, emotions_kv, xapian_search_domain, LEVELDBPATH
+from weibo.global_config import xapian_search_weibo, emotions_kv, xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
 from utils import getWeiboByMid, st_variation, find_topN
 from xapian_weibo.utils import top_keywords
@@ -17,8 +17,6 @@ import weibo.model
 import json
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
-
-buckets = {}
 total_days = 90
 
 

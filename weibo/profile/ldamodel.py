@@ -8,7 +8,7 @@ import datetime
 from operator import itemgetter, attrgetter
 from time_utils import datetime2ts
 
-from xapian_config import xapian_search_weibo
+from weibo.global_config import xapian_search_weibo
 
 ##提取已保存的模型
 dictionary = gensim.corpora.Dictionary.load('weibo/profile/ldamodel/100000U2M50T.dict')

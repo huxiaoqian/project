@@ -10,19 +10,20 @@
     <div class="span2">
       <div class="well sidebar-nav">
         <ul class="nav nav-list">
-	  <li class="nav-header">博主识别范围</li>
-	  <li><a href="/identify/">主页</a></li>
-	  <li><a href="/identify/whole/">全网识别</a></li>
-	  <li><a href="/identify/area/">领域识别</a></li>
-	  <li class="active"><a href="/identify/burst/">突发识别</a></li>
+	  <li class="nav-header"><h4>博主识别范围</h4></li>
+	      <li><a href="/identify/"><h5>主页</h5></a></li>
+	      <li><a href="/identify/whole/"><h5>全网识别</h5></a></li>
+		  <li class="active"><a href="/identify/burst/"><h5>突发识别</h5></a></li>
+	      <li><a href="/identify/area/"><h5>领域识别</h5></a></li>
+	      <li><a href="/identify/topic/"><h5>话题识别</h5></a></li>
         </ul>
       </div>
     </div>
     <div class="span9">
-      <legend>突发博主识别</legend>
+      <legend><strong><h3>突发敏感博主识别</h3></strong></legend>
      <div>
       	<form id="burst_identify" action="/identify/burst/" class="form-inline" method="POST">
-      	  排序标准:
+      	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>排序标准:</b></font>
 	  <div class="btn-group">
 	    <a id="burst_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
 	      {% if rank_method == 'followers' %}粉丝数
@@ -39,7 +40,7 @@
 	    </ul>
 	  </div>
 
-      	  时间范围:
+      	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
 	  <div class="btn-group">
 	    <a id="burst_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
 	      {% if window_size == 1 %}1天
@@ -58,11 +59,11 @@
 	    </ul>
 	  </div>
 
-	  前<input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
-	  条结果
+	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
+	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 
-	  每页<input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
-	  条结果
+	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
+	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 	  <input type="hidden" name="action" value="run">
 	  <input id="burst_rank_method" type="hidden" name="rank_method" value="followers">
 	  <input id="burst_window_size" type="hidden" name="window_size" value="7">
@@ -73,11 +74,11 @@
       <hr>
 
       <div class="well">
-	<legend>本期排序结果</legend>
+	<legend><strong>本期排序结果</strong></legend>
 	{% if not from_external %}
 	<div>
 	  <div id="loading_current_data" class="alert alert-info">
-	    计算中...
+	    系统繁忙计算中，请稍后...
 	  </div>
 	  <label>
 	    <div id="current_process" class="progress progress-striped active">
@@ -104,11 +105,11 @@
       <hr>
 
       <div class="well">
-	<legend>上期排序结果</legend>
+	<legend><strong>上期排序结果</strong></legend>
 	{% if not from_external %}
 	<div>
 	  <div id="loading_previous_data" class="alert alert-info">
-	    上期结果计算中...
+	    上期结果计算中，请稍后...
 	  </div>
 	  <label>
 	    <div id="previous_process" class="progress progress-striped active">

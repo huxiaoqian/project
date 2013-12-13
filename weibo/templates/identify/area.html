@@ -17,57 +17,41 @@
         <div class="span2">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
-	      <li class="nav-header">博主识别范围</li>
-	      <li><a href="/identify/">主页</a></li>
-	      <li><a href="/identify/whole/">全网识别</a></li>
-	      <li class="active"><a href="/identify/area/">领域识别</a></li>
-	      <li><a href="/identify/burst/">突发识别</a></li>
+	      <li class="nav-header"><h4>博主识别范围</h4></li>
+	      <li><a href="/identify/"><h5>主页</h5></a></li>
+	      <li><a href="/identify/whole/"><h5>全网识别</h5></a></li>
+		  <li><a href="/identify/burst/"><h5>突发识别</h5></a></li>
+	      <li class="active"><a href="/identify/area/"><h5>领域识别</h5></a></li>
+	      <li><a href="/identify/topic/"><h5>话题识别</h5></a></li>
             </ul>
           </div>
         </div>
 	<div class="span9">
-      	  <legend>领域博主识别</legend>
+      	  <legend><strong><h3>领域敏感博主识别</h3></strong></legend>
 	  <div>
       	    <form id="area_identify" action="/identify/area/" class="form-inline" method="POST">
 	      {% if topic %}
-      	      <input id="topic_keywords" name="topic" type="text" value="{{ topic }}" class="span2 search-query" placeholder="子领域、话题">
+      	      <input id="topic_keywords" name="topic" type="text" value="{{ topic }}" class="span2 search-query" placeholder="子领域">
 	      {% else %}
-	      <input id="topic_keywords" name="topic" type="text" class="span2 search-query" placeholder="子领域、话题">
+	      <input id="topic_keywords" name="topic" type="text" class="span2 search-query" placeholder="子领域">
 	      {% endif %}
   
-      	      时间范围:
-	      <div class="btn-group">
-		<a id="area_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-		  {% if window_size == 1 %}1天
-		  {% elif window_size == 7 %}1周
-		  {% elif window_size == 30 %}1个月
-		  {% elif window_size == 90 %}3个月
-		  {% else %}1周
-		  {% endif %}
-		  <span class="caret"></span>
-		</a>
-		<ul id="area_window_size_dropdown_menu" class="dropdown-menu">
-		  <li><a href="#" onclick="choose_window('area', 1);" data-toggle="tab">1天</a></li>
-      		  <li><a href="#" onclick="choose_window('area', 7);" data-toggle="tab">1周</a></li>
-      		  <li><a href="#" onclick="choose_window('area', 30);" data-toggle="tab">1个月</a></li>
-      		  <li><a href="#" onclick="choose_window('area', 90);" data-toggle="tab">3个月</a></li>
-		</ul>
-	      </div>
+      	     
 
-      	      前<input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
-      	      条结果
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 
-      	      每页<input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
-      	      条结果
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       	      <input type="hidden" name="action" value="run">
 	      <input id="area_window_size" type="hidden" name="window_size" value="7">
 	      <input type="submit" class="btn btn-primary" value="识别">
       	    </form>
       	    <ul id="TopicTab" class="nav nav-tabs">
-              <li class="active"><a href="#area_1" data-toggle="tab">时政</a></li>
-              <li><a href="#area_2" data-toggle="tab">财经</a></li>
-      	      <li><a href="#area_3" data-toggle="tab">体育</a></li>
-      	      <li><a href="#area_4" data-toggle="tab">互联网</a></li>
+              <li class="active"><a href="#area_1" data-toggle="tab"><strong>时政</strong></a></li>
+              <li><a href="#area_2" data-toggle="tab"><strong>财经</strong></a></li>
+      	      <li><a href="#area_3" data-toggle="tab"><strong>体育</strong></a></li>
+      	      <li><a href="#area_4" data-toggle="tab"><strong>互联网</strong></a></li>
 	      <li><a href="/admin/" target="_blank"><i class="icon-cog"></i></a></li> 
             </ul>
       	    <div id="TopicTabContent" class="tab-content">
@@ -128,7 +112,7 @@
 	  <hr>
 
 	  <div class="well">
-	    <legend>网络呈现</legend>
+	    <legend><strong>网络呈现</strong></legend>
 	    <form class="form-inline">
 	      <img src="{{ url_for('static', filename='img/identify/network.png') }}" class="img-polaroid">
 	      <label>
@@ -154,11 +138,11 @@
 	  </div>
 
 	  <div class="well">
-	    <legend>本期排序结果</legend>
+	    <legend><strong>本期排序结果</strong></legend>
 	    {% if not from_external %}
 	    <div>
 	      <div id="loading_current_data" class="alert alert-info">
-		计算中...
+		系统繁忙计算中，请稍后...
 	      </div>
 	      <label>
 		<div id="current_process" class="progress progress-striped active">
@@ -185,11 +169,11 @@
 	  <hr>
 
 	  <div class="well">
-	    <legend>上期排序结果</legend>
+	    <legend><strong>上期排序结果</strong></legend>
 	    {% if not from_external %}
 	    <div>
 	      <div id="loading_previous_data" class="alert alert-info">
-		上期结果计算中...
+		上期结果计算中，请稍后...
 	      </div>
 	      <label>
 		<div id="previous_process" class="progress progress-striped active">

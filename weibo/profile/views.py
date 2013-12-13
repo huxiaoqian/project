@@ -28,8 +28,7 @@ from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
 
-from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
-                                fields_value, fields_id, emotions_zh_kv, emotions_kv
+
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
 COUNT_PER_PAGE = 20
@@ -59,7 +58,6 @@ def fieldsEn2Zh(name):
         return u'时尚'
     if name == 'sports':
         return u'体育'
-
 def getStaticInfo():
     statuscount = [0, 2000000, 4000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000]
     friendscount = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
@@ -105,6 +103,27 @@ def log_in():
         return json.dumps('Right')
     else:
         return json.dumps('Wrong')
+
+#添加画像主页
+@mod.route('/', methods=['GET','POST'])
+def test_index():
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            return render_template('profile/index.html')
+        else:
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
+            #pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.identify
+                    if identy == 1:
+                        return render_template('profile/index.html')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
+#添加画像主页
 
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
@@ -467,10 +486,15 @@ def profile_person(uid):
                 count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
                                                   'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
                 if count > 0:
+                    current_time = '2013-3-7'
+                    from utils import get_person_active,get_person_important
                     for r in get_results():
                         user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  _utf_8_decode(r['name']), 'friends_count': r['friends_count'], \
                                 'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
                                 'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
+                        user['created_at'] = ts2HMS(user['created_at']);
+                        user['active_rank'] = get_person_active(user['id'],current_time)
+                        user['important_rank'] = get_person_important(user['id'],current_time)
                 else:
                     return 'no such user'
             return render_template('profile/profile_person.html', user=user)

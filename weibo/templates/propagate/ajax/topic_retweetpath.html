@@ -9,6 +9,13 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/sigma.parseGexf.js') }}"></script>
 <script>
+  var flag = '{{flag}}';
+  if(flag == '0'){
+    var html = "计算结果为空！"
+    $("#sigma-graph").empty();
+    $("#sigma-graph").append(html);
+  }
+  else{
 	$.get("/static/gexf/forest{{keyid}}.gexf", function(data) {
 	  var sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
 	  	defaultLabelColor: '#fff'
@@ -21,4 +28,5 @@
  
     sigInst.draw();
   }, "xml");
+  }
 </script>

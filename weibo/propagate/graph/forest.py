@@ -38,10 +38,11 @@ def unix2local(ts):
 def load_data(keyword,beg_time,end_time):
     dataset = []
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count']
-    number, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list)
+    number, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['reposts_count'], fields=fields_list,max_offset=500)
     topic_info = calculate(get_results())
     blog_rel_list = topic_info['topic_rel_blog'][:5]
 
+    n = 0
     ts = []
     for status in blog_rel_list:
         print status['status']['_id']
@@ -49,6 +50,7 @@ def load_data(keyword,beg_time,end_time):
         number,source_weibo = xapian_search_weibo.search(query={'retweeted_mid': status['status']['_id']})#查找热门微博的转发微博
         print number
         if not number:
+            n = n + 1
             continue
 
         count = 0
@@ -58,11 +60,15 @@ def load_data(keyword,beg_time,end_time):
                 print '%s tweets loaded...' % count
             number,get_users = xapian_search_user.search(query={'_id': sw['user']}, fields=['name'])
             for user in get_users():
-                line = unicode(user['name'], 'utf-8') + '\t'+ unicode(sw['text'], 'utf-8') + '\t' + status['user']['name'] +'\t'+ str(int(sw['timestamp']))
+                line = user['name'] + '\t'+ sw['text'] + '\t' + status['user']['name'] +'\t'+ str(int(sw['timestamp']))
                 reposts.append(line)
             count += 1
         dataset.append(reposts)
-    return min(ts), dataset  
+    if n == len(blog_rel_list):
+        flag = 0
+    else:
+        flag = 1
+    return min(ts), dataset , flag
 
 def random_color(colors):
     r  = str(int(random.random()*255))
@@ -234,7 +240,10 @@ def forest_main(keyword,beg_time,end_time,keyid):
     if end_time <= beg_time:
         end_time = int(time.time())
     print 'yuan'
-    first_start_ts, dataset = load_data(keyword,beg_time,end_time)
+    first_start_ts, dataset, flag = load_data(keyword,beg_time,end_time)
+
+    if flag == 0:
+        return 0
 
     height = 0
     counter = 0
@@ -265,3 +274,5 @@ def forest_main(keyword,beg_time,end_time,keyid):
     #print keyid
     with open('./weibo/static/gexf/forest%s.gexf'% keyid, 'w') as gf:
         gf.write(graph)
+
+    return 1

@@ -40,6 +40,7 @@ from utils import *
 
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
 fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
+month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
 
@@ -88,6 +89,31 @@ def fieldsEn2Zh(name):
         return '时尚'
     if name == 'sports':
         return '体育'
+
+def strToDate(dur_time):
+    m = '1'
+    d = '1'
+    y = '2013'
+    items = dur_time.split(', ')
+    n = 0
+    for item in items:
+        if n == 0:
+            mds = item.split(' ')
+            t = 0
+            for md in mds:
+                if t==0:
+                    m = month_value[md]
+                    t = 1
+                else:
+                    d = md
+            n = 1
+        else:
+            y = item
+
+    time_str = str(y)+'-'+str(m)+'-'+str(d)
+
+    return time_str
+                
 
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
@@ -146,11 +172,19 @@ def showresult_by_topic():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
     # get the input context
-            keyword = request.form.get('keyword', "")
-            keyuser = request.form.get('keyuser', "")
-            beg_time = request.form.get('beg_time', "")
-            end_time = request.form.get('end_time', "")
-    
+            keyword = request.args.get('keyword', '')
+            keyuser = request.args.get('keyuser', '')
+            dur_time = request.args.get('time', '')
+
+            times = dur_time.split(' - ')
+            n = 0
+            for ti in times:
+                if n==0:
+                    beg_time = strToDate(ti)
+                    n = 1
+                else:
+                    end_time = strToDate(ti)
+
             keyword = keyword.strip('@\r\n\t')
             keyuser = keyuser.strip('@\r\n\t')
             beg_time = beg_time.strip('@\r\n\t')
@@ -159,7 +193,7 @@ def showresult_by_topic():
             return_beg_str = beg_time
             return_end_str = end_time
             keyuser_str = keyuser
-    
+
             if keyword == "":
                 flash(u'关键字（词）不能为空')
                 return redirect('/propagate/')
@@ -183,10 +217,8 @@ def showresult_by_topic():
                 end_time_month = int(end_time.month)
                 end_time_day = int(end_time.day)
                 end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
-        
             fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
             count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=5000)
-
             if count == 0:
                 flash(u'您搜索的话题结果为空')
                 return redirect('/propagate/')

@@ -46,7 +46,7 @@ function get_selected_uids() {
 	    if (current_data.length) {
 		$("#loading_current_data").text("计算完成!");
 		if (current_data.length < page_num) {
-		    page_num = current_data.length
+		    page_num = current_data.length - 1;
 		    create_current_table(current_data, 0, page_num);
 		}
 		else {
@@ -63,8 +63,8 @@ function get_selected_uids() {
 			page: 1,
 			maxVisible: 30
 		    }).on("page", function(event, num){
-			start_row = (num - 1)* page_num;
-			end_row = start_row + 20;
+			start_row = (num - 1)* page_num + 1;
+			end_row = start_row + page_num - 1;
 			if (end_row > current_data.length)
 			    end_row = current_data.length;
 			create_current_table(current_data, start_row, end_row);
@@ -72,7 +72,7 @@ function get_selected_uids() {
 		}
 	    }
 	    else {
-		$("#loading_current_data").text("本期计算结果为空!");
+		$("#loading_current_data").text("很抱歉，本期计算结果为空!");
 	    }
 	    
 	}
@@ -113,7 +113,7 @@ function get_selected_uids() {
 		}
 	    }
 	    else {
-		$("#loading_previous_data").text("上期结果不存在!");
+		$("#loading_previous_data").text("很抱歉，上期结果不存在!");
 	    }
 	}
 	else
@@ -123,7 +123,7 @@ function get_selected_uids() {
     function create_current_table(data, start_row, end_row) {
 	var cellCount = 9;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>同比</th><th>敏感状态</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>环比</th><th>敏感状态</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';

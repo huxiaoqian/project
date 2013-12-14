@@ -29,9 +29,9 @@ else:
 READ_FROM_STUB = 1
 
 if READ_FROM_STUB:
-    xapian_search_weibo = XapianSearch(stub=MASTER_TIMELINE_STUB)
+    xapian_search_weibo = XapianSearch(stub=MASTER_TIMELINE_STUB, schema_version=5)
 else:
-	xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo', schema_version=4)
+	xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo_csv', schema_version=5)
 
 xapian_search_domain  = XapianSearch(path=XAPIAN_DOMAIN_DATA_PATH, name='master_timeline_domain', schema_version=4)
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)

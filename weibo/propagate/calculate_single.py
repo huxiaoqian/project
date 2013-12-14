@@ -130,7 +130,7 @@ def calculate_single(_id):
 
     #获取相关微博
     #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count,get_results = s_weibo.search(query={'retweeted_mid': _id,'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
+    count,get_results = s_weibo.search(query={'retweeted_mid': _id}, sort_by=['timestamp'])#,'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
 
     print count
     reposter = []
@@ -151,7 +151,6 @@ def calculate_single(_id):
             user = get_user(r['user'])
             if user['province'] != None:
                 p = province_name[user['province']]
-                print user['province']
                 if p == u'海外' or p == u'其他':
                     pass
                 else:
@@ -215,9 +214,8 @@ def calculate_single(_id):
        else:
           pass
 
-    #print city_count
     map_data = province_color_map(city_count)
-    #print map_data
+
     leader_index = len(key_reposter)
     
     blog_info['status'] = status_ori

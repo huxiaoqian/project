@@ -50,20 +50,22 @@
                 <li>关注：<span class="badge badge-success">{{ user['friends_count'] }}</span> </li>
                 <li class="">粉丝：<span class="badge badge-info">{{ user['followers_count'] }}</span></li>
                 <li class="">微博：<span class="badge badge-warning">{{ user['statuses_count'] }}</span></li>
+                <li class="">重要度：{{ user['important_rank'] }}</li>
+                <li class="">活跃度：{{ user['active_rank'] }}</li>
                 {% if user['gender'] == 'f' %}
                   <li class="">性别：女</li>
                 {% else %}
                   <li class="">性别：男</li>
                 {% endif %}
                 {% if user['verified'] == False %}
-                  <li class="">普通用户</li>
+                  <li class="">是否认证用户：否</li>
                 {% else %}
-                  <li class="">认证用户</li>
+                  <li class="">是否认证用户：是</li>
                 {% endif %}
                 <!--<li class="">个人简介：天使投资人薛蛮子</li>-->
                 <li class="nav-header">注册信息</li>
-                <li class="">{{ user['location'] }}</li>
-                <li class="">{{ user['createdAt'] }}</li>
+                <li class="">注册地：{{ user['location'] }}</li>
+                <li class="">注册时间：{{ user['created_at'] }}</li>
                 <li class="nav-header">微博地址</li>
                 <li class=""><a href="http://weibo.com/u/{{ user.id }}" target="_blank">weibo.com/u/{{ user['id'] }}</a></li>
               </ul>

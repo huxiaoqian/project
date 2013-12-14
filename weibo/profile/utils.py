@@ -290,6 +290,29 @@ def active_rank(top_n, date, window_size):
     data = sorted_uids
     return data
 
+def get_person_active(uidToFind,date):
+    date_time = datetime2ts(date)
+    db_name = get_leveldb('active', date_time)
+    daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    for uid, active in daily_user_active_bucket.RangeIter():
+        uid = int(uid)
+        active = float(active)
+        if uid == int(uidToFind):
+            return active
+    return 0;
+def get_person_important(uidToFind,date):
+    date_time = datetime2ts(date)
+    db_name = get_leveldb('important', date_time)
+    daily_user_important_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
+                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    for uid, important in daily_user_important_bucket.RangeIter():
+        uid = int(uid)
+        important = float(important)
+        if uid == int(uidToFind):
+            return important
+    return 0;
+
 def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='20130430'):
     if fieldName == 'oversea':
         count, get_results = xapian_search_user.search(query={'location': '海外'}, sort_by=['followers_count'], max_offset=10000, fields=['_id'])

@@ -36,7 +36,7 @@ def log_in():
     else:
         return json.dumps('Wrong')
 
-@mod.route('/')
+@mod.route('/', methods=['GET','POST'])
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
@@ -55,7 +55,26 @@ def index():
         return redirect('/')
 
 
-@mod.route('/field')
+@mod.route('/all', methods=['GET','POST'])
+def topic():
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            return render_template('moodlens/all_emotion.html', active='moodlens')
+        else:
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.moodlens
+                    if identy == 1:
+                        return render_template('moodlens/all_emotion.html', active='moodlens')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
+
+
+@mod.route('/field', methods=['GET','POST'])
 def field():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
@@ -74,11 +93,17 @@ def field():
         return redirect('/')
 
 
-@mod.route('/topic')
+@mod.route('/topic', methods=['GET','POST'])
 def topic():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
-            return render_template('moodlens/topic_emotion.html', active='moodlens')
+            temp=request.form.get('keyword',None);
+            print temp
+            if temp:
+                return render_template('moodlens/topic_emotion.html', active='moodlens',temp=temp)
+            else:
+                return render_template('moodlens/topic_emotion.html', active='moodlens')
+            return render_template('moodlens/topic_emotion.html', active='moodlens') 
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -88,12 +113,13 @@ def topic():
                         return render_template('moodlens/topic_emotion.html', active='moodlens')
                     else:
                         return redirect('/')
+
             return redirect('/')
     else:
         return redirect('/')
 
 
-@mod.route('/data/<area>/')
+@mod.route('/data/<area>/', methods=['GET','POST'])
 def data(area='global'):
     """
     分类情感数据
@@ -122,7 +148,7 @@ def data(area='global'):
                 query_dict['$or'].append({'text': [term]})
     for k, v in emotions_kv.iteritems():
         query_dict['sentiment'] = v
-        count = xapian_search_weibo.search(query=query_dict, count_only=True)
+        count = xapian_search_weibo.search(query=query_dict, max_offset=100, count_only=True)
         emotions_data[k] = [end_ts, count]
     print emotions_data
 

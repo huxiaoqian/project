@@ -263,20 +263,15 @@ def area():
                 action = form.get('action', None)
         #field
                 field = form.get('field', None)
-        #topic or sub-field
-                topic = form.get('topic', None)
-                topic_id = form.get('topic_id', None)
+                print field
+
         #total results count
                 top_n = int(form.get('top_n', 2000))
         #results count for every page
                 page_num = int(form.get('page_num', 20))
         #window size for idenfity i.e. adding time limit on input data
                 window_size = int(form.get('window_size', 1))
-        #use PageRank if and only if window size equals 1
-                if window_size == 1 or window_size == 7:
-                    rank_method = 'pagerank'
-                else:
-                    rank_method = 'degree'
+               
 
         #acquire topic id
                 if not topic_id:

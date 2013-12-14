@@ -70,7 +70,6 @@ def getStaticInfo():
     fields = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
     return statusRange, friendsRange, followersRange, province, fields
 
-
 def yymInfo(uid):
     query_dict = {
         '_id': int(uid)
@@ -138,17 +137,39 @@ def profile_search(model='hotest'):
                     return render_template('profile/profile_search.html',statuscount=statuscount,
                                            friendscount=friendscount, followerscount=followerscount,
                                            location=province, field=field, model=model, result=None, nickname=nickname)
-                elif model in ['statuses', 'friends', 'followers']:
-                    low = int(request.args.get('low'))
-                    up = int(request.args.get('up'))
-                    return render_template('profile/profile_search.html',statuscount=statuscount,
-                                           friendscount=friendscount, followerscount=followerscount,
-                                           location=province, field=field, model=model, result=None, low=low, up=up)
-                elif model == 'province':
-                    province_arg = request.args.get('province')
-                    return render_template('profile/profile_search.html',statuscount=statuscount,
-                                           friendscount=friendscount, followerscount=followerscount,
-                                           location=province, field=field, model=model, result=None, province=province_arg)
+                elif model == 'find':
+                    statuses_count_upBound = request.args.get('statuses_count_upBound',None)
+                    friends_count_upBound = request.args.get('friends_count_upBound',None)
+                    followers_count_upBound = request.args.get('followers_count_upBound',None)
+                    top_n = request.args.get('top_n',None)
+                    province_str = request.args.get('province_str',None)
+                    rank_str = request.args.get('rankcount',None)
+                    if(province_str):
+                        province = province_str#最后一个元素是空值
+                    else:
+                        province = ['北京','天津','上海','重庆']
+                    if(top_n):
+                        result_count = int(top_n)
+                    else:
+                        result_count = 100
+                    if(statuses_count_upBound):
+                        statusescount_up = (int(statuses_count_upBound))*10000
+                    else:
+                        statusescount_up = 2000000
+
+                    if(friends_count_upBound):
+                        friendscount_up = int(friends_count_upBound)
+                    else:
+                        friendscount_up = 400
+
+                    if(followers_count_upBound):
+                        followerscount_up = (int(followers_count_upBound))*10000
+                    else:
+                        followerscount_up = 6000000
+
+                    return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up,
+                                           friendscount_up = friendscount_up,followerscount_up = followerscount_up,
+                                           location = province, field=field, model = model,rankcount=rank_str)  
                 else:
                     return render_template('profile/profile_search.html',statuscount=statuscount,
                                            friendscount=friendscount, followerscount=followerscount,
@@ -270,23 +291,33 @@ def profile_search(model='hotest'):
                         if user:
                             users.append(user)                    
                     return json.dumps(users)
-                elif model in ['statuses', 'friends', 'followers']:
-                    low = int(request.form['low'])
-                    up = int(request.form['up'])
+                elif model == 'find':
                     page = int(request.form['page'])
                     if page == 1:
                         startoffset = 0
                     else:
                         startoffset = (page - 1) * COUNT_PER_PAGE
-                    sorted_key = '%s_count' % model
-                    query_dict = { sorted_key: {
-                            '$gt': low,
-                            '$lt': up,
-                        }
-                    }
-                    count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
-                                                       fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                       sort_by=[sorted_key])
+                    endoffset = startoffset + COUNT_PER_PAGE - 1
+                    result_count = int(request.form['result_count'])
+                    statusescount_up = int(request.form['statusescount_up'])
+                    friendscount_up = int(request.form['friendscount_up'])
+                    followerscount_up = int(request.form['followerscount_up'])
+                    province_str = request.form['province']
+                    rankcount = request.form['rankcount']
+                    province = province_str.split(',')
+                    query_dict = {}
+                    query_dict['$and'] = []
+                    query_dict['$and'].append({'statuses_count':{'$gt': statusescount_up - 2000000,'$lt': statusescount_up }})
+                    query_dict['$and'].append({'followers_count':{'$gt': followerscount_up - 6000000 ,'$lt': followerscount_up}})
+                    query_dict['$and'].append({'friends_count':{'$gt': friendscount_up - 400 ,'$lt': friendscount_up}})
+                    or_dict = {}
+                    or_dict['$or'] = []
+                    for pro in province:
+                        or_dict['$or'].append({'location': pro})
+                    query_dict['$and'].append(or_dict)
+                    count, get_results = xapian_search_user.search(query=query_dict, max_offset=result_count,
+                                                                   fields=[ '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                                   sort_by=[rankcount])
                     users = []
                     for r in get_results():
                         statusesCount = r['statuses_count']
@@ -297,28 +328,8 @@ def profile_search(model='hotest'):
                         uid = r['_id']
                         profileImageUrl = r['profile_image_url']
                         users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                                      'description': description, 'profileImageUrl': profileImageUrl})
-                    return json.dumps(users)
-                elif model == 'province':
-                    page = int(request.form['page'])
-                    if page == 1:
-                        startoffset = 0
-                    else:
-                        startoffset = (page - 1) * COUNT_PER_PAGE
-                    endoffset = startoffset + COUNT_PER_PAGE - 1
-                    province = request.form['province']
-                    if type(province) is unicode:
-                        province = province.encode('utf-8')
-                    count, get_results = xapian_search_user.search(query={'location': province}, sort_by=['followers_count'], max_offset=10000, fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'])
-                    users = []
-                    offset = 0
-                    for r in get_results():
-                        if offset >= startoffset and offset <= endoffset:
-                            users.append({'id': r['_id'], 'profileImageUrl': r['profile_image_url'], 'userName': r['name'], 'statusesCount': r['statuses_count'], 'friendsCount': r['friends_count'], 'followersCount': r['followers_count'], 'description': r['description']})
-                        if offset >= endoffset:
-                            break
-                        offset += 1
-                    return json.dumps(users)
+                                  'description': description, 'profileImageUrl': profileImageUrl})
+                    return json.dumps(users[startoffset:endoffset])
         else:
             #pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -333,17 +344,39 @@ def profile_search(model='hotest'):
                                 return render_template('profile/profile_search.html',statuscount=statuscount,
                                                        friendscount=friendscount, followerscount=followerscount,
                                                        location=province, field=field, model=model, result=None, nickname=nickname)
-                            elif model in ['statuses', 'friends', 'followers']:
-                                low = int(request.args.get('low'))
-                                up = int(request.args.get('up'))
-                                return render_template('profile/profile_search.html',statuscount=statuscount,
-                                                       friendscount=friendscount, followerscount=followerscount,
-                                                       location=province, field=field, model=model, result=None, low=low, up=up)
-                            elif model == 'province':
-                                province_arg = request.args.get('province')
-                                return render_template('profile/profile_search.html',statuscount=statuscount,
-                                                       friendscount=friendscount, followerscount=followerscount,
-                                                       location=province, field=field, model=model, result=None, province=province_arg)
+                            elif model == 'find':
+                                statuses_count_upBound = request.args.get('statuses_count_upBound',None)
+                                friends_count_upBound = request.args.get('friends_count_upBound',None)
+                                followers_count_upBound = request.args.get('followers_count_upBound',None)
+                                top_n = request.args.get('top_n',None)
+                                province_str = request.args.get('province_str',None)
+                                rank_str = request.args.get('rankcount',None)
+                                if(province_str):
+                                    province = province_str#最后一个元素是空值
+                                else:
+                                    province = ['北京','天津','上海','重庆']
+                                if(top_n):
+                                    result_count = int(top_n)
+                                else:
+                                    result_count = 100
+                                if(statuses_count_upBound):
+                                    statusescount_up = (int(statuses_count_upBound))*10000
+                                else:
+                                    statusescount_up = 2000000
+
+                                if(friends_count_upBound):
+                                    friendscount_up = int(friends_count_upBound)
+                                else:
+                                    friendscount_up = 400
+
+                                if(followers_count_upBound):
+                                    followerscount_up = (int(followers_count_upBound))*10000
+                                else:
+                                    followerscount_up = 6000000
+
+                                return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up,
+                                                       friendscount_up = friendscount_up,followerscount_up = followerscount_up,
+                                                       location = province, field=field, model = model,rankcount=rank_str)  
                             else:
                                 return render_template('profile/profile_search.html',statuscount=statuscount,
                                                        friendscount=friendscount, followerscount=followerscount,
@@ -417,23 +450,33 @@ def profile_search(model='hotest'):
                                 nickname = urllib2.unquote(request.form['nickname'])
                                 users = User.query.filter(User.userName==nickname).all()
                                 return json.dumps([i.serialize for i in users])
-                            elif model in ['statuses', 'friends', 'followers']:
-                                low = int(request.form['low'])
-                                up = int(request.form['up'])
+                            elif model == 'find':
                                 page = int(request.form['page'])
                                 if page == 1:
                                     startoffset = 0
                                 else:
                                     startoffset = (page - 1) * COUNT_PER_PAGE
-                                sorted_key = '%s_count' % model
-                                query_dict = { sorted_key: {
-                                        '$gt': low,
-                                        '$lt': up,
-                                    }
-                                }
-                                count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
-                                                                   fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                                   sort_by=['-' + sorted_key])
+                                endoffset = startoffset + COUNT_PER_PAGE - 1
+                                result_count = int(request.form['result_count'])
+                                statusescount_up = int(request.form['statusescount_up'])
+                                friendscount_up = int(request.form['friendscount_up'])
+                                followerscount_up = int(request.form['followerscount_up'])
+                                province_str = request.form['province']
+                                rankcount = request.form['rankcount']
+                                province = province_str.split(',')
+                                query_dict = {}
+                                query_dict['$and'] = []
+                                query_dict['$and'].append({'statuses_count':{'$gt': statusescount_up - 2000000,'$lt': statusescount_up }})
+                                query_dict['$and'].append({'followers_count':{'$gt': followerscount_up - 6000000 ,'$lt': followerscount_up}})
+                                query_dict['$and'].append({'friends_count':{'$gt': friendscount_up - 400 ,'$lt': friendscount_up}})
+                                or_dict = {}
+                                or_dict['$or'] = []
+                                for pro in province:
+                                    or_dict['$or'].append({'location': pro})
+                                query_dict['$and'].append(or_dict)
+                                count, get_results = xapian_search_user.search(query=query_dict, max_offset=result_count,
+                                                                               fields=[ '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                                               sort_by=[rankcount])
                                 users = []
                                 for r in get_results():
                                     statusesCount = r['statuses_count']
@@ -444,14 +487,8 @@ def profile_search(model='hotest'):
                                     uid = r['_id']
                                     profileImageUrl = r['profile_image_url']
                                     users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                                                  'description': description, 'profileImageUrl': profileImageUrl})
-                                return json.dumps(users)
-                            elif model == 'province':
-                                province = request.form['province']
-                                basequery = User.query.filter(User.location.startswith(province)).limit(1000)#.order_by(User.followersCount.desc())
-                                page = int(request.form['page'])
-                                users = basequery.paginate(page, COUNT_PER_PAGE, False).items
-                                return json.dumps([i.serialize for i in users])
+                                              'description': description, 'profileImageUrl': profileImageUrl})
+                                return json.dumps(users[startoffset:endoffset])
                     else:
                         return redirect('/')
             return redirect('/')

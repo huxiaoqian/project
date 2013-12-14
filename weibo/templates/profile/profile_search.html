@@ -308,6 +308,212 @@
 {% block content %}
     <a name="top"></a>
     <p id="back-to-top"><a href="#top"><span></span>返回顶部</a></p>
+    <div class="well">
+      <form id="profile_search" action="/profile/search/find" class="form-inline" method="GET">
+        微博数:
+        <div class="btn-group">
+          <a  id="statuses_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            {{(statusescount_up-2000000) / 10000 }}万-{{statusescount_up  / 10000 }}万<span class="caret"></span></a>
+          <ul id="statuses_count_window_size_dropdown_menu" class="dropdown-menu">
+            <li><a href="#" onclick="choose_statuses_count('statuses_count', 200);" data-toggle="tab">0-200万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 400);" data-toggle="tab">200-400万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 600);" data-toggle="tab">400-600万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 800);" data-toggle="tab">600-800万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 1000);" data-toggle="tab">800-1000万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 1200);" data-toggle="tab">1000-1200万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 1400);" data-toggle="tab">1200-1400万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 1600);" data-toggle="tab">1400-1600万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 1800);" data-toggle="tab">1600-1800万</a></li>
+                  <li><a href="#" onclick="choose_statuses_count('statuses_count', 2000);" data-toggle="tab">1800-2000万</a></li>
+          </ul>
+        </div>
+        粉丝数：
+        <div class="btn-group">
+          <a  id="followers_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          {{(followerscount_up-6000000) / 10000 }}万-{{followerscount_up  / 10000 }}万<span class="caret"></span></a>
+          <ul id="followers_count_window_size_dropdown_menu" class="dropdown-menu">
+            <li><a href="#" onclick="choose_followers_count('followers_count', 600);" data-toggle="tab">0-600万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 1200);" data-toggle="tab">600-1200万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 1800);" data-toggle="tab">1200-1800万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 2400);" data-toggle="tab">1800-2400万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 3000);" data-toggle="tab">2400-3000万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 3600);" data-toggle="tab">3000-3600万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 4200);" data-toggle="tab">3600-4200万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 4800);" data-toggle="tab">4200-4800万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 5400);" data-toggle="tab">4800-5400万</a></li>
+                  <li><a href="#" onclick="choose_followers_count('followers_count', 6000);" data-toggle="tab">5400-6000万</a></li>
+          </ul>
+        </div>
+        关注数：
+        <div class="btn-group">
+          <a  id="friends_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            {{friendscount_up-400}}-{{friendscount_up}}<span class="caret"></span></a>
+          <ul id="friends_count_window_size_dropdown_menu" class="dropdown-menu">
+            <li><a href="#" onclick="choose_friends_count('friends_count', 400);" data-toggle="tab">0-400</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 800);" data-toggle="tab">400-800</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 1200);" data-toggle="tab">800-1200</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 1600);" data-toggle="tab">1200-1600</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 2000);" data-toggle="tab">1600-2000</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 2400);" data-toggle="tab">2000-2400</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 2800);" data-toggle="tab">2400-2800</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 3200);" data-toggle="tab">2800-3200</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 3600);" data-toggle="tab">3200-3600</a></li>
+                  <li><a href="#" onclick="choose_friends_count('friends_count', 4000);" data-toggle="tab">3600-4000</a></li>
+          </ul>
+        </div>
+        排序标准：
+        <div class="btn-group">
+          <a  id="rankcount_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            {%if rankcount=='followers_count'%}粉丝数{%endif%}
+            {%if rankcount=='friends_count'%}关注数{%endif%}
+            {%if rankcount=='statuses_count'%}微博数{%endif%}
+            {%if rankcount=='created_at'%}注册时间{%endif%}<span class="caret"></span></a>
+          <ul id="rankcount_rank_method_dropdown_menu" class="dropdown-menu">
+            <li><a href="#" onclick="choose_rankcount('rankcount', 'followers_count');" data-toggle="tab">粉丝数</a></li>
+                  <li><a href="#" onclick="choose_rankcount('rankcount', 'friends_count');" data-toggle="tab">关注数</a></li>
+                  <li><a href="#" onclick="choose_rankcount('rankcount', 'statuses_count');" data-toggle="tab">微博数</a></li>
+                  <li><a href="#" onclick="choose_rankcount('rankcount', 'created_at');" data-toggle="tab">注册时间</a></li>
+          </ul>
+        </div>
+        前<input name="top_n" type="text" value="{{result_count}}" class="span1">条结果
+        已查询地区<input name="select " type = "text" value = "{{location}}" class = "span2">
+        <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="200">
+        <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
+        <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">
+        <input id="rankcount_rank_method" type="hidden" name="rankcount" value="粉丝数">
+        <input id="topic_keywords" name="province_str" type="hidden" >
+        <input type="submit" class="btn btn-primary" onclick="choose_province()" value="分析">
+      </form>
+      <ul id="TopicTab" class="nav nav-tabs">
+        <li class="active"><a href="#area_5" data-toggle="tab">东部地区</a></li>
+        <li><a href="#area_6" data-toggle="tab">中部地区</a></li>
+        <li><a href="#area_7" data-toggle="tab">西部地区</a></li>
+        <li><a href="#area_8" data-toggle="tab">其他地区</a></li>
+      </ul>
+      <div id="LocationTabContent" class="tab-content">
+        <div class="tab-pane fade active in" id="area_5">
+          <ul class="inline">
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box1" value="北京"> 北京
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box2" value="天津"> 天津
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box3" value="河北"> 河北
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box4" value="辽宁"> 辽宁
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box5" value="上海"> 上海
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box6" value="江苏"> 江苏
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box7" value="浙江"> 浙江
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box8" value="福建"> 福建
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box9" value="山东"> 山东
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box10" value="广东"> 广东
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box11" value="广西"> 广西
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box12" value="海南"> 海南
+                  </li>
+          </ul>
+        </div>
+        <div class="tab-pane fade" id="area_6">
+          <ul class="inline">
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box13" value="山西"> 山西
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box14" value="内蒙古"> 内蒙古
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box15" value="吉林"> 吉林
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box16" value="黑龙江"> 黑龙江
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box17" value="安徽"> 安徽
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box18" value="江西"> 江西
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box19" value="河南"> 河南
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box20" value="湖北"> 湖北
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box21" value="湖南"> 湖南
+                  </li>
+          </ul>
+        </div>
+        <div class="tab-pane fade" id="area_7">
+          <ul class="inline">
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box22" value="四川"> 四川
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box23" value="贵州"> 贵州
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box24" value="云南"> 云南
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box25" value="西藏"> 西藏
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box26" value="陕西"> 陕西
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box27" value="甘肃"> 甘肃
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box28" value="宁夏"> 宁夏
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box29" value="青海"> 青海
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box30" value="新疆"> 新疆
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box31" value="重庆"> 重庆
+                  </li>
+          </ul>
+        </div> 
+        <div class="tab-pane fade" id="area_8">
+          <ul class="inline">
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box32" value="香港"> 香港
+                  </li>  
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box33" value="澳门"> 澳门
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box34" value="台湾"> 台湾
+                  </li>
+                  <li>
+                    <input type="checkbox" name="provincebox" id="box35" value="海外"> 海外
+                  </li>
+          </ul>  
+        </div>
+      </div>
+    </div> 
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
@@ -331,95 +537,6 @@
         </div>
       </div>
     </div>
-    <div id="shadow_nav">
-        <div class="wrapper" style="width: 1170px;">
-            <div class="tent">
-                <div class="idec-shadow-nav clearfix">
-                  <form action="#">
-                      <div class="unit">
-                        <div class="attr">
-                          <div class="attrKey">微博数</div>
-                          <div class="attrValues">
-                              <ul class="av-collapse">
-                                {% if statuscount %}
-                                  {% for item in statuscount %}
-                                    {% if up == item.upBound and model == 'statuses'%}
-                                      <li class="active"><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000 }}-{{item.upBound / 10000}}万</a></li>
-                                    {% else %}
-                                      <li><a href="/profile/search/statuses?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000}}-{{item.upBound / 10000}}万</a></li>
-                                    {% endif %}
-                                  {% endfor %}
-                                {% endif %}
-                              </ul>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="border"></div>
-                      <div class="unit">
-                          <div class="attr">
-                          <div class="attrKey">关注数</div>
-                          <div class="attrValues">
-                              <ul class="av-collapse">
-                                {% if friendscount %}
-                                  {% for item in friendscount %}
-                                    {% if up == item.upBound and model == 'friends' %}
-                                      <li class='active'><a href="/profile/search/friends?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
-                                    {% else %}
-                                      <li><a href="/profile/search/friends?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound }}-{{item.upBound}}</a></li>
-                                    {% endif %}
-                                  {% endfor %}
-                                {% endif %}
-                              </ul>
-                          </div>
-                        </div>
-                      </div>                   
-                      
-                      <div class="unit">
-                          <div class="attr">
-                          <div class="attrKey">粉丝数</div>
-                          <div class="attrValues">
-                              <ul class="av-collapse">
-                                {% if followerscount %}
-                                  {% for item in followerscount %}
-                                    {% if up == item.upBound and model == 'followers'%}
-                                      <li class='active'><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000}}-{{item.upBound / 10000}}万</a></li>
-                                    {% else %}
-                                      <li><a href="/profile/search/followers?low={{ item.lowBound }}&up={{item.upBound}}">{{ item.lowBound / 10000}}-{{item.upBound / 10000}}万</a></li>
-                                    {% endif %}
-                                  {% endfor %}
-                                {% endif %}
-                              </ul>
-                          
-                          </div>
-                           
-                        </div>
-                      </div>
-                      <div class="border"></div>
-
-                      <div class="unit">
-                         <div class="attr">
-                          <div class="attrKey">所在地</div>
-                          <div class="attrValues">
-                              <ul class="av-collapse">
-                              {% if location %}
-                                {% for item in location %}
-                                  {% if model == 'province' and item.province == province %}
-                                    <li class='active'><a href="/profile/search/province?province={{ item.province }}">{{ item.province }}</a></li>
-                                  {% else %}
-                                    <li><a href="/profile/search/province?province={{ item.province }}">{{ item.province }}</a></li>
-                                  {% endif %}
-                                {% endfor %}
-                              {% endif %}
-                              </ul>
-                          </div>
-                        </div>
-                      </div>
-                  </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span2 panel">
@@ -479,15 +596,16 @@
         <div id="loader">
           <div id="loaderCircle"></div>
         </div>
-
         </div>
       </div>
-    </div>
+    </div>   
 {% endblock content %}
 
 {% block script %}
 <script type="text/javascript" src="/static/js/profile/jquery.wookmark.js"></script>
 <script type="text/javascript" src="/static/js/profile/blocksit.min.js"></script>
+<script type="text/javascript" src="/static/js/profile/choose.js"></script>
+<script type="text/javascript" src="/static/js/identify/topic_selector.js"></script>
 <script>
   var options = {
       numOfCol: 5,
@@ -577,10 +695,8 @@
       {% if model == 'person' %}
         $(document).unbind('scroll');
         dataparams = {page: page, nickname: '{{nickname}}'};
-      {% elif model in ['statuses', 'friends', 'followers'] %}
-        dataparams = {page: page, low: {{low}}, up:{{up}}};
-      {% elif model == 'province' %}
-        dataparams = {page: page, province: '{{province}}'};
+      {% elif  model == 'find' %}  
+        dataparams = {result_count: '{{result_count}}',statusescount_up:'{{statusescount_up}}',friendscount_up:'{{friendscount_up}}', followerscount_up:'{{followerscount_up}}',province: '{{location}}',page: page,rankcount:'{{rankcount}}'};
       {% else %}  
         dataparams = {page: page};
       {% endif %}
@@ -674,6 +790,23 @@ function backToTop(){
     });
   });
 }
+function choose_province()
+  {
+    var str=document.getElementsByName("provincebox");
+    var objarray=str.length;
+    var chestr="";
+    for (i=0;i<objarray;i++){
+      if(str[i].checked == true){
+        chestr+=str[i].value+",";
+      }
+    }
+    if(chestr == ""){
+      $('#topic_keywords').val("北京,天津,河北,辽宁,上海,江苏,浙江,福建,山东,广东,广西,海南,山西,内蒙古,吉林,黑龙江,安徽,江西,河南,湖北,湖南,四川,贵州,云南,西藏,陕西,甘肃,宁夏,青海,新疆,重庆,香港,台湾,澳门");
+    }
+    else{
+      $('#topic_keywords').val(chestr);
+    }
+  }
 
 $(document).ready(function(){
   loadData();

@@ -29,10 +29,10 @@ def reposts2tree(source_weibo, reposts):
     tree_nodes = []
     count, get_results = xapian_search_user.search(query={'_id': source_weibo['user']}, fields=['profile_image_url', 'name' , 'location'])#查找原创微博的用户信息
     for result in get_results():
-        node = result['name'].decode('utf-8')
-        location = result['location'].decode('utf-8') 
+        node = result['name']
+        location = result['location']
         datetime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(source_weibo['timestamp'])) 
-        img_url = result['profile_image_url'].decode('utf-8') 
+        img_url = result['profile_image_url'] 
         weibo_url = base62.weiboinfo2url(source_weibo['user'], str(source_weibo['_id']))
         tree_nodes.append(Tree(node, location, datetime, source_weibo['_id'], img_url, weibo_url))
 
@@ -43,15 +43,15 @@ def reposts2tree(source_weibo, reposts):
     for repost in reposts:
         count, get_results = xapian_search_user.search(query={'_id': repost['user']}, fields=['profile_image_url', 'name' , 'location'])#查找转发微博的用户信息
         for result in get_results():
-            node = result['name'].decode('utf-8') 
-            img_url = result['profile_image_url'].decode('utf-8')
-            location = result['location'].decode('utf-8')
+            node = result['name']
+            img_url = result['profile_image_url']
+            location = result['location']
             datetime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(repost['timestamp'])) 
             weibo_url = base62.weiboinfo2url(repost['user'], str(repost['_id']))
             uid = repost['user']
             tree_nodes.append(Tree(node, location, datetime, repost['_id'], img_url, weibo_url, uid))
 
-            repost_users = re.findall(u'/@([a-zA-Z-_\u0391-\uFFE5]+)', repost['text'].decode('utf-8'))
+            repost_users = re.findall(u'/@([a-zA-Z-_\u0391-\uFFE5]+)', repost['text'])
             parent_idx = 0
             while parent_idx < len(repost_users):
                 flag = False
@@ -115,7 +115,7 @@ def tree2graph(tree_nodes):
 
 def tree_main(mid):
     mids = [mid]
-    
+
     for mid in mids:
         users = set()
         number,source_weibo = xapian_search_weibo.search(query={'retweeted_mid': mid})#读取以mid为原创微博的转发微博
@@ -124,7 +124,7 @@ def tree_main(mid):
         for sw in source_weibo():
             repost_ids.append(sw['_id']) 
         if not number:
-            continue
+            return 0#continue
         count = 0
         reposts = []#存储转发微博的信息
         for sid in repost_ids:
@@ -148,3 +148,5 @@ def tree_main(mid):
 
         with open('./weibo/static/gexf/tree%s.gexf'%mid, 'w') as gf:
             gf.write(graph)
+
+    return 1

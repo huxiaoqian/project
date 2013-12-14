@@ -4,9 +4,11 @@
 
 from weibo.model import *
 from weibo.extensions import db
-from weibo.global_config import xapian_search_weibo, emotions_kv, xapian_search_domain, LEVELDBPATH
+from weibo.global_config import xapian_search_weibo, emotions_kv, \
+                                xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
-from utils import getWeiboByMid, st_variation, find_topN
+from utils import *
+#getWeiboByMid, st_variation, find_topN, read_range_count_results, read_range_kcount_results, read_range_weibos_results, sentimentCountFromDb,sentimentCountRealTime
 from xapian_weibo.utils import top_keywords
 import simplejson as json
 import datetime
@@ -15,8 +17,11 @@ import leveldb
 import os
 import weibo.model
 import json
+import re
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
+
+buckets = {}
 total_days = 90
 
 
@@ -92,15 +97,43 @@ def field():
     else:
         return redirect('/')
 
+def _utf_encode(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.encode('utf-8')
+
+
+def _utf_decode(s):
+    if isinstance(s, str):
+        return s.decode('utf-8')
+    else:
+        return s
+
+
+def str2ts(s):
+    temp_during = _utf_encode(s)
+    if re.match(r'\d+分钟', temp_during):
+        pattern=re.compile(r'分钟')
+        temp_during=int(pattern.split(temp_during)[0])*60
+    elif re.match((r'\d+小时'),temp_during):
+        pattern=re.compile(r'小时')
+        temp_during=int(pattern.split(temp_during)[0])*3600
+    elif re.match(r'\d+天',temp_during):
+        pattern=re.compile(r'天')
+        temp_during=pattern.split(temp_during)*24*3600
+    return temp_during
 
 @mod.route('/topic', methods=['GET','POST'])
 def topic():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
-            temp=request.form.get('keyword',None);
-            print temp
-            if temp:
-                return render_template('moodlens/topic_emotion.html', active='moodlens',temp=temp)
+            temp_keyword=request.form.get('keyword', None)
+            temp_during=request.form.get('during', 24*3600)
+            if not isinstance(temp_during, int):
+                temp_during = str2ts(temp_during)
+            if temp_keyword:
+                return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, temp_during=temp_during)
             else:
                 return render_template('moodlens/topic_emotion.html', active='moodlens')
             return render_template('moodlens/topic_emotion.html', active='moodlens') 
@@ -121,39 +154,29 @@ def topic():
 
 @mod.route('/data/<area>/', methods=['GET','POST'])
 def data(area='global'):
+    """分类情感数据
     """
-    分类情感数据
-    """
+    query = request.args.get('query', None)
+    ts = request.args.get('ts', None)
+    if not query or not ts:
+        return json.dumps('Null')
 
-    query = request.args.get('query', '')
-    query = query.strip()
-    ts = request.args.get('ts', '')
-    ts = long(ts)
     during = request.args.get('during', 24*3600)
     during = int(during)
 
     begin_ts = ts - during
     end_ts = ts
-    print begin_ts, end_ts
+    results = []
 
-    emotions_data = {}
+    if query and query != '':
+        results = sentimentCountFromDb(end_ts, during, 'topic', query)
+        if not results:
+            results = sentimentCountRealTime(end_ts, during, 'topic', query)
+    else:
+        results = sentimentCountFromDb(end_ts, during, 'whole')
 
-    query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-        '$or': [],
-    }
-    if query:
-        for term in query.split(','):
-            if term:
-                query_dict['$or'].append({'text': [term]})
-    for k, v in emotions_kv.iteritems():
-        query_dict['sentiment'] = v
-        count = xapian_search_weibo.search(query=query_dict, max_offset=100, count_only=True)
-        emotions_data[k] = [end_ts, count]
-    print emotions_data
-
-    return json.dumps(emotions_data)
-
+    return json.dumps(results)
+    
 @mod.route('/field_data/<area>/')
 def field_data(area):
     """
@@ -231,33 +254,20 @@ def keywords_data(area='global'):
     """
     /keywords_data 接口已备好，只是差领域数据
     """
+
     query = request.args.get('query', '')
     query = query.strip()
     ts = request.args.get('ts', '')
     ts = long(ts)
-    emotion = request.args.get('emotion', 'all')
     during = request.args.get('during', 24*3600)
     during = int(during)
-
+    
     begin_ts = ts - during
     end_ts = ts
+    results = read_range_kcount_results(begin_ts, end_ts, during)
+    
+    return json.dumps(results)
 
-    query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-    }
-    if emotion != 'all':
-        query_dict['sentiment'] = emotions_kv[emotion]
-    if query:
-        query_dict['$or'] = []
-        for term in query.split(','):
-            if term:
-                query_dict['$or'].append({'text': term})
-
-    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
-    keywords_with_count = top_keywords(get_results, top=50)
-    keywords_with_count = [list(i) for i in keywords_with_count]
-
-    return json.dumps(keywords_with_count)
 
 @mod.route('/field_keywords_data/<area>/')
 def field_keywords_data(area):
@@ -292,42 +302,24 @@ def field_keywords_data(area):
     return json.dumps(keywords_with_count)
 
 
-@mod.route('/weibos_data/<emotion>/<area>/')
-def weibos_data(emotion, area='global'):
-    """
-    此接口差领域数据，并且还跟另外的接口差领域数据检索途径不大一样
+@mod.route('/weibos_data/<area>/')
+def weibos_data(area='global'):
+    """关键词
     """
     query = request.args.get('query', '')
     query = query.strip()
     ts = request.args.get('ts', '')
     ts = long(ts)
-    during = request.args.get('during', 24*3600)
+    #during = request.args.get('during', 24*3600)
+    during=24*3600
     during = int(during)
-
+    
     begin_ts = ts - during
     end_ts = ts
-    query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-        #'reposts_count': {'$gt': 100},
-        'sentiment': emotions_kv[emotion]
-    }
-    if query:
-        query_dict['$or'] = []
-        for term in query.split(','):
-            if term:
-                query_dict['$or'].append({'text': term})
+    results = read_range_weibos_results(begin_ts, end_ts, during)
+    
+    return json.dumps(results)
 
-    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=10, sort_by=['-reposts_count'], fields=['_id'])
-    data = []
-    count = 0
-    for r in get_results():
-        if count == 10:
-            break
-        count += 1
-        weibo_data = getWeiboByMid(r['_id'], emotion)
-        if weibo_data:
-            data.append(weibo_data)
-    return json.dumps(data)
 
 @mod.route('/field_weibos_data/<emotion>/<area>/')
 def field_weibos_data(emotion, area):

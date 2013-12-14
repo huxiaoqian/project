@@ -40,8 +40,9 @@
         float: left;
     }
     #weibo_container{
-        width: 340px;
+        width: 388px;
         float: left;
+        margin-left: 43px;
     }
     .icon-up {
         filter: alpha(opacity=50);
@@ -114,7 +115,7 @@
     #togglecount{
         width: 200px;
         position: absolute;
-        top: 147px;
+        top: 129px;
         left: 90px;
         z-index: 1000;
     }
@@ -134,19 +135,9 @@
         <div class="row-fluid">
             <div style="text-align: center">
                 <div id="presets">
-                    <a class="first" href="/moodlens/">全网</a>
-                    <a class="active" href="/moodlens/field">领域</a>
+                    <a class="first active" href="/moodlens/">全网</a>
+                    <a class="" href="/moodlens/field">领域</a>
                     <a class="" href="/moodlens/topic">话题</a>
-                </div>
-                <div style="font-size: 15px;">
-                    <a onclick="begin(1);"><span class="label label-info"> 文化 </span></a>
-                    <a onclick="begin(2);"><span class="label label-info"> 教育 </span></a>
-                    <a onclick="begin(3);"><span class="label label-info"> 娱乐 </span></a>
-                    <a onclick="begin(4);"><span class="label label-info"> 时尚 </span></a>
-                    <a onclick="begin(5);"><span class="label label-info"> 财经 </span></a>
-                    <a onclick="begin(6);"><span class="label label-info"> 媒体 </span></a>
-                    <a onclick="begin(7);"><span class="label label-info"> 体育 </span></a>
-                    <a onclick="begin(8);"><span class="label label-info"> 科技 </span></a>                    
                 </div>
             </div>
             <hr class="soften">
@@ -190,15 +181,9 @@
   <script src="{{ url_for('static', filename='js/highstock.js') }}"></script>
   <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.min.js') }}"></script>
-  <script type="text/javascript" src="http://buildinternet.s3.amazonaws.com/projects/totem/js/jquery.totemticker.js"></script>
+  <script type="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>
 
   <script>
-    function moodlens_request() {
-    $.post("/moodlens/topic/", {'action': 'previous_rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
-    }
-
-    moodlens_request();
-
     var emotion_ratio = {};
     var happy_absolute = [];
     var angry_absolute = [];
@@ -213,14 +198,12 @@
     var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
     var max_word_size = 10;
     var min_word_size = 1;
-    //var field_id;
 
-    function begin(number){ 
-        var field_id = number;   
-        display_realtime_emotion(field_id);
+    $(document).ready(function(){    
+        display_realtime_emotion();
         redraw_tagcanvas();
-    }
-    
+    })
+
     function redraw_tagcanvas() {
         if(!$('#myCanvas').tagcanvas(oopts,'tags_div')) {
             $('#myCanvas').hide();
@@ -233,7 +216,7 @@
         return minsize + (maxsize - minsize) * Math.pow((count / (maxcount - mincount)), 2)
       }
     }
-
+    
     function chg_tagcloud(data) {
         $("#tags_ul").empty();
         var cloud_list = [];
@@ -276,7 +259,7 @@
         display_vertical_list();
     }
 
-     function chg_emotion_pie(raw_data){
+    function chg_emotion_pie(raw_data){
         if(raw_data[3] != 0){
             var data = [['高兴', raw_data[0] * 100], ['愤怒', raw_data[1] * 100], ['悲伤', raw_data[2] * 100]];
             $('#emotion_pie_container').empty();
@@ -295,11 +278,11 @@
         });
     }
 
-    function init_statistics(field_id, end_ts, during){
+    function init_statistics(end_ts, during){
         var emotion = ['happy', 'angry', 'sad'];
         for(var e in emotion){
             $.ajax({
-                url: "/moodlens/field_weibos_data/" + emotion[e] + "/"+field_id+"/?ts=" + end_ts + "&during=" + during,
+                url: "/moodlens/weibos_data/" + emotion[e] + "/global/?ts=" + end_ts + "&during=" + during,
                 type: "GET",
                 dataType:"json",
                 success: function(data){
@@ -309,7 +292,7 @@
             });
         }
         $.ajax({
-            url: "/moodlens/field_keywords_data/"+field_id+"/?ts=" + end_ts + "&during=" + during,
+            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -317,7 +300,7 @@
             }
         });
         $.ajax({
-            url: "/moodlens/field_data/"+field_id+"/?ts=" + end_ts + "&during=" + during,
+            url: "/moodlens/data/global/?ts=" + end_ts + "&during=" + during,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -330,16 +313,15 @@
         })
     }
 
-
     function pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6){
         if(times >= total_days){
-            get_peaks(area_type, series4, series5, series6);
+            get_peaks(series4, series5, series6);
             return;
         }
         
         var ts = begin_ts + times * during;
         $.ajax({
-            url: "/moodlens/field_data/" + area_type + "/" + "?ts=" + ts,
+            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -377,14 +359,13 @@
         });
     }
 
-    function get_peaks(field_id, series4, series5, series6){
-        console.log(happy_list);
+    function get_peaks(series4, series5, series6){
         $.ajax({
             url: "/moodlens/emotionpeak/?happy=" + happy_list.join(',') + "&angry=" + angry_list.join(',') + "&sad=" + sad_list.join(',') + "&ts=" + ts_list,
             type: "GET",
             dataType:"json",
             success: function(data){
-                if ( data != 'Null Data'){
+              if ( data != 'Null Data'){
               var isShift = false;
               for(var i in data){
                 var x = data[i]['ts'];
@@ -401,7 +382,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/field_weibos_data/" + emotion + "/"+field_id+"/?ts=" + click_ts,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -411,7 +392,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/field_keywords_data/"+field_id+"/?ts=" + click_ts + "&emotion=" + emotion,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -429,8 +410,6 @@
         })
     }
 
-    
-
     function display_emotion_pie(data){
         Highcharts.setOptions({
             colors: ['#006600', '#FF0000', '#000099']
@@ -445,16 +424,22 @@
             title: {
                 text: '微博情绪饼图',
             },
-            tooltip: {
-                pointFormat: '{series.name}: <b>{point.percentage}%</b>',
-                percentageDecimals: 1
-            },
+            //tooltip: {
+                //pointFormat: '{series.name}: <b>{point.percentage}%</b>',
+               // percentageDecimals: 1,
+                //valueDecimals: 2,
+               // enabled: false
+
+           // },
             plotOptions: {
                 pie: {
                     allowPointSelect: true,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: false
+                        enabled: true,
+                        formatter:function(){
+                            return '<b>'+this.point.name+'</b>'+this.percentage.toFixed(2)+'%';}
+
                     },
                     showInLegend: true
                 }
@@ -476,7 +461,7 @@
         });
     }
 
-    function display_realtime_emotion(field_id){
+    function display_realtime_emotion(){
         Highcharts.setOptions({
             global: {
                 useUTC: false
@@ -493,10 +478,10 @@
                     load: function() {
                         var total_days = 30;
                         var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
-                        var now_ts = parseInt((new Date(2013, 9, 30)).getTime() / 1000) + 2 * 3600;
+                        var now_ts = parseInt((new Date(2013, 10, 1)).getTime() / 1000) + 2 * 3600;
                         var during = 24 * 3600;
-                        init_statistics(field_id, now_ts, total_days * during);
-                        pull_emotion_count(field_id, total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]);
+                        init_statistics(now_ts, total_days * during)
+                        pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]);
                     }
                 }
             },
@@ -622,5 +607,32 @@
             }]
         });
     }
+
+    /*function switch2(status){
+        if(status == 'absolute'){
+            var chart = $('#emotion_container').highcharts();
+            chart.series[0].update({
+                data : happy_absolute
+            });
+            chart.series[1].update({
+                data : angry_absolute
+            });
+            chart.series[2].update({
+                data : sad_absolute
+            });
+        }
+        else{
+            var chart = $('#emotion_container').highcharts();
+            chart.series[0].update({
+                data : happy_ratio
+            });
+            chart.series[1].update({
+                data : angry_ratio
+            });
+            chart.series[2].update({
+                data : sad_ratio
+            });
+        }
+    }*/
   </script>
 {% endblock %}

@@ -32,7 +32,7 @@
       <option value="150">5个月</option>
       <option value="120">4个月</option>
     </select>
-    <input type="number" name="topic_limit" value="30" min="1" max="1000" class="span2" id="tp_topic_limit" disabled />话题,
+    <input type="number" name="topic_limit" value="10" min="1" max="1000" class="span2" id="tp_topic_limit" disabled />话题,
     <input type="number" name="keyword_limit" value="10" min="1" max="1000" class="span2" id="tp_keyword_limit" disabled />关键词
       <!--<input type='button' onclick='return false;'>-->
     <button type="button" class="btn btn-primary" id="generate_cloud" onclick="submit_form();return false;"><i class="icon-search"></i>分析</button>
@@ -203,7 +203,7 @@ function display_column_topic_chart(data){
     redraw_tagcanvas();
     var interval_arg = $("#tp_interval")[0].value;
     $.ajax({
-        url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&topic_limit=30&keyword_limit=10&action=nonupdate",
+        url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&topic_limit=10&keyword_limit=10&action=nonupdate",
         dataType: 'json', 
         type: "GET",   
         success: function (data) {
@@ -214,7 +214,7 @@ function display_column_topic_chart(data){
   function submit_form(){
     var interval_arg = $("#tp_interval").val();
     $.ajax({
-          url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&topic_limit=30&keyword_limit=10&action=nonupdate",
+          url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&topic_limit=10&keyword_limit=10&action=nonupdate",
           dataType: 'json',   
           type: "GET",   
           success: function (data) {

@@ -1,6 +1,9 @@
 {% extends "profile/base.html" %}
 {% block title %}主页{% endblock %}
 {% block content %}
+<head>
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datarangepiker.css') }}">
+</head>
 <div class="container">
   <div class="well">
     <legend>领域特征</legend>
@@ -21,19 +24,15 @@
           </ul>
       </div>
       时间范围:
-      <div class="btn-group">
-        <a  id="profile_group_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        1周<span class="caret"></span></a>
-          <ul id="profile_group_window_size_dropdown_menu" class="dropdown-menu">
-            <li><a href="#" onclick="choose_window('profile_group', 1);" data-toggle="tab">1天</a></li>
-                  <li><a href="#" onclick="choose_window('profile_group', 7);" data-toggle="tab">1周</a></li>
-                  <li><a href="#" onclick="choose_window('profile_group', 30);" data-toggle="tab">1个月</a></li>
-                  <li><a href="#" onclick="choose_window('profile_group', 90);" data-toggle="tab">3个月</a></li>
-          </ul>
+      <div id="reportrange" class="btn dropdown-toggle">
+        <i class="icon-calendar icon-large"></i>
+          <span>2013年12月11号 - 2013年12月31号</span> 
+            <b class="caret"></b>
       </div>
       按粉丝数前<input name="top_n" type="text" value="1000" class="span1">人
       <input id="profile_group_rank_method" type="hidden" name="fieldEnName" value="finance">
-      <input id="profile_group_window_size" type="hidden" name="time_lengh" value="7">
+      <input id="reportrange span" type="hidden" name="timestart" value="0">
+      <input id="reportrange span" type="hidden" name="timeend" value="30">
       <input type="submit" class="btn btn-primary" value="分析">
     </form>
   </div>
@@ -245,6 +244,8 @@
 {% block script %}
   <script src="{{ url_for('static', filename='js/profile/choose.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
   <script>
   function choose_province()
   {
@@ -263,5 +264,24 @@
       $('#topic_keywords').val(chestr);
     }
   }
+  $(document).ready(function() {
+    $('#reportrange').daterangepicker({
+      ranges: {
+         'Today': [moment(), moment()],
+         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+         'Last 7 Days': [moment().subtract('days', 6), moment()],
+         'Last 30 Days': [moment().subtract('days', 29), moment()],
+         'This Month': [moment().startOf('month'), moment().endOf('month')],
+         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+      },
+      startDate: moment().subtract('days', 29),
+      endDate: moment()
+    }, 
+      function(start, end) {
+        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      }
+    );
+  }
+  );
 </script>
 {% endblock %}

@@ -3,10 +3,11 @@
 import os
 import time
 import leveldb
-
+import sys
 from datetime import datetime
 
 from xapian_weibo.xapian_backend import XapianSearch
+from global_config import xapian_search_user as user_search, xapian_search_weibo as statuses_search, LEVELDBPATH
 
 def datetime2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))
@@ -14,11 +15,11 @@ def datetime2ts(date):
 def ts2datetime(ts):
     return time.strftime('%Y-%m-%d', time.localtime(ts))
 
-LEVELDBPATH = '/home/mirage/leveldb'
-
-statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-
-user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+##LEVELDBPATH = '/home/mirage/leveldb'
+##
+##statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+##
+##user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 def make(date):
     end_ts = datetime2ts(date)
@@ -96,11 +97,12 @@ def get_leveldb(method, ts):
 
 def main():
     # current_time = time.time()
-    current_time = datetime2ts('2013-3-1')
+    current_time = datetime2ts('2013-9-30')
 
     date = ts2datetime(current_time)
 
     make(date)
+    read(date)
 
 if __name__ == '__main__': main()
     

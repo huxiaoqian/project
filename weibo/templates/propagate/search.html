@@ -21,10 +21,8 @@
     	<legend><strong>话题信息搜索</strong></legend>
     	<div class="inline">
         <ul>
-    	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>关键字词:</b></font> <input type="text" class="span2" placeholder="请输入关键字" value="" role="textbox" name="keyword" id="topic_keywords">
-    	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>关键用户: </b></font><input type="text" class="span2" placeholder="请输入用户" value="" role="textbox" name="keyuser" id="topic_keyusers">
-          <!--开始时间: <input type="text" class="span2" placeholder="2013-01-01" data-date-format="yyyy-mm-dd" value="" role="textbox" name="beg_time">
-          截止时间: <input type="text" class="span2" placeholder="2013-01-07" data-date-format="yyyy-mm-dd" value="" role="textbox" name="end_time">-->
+    	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>关键字词:</b></font> <input type="text" class="span2" placeholder="请输入关键字" value="" role="textbox" name="keyword" id="topic_keywords" style="margin-bottom: 0px;">
+    	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>关键用户: </b></font><input type="text" class="span2" placeholder="请输入用户" value="" role="textbox" name="keyuser" id="topic_keyusers" style="margin-bottom: 0px;">
           <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
           <div id="reportrange_topic" class="btn dropdown-toggle">
             <i class="icon-calendar icon-large"></i>
@@ -37,55 +35,35 @@
     	</div>
       <hr>
       <ul id="TopicTab" class="nav nav-tabs">
-        {% for field in field_topics %}
-          {% if field.index == 1 %}
-            <li class="active"><a href="#area_1" data-toggle="tab"><strong>{{field.field_name}}</strong></a></li>
-          {% else %}
-            <li><a href="#area_{{field.index}}" data-toggle="tab"><strong>{{field.field_name}}</strong></a></li>
-          {% endif %}
-        {% endfor %}  
+            <li class="active"><a href="#area_1" data-toggle="tab"><strong>系统定制</strong></a></li>
         <li><a href="/sysadmin/" target="_blank"><i class="icon-cog"></i></a></li>
-        <li><a href="/propagate/topics" ><strong>查看更多话题</strong></a></li>
+        <!--<li><a href="/propagate/topics" ><strong>查看更多话题</strong></a></li>-->
       </ul>
 
       <div id="TopicTabContent" class="tab-content">
-        {% for field in field_topics %}
-          {% if field.index == 1 %}
             <div class="tab-pane fade active in" id="area_1">
               <ul class="inline">
-                {% for topic in field.topics %}
+                {% for topic in topics %}
                 <li><input type="checkbox"> {{ topic }} </li>
                 {% endfor %}
               </ul>
             </div>
-          {% else %}
-            <div class="tab-pane fade" id="area_{{field.index}}">
-              <ul class="inline">
-                {% for topic in field.topics %}
-                <li><input type="checkbox"> {{ topic }} </li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endif %}
-        {% endfor %}
       </div>
     </div>
 	  <div class="row well">
       <legend><strong>微博信息搜索</strong></legend>
-      <form class="form-inline" action = "/propagate/hot_status" method="post">
+      <div class="inline">
         <ul>
-          <!--开始时间: <input type="text" class="span2" placeholder="2013-01-01" data-date-format="yyyy-mm-dd" value="" role="textbox" name="beg_time">
-          截止时间: <input type="text" class="span2" placeholder="2013-01-07" data-date-format="yyyy-mm-dd" value="" role="textbox" name="end_time">-->
           <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
           <div id="reportrange_single" class="btn dropdown-toggle">
             <i class="icon-calendar icon-large"></i>
-            <span>September 20, 2013 - September 25, 2013</span> 
+            <span id="weibo_time">September 20, 2013 - September 25, 2013</span> 
             <b class="caret"></b>
           </div>
           <input type="hidden" name="r" value="1">
-          <input type="submit" class="btn btn-primary" value = "识别">
+          <input type="submit" class="btn btn-primary" value = "搜索" id="search_weibo">
         </ul>
-      </form>
+      </div>
       <hr>
     </div>
   </div> <!-- /container -->
@@ -135,6 +113,10 @@ $("#search_topic").click(function() {
   var keyword = document.getElementById("topic_keywords").value;
   var keyuser = document.getElementById("topic_keyusers").value;
   window.location.href="/propagate/showresult/?keyword="+keyword+"&keyuser="+keyuser+"&time="+time;
+});
+$("#search_weibo").click(function() {
+  var time = $("#weibo_time").html();
+  window.location.href="/propagate/hot_status/?time="+time;
 });
 </script>
 {% endblock %}

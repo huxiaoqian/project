@@ -46,7 +46,7 @@ function get_selected_uids() {
 	    if (current_data.length) {
 		$("#loading_current_data").text("计算完成!");
 		if (current_data.length < page_num) {
-		    page_num = current_data.length - 1;
+		    page_num = current_data.length;
 		    create_current_table(current_data, 0, page_num);
 		}
 		else {

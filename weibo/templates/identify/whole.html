@@ -36,7 +36,7 @@
 	    </ul>
 	  </div>
 
-      	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
+      	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
 	  <div class="btn-group">
 	    <a id="whole_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
 	      {% if window_size == 1 %}1天
@@ -55,14 +55,15 @@
 	    </ul>
 	  </div>
 
-	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
+	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 
-	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
+	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 	  <input type="hidden" name="action" value="run">
 	  <input id="whole_rank_method" type="hidden" name="rank_method" value="followers">
 	  <input id="whole_window_size" type="hidden" name="window_size" value="7">
+    &nbsp&nbsp&nbsp
 	  <input type="submit" class="btn btn-primary" value="识别">
       	</form>
       </div>

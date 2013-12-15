@@ -1,105 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from config import db
+from extensions import db
 
-__all__ = ['Field', 'Topic', 'User', 'Status', 'RepostRelationship', 'FollowRelationship',
-           'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', 
-           'RangeCount', 'Province', 'Words', 'PersonalBurstWords','FieldProfile', 'UserField', 
-           'HotStatus', 'Media', 'Manager', 'NewWords', 'WhiteList', 'UserWeight', 'BlackList',
-           'IMedia']
+__all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', \
+           'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', \
+           'UserWeight', 'BlackList', 'IMedia', 'M_Weibo', 'UserList','Topic_Search', 'SentimentCount', \
+           'SentimentKeywords', 'TopWeibos', 'Domain', 'SentimentDomainCount', \
+           'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
+           'SentimentTopicKeywords', 'SentimentTopicTopWeibos']
 
-class User(db.Model):
-    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    userName = db.Column(db.String(30))
-    location = db.Column(db.String(20))
-    gender = db.Column(db.String(5))
-    profileImageUrl = db.Column(db.String(50))
-    description = db.Column(db.String(150))
-    createdAt = db.Column(db.DateTime)
-    verified = db.Column(db.Boolean)
-    verifiedType = db.Column(db.Integer)
-    statusesCount = db.Column(db.Integer)
-    followersCount = db.Column(db.Integer)
-    friendsCount = db.Column(db.Integer)
-    biFollowersCount = db.Column(db.Integer)
-
-    @classmethod
-    def _name(cls):
-        return u'博主'
-
-    def __repr__(self):
-        return self.userName
-
-    @property
-    def serialize(self):
-        """Return object data in easily serializeable format"""
-        createdAt = None
-        if self.createdAt:
-            createdAt = self.createdAt.isoformat()
-        return {
-            'id' : self.id,
-            'userName' : self.userName,
-            'location' : self.location,
-            'gender' : self.gender,
-            'profileImageUrl' : self.profileImageUrl,
-            'description' : self.description,
-            'createdAt' : createdAt,
-            'verified' : self.verified,
-            'verifiedType' : self.verifiedType,
-            'statusesCount' : self.statusesCount,
-            'followersCount' : self.followersCount,
-            'friendsCount' : self.friendsCount,
-            'biFollowersCount' : self.biFollowersCount
-        }
-
-class Status(db.Model):
-    id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
-    text = db.Column(db.String(350))
-    geo = db.Column(db.String(50))
-    sourcePlatform = db.Column(db.String(20))
-    postDate = db.Column(db.DateTime)
-    uid = db.Column(db.BigInteger(11, unsigned=True))
-    retweetedMid = db.Column(db.BigInteger(20, unsigned=True))
-    repostsCount = db.Column(db.Integer)
-    commentsCount = db.Column(db.Integer)
-    attitudesCount = db.Column(db.Integer)
-
-    @classmethod
-    def _name(cls):
-        return u'微博'
-
-    def __repr__(self):
-        return self.id
-
-class RepostRelationship(db.Model):
-    id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
-    fieldId = db.Column(db.Integer, db.ForeignKey('field.id'))
-    field = db.relationship('Field', primaryjoin='Field.id==RepostRelationship.fieldId')
-    topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
-    topic = db.relationship('Topic', primaryjoin='Topic.id==RepostRelationship.topicId')
-    uid =  db.Column(db.BigInteger(11, unsigned=True))
-    sourceUid = db.Column(db.BigInteger(11, unsigned=True))
-    mid = db.Column(db.BigInteger(20, unsigned=True))
-    sourceMid = db.Column(db.BigInteger(20, unsigned=True))
-    createdAt = db.Column(db.DateTime)
-
-    @classmethod
-    def _name(cls):
-        return u'转发关系'
-
-    def __repr__(self):
-        return self.id
-
-class FollowRelationship(db.Model):
-    uid = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    fid = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-
-    @classmethod
-    def _name(cls):
-        return u'关注关系'
-
-    def __repr__(self):
-        return '%s->%s' % (self.uid, self.fid)
 
 class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -142,8 +51,7 @@ class WholeUserIdentification(db.Model):
 
 class AreaUserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    topicId = db.Column(db.Integer, db.ForeignKey('topic.id'))
-    topic = db.relationship('Topic', primaryjoin='Topic.id==AreaUserIdentification.topicId')
+    topicId = db.Column(db.Integer)
     rank = db.Column(db.Integer)
     userId = db.Column(db.BigInteger(11, unsigned=True))
     identifyDate = db.Column(db.Date)
@@ -196,60 +104,18 @@ class Province(db.Model):
     def __repr__(self):
         return self.id
 
-class Words(db.Model):
-    id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
-    uid = db.Column(db.BigInteger(11, unsigned=True))
-    postDate = db.Column(db.DateTime)
-    textWord = db.Column(db.String(400))
-    retweetedMid = db.Column(db.BigInteger(20, unsigned=True))
-
-    @classmethod
-    def _name(cls):
-        return u'词语'
-
-    def __repr__(self):
-        return self.id
-
-class PersonalBurstWords(db.Model):
+class PersonalLdaWords(db.Model):
     uid = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    windowSize = db.Column(db.BigInteger(20, unsigned=True), primary_key=True) 
-    startDate = db.Column(db.Date, primary_key=True)
-    endDate = db.Column(db.Date, primary_key=True)
-    word = db.Column(db.String(20), primary_key=True)
-    burst = db.Column(db.Float(10,4))
-    freq = db.Column(db.BigInteger(20, unsigned=True))
+    windowTimestamp = db.Column(db.BigInteger(20, unsigned=True), primary_key=True) 
+    startTimestamp = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
+    word = db.Column(db.String(20000))
     
     @classmethod
     def _name(cls):
         return u'突发词'
 
     def __repr__(self):
-        return self.startdate
-
-class FieldProfile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    fieldEnName = db.Column(db.String(20), unique=True)
-    fieldZhName = db.Column(db.String(20), unique=True)
-
-    @classmethod
-    def _name(cls):
-        return u'画像用领域'
-
-    def __repr__(self):
-        return self.id
-
-class UserField(db.Model):
-    uid = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    updateTime = db.Column(db.Date, primary_key=True)
-    fieldFirst = db.Column(db.String(20))
-    fieldSecond = db.Column(db.String(20))
-    
-    @classmethod
-    def _name(cls):
-        return u'领域博主'
-
-    def __repr__(self):
-        return self.uid
+        return self.startTimestamp
 
 class Media(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -301,6 +167,7 @@ class Manager(db.Model):
 class NewWords(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     wordsName = db.Column(db.String(20), unique=True)
+    seWeight = db.Column(db.Integer)
 
     @classmethod
     def _name(cls):
@@ -308,17 +175,6 @@ class NewWords(db.Model):
 
     def __repr__(self):
         return self.wordsName
-
-class WhiteList(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    listName = db.Column(db.String(20), unique=True)
-
-    @classmethod
-    def _name(cls):
-        return u'白名单'
-
-    def __repr__(self):
-        return self.listName
 
 class UserWeight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -355,3 +211,195 @@ class IMedia(db.Model):
 
     def __repr__(self):
         return self.mediaName
+
+class M_Weibo(db.Model):
+    weibo_id = db.Column(db.BigInteger(20, unsigned=True), primary_key=True)
+    text = db.Column(db.String(350))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.BigInteger(11, unsigned=True))
+
+    @classmethod
+    def _name(cls):
+        return u'微博素材'
+
+    def __repr__(self):
+        return self.weibo_id
+
+class UserList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True)
+    password = db.Column(db.String(20))
+    identify = db.Column(db.Integer)
+    moodlens = db.Column(db.Integer)
+    profile = db.Column(db.Integer)
+    propagate = db.Column(db.Integer)
+
+    @classmethod
+    def _name(cls):
+        return u'用户权限列表'
+
+    def __repr__(self):
+        return self.id
+
+class Topic_Search(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    uname = db.Column(db.String(20))
+    topicName = db.Column(db.String(20), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'用户搜索话题列表'
+
+    def __repr__(self):
+        return self.id
+
+class SentimentCount(db.Model):
+    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    count = db.Column(db.BigInteger(20, unsigned=True))
+
+    def __init__(self, range, ts, sentiment, count):
+        self.range = range
+        self.ts = ts
+        self.sentiment = sentiment
+        self.count = count
+
+class SentimentKeywords(db.Model):
+    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    kcount = db.Column(db.Text)
+
+    def __init__(self, range, limit, ts, sentiment, kcount):
+        self.range = range
+        self.limit = limit
+        self.ts = ts
+        self.sentiment = sentiment
+        self.kcount = kcount
+
+class TopWeibos(db.Model):
+    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    weibos = db.Column(db.Text)
+
+    def __init__(self, range, limit, ts, sentiment, weibos):
+        self.range = range
+        self.limit = limit
+        self.ts = ts
+        self.sentiment = sentiment
+        self.weibos = weibos
+
+class Domain(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    idx = db.Column(db.Integer, unique=True)
+    name = db.Column(db.String(20), unique=True)
+    zhname = db.Column(db.String(20), unique=True)
+    active = db.Column(db.Boolean)
+
+    def __init__(self, idx, name, zhname, active):
+        self.idx = idx
+        self.name = name
+        self.zhname = zhname
+        self.active = active
+
+
+class SentimentDomainCount(db.Model):
+    domain = db.Column(db.Integer, primary_key=True)
+    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    count = db.Column(db.BigInteger(20, unsigned=True))
+
+    def __init__(self, domain, range, ts, sentiment, count):
+        self.domain = domain
+        self.range = range
+        self.ts = ts
+        self.sentiment = sentiment
+        self.count = count
+
+class SentimentDomainKeywords(db.Model):
+    domain = db.Column(db.Integer, primary_key=True)
+    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    kcount = db.Column(db.Text)
+
+    def __init__(self, domain, range, limit, ts, sentiment, kcount):
+        self.domain = domain
+        self.range = range
+        self.limit = limit
+        self.ts = ts
+        self.sentiment = sentiment
+        self.kcount = kcount
+
+class SentimentDomainTopWeibos(db.Model):
+    domain = db.Column(db.Integer, primary_key=True)
+    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    weibos = db.Column(db.Text)
+
+    def __init__(self, domain, range, limit, ts, sentiment, weibos):
+        self.domain = domain
+        self.range = range
+        self.limit = limit
+        self.ts = ts
+        self.sentiment = sentiment
+        self.weibos = weibos
+
+class SentimentTopicCount(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    query = db.Column(db.String(20))
+    end = db.Column(db.BigInteger(10, unsigned=True))
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    sentiment = db.Column(db.Integer(1, unsigned=True))
+    count = db.Column(db.BigInteger(20, unsigned=True))
+
+    def __init__(self, query, range, end, sentiment, count):
+        self.query = query 
+        self.range = range
+        self.end = end
+        self.sentiment = sentiment
+        self.count = count
+
+class SentimentTopicKeywords(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    query = db.Column(db.String(20))
+    end = db.Column(db.BigInteger(10, unsigned=True))
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True))
+    kcount = db.Column(db.Text)
+
+    def __init__(self, query, range, limit, end, sentiment, kcount):
+        self.query = query 
+        self.range = range
+        self.limit = limit
+        self.end = end
+        self.sentiment = sentiment
+        self.kcount = kcount
+
+class SentimentTopicTopWeibos(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    query = db.Column(db.String(20))
+    end = db.Column(db.BigInteger(10, unsigned=True))
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True))
+    weibos = db.Column(db.Text)
+
+    def __init__(self, query, range, limit, end, sentiment, weibos):
+        self.query = query 
+        self.range = range
+        self.limit = limit
+        self.end = end
+        self.sentiment = sentiment
+        self.weibos = weibos

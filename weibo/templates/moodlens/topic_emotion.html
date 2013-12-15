@@ -2,6 +2,9 @@
 {% block title %}网民情绪监测和预警{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="/static/css/toggle_switch.css">
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datarangepiker.css') }}">
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+
 <style>
     .title {
         margin: 30px auto;
@@ -138,11 +141,29 @@
                     <a class="" href="/moodlens/field">领域</a>
                     <a class="active" href="/moodlens/topic">话题</a>
                 </div>
-              <input type="text" id="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
-              <button id="search_bt" class="btn btn-primary" type="submit" onclick="submit_form();return false;"><i class="icon-search"></i>分析</button>
+                <form id="topic_emotion" action="/moodlens/topic" class="form-inline" method="POST">
+                    <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;"> 
+                    时间范围：
+                    <div id="reportrange" class="btn dropdown-toggle">
+                            <i class="icon-calendar icon-large"></i>
+                            <span>2013年12月11号 - 2013年12月31号</span> <b class="caret"></b>
+                    </div>
+                    <div class="btn dropdown-toggle" style="position:relative;">
+                        <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+                            <select id="during_sel" style="width:110px;margin-left:-100px" onchange=onchangeUpdate(); >
+                                <option value="15分钟"> 15分钟 </option>
+                                <option value="30分钟"> 30分钟 </option>
+                                <option value="1小时">1小时</option>
+                                <option value="3小时">3小时</option>
+                                <option value="1天">1天</option>
+                            </select></span><input name="during_sel" style="width:75px;position:absolute;left:15px;overflow:hidden;"><input id="hidden_during" name="during" type="hidden" value="15分钟">
+                        </div>
+                    <input type="submit" class="btn btn-primary" value="分析">
+                </form>
+                <hr class="soften">
             </div>
-            <hr class="soften">
         </div>
+
         <div id="emotion_chart_div" class="row-fluid">
             <div class="span8">
                 <!--<div class="control-group" id="togglecount">
@@ -176,6 +197,7 @@
             </div>
         </div>
     </div>
+
     
 {% endblock %}
 {% block script %}
@@ -183,8 +205,40 @@
   <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.min.js') }}"></script>
   <script type="text/javascript" src="http://buildinternet.s3.amazonaws.com/projects/totem/js/jquery.totemticker.js"></script>
+  <script src="{{ url_for('static', filename='js/moment.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/daterangepicker.js') }}"></script>
+  <script type="text/javascript">
+    var during;
+    function onchangeUpdate(){
+        $("#hidden_during").val($("#during_sel").val());
+    }
+    
+    $(document).ready(function() {
+        $('#reportrange').daterangepicker({
+          ranges: {
+             'Today': [moment(), moment()],
+             'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+             'Last 7 Days': [moment().subtract('days', 6), moment()],
+             'Last 30 Days': [moment().subtract('days', 29), moment()],
+             'This Month': [moment().startOf('month'), moment().endOf('month')],
+             'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+          },
+          startDate: moment().subtract('days', 29),
+          endDate: moment()
+        }, 
+        function(start, end) {
+        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        }
+        );
+        if('{{temp_keyword}}')
+        {
+            $('#keyword').val('{{temp_keyword}}');
+            during='{{temp_during}}';
+            submit_form();
+        }
 
-  <script>
+    });
+    
     var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
 
     var emotion_ratio = {};
@@ -198,11 +252,17 @@
     var angry_list = [];
     var sad_list = [];
     var ts_list = [];
-
+    var chart_type;
+    var total_days = 30;
+    var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
+    var now_ts = parseInt((new Date(2013, 9, 30)).getTime() / 1000) + 2 * 3600;
+    
+    //alert('{{temp}}');
     function submit_form(){
+        decide_chart_type('global', total_days, begin_ts, during);
         display_realtime_emotion();
         redraw_tagcanvas();
-        //switch2();
+        //switch2();  
     }
     
     function redraw_tagcanvas() {
@@ -288,10 +348,12 @@
 
     function init_statistics(end_ts, during){
         var query_args = $("#keyword")[0].value;
+        //alert(query_args);
         var emotion = ['happy', 'angry', 'sad'];
+        console.log(during);
         for(var e in emotion){
             $.ajax({
-                url: "/moodlens/weibos_data/" + emotion[e] + "/global/?ts=" + end_ts + "&during=" + during  + "&query=" + query_args,
+                url: "/moodlens/weibos_data/" + emotion[e] + "/global/?ts=" + end_ts + "&during=" + during + "&query=" + query_args,
                 type: "GET",
                 dataType:"json",
                 success: function(data){
@@ -300,7 +362,7 @@
                 }
             });
         }
-        $.ajax({
+        $.ajax({s
             url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during + "&query=" + query_args,
             type: "GET",
             dataType:"json",
@@ -324,14 +386,16 @@
 
     function pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6){
         var query_args = $("#keyword")[0].value;
-        if(times >= total_days){
-            get_peaks(series4, series5, series6);
+        var end_ts=begin_ts+total_days*24*3600;
+        if(ts >= end_ts||times>=10){
+            get_peaks(series4, series5, series6,1);
+
             return;
         }
-        
+
         var ts = begin_ts + times * during;
         $.ajax({
-            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + "&query=" + query_args,
+            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + "&query=" + query_args+"&during="+during,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -341,6 +405,7 @@
                 var sad_emotion_count = data['sad'][1];
 
                 var total_emotion_count = happy_emotion_count + angry_emotion_count + sad_emotion_count;
+                //alert(total_emotion_count);
                 if(total_emotion_count > 0){
                     var happy_emotion_ratio = parseInt(happy_emotion_count * 100 / total_emotion_count) / 100.0;
                     var angry_emotion_ratio = parseInt(angry_emotion_count * 100 / total_emotion_count) / 100.0;
@@ -350,6 +415,7 @@
                     series3.addPoint([ts * 1000, sad_emotion_ratio], true, isShift);
                     emotion_ratio[ts * 1000] = [happy_emotion_ratio, angry_emotion_ratio, sad_emotion_ratio, total_emotion_count];
                     happy_absolute.push([ts * 1000, happy_emotion_count]);
+                    //alert(1);
                     angry_absolute.push([ts * 1000, angry_emotion_count]);
                     sad_absolute.push([ts * 1000, sad_emotion_count]);
                     happy_ratio.push([ts * 1000, happy_emotion_ratio]);
@@ -362,14 +428,17 @@
                 }
                 else{
                     emotion_ratio[ts * 1000] = [0, 0, 0, 0];
-                }
-                times++;
-                pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6);
-            }
+                }}  
+                
         });
+        times++;
+        console.log(times);
+        //alert(100);
+        pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6);
+        
     }
 
-    function get_peaks(series4, series5, series6){
+    function get_peaks(series4, series5, series6,flag){
         var query_args = $("#keyword")[0].value;
         $.ajax({
             url: "/moodlens/emotionpeak/?happy=" + happy_list.join(',') + "&angry=" + angry_list.join(',') + "&sad=" + sad_list.join(',') + "&ts=" + ts_list + "&query=" + query_args,
@@ -437,7 +506,7 @@
                 text: '微博情绪饼图',
             },
             //tooltip: {
-              //  pointFormat: '{series.name}: <b>{point.percentage}%</b>',
+                //pointFormat: '{series.name}: <b>{point.percentage}%</b>',
                 //percentageDecimals: 1,
                 //valueDecimals: 2,
                 //enabled: true
@@ -449,7 +518,7 @@
                     dataLabels: {
                         enabled:true,
                         formatter:function(){
-                            return '<b>'+this.point.name+'</b>'+this.percentage+'%';
+                            return '<b>'+this.point.name+'</b>'+this.percentage.toFixed(2)+'%';
 
                         }
                    },
@@ -460,16 +529,7 @@
             series: [{
                 type: 'pie',
                 name: '微博情绪占比',
-                data: data/*[
-                    ['高兴',   45.0],
-                    ['愤怒',       26.8],
-                    {
-                        name: '悲伤',
-                        y: 12.8,
-                        sliced: true,
-                        selected: true
-                    },
-                ]*/
+                data: data
             }]
         });
     }
@@ -480,21 +540,17 @@
                 useUTC: false
             }
         });
-
-
+        
         var chart_obj = $('#emotion_container').highcharts({
             chart: {
-                type: 'spline',
+                type: chart_type,
                 animation: Highcharts.svg, // don't animate in old IE
                 marginRight: 10,
                 events: {
                     load: function() {
-                        var total_days = 30;
-                        var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
-                        var now_ts = parseInt((new Date(2013, 9, 30)).getTime() / 1000) + 2 * 3600;
-                        var during = 24 * 3600;
+                        
                         init_statistics(now_ts, total_days * during);
-                        pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]);                        
+                        pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]); 
                     }
                 }
             },
@@ -647,5 +703,39 @@
             });
         }
     }*/
+    var chart_type;
+function decide_chart_type(area_type, total_days, begin_ts, during){
+        var query_args = $("#keyword")[0].value;
+        var i=0;
+        var count=0;
+        while(i<=total_days){
+        var ts = begin_ts + i* during;
+
+        $.ajax({
+            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + "&query=" + query_args+"&during="+during,
+            type: "GET",
+            dataType:"json",
+            success: function(data){
+                console.log(data);
+                var happy_emotion_count = data['happy'][1];
+                var angry_emotion_count = data['angry'][1];
+                var sad_emotion_count = data['sad'][1];
+
+                var total_emotion_count = happy_emotion_count + angry_emotion_count + sad_emotion_count;
+                //alert(total_emotion_count);
+                if(total_emotion_count > 0){count=count+1;}
+               }  
+                
+        });
+        i++;
+        
+    }
+    if(count<=1){
+        chart_type='bar';   
+    }
+    else{
+        chart_type='spline';
+    }
+}
   </script>
 {% endblock %}

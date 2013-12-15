@@ -7,8 +7,8 @@ from weibo.extensions import db
 from weibo.global_config import xapian_search_weibo, emotions_kv, \
                                 xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
-from utils import getWeiboByMid, st_variation, find_topN, read_range_count_results, \
-                  read_range_kcount_results, read_range_weibos_results
+from utils import *
+#getWeiboByMid, st_variation, find_topN, read_range_count_results, read_range_kcount_results, read_range_weibos_results, sentimentCountFromDb,sentimentCountRealTime
 from xapian_weibo.utils import top_keywords
 import simplejson as json
 import datetime
@@ -17,6 +17,7 @@ import leveldb
 import os
 import weibo.model
 import json
+import re
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
@@ -40,7 +41,7 @@ def log_in():
     else:
         return json.dumps('Wrong')
 
-@mod.route('/')
+@mod.route('/', methods=['GET','POST'])
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
@@ -59,7 +60,26 @@ def index():
         return redirect('/')
 
 
-@mod.route('/field')
+@mod.route('/all', methods=['GET','POST'])
+def topic():
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            return render_template('moodlens/all_emotion.html', active='moodlens')
+        else:
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.moodlens
+                    if identy == 1:
+                        return render_template('moodlens/all_emotion.html', active='moodlens')
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
+
+
+@mod.route('/field', methods=['GET','POST'])
 def field():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
@@ -77,12 +97,46 @@ def field():
     else:
         return redirect('/')
 
+def _utf_encode(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.encode('utf-8')
 
-@mod.route('/topic')
+
+def _utf_decode(s):
+    if isinstance(s, str):
+        return s.decode('utf-8')
+    else:
+        return s
+
+
+def str2ts(s):
+    temp_during = _utf_encode(s)
+    if re.match(r'\d+分钟', temp_during):
+        pattern=re.compile(r'分钟')
+        temp_during=int(pattern.split(temp_during)[0])*60
+    elif re.match((r'\d+小时'),temp_during):
+        pattern=re.compile(r'小时')
+        temp_during=int(pattern.split(temp_during)[0])*3600
+    elif re.match(r'\d+天',temp_during):
+        pattern=re.compile(r'天')
+        temp_during=pattern.split(temp_during)*24*3600
+    return temp_during
+
+@mod.route('/topic', methods=['GET','POST'])
 def topic():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
-            return render_template('moodlens/topic_emotion.html', active='moodlens')
+            temp_keyword=request.form.get('keyword', None)
+            temp_during=request.form.get('during', 24*3600)
+            if not isinstance(temp_during, int):
+                temp_during = str2ts(temp_during)
+            if temp_keyword:
+                return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, temp_during=temp_during)
+            else:
+                return render_template('moodlens/topic_emotion.html', active='moodlens')
+            return render_template('moodlens/topic_emotion.html', active='moodlens') 
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -92,31 +146,37 @@ def topic():
                         return render_template('moodlens/topic_emotion.html', active='moodlens')
                     else:
                         return redirect('/')
+
             return redirect('/')
     else:
         return redirect('/')
 
 
-@mod.route('/data/<area>/')
+@mod.route('/data/<area>/', methods=['GET','POST'])
 def data(area='global'):
+    """分类情感数据
     """
-    分类情感数据
-    """
+    query = request.args.get('query', None)
+    ts = request.args.get('ts', None)
+    if not query or not ts:
+        return json.dumps('Null')
 
-    query = request.args.get('query', '')
-    query = query.strip()
-    ts = request.args.get('ts', '')
-    ts = long(ts)
     during = request.args.get('during', 24*3600)
     during = int(during)
-    
+
     begin_ts = ts - during
     end_ts = ts
-    results = read_range_count_results(begin_ts, end_ts, during)
-    
+    results = []
+
+    if query and query != '':
+        results = sentimentCountFromDb(end_ts, during, 'topic', query)
+        if not results:
+            results = sentimentCountRealTime(end_ts, during, 'topic', query)
+    else:
+        results = sentimentCountFromDb(end_ts, during, 'whole')
+
     return json.dumps(results)
-
-
+    
 @mod.route('/field_data/<area>/')
 def field_data(area):
     """
@@ -250,7 +310,8 @@ def weibos_data(area='global'):
     query = query.strip()
     ts = request.args.get('ts', '')
     ts = long(ts)
-    during = request.args.get('during', 24*3600)
+    #during = request.args.get('during', 24*3600)
+    during=24*3600
     during = int(during)
     
     begin_ts = ts - during

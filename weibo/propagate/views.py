@@ -44,16 +44,17 @@ month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
 
 def getFieldTopics():
-    field_topics = []
-    fields = db.session.query(Field)
-    for field in fields:
-        field_name = field.fieldName
-        topics = db.session.query(Topic).filter_by(field=field)
-        topic_names = []
-        for topic in topics:
-            topic_names.append(topic.topicName)
-        field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
-    return field_topics
+    topic_names = []
+    topics = db.session.query(Topic)
+    for topic in topics:
+        topic_names.append(topic.topicName)
+##        field_name = field.fieldName
+##        topics = db.session.query(Topic).filter_by(field=field)
+##        topic_names = []
+##        for topic in topics:
+##            topic_names.append(topic.topicName)
+##        field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
+    return topic_names
 
 def getHotStatus(start,end):
     count,statuses = xapian_search_weibo.search(query={'timestamp': {'$gt': time.mktime(time.strptime(start,'%Y-%m-%d')), '$lt': time.mktime(time.strptime(end,'%Y-%m-%d'))}}, sort_by=['reposts_count'], fields=['_id','text','timestamp','user','reposts_count','comments_count','attitudes_count','retweeted_mid','source'], max_offset=10)
@@ -124,35 +125,18 @@ def log_in():
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            field_topics = getFieldTopics() 
-            field_topics.sort(key=lambda x:x['len'],reverse=True)
-
-            i = 0
-            fields = []
-            for field_topic in field_topics:
-                if i > 3:
-                    break
-                i = i + 1
-                fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+            topics = getFieldTopics() 
             
-            return render_template('propagate/search.html', field_topics=fields)
+            return render_template('propagate/search.html', topics=topics)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.propagate
                     if identy == 1:
-                        field_topics = getFieldTopics()
-                        field_topics.sort(key=lambda x:x['len'],reverse=True)
-                        i = 0
-                        fields = []
-                        for field_topic in field_topics:
-                            if i > 3:
-                                break
-                            i = i + 1
-                            fields.append({'field_name': field_topic['field_name'], 'topics': field_topic['topics'], 'index': i})
+                        topics = getFieldTopics()
      
-                        return render_template('propagate/search.html', field_topics=fields)
+                        return render_template('propagate/search.html', topics=topics)
                     else:
                         return redirect('/')
             return redirect('/')

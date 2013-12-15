@@ -313,7 +313,11 @@
         微博数:
         <div class="btn-group">
           <a  id="statuses_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            {{(statusescount_up-2000000) / 10000 }}万-{{statusescount_up  / 10000 }}万<span class="caret"></span></a>
+            {%if statusescount_up%}
+              {{(statusescount_up-2000000) / 10000 }}万-{{statusescount_up  / 10000 }}万<span class="caret"></span></a>
+            {% else %}
+              0-200万<span class="caret"></span></a>
+            {% endif %}
           <ul id="statuses_count_window_size_dropdown_menu" class="dropdown-menu">
             <li><a href="#" onclick="choose_statuses_count('statuses_count', 200);" data-toggle="tab">0-200万</a></li>
                   <li><a href="#" onclick="choose_statuses_count('statuses_count', 400);" data-toggle="tab">200-400万</a></li>
@@ -330,7 +334,11 @@
         粉丝数：
         <div class="btn-group">
           <a  id="followers_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-          {{(followerscount_up-6000000) / 10000 }}万-{{followerscount_up  / 10000 }}万<span class="caret"></span></a>
+            {%if followerscount_up%}
+              {{(followerscount_up-6000000) / 10000 }}万-{{followerscount_up  / 10000 }}万<span class="caret"></span></a>
+            {% else %}
+              0-600万<span class="caret"></span></a>
+            {% endif %}
           <ul id="followers_count_window_size_dropdown_menu" class="dropdown-menu">
             <li><a href="#" onclick="choose_followers_count('followers_count', 600);" data-toggle="tab">0-600万</a></li>
                   <li><a href="#" onclick="choose_followers_count('followers_count', 1200);" data-toggle="tab">600-1200万</a></li>
@@ -347,7 +355,11 @@
         关注数：
         <div class="btn-group">
           <a  id="friends_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            {{friendscount_up-400}}-{{friendscount_up}}<span class="caret"></span></a>
+            {%if friendscount_up%}
+              {{friendscount_up-400}}-{{friendscount_up}}<span class="caret"></span></a>
+            {% else %}
+              0-400<span class="caret"></span></a>
+            {% endif %}
           <ul id="friends_count_window_size_dropdown_menu" class="dropdown-menu">
             <li><a href="#" onclick="choose_friends_count('friends_count', 400);" data-toggle="tab">0-400</a></li>
                   <li><a href="#" onclick="choose_friends_count('friends_count', 800);" data-toggle="tab">400-800</a></li>
@@ -364,10 +376,14 @@
         排序标准：
         <div class="btn-group">
           <a  id="rankcount_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            {%if rankcount=='followers_count'%}粉丝数{%endif%}
-            {%if rankcount=='friends_count'%}关注数{%endif%}
-            {%if rankcount=='statuses_count'%}微博数{%endif%}
-            {%if rankcount=='created_at'%}注册时间{%endif%}<span class="caret"></span></a>
+            {%if rankcount%}
+              {%if rankcount=='followers_count'%}粉丝数{%endif%}<span class="caret"></span></a>
+              {%if rankcount=='friends_count'%}关注数{%endif%}<span class="caret"></span></a>
+              {%if rankcount=='statuses_count'%}微博数{%endif%}<span class="caret"></span></a>
+              {%if rankcount=='created_at'%}注册时间{%endif%}<span class="caret"></span></a>
+            {% else %}
+              粉丝数<span class="caret"></span></a>
+            {%endif%}
           <ul id="rankcount_rank_method_dropdown_menu" class="dropdown-menu">
             <li><a href="#" onclick="choose_rankcount('rankcount', 'followers_count');" data-toggle="tab">粉丝数</a></li>
                   <li><a href="#" onclick="choose_rankcount('rankcount', 'friends_count');" data-toggle="tab">关注数</a></li>
@@ -375,8 +391,8 @@
                   <li><a href="#" onclick="choose_rankcount('rankcount', 'created_at');" data-toggle="tab">注册时间</a></li>
           </ul>
         </div>
-        前<input name="top_n" type="text" value="{{result_count}}" class="span1">条结果
-        已查询地区<input name="select " type = "text" value = "{{location}}" class = "span2">
+        前<input name="top_n" type="text" value="{%if result_count%}{{result_count}}{%else%}100{%endif%}" class="span1">条结果
+        已查询地区<input name="select " type = "text" value = "{%if location%}{{location}}{%else%}全国{%endif%}" class = "span2">
         <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="200">
         <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
         <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">

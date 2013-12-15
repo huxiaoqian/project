@@ -514,6 +514,28 @@ def profile_group(fieldEnName):
             return redirect('/')
     else:
         return redirect('/')
+@mod.route('/group/',methods=['GET','POST'])
+def test_profile_group():
+    if 'logged_in' in session and session['logged_in']:
+        if session['user'] == 'admin':
+            if method == 'GET':
+                time = request.args.get('timestart',None)
+                print time
+            field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
+            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
+        else:
+            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.profile
+                    if identy == 1:
+                        field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
+                        return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
+                    else:
+                        return redirect('/')
+            return redirect('/')
+    else:
+        return redirect('/')
 
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):

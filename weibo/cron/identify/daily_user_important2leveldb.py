@@ -7,6 +7,7 @@ import leveldb
 from datetime import datetime
 
 from xapian_weibo.xapian_backend import XapianSearch
+from global_config import xapian_search_user as user_search, xapian_search_weibo as statuses_search, LEVELDBPATH
 
 def datetime2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))
@@ -14,11 +15,11 @@ def datetime2ts(date):
 def ts2datetime(ts):
     return time.strftime('%Y-%m-%d', time.localtime(ts))
 
-LEVELDBPATH = '/home/mirage/leveldb'
-
-statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-
-user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+##LEVELDBPATH = '/home/mirage/leveldb'
+##
+##statuses_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+##
+##user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 def make(date):
     end_ts = datetime2ts(date)
@@ -52,11 +53,13 @@ def make(date):
         if user_count == 1:
             for user in get_user_results():
                 followers_count = user['followers_count']
+                
         important = 0.9 * reposts_count + 0.1 * followers_count
         if uid not in uid_important:
             uid_important[uid] = 0
         important += uid_important[uid]
         uid_important[uid] = important
+        print uid,important
         batch.Put(str(uid), str(important))
         count += 1
 
@@ -73,6 +76,7 @@ def read(date):
                                                block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     count = 0
     for key, value in daily_user_important_bucket.RangeIter():
+        print key, value
         count += 1
     print 'total kvs: %s' % count
 
@@ -92,10 +96,11 @@ def get_leveldb(method, ts):
 
 def main():
     # current_time = time.time()
-    current_time = datetime2ts('2013-3-1')
+    current_time = datetime2ts('2013-9-30')
 
     date = ts2datetime(current_time)
 
     make(date)
+    read(date)
 
 if __name__ == '__main__': main()

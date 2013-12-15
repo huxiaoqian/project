@@ -38,7 +38,7 @@ def unix2local(ts):
 def load_data(keyword,beg_time,end_time):
     dataset = []
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count']
-    number, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['reposts_count'], fields=fields_list,max_offset=500)
+    number, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['reposts_count'], fields=fields_list,max_offset=100)
     topic_info = calculate(get_results())
     blog_rel_list = topic_info['topic_rel_blog'][:5]
 

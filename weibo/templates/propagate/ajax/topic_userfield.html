@@ -37,7 +37,7 @@
   -o-transition: top 1s ease, left 1s ease;
   -ms-transition: top 1s ease, left 1s ease;
   }
-  strong {
+  .yuan {
   border-bottom:1px solid #ccc;
   margin:10px 0;
   display:block;
@@ -91,7 +91,7 @@
     {% for u in topic_key_user_list %}
       <div class="grid">
         <div id="imgholder"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
-        <strong>{{ u.name }}</strong>
+        <strong class="yuan">{{ u.name }}</strong>
         <p>微博数：{{ u.statuses_count }}</p>
         <p>关注数：{{ u.bi_followers_count }}</p>
         <p>粉丝数：{{ u.followers_count }}</p>

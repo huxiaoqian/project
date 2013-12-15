@@ -3,7 +3,7 @@
 import json
 import numpy as np
 from weibo.extensions import db
-from weibo.model import SentimentCount, SentimentKeywords, TopWeibos
+from weibo.model import SentimentCount, SentimentKeywords, TopWeibos, SentimentTopicCount
 import time, os, operator, datetime
 from time_utils import datetime2ts
 from weibo.global_config import xapian_search_weibo, xapian_search_user, \
@@ -156,7 +156,7 @@ def read_range_count_results(start_ts=start_range_ts, over_ts=end_range_ts, duri
     
     emotion_dic = {}
 
-    if during == Hour:
+    if during == MinInterval:
         for k, v in emotions_kv.iteritems():
             count = read_count_results(v, over_ts=over_ts, during=during)
             emotion_dic[k] = [over_ts * 1000, count]
@@ -294,6 +294,57 @@ def find_topN(lis,n):
             break
         cursor += 1
     return peak_x[:n],peak_y[:n]
+
+
+def sentimentCountRealTime(end_ts, during, method='whole', query=None):
+    emotions_data = {}
+
+    if method == 'topic' and query and query != '':
+        query_dict = {
+            'timestamp': {'$gt': end_ts-during, '$lt': end_ts},
+            '$or': [],
+        }
+
+        for term in query.strip().split(','):
+            if term:
+                query_dict['$or'].append({'text': [term]})
+
+        for k, v in emotions_kv.iteritems():
+            query_dict['sentiment'] = v
+            count = xapian_search_weibo.search(query=query_dict, count_only=True)
+            emotions_data[v] = [end_ts*1000, count]
+        
+        for k, v in emotions_data.iteritems():
+            end_ts, count = v
+            item = SentimentTopicCount(query, during, end_ts, k, count)
+            item_exist = SentimentTopicCount.query.filter_by(query=query, end=end_ts / 1000, range=during, sentiment=v).first()
+            if item_exist:
+                db.session.delete(item_exist)
+            db.session.add(item)
+
+        db.session.commit()
+        
+        return emotions_data
+
+
+def sentimentCountFromDB(end_ts, during, method='whole', query=None):
+    emotions_data = {}
+
+    for k, v in emotions_kv.iteritems():
+        if method == 'topic':
+            tcount = SentimentTopicCount.query.filter_by(query=query, end=end_ts, range=during, sentiment=v).first()
+            if tcount:
+                emoitions_data[k] = [end_ts*1000, count]
+            else:
+                return None
+
+        if method == 'whole':
+            emotions_data = read_range_count_results(end_ts-during, end_ts, during)
+
+        if method == 'domain':
+            pass
+
+    return emoitions_data
 
 
 if __name__ == '__main__':

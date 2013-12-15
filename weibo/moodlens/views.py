@@ -8,7 +8,7 @@ from weibo.global_config import xapian_search_weibo, emotions_kv, \
                                 xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
 from utils import getWeiboByMid, st_variation, find_topN, read_range_count_results, \
-                  read_range_kcount_results, read_range_weibos_results
+                  read_range_kcount_results, sentimentCountFromDB, sentimentCountRealTime
 from xapian_weibo.utils import top_keywords
 import simplejson as json
 import datetime
@@ -99,28 +99,37 @@ def topic():
 
 @mod.route('/data/<area>/')
 def data(area='global'):
+    """分类情感数据
     """
-    分类情感数据
-    """
+    query = request.args.get('query', None)
+    ts = request.args.get('ts', None)
+    if not query or not ts:
+        return json.dumps('Null')
 
-    query = request.args.get('query', '')
-    query = query.strip()
-    ts = request.args.get('ts', '')
-    ts = long(ts)
     during = request.args.get('during', 24*3600)
+    ts = int(ts)
     during = int(during)
-    
+
     begin_ts = ts - during
     end_ts = ts
-    results = read_range_count_results(begin_ts, end_ts, during)
-    
-    return json.dumps(results)
+    results = []
 
+    if query and query != '':
+        try:
+            results = sentimentCountFromDB(end_ts, during, 'topic', query)
+        except:
+            results = sentimentCountRealTime(end_ts, during, 'topic', query)
+        if not results:
+            print 'here'
+            results = sentimentCountRealTime(end_ts, during, 'topic', query)
+    else:
+        results = sentimentCountFromDB(end_ts, during, 'whole')
+
+    return json.dumps(results)
 
 @mod.route('/field_data/<area>/')
 def field_data(area):
-    """
-    /keywords_data 接口已备好，只是差领域数据
+    """/keywords_data 接口已备好，只是差领域数据
     """
 
     ts = request.args.get('ts', '')

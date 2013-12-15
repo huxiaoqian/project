@@ -41,7 +41,7 @@ function choose_window(range, window) {
     $("#"+range+"_window_size_choosen").parent().removeClass('open');
     $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
 }
-function choose_weibo_count(range, window) {
+function choose_statuses_count(range, window) {
     $("#"+range+"_window_size").val(window);
     cn_window = '';
     if(window==200)
@@ -128,4 +128,21 @@ function choose_friends_count(range, window) {
     //close dropdown
     $("#"+range+"_window_size_choosen").parent().removeClass('open');
     $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+}
+function choose_rankcount(range, method) {
+    $("#"+range+"_rank_method").val(method);
+    cn_method = '';
+    if(method=='followers_count')
+      cn_method = '粉丝数';
+    else if(method=='friends_count')
+      cn_method = '关注数';
+    else if(method=='statuses_count')
+      cn_method = '微博数';
+    else if(method=='created_at')
+      cn_method = '注册时间';
+    $("#"+range+"_rank_method_choosen").text(cn_method);
+    $("#"+range+"_rank_method_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_rank_method_choosen").parent().removeClass('open');
+    $("#"+range+"_rank_method_dropdown_menu").children().removeClass('active');
 }

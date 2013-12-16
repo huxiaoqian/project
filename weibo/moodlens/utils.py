@@ -128,7 +128,7 @@ def read_range_weibos_results(start_ts=start_range_ts, over_ts=end_range_ts, dur
         start_ts = end_ts - during
         
         for k, v in emotions_kv.iteritems():
-            weibos = read_weibos_results(v, start_ts=start_ts, over_ts=end_ts, during=during)
+            weibos = read_weibo_results(v, start_ts=start_ts, over_ts=end_ts, during=during)
             emotion_dic[k] = weibos
 
     return emotion_dic

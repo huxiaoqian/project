@@ -235,6 +235,7 @@ def data(area='global'):
     during = int(during)
     
     results = []
+    print 'here'
 
     if query and query != '':
         results = sentimentFromDB(end_ts, during, method='topic', query=query)
@@ -334,7 +335,7 @@ def keywords_data(area='global'):
     begin_ts = ts - during
     end_ts = ts
     results = read_range_kcount_results(begin_ts, end_ts, during)
-    
+
     return json.dumps(results)
 
 
@@ -381,13 +382,13 @@ def weibos_data(emotion='happy', area='global'):
     ts = long(ts)
     during = request.args.get('during', 24 * 3600)
     during = int(during)
-    
+
     # query为空，是全网情绪检测
     if query == '':
         begin_ts = ts - during
         end_ts = ts
         results = read_range_weibos_results(begin_ts, end_ts, during)
-        print results, type(results)
+        #print results, type(results)
     
     # query不为空，是话题情绪监测
     else:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-
 from weibo.model import *
 from weibo.extensions import db
 from weibo.global_config import xapian_search_weibo, emotions_kv, \
@@ -335,8 +334,12 @@ def keywords_data(area='global'):
     begin_ts = ts - during
     end_ts = ts
     results = read_range_kcount_results(begin_ts, end_ts, during)
+    
+    limit = 10
 
-    return json.dumps(results)
+    results = sorted(results, key=lambda tup: tup[1])
+    
+    return json.dumps(results[:limit])
 
 
 @mod.route('/field_keywords_data/<area>/')
@@ -383,18 +386,21 @@ def weibos_data(emotion='happy', area='global'):
     during = request.args.get('during', 24 * 3600)
     during = int(during)
 
+    limit = 10
+    
     # query为空，是全网情绪检测
     if query == '':
         begin_ts = ts - during
         end_ts = ts
         results = read_range_weibos_results(begin_ts, end_ts, during)
-        #print results, type(results)
+
+    results = sorted(results, key=lambda tup: tup[1])
     
     # query不为空，是话题情绪监测
     else:
         pass
 
-    return json.dumps(results)
+    return json.dumps(results[:limit])
 
 
 @mod.route('/field_weibos_data/<emotion>/<area>/')

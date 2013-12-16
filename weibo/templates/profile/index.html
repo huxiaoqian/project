@@ -26,14 +26,13 @@
       时间范围:
       <div id="reportrange" class="btn dropdown-toggle">
         <i class="icon-calendar icon-large"></i>
-          <span>2013年12月11号 - 2013年12月31号</span> 
+          <span id="field_time" >September 20, 2013 - September 25, 2013</span> 
             <b class="caret"></b>
       </div>
       按粉丝数前<input name="top_n" type="text" value="1000" class="span1">人
       <input id="profile_group_rank_method" type="hidden" name="fieldEnName" value="finance">
-      <input id="reportrange span" type="hidden" name="timestart" value="0">
-      <input id="reportrange span" type="hidden" name="timeend" value="30">
-      <input type="submit" class="btn btn-primary" value="分析">
+      <input id="during_time" name = "during_time" type="hidden" value="September 20, 2013 - September 25, 2013">
+      <input type="submit" class="btn btn-primary" onclick = "get_during_time()" value="分析">
     </form>
   </div>
   <div class="well">
@@ -105,7 +104,7 @@
       <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="200">
       <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
       <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">
-      <input id="rankcount_rank_method" type="hidden" name="rankcount" value="粉丝数">
+      <input id="rankcount_rank_method" type="hidden" name="rankcount" value="followers_count">
       <input id="topic_keywords" name="province_str" type="hidden" >
       <input type="submit" class="btn btn-primary" onclick="choose_province()" value="分析">
     </form>
@@ -283,5 +282,9 @@
     );
   }
   );
+  function get_during_time(){
+    var time = $("#field_time").html();
+    $("#during_time").val(time);
+ }
 </script>
 {% endblock %}

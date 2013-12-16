@@ -377,13 +377,13 @@
         <div class="btn-group">
           <a  id="rankcount_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
             {%if rankcount%}
-              {%if rankcount=='followers_count'%}粉丝数{%endif%}<span class="caret"></span></a>
-              {%if rankcount=='friends_count'%}关注数{%endif%}<span class="caret"></span></a>
-              {%if rankcount=='statuses_count'%}微博数{%endif%}<span class="caret"></span></a>
-              {%if rankcount=='created_at'%}注册时间{%endif%}<span class="caret"></span></a>
+              {%if rankcount=='followers_count'%}粉丝数{%endif%}
+              {%if rankcount=='friends_count'%}关注数{%endif%}
+              {%if rankcount=='statuses_count'%}微博数{%endif%}
+              {%if rankcount=='created_at'%}注册时间{%endif%}
             {% else %}
-              粉丝数<span class="caret"></span></a>
-            {%endif%}
+              粉丝数
+            {%endif%}<span class="caret"></span></a>
           <ul id="rankcount_rank_method_dropdown_menu" class="dropdown-menu">
             <li><a href="#" onclick="choose_rankcount('rankcount', 'followers_count');" data-toggle="tab">粉丝数</a></li>
                   <li><a href="#" onclick="choose_rankcount('rankcount', 'friends_count');" data-toggle="tab">关注数</a></li>
@@ -396,7 +396,7 @@
         <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="200">
         <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
         <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">
-        <input id="rankcount_rank_method" type="hidden" name="rankcount" value="粉丝数">
+        <input id="rankcount_rank_method" type="hidden" name="rankcount" value="followers_count">
         <input id="topic_keywords" name="province_str" type="hidden" >
         <input type="submit" class="btn btn-primary" onclick="choose_province()" value="分析">
       </form>

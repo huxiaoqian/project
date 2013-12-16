@@ -63,7 +63,7 @@ def read_count_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts,
                                                                         SentimentCount.ts < over_ts, \
                                                                         SentimentCount.sentiment==sentiment, \
                                                                         SentimentCount.range==MinInterval)
-        if count:
+        if count and count[0] and count[0][0]:
             return int(count[0][0])
         else:
             return 0

@@ -8,42 +8,42 @@
 <div class="container">
   <div class="well">
     <legend>微博情绪全网分析</legend>
-    <form id="all_eomtion" action="/moodlens/all" class="form-inline" method="POST">
+    <div id="all_eomtion" class="inline">
    <div id="reportrange_1" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
+    <span id="all_time">September 20, 2013 - September 25, 2013</span> 
 	 <b class="caret"></b>
 	    </div>
-	<input type="submit" class="btn btn-primary" value="识别">
-    </form>
+	<input type="submit" class="btn btn-primary" value="搜索" id="search_all">
+    </div>
   </div>
   
   <div class="well">
     <legend>微博情绪领域分析</legend>
-    <form id="field_emotion" action="/moodlens/field" class="form-inline" method="POST">
+    <div id="field_emotion" class="inline">
      <div id="reportrange_2" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
+    <span id="field_time">September 20, 2013 - September 25, 2013</span> 
    <b class="caret"></b>
       </div>
-      <input type="submit" class="btn btn-primary" value="识别">
-    </form>
+      <input type="submit" class="btn btn-primary" value="搜索" id="search_field">
+    </div>
 
   </div>
   
     <div class="well">
     <legend>微博情绪话题分析</legend>
-    <form id="topic_emotion" action="/moodlens/topic" class="form-inline" method="POST">
+    <div id="topic_emotion" class="inline">
       
       <div id="reportrange_3" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
+    <span id="topic_time">September 20, 2013 - September 25, 2013</span> 
    <b class="caret"></b>
       </div>
       <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
       <input type="hidden" name="action" value="run">
-      <input type="submit" class="btn btn-primary" value="识别">
-    </form>
+      <input type="submit" class="btn btn-primary" value="搜索" id="search_topic">
+    </div>
     
       </div>
       
@@ -116,6 +116,19 @@ $(document).ready(function() {
   );
 });
 
+$("#search_all").click(function() {
+  var time = $("#all_time").html();
+  window.location.href="/moodlens/all/?time="+time;
+});
+$("#search_field").click(function() {
+  var time = $("#field_time").html();
+  window.location.href="/moodlens/field/?time="+time;
+});
+$("#search_topic").click(function() {
+  var time = $("#topic_time").html();
+  var keyword = document.getElementById("keyword").value;
+  window.location.href="/moodlens/topic/?time="+time+"keyword="+keyword;
+});
 </script>
 </body>
   

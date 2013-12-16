@@ -1,4 +1,4 @@
-{% extends "master.html" %}
+{% extends "moodlens/base.html" %}
 {% block title %}网民情绪监测和预警{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="/static/css/toggle_switch.css">
@@ -135,9 +135,9 @@
         <div class="row-fluid">
             <div style="text-align: center">
                 <div id="presets">
-                    <a class="first active" href="/moodlens/">全网</a>
-                    <a class="" href="/moodlens/field">领域</a>
-                    <a class="" href="/moodlens/topic">话题</a>
+                    <a class="first active" href="/moodlens/all/">全网</a>
+                    <a class="" href="/moodlens/field/">领域</a>
+                    <a class="" href="/moodlens/topic/">话题</a>
                 </div>
             </div>
             <hr class="soften">
@@ -181,7 +181,7 @@
   <script src="{{ url_for('static', filename='js/highstock.js') }}"></script>
   <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.min.js') }}"></script>
-  <script type="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>
 
   <script>
     var emotion_ratio = {};
@@ -198,6 +198,7 @@
     var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
     var max_word_size = 10;
     var min_word_size = 1;
+    var dur_day = parseInt('{{dur_day}}');
 
     $(document).ready(function(){    
         display_realtime_emotion();
@@ -238,15 +239,16 @@
     }
     function chg_weibos(data){
         var html = "";
+        var emotion_content = ['happy', 'angry', 'sad'];
         for(var i=0;i<data.length;i+=1){
-            var emotion = data[i][0];
-            var name = data[i][1];
-            var user_link = data[i][2];
-            var text = data[i][3];
-            var weibo_link = data[i][4];
-            var time = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', parseInt(data[i][5]) * 1000);
-            var repost_count = data[i][6];
-            var retweeted_text = data[i][7];
+            var emotion = emotion_content[data[i]['sentiment']-1];
+            var name = data[i]['user'];
+            var user_link = 'weibo/u/'+data[i]['user'];
+            var text = data[i]['text'];
+            var weibo_link = 'http://weibo.com/'+data[i]['user']+'/'+data[i]['_id'];
+            var time = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', parseInt(data[i]['timestamp']) * 1000);
+            var repost_count = data[i]['reposts_count'];
+            var retweeted_text = 'None';
             html += "<li><div class=\"chartclient-annotation-letter\"><img src='/static/img/" + emotion + "_thumb.gif'></div>"; 
             html += "<div class=\"chartclient-annotation-title\"><a href='" + user_link + "' target='_blank' >" + name + "</a> 发布 </div>";
             html += "<div class=\"chartclient-annotation-content\"><a href='" + weibo_link + "' target='_blank' >" + text + "</a></div>";
@@ -280,23 +282,28 @@
 
     function init_statistics(end_ts, during){
         var emotion = ['happy', 'angry', 'sad'];
-        for(var e in emotion){
+        //for(var e in emotion){
             $.ajax({
-                url: "/moodlens/weibos_data/" + emotion[e] + "/global/?ts=" + end_ts + "&during=" + during,
+                url: "/moodlens/weibos_data/happy/global/?ts=" + end_ts + "&during=" + during,
                 type: "GET",
                 dataType:"json",
                 success: function(data){
                     $("#vertical-ticker").empty();
-                    chg_weibos(data);
+                    for(var e in emotion){
+                        
+                        chg_weibos(data[emotion[e]]);
+                    }
                 }
             });
-        }
+        //}
         $.ajax({
             url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during,
             type: "GET",
             dataType:"json",
             success: function(data){
-                chg_tagcloud(data);
+                for(var e in emotion){
+                    chg_tagcloud(data[emotion[e]]);
+            }
             }
         });
         $.ajax({
@@ -387,7 +394,7 @@
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
-                            chg_weibos(data);
+                            chg_weibos(data[emotion]);
                             $("#event_title").html(title);
                         }
                     });
@@ -396,7 +403,7 @@
                         type: "GET",
                         dataType:"json",
                         success: function(data){
-                            chg_tagcloud(data);
+                            chg_tagcloud(data[emotion]);
                         }
                     });
                     chg_emotion_pie(emotion_ratio[this.x]);     
@@ -476,11 +483,22 @@
                 marginRight: 10,
                 events: {
                     load: function() {
-                        var total_days = 30;
-                        var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
-                        var now_ts = parseInt((new Date(2013, 10, 1)).getTime() / 1000) + 2 * 3600;
+                        if (isNaN(dur_day))
+                        {
+                            var total_days=30;
+                        }
+                        else{
+                            var total_days = dur_day;
+                        }
+                        
+                        //var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
+                        total_days = 5
+                        var now_ts = parseInt((new Date(2013, 8, 5)).getTime() / 1000) ;
                         var during = 24 * 3600;
+                        var begin_ts = now_ts-total_days * during;//目前数据库中只有10月1号的
                         init_statistics(now_ts, total_days * during)
+                        //数据只有一天的，所以时间间隔只有15分钟
+                        console.log(begin_ts,during);
                         pull_emotion_count('global', total_days, 0, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5]);
                     }
                 }

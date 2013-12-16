@@ -79,9 +79,9 @@ def read_kcount_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts
     else:
         kcounts_dict = {}
         kcounts = SentimentKeywords.query.filter(SentimentKeywords.ts>start_ts, \
-                                                    SentimentKeywords.ts<over_ts, \
-                                                    SentimentKeywords.sentiment==sentiment, \
-                                                    SentimentKeywords.range==MinInterval).all()
+                                                 SentimentKeywords.ts<over_ts, \
+                                                 SentimentKeywords.sentiment==sentiment, \
+                                                 SentimentKeywords.range==MinInterval).all()
         for kcount in kcounts:
             k_c = json.loads(kcount.kcount)
             for k, v in k_c:
@@ -105,12 +105,16 @@ def read_weibo_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts,
         return weibos
 
     else:
-        weibos = db.session.query.filter(TopWeibos.ts > start_ts, \
-                                         TopWeibos.ts < over_ts, \
-                                         TopWeibos.sentiment==sentiment, \
-                                         TopWeibos.range==MinInterval)
+        weibos = TopWeibos.query.filter(TopWeibos.ts>start_ts, \
+                                        TopWeibos.ts<over_ts, \
+                                        TopWeibos.sentiment==sentiment, \
+                                        TopWeibos.range==MinInterval).all()
+        results = []
+        for weibo in weibos:
+            _weibo_list = json.loads(weibo.weibos)
+            results.extend(_weibo_list)
 
-        return list(weibos)
+        return list(results)
 
 
 def read_range_weibos_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):

@@ -3,8 +3,13 @@
 import json
 import numpy as np
 from weibo.extensions import db
-from weibo.model import SentimentCount, SentimentKeywords, TopWeibos
-import time, os, operator, datetime
+from weibo.model import SentimentCount, SentimentKeywords, TopWeibos, \
+                        SentimentTopicCount, SentimentTopicKeywords, \
+                        SentimentTopicTopWeibos
+import os
+import time
+import datetime
+import operator
 from time_utils import datetime2ts
 from weibo.global_config import xapian_search_weibo, xapian_search_user, \
                                 cron_start, cron_end, emotions_kv
@@ -18,6 +23,9 @@ Hour = 3600
 SixHour = Hour * 6
 Day = Hour * 24
 MinInterval = Fifteenminutes
+
+TOP_KEYWORDS_LIMIT = 50
+TOP_WEIBOS_LIMIT = 50
 
 start_range_ts = datetime2ts(cron_start)
 end_range_ts = datetime2ts(cron_end)
@@ -42,7 +50,7 @@ def ts2HourlyTime(ts, interval):
 
 
 def read_count_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
-    if during == MinInterval:
+    if during <= MinInterval:
         item_exist = SentimentCount.query.filter_by(ts=over_ts, \
                                                     sentiment=sentiment, \
                                                     range=MinInterval).first()
@@ -60,7 +68,7 @@ def read_count_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts,
 
 
 def read_kcount_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
-    if during == MinInterval:
+    if during <= MinInterval:
         item_exist = SentimentKeywords.query.filter_by(ts=over_ts, \
                                                        sentiment=sentiment, \
                                                        range=MinInterval).first()
@@ -70,22 +78,23 @@ def read_kcount_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts
             return {}
     else:
         kcounts_dict = {}
-        kcounts = db.session.query.filter(SentimentCount.ts > start_ts, \
-                                          SentimentCount.ts < over_ts, \
-                                          SentimentCount.sentiment==sentiment, \
-                                          SentimentCount.range==MinInterval)
+        kcounts = SentimentKeywords.query.filter(SentimentKeywords.ts>start_ts, \
+                                                    SentimentKeywords.ts<over_ts, \
+                                                    SentimentKeywords.sentiment==sentiment, \
+                                                    SentimentKeywords.range==MinInterval).all()
         for kcount in kcounts:
-            for k, count in kcount:
+            k_c = json.loads(kcount.kcount)
+            for k, v in k_c:
                 try:
-                    kcounts_dict[k] = count
+                    kcounts_dict[k] += v
                 except KeyError:
-                    kcounts_dict[k] += count
+                    kcounts_dict[k] = v            
 
-        return list(k_count)
+        return list(kcounts_dict)
 
 
 def read_weibo_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
-    if during == MinInterval:
+    if during <= MinInterval:
         weibos = []
         item_exist = TopWeibos.query.filter_by(ts=over_ts, \
                                                sentiment=sentiment, \
@@ -106,12 +115,12 @@ def read_weibo_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts,
 
 
 def read_range_weibos_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
-    over_ts = ts2HourlyTime(over_ts, during)
+    over_ts = ts2HourlyTime(over_ts, MinInterval)
     interval = (over_ts - start_ts) / during
     
     emotion_dic = {}
 
-    if during == MinInterval:
+    if during <= MinInterval:
         for k, v in emotions_kv.iteritems():
             weibos = read_weibo_results(v, over_ts=over_ts, during=during)
             emotion_dic[k] = weibos
@@ -127,12 +136,12 @@ def read_range_weibos_results(start_ts=start_range_ts, over_ts=end_range_ts, dur
 
 
 def read_range_kcount_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
-    over_ts = ts2HourlyTime(over_ts, during)
+    over_ts = ts2HourlyTime(over_ts, MinInterval)
     interval = (over_ts - start_ts) / during
     
     emotion_dic = {}
 
-    if during == MinInterval:
+    if during <= MinInterval:
         for k, v in emotions_kv.iteritems():
             kcount = read_kcount_results(v, over_ts=over_ts, during=during)
             emotion_dic[k] = kcount
@@ -151,20 +160,18 @@ def read_range_kcount_results(start_ts=start_range_ts, over_ts=end_range_ts, dur
 
 
 def read_range_count_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
-    over_ts = ts2HourlyTime(over_ts, during)
+    over_ts = ts2HourlyTime(over_ts, MinInterval)
     interval = (over_ts - start_ts) / during
     
     emotion_dic = {}
 
-    if during == MinInterval:
+    if during <= MinInterval:
         for k, v in emotions_kv.iteritems():
             count = read_count_results(v, over_ts=over_ts, during=during)
             emotion_dic[k] = [over_ts * 1000, count]
-
     else:
         end_ts = over_ts
         start_ts = end_ts - during 
-        
         for k, v in emotions_kv.iteritems():
             count = read_count_results(v, start_ts=start_ts, over_ts=end_ts, during=during)
             emotion_dic[k] = [end_ts * 1000, count]
@@ -296,13 +303,149 @@ def find_topN(lis,n):
     return peak_x[:n],peak_y[:n]
 
 
-def sentimentCountRealTime(end_ts, during, method='whole', query=None):
+def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wlimit=TOP_WEIBOS_LIMIT):
+    if calc == 'count':
+        for k, v in results.iteritems():
+            sentiment = k
+            ts, count = v
+            item = SentimentTopicCount(query, during, ts, sentiment, count)
+            item_exist = SentimentTopicCount(query=query, range=during, end=ts, sentiment=sentiment).first()
+            if item_exist:
+                db.session.delete(item_exist)
+            db.session.add(item)
+        
+        db.session.commit()
+
+    if calc == 'kcount':
+        for k, v in results.iteritems():
+            sentiment = k
+            ts, kcount = v
+            item = SentimentTopicKeywords(query, during, ts, sentiment, json.dumps(kcount))
+            item_exist = SentimentTopicKeywords.query.filter_by(query=query, range=during, end=ts, limit=klimit, sentiment=sentiment).first()
+            if item_exist:
+                db.session.delete(item_exist)
+            db.session.add(item)
+        
+        db.session.commit()
+
+    if calc == 'weibos':
+        for k, v in results.iteritems():
+            sentiment = k
+            ts, weibos = v
+            item = SentimentTopicTopWeibos(query, during, ts, sentiment, json.dumps(weibos))
+            item_exist = SentimentTopicTopWeibos.query.filter_by(query=query, range=during, end=ts, limit=wlimit, sentiment=sentiment).first()
+            if item_exist:
+                db.session.delete(item_exist)
+            db.session.add(item)
+        
+        db.session.commit()
+
+
+def sentimentRealTime(end_ts, during, method='whole', calc='count', query=None):
+    emotions_count = {}
+    emotions_kcount = {}
+    emotions_weibo = {}
+
+    if method == 'topic' and query and query != '':
+        query_dict = {
+            'timestamp': {'$gt': end_ts-during, '$lt': end_ts},
+            '$or': []
+        }
+
+        for term in query.strip().split(','):
+            if term:
+                query_dict['$or'].append({'text': [term]})
+
+        for k, v in emotions_kv.iteritems():
+            query_dict['sentiment'] = v
+
+            if calc == 'all':
+                scount = xapian_search_weibo.search(query=query_dict, count_only=True)
+                count, get_results = xapian_search_weibo.search(query=query_dict, fields=save_fields, \
+                                                                sort_by=[sort_field], max_offset=w_limit)
+                kcount = top_keywords(get_results, top=k_limit)
+                top_ws = top_weibos(get_results, top=w_limit)
+                emotions_count[v] = [end_ts, scount]
+                emotions_kcount[v] = [end_ts, kcount]
+                emotions_weibo[v] = [end_ts, top_ws]
+                save_rt_results('count', query, emotions_count, during)
+                save_rt_results('kcount', query, emotions_kcount, during, klimit=TOP_KEYWORDS_LIMIT)
+                save_rt_results('weibos', query, emotions_weibo, during, wlimit=TOP_WEIBOS_LIMIT)
+            
+            elif calc == 'count':
+                scount = xapian_search_weibo.search(query=query_dict, count_only=True)
+                emotions_count[v] = [end_ts, scount]
+                save_rt_results('count', query, emotions_count, during)
+            
+            else:
+                count, get_results = xapian_search_weibo.search(query=query_dict, fields=save_fields, \
+                                                                sort_by=[sort_field], max_offset=w_limit)
+                if calc == 'kcount':
+                    kcount = top_keywords(get_results, top=k_limit)
+                    emotions_kcount[v] = [end_ts, kcount]
+                    save_rt_results('kcount', query, emotions_kcount, during, TOP_KEYWORDS_LIMIT)
+
+                if calc == 'weibos':
+                    top_ws = top_weibos(get_results, top=w_limit)
+                    emotions_weibo[v] = [end_ts, top_ws]
+                    save_rt_results('weibos', query, emotions_weibo, during, TOP_WEIBOS_LIMIT)
+        
+        return {'count': emotions_count, 'kcount': emotions_kcount, 'weibos': emotions_weibo}
+
+
+def sentimentFromDB(end_ts, during, method='whole', calc='count', query=None):
+    emotions_count = {}
+    emotions_kcount = {}
+    emotions_weibo = {}
+
+    if method == 'topic':
+        for k, v in emotions_kv.iteritems():
+            if calc == 'count':
+                print query, end_ts, during, v
+                tcount = SentimentTopicCount.query.filter_by(query=query, end=end_ts, range=during, sentiment=v).first()
+                if tcount:
+                    emoitions_count[k] = [end_ts*1000, tcount]
+                else:
+                    return None
+
+            if calc == 'kcount':
+                kcount = SentimentKeywordsCount.query.filter_by(query=query, end=end_ts, range=during, sentiment=v).first()
+                if kcount:
+                    emotions_kcount[k] = [end_ts*1000, kcount]
+                else:
+                    return None
+
+            if calc == 'weibos':
+                weibos = SentimentTopicTopWeibos.query.filter_by(query=query, end=end_ts, range=during, sentiment=v).first()
+                if weibos:
+                    emotions_weibo[k] = [end_ts*1000, weibos]
+                else:
+                    return None
+
+    if method == 'whole':
+        begin_ts = end_ts - during
+        if calc == 'count':
+            emotions_count = read_range_count_results(begin_ts, end_ts, during)
+        
+        if calc == 'kcount':
+            emotions_kcount = read_range_kcount_results(begin_ts, end_ts, during)
+
+        if calc == 'weibos':
+            emotions_weibo = read_range_weibos_results(begin_ts, end_ts, during)
+
+    if method == 'domain':
+        pass
+
+    return {'count': emotions_count, 'kcount': emotions_kcount, 'weibos': emotions_weibo}
+
+
+def SentimentKeywordsRealTime(end_ts, during, method='whole', query=None):
     emotions_data = {}
 
-    if (method =='topic') and query and (query != ''):
+    if method == 'topic' and query and query != '':
         query_dict = {
-            'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-            '$or': [],
+            'timestamp': {'$gt': end_ts-during, '$lt': end_ts},
+            '$or': []
         }
 
         for term in query.strip().split(','):
@@ -312,29 +455,19 @@ def sentimentCountRealTime(end_ts, during, method='whole', query=None):
         for k, v in emotions_kv.iteritems():
             query_dict['sentiment'] = v
             count = xapian_search_weibo.search(query=query_dict, count_only=True)
-            emotions_data[k] = [end_ts, count]
-
-        return json.dumps(emotions_data)
-
-
-def sentimentCountFromDB(end_ts, during, method='whole', query=None):
-    emotions_data = {}
-
-    for k, v in emotions_kv.iteritems():
-        if method == 'topic':
-            tcount = SentimentTopicCount.query.filter_by(query=query, end=end_ts, range=during, sentiment=v).first()
-            if tcount:
-                emoitions_data[k] = [end_ts, count]
-            else:
-                return None
-
-        if method == 'whole':
-            emotions_data = read_range_count_results(end_ts-during, end_ts, during)
-
-        if method == 'domain':
-            pass
-
-    return emoitions_data
+            emotions_data[v] = [end_ts, kcount]
+        
+        for k, v in emotions_data.iteritems():
+            end_ts, count = v
+            item = SentimentTopicKeywords(query, during, end_ts, k, count) 
+            item_exist = db.session.query(SentimentTopicKeywords).filter_by(query=query, end=end_ts, range=during, sentiment=k).first()
+            if item_exist:
+                db.session.delete(item_exist)
+            db.session.add(item)
+            
+        db.session.commit()
+        
+        return emotions_data
 
 
 if __name__ == '__main__':

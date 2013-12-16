@@ -7,6 +7,7 @@ from time_utils import datetime2ts
 from sqlalchemy.exc import IntegrityError
 from xapian_weibo.utils import top_keywords
 from model import SentimentKeywords, TopWeibos
+from dynamic_xapian_weibo import getXapianWeiboByDate
 from config import cron_start, cron_end, xapian_search_weibo, emotions_kv
 
 
@@ -80,7 +81,7 @@ def read_count_results(ts, sentiment, range=Hour, limit=TOP_KEYWORDS_LIMIT):
         return []
 
 
-def sentiment_keywords(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
+def sentiment_keywords(xapian_weibo=xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
     start_ts = int(start_ts)
     over_ts = int(over_ts)
 
@@ -131,11 +132,21 @@ def test_read_count_results(start_ts=start_range_ts, over_ts=end_range_ts, durin
     return sentiment_results
 
 
+
+def cal_sentiment_kcount_by_date(datestr, duration):
+    start_ts = datetime2ts(datestr)
+    end_ts = start_ts + Day
+    datestr = datestr.replace('-', '')
+    xapian_search_weibo = getXapianWeiboByDate(datestr)
+    sentiment_keywords(xapian_weibo=xapian_search_weibo, start_ts=start_ts, over_ts=end_ts, during=duration)
+
+
 if __name__ == '__main__':
     # test mysql write
-    start_ts = datetime2ts('2013-09-30')
-    end_ts = datetime2ts('2013-10-01')
-    sentiment_keywords(start_ts=start_ts, over_ts=end_ts, during=Fifteenminutes)
+
+    for date in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
+        cal_sentiment_kcount_by_date(date, Fifteenminutes)
+        cal_sentiment_kcount_by_date(date, Day)
     
     # test mysql read
     # start_ts = datetime2ts('2013-09-30')

@@ -7,9 +7,10 @@ from weibo.extensions import db
 from weibo.global_config import xapian_search_weibo, emotions_kv, \
                                 xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
-from utils import *
-#getWeiboByMid, st_variation, find_topN, read_range_count_results, read_range_kcount_results, read_range_weibos_results, sentimentCountFromDb,sentimentCountRealTime
+from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_results, \
+                  sentimentFromDB, sentimentRealTime
 from xapian_weibo.utils import top_keywords
+from topics import _all_topics, _add_topic, _drop_topic
 import simplejson as json
 from datetime import date
 from datetime import datetime
@@ -226,29 +227,29 @@ def data(area='global'):
     """
     query = request.args.get('query', None)
     ts = request.args.get('ts', None)
-    if not query or not ts:
+    if not ts:
         return json.dumps('Null')
+    end_ts = ts = int(ts)
 
     during = request.args.get('during', 24*3600)
     during = int(during)
-
-    begin_ts = ts - during
-    end_ts = ts
+    
     results = []
 
     if query and query != '':
-        results = sentimentCountFromDb(end_ts, during, 'topic', query)
+        results = sentimentFromDB(end_ts, during, method='topic', query=query)
         if not results:
-            results = sentimentCountRealTime(end_ts, during, 'topic', query)
+            results = sentimentRealTime(end_ts, during, method='topic', query=query)
     else:
-        results = sentimentCountFromDb(end_ts, during, 'whole')
+        results = sentimentFromDB(end_ts, during, method='whole')
+
+    results = results['count']
 
     return json.dumps(results)
     
 @mod.route('/field_data/<area>/')
 def field_data(area):
-    """
-    /keywords_data 接口已备好，只是差领域数据
+    """/keywords_data 接口已备好，只是差领域数据
     """
 
     ts = request.args.get('ts', '')
@@ -478,3 +479,31 @@ def getPeaks():
         }
 
     return json.dumps(time_lis)
+
+@mod.route('/topics.json', methods=['GET','POST'])
+def topics_customized():
+    if request.method == 'GET':
+
+        topics = _all_topics(True)
+        topics_names = []
+
+        for topic in topics:
+            topics_names.append(topic.topic)
+
+        return json.dumps(topics_names)
+
+    else:
+        operator = request.form.get('operator', 'add')
+        topic = request.form.get('topic', '')
+
+        if topic != '':
+            if operator == 'add':
+                status, item = _add_topic(topic)
+            if operator == 'del':
+                status, item = _drop_topic(topic)
+
+            item = item.topic
+        else:
+            status, item = 'NoTopic', 'Null'
+
+        return json.dumps({'status': status, 'item': item})

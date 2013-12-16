@@ -32,7 +32,31 @@ from utils import last_day
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
 COUNT_PER_PAGE = 20
+month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
+def strToDate(dur_time):
+    m = '1'
+    d = '1'
+    y = '2013'
+    items = dur_time.split(', ')
+    n = 0
+    for item in items:
+        if n == 0:
+            mds = item.split(' ')
+            t = 0
+            for md in mds:
+                if t==0:
+                    m = month_value[md]
+                    t = 1
+                else:
+                    d = md
+            n = 1
+        else:
+            y = item
+
+    time_str = str(y)+'-'+str(m)+'-'+str(d)
+
+    return time_str
 
 def get_bucket(bucket):
     if bucket in buckets:
@@ -518,9 +542,18 @@ def profile_group(fieldEnName):
 def test_profile_group():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            if method == 'GET':
-                time = request.args.get('timestart',None)
-                print time
+            if request.method == 'GET':
+                fieldEnName = request.args.get('fieldEnName',None)
+                during_time = request.args.get('during_time',None)
+                times = during_time.split(' - ')
+                n = 0
+                for ti in times:
+                    if n == 0:
+                        beg_time = strToDate(ti)
+                        n = 1
+                    else:
+                        end_time = strToDate(ti)
+                print during_time
             field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
             return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
         else:
@@ -619,7 +652,7 @@ def getInteractCount(uid, start_ts, end_ts, schema='repost', amongfriends=True, 
 
     interact_dict = {}
     if uid:
-        count, results = xapian_search_weibo.search(query={'user': int(uid), 'timestamp': {'$gt': start_ts, '$lt': end_ts}}, fields=['text', 'retweeted_status'])
+        count, results = xapian_search_weibo.search(query={'user': int(uid), 'timestamp': {'$gt': start_ts, '$lt': end_ts}}, fields=['text', 'retweeted_mid'])
         
         if schema == 'repost':
             for r in results():
@@ -632,8 +665,8 @@ def getInteractCount(uid, start_ts, end_ts, schema='repost', amongfriends=True, 
                             interact_dict[repost_uid] += 1
                         except KeyError:
                             interact_dict[repost_uid] = 1
-                retweeted_status = r['retweeted_status']
-                retweeted_uid = getUidByMid(retweeted_status)
+                retweeted_mid = r['retweeted_mid']
+                retweeted_uid = getUidByMid(retweeted_mid)
                 if retweeted_uid:
                     try:
                         interact_dict[retweeted_uid] += 1
@@ -651,8 +684,8 @@ def getInteractCount(uid, start_ts, end_ts, schema='repost', amongfriends=True, 
                             interact_dict[at_uid] += 1
                         except KeyError:
                             interact_dict[at_uid] = 1
-                retweeted_status = r['retweeted_status']
-                retweeted_uid = getUidByMid(retweeted_status)
+                retweeted_mid = r['retweeted_mid']
+                retweeted_uid = getUidByMid(retweeted_mid)
                 if retweeted_uid:
                     try:
                         interact_dict[retweeted_uid] += 1
@@ -1033,15 +1066,15 @@ def profile_network(friendship, uid):
         for i in xrange(-total_days + 1, 1):
             lt = now_ts + during * i
             query_dict = {'user':int(uid),'timestamp': {'$gt': now_ts, '$lt': lt}}
-            count,mid_result = xapian_search_weibo.search(query=query_dict,fields=['retweeted_status'])
+            count,mid_result = xapian_search_weibo.search(query=query_dict,fields=['retweeted_mid'])
             mid_list = []
             for i in mid_result():
-                if i['retweeted_status'] == None:
+                if i['retweeted_mid'] == None:
                     pass
                 else:
-                    mid_list.append(i['retweeted_status'])
+                    mid_list.append(i['retweeted_mid'])
             for mid in mid_list:
-                count,get_results = xapian_search_weibo.search(query={'mid':mid,'retweeted_status':None},fields=['user'])
+                count,get_results = xapian_search_weibo.search(query={'mid':mid,'retweeted_mid':None},fields=['user'])
                 for i in get_results():
                     f_uid = i['user']
                 if f_uid in fri_fol  and count > 0:
@@ -1161,7 +1194,7 @@ def personal_weibo_count(uid):
         'user': uid,
         'timestamp': {'$gt': begin_ts, '$lt': end_ts}
     }
-    count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp', 'retweeted_status', '_id', 'reposts_count', 'comments_count', 'text'])
+    count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp', 'retweeted_mid', '_id', 'reposts_count', 'comments_count', 'text'])
     daily_count_dict = {}
     comments_count_dict = {}
     reposts_count_dict = {}
@@ -1177,7 +1210,7 @@ def personal_weibo_count(uid):
             daily_count_arr = daily_count_dict[datestr]
         except KeyError:
             daily_count_dict[datestr] = [0, 0, 0, r['timestamp']]#原创，转发，总数，时间戳
-        if r['retweeted_status']:
+        if r['retweeted_mid']:
             daily_count_dict[datestr][1] += 1
             retweets_count += 1
         else:
@@ -1290,9 +1323,9 @@ def profile_group_status_count(fieldEnName):
                 'timestamp': {'$gt': lt, '$lt': lt + during},
                 'user': uid
             }
-            count, retweeted_status = xapian_search_weibo.search(query=query_dict, fields=['retweeted_status'])
-            for i in retweeted_status():
-                if i['retweeted_status'] == None:
+            count, retweeted_mid = xapian_search_weibo.search(query=query_dict, fields=['retweeted_mid'])
+            for i in retweeted_mid():
+                if i['retweeted_mid'] == None:
                     fipost_count += 1
                 else:
                     repost_count += 1

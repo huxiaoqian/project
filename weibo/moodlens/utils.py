@@ -109,7 +109,6 @@ def read_weibo_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts,
                                          TopWeibos.ts < over_ts, \
                                          TopWeibos.sentiment==sentiment, \
                                          TopWeibos.range==MinInterval)
-        print type(weibos)
 
         return list(weibos)
 

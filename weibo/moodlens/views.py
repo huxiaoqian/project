@@ -8,7 +8,7 @@ from weibo.global_config import xapian_search_weibo, emotions_kv, \
                                 xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
 from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_results, \
-                  sentimentFromDB, sentimentRealTime
+                  sentimentFromDB, sentimentRealTime, read_range_weibos_results
 from xapian_weibo.utils import top_keywords
 from topics import _all_topics, _add_topic, _drop_topic
 import simplejson as json
@@ -303,22 +303,28 @@ def field_keywords_data(area):
     return json.dumps(keywords_with_count)
 
 
-@mod.route('/weibos_data/<area>/')
-def weibos_data(area='global'):
-    """关键词
+@mod.route('/weibos_data/<emotion>/<area>/')
+def weibos_data(emotion='happy', area='global'):
+    """关键微博
     """
     query = request.args.get('query', '')
     query = query.strip()
     ts = request.args.get('ts', '')
     ts = long(ts)
-    #during = request.args.get('during', 24*3600)
-    during=24*3600
+    during = request.args.get('during', 24 * 3600)
     during = int(during)
     
-    begin_ts = ts - during
-    end_ts = ts
-    results = read_range_weibos_results(begin_ts, end_ts, during)
+    # query为空，是全网情绪检测
+    if query == '':
+        begin_ts = ts - during
+        end_ts = ts
+        results = read_range_weibos_results(begin_ts, end_ts, during)
+        print results, type(results)
     
+    # query不为空，是话题情绪监测
+    else:
+        pass
+
     return json.dumps(results)
 
 

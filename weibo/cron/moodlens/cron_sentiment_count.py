@@ -3,7 +3,7 @@
 
 from dynamic_xapian_weibo import getXapianWeiboByDate
 from config import cron_start, cron_end, xapian_search_weibo, emotions_kv
-from time_utils import datetime2ts
+from time_utils import datetime2ts, ts2HourlyTime
 from config import db
 from model import SentimentCount
 from sqlalchemy.exc import IntegrityError
@@ -17,13 +17,6 @@ Day = Hour * 24
 
 start_range_ts = datetime2ts(cron_start)
 end_range_ts = datetime2ts(cron_end)
-
-
-def ts2HourlyTime(ts, interval):
-    # interval 取 Minite、Hour
-
-    ts = ts - ts % interval
-    return ts
 
 
 def save_count_results(dic, during):
@@ -71,7 +64,7 @@ def sentiment_count(xapian_weibo=xapian_search_weibo, start_ts=start_range_ts, o
             query_dict['sentiment'] = v
             count = xapian_weibo.search(query=query_dict, count_only=True)
             emotions_data[v] = [end_ts, count]
-        
+
         print 'saved: ', emotions_data
         save_count_results(emotions_data, during)
 
@@ -83,11 +76,11 @@ def test_read_count_results(start_ts=start_range_ts, over_ts=end_range_ts, durin
 
     for i in range(0, interval):
         end_ts = over_ts - during * i
-        
+
         for k, v in emotions_kv.iteritems():
             count = read_count_results(end_ts, v, Hour)
             sentiment_results[k] = [end_ts*1000, count]
-    
+
     print sentiment_results
     return sentiment_results
 
@@ -108,7 +101,7 @@ if __name__ == '__main__':
         cal_sentiment_count_by_date(date, Day)
     '''
 
-   
+
     # test mysql read
     '''
     start_range_ts = datetime2ts('2013-09-29')

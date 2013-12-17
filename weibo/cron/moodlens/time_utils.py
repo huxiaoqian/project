@@ -13,3 +13,10 @@ def datetime2ts(date):
 
 def window2time(window, size=24*60*60):
     return window*size
+
+
+def ts2HourlyTime(ts, interval):
+    # interval 取 Minite、Hour
+
+    ts = ts - ts % interval
+    return ts

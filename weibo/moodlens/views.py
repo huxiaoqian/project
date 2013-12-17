@@ -265,11 +265,16 @@ def keywords_data(area='global'):
     begin_ts = ts - during
     end_ts = ts
     results = read_range_kcount_results(begin_ts, end_ts, during)
-    limit = 10
 
-    results = sorted(results, key=lambda tup: tup[1])
+    happy = results['happy']
+    sad = results['sad']
+    angry = results['angry']
+    happy = happy[:10]
+    sad = sad[:10]
+    angry = angry[:10]
+    results = {'happy':happy,'sad':sad,'angry':angry}
     
-    return json.dumps(results[:limit])
+    return json.dumps(results)
 
 
 @mod.route('/field_keywords_data/<area>/')
@@ -324,13 +329,20 @@ def weibos_data(emotion='happy', area='global'):
         end_ts = ts
         results = read_range_weibos_results(begin_ts, end_ts, during)
 
-    results = sorted(results, key=lambda tup: tup[1])
+        #results = sorted(results, key=lambda tup: tup[1])
+        happy = results['happy']
+        sad = results['sad']
+        angry = results['angry']
+        happy = happy[:10]
+        sad = sad[:10]
+        angry = angry[:10]
+        results = {'happy':happy,'sad':sad,'angry':angry}
     
     # query不为空，是话题情绪监测
     else:
         pass
 
-    return json.dumps(results[:limit])
+    return json.dumps(results)
 
 
 @mod.route('/field_weibos_data/<emotion>/<area>/')

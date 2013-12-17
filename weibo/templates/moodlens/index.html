@@ -7,7 +7,7 @@
 <body>
 <div class="container">
   <div class="well">
-    <legend>微博情绪全网分析</legend>
+    <legend>全网情绪分析</legend>
     <form id="all_eomtion" action="/moodlens/all" class="form-inline" method="POST">
    <div id="reportrange_1" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
@@ -19,7 +19,7 @@
   </div>
   
   <div class="well">
-    <legend>微博情绪领域分析</legend>
+    <legend>领域情绪分析</legend>
     <form id="field_emotion" action="/moodlens/field" class="form-inline" method="POST">
      <div id="reportrange_2" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
@@ -32,91 +32,182 @@
   </div>
   
     <div class="well">
-    <legend>微博情绪话题分析</legend>
-    <form id="topic_emotion" action="/moodlens/topic" class="form-inline" method="POST">
-      
-      <div id="reportrange_3" class="btn dropdown-toggle">
-    <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
-   <b class="caret"></b>
+      <legend>话题情绪分析</legend>
+      <form id="topic_emotion" action="/moodlens/topic" class="form-inline" method="POST">
+        <div id="reportrange_3" class="btn dropdown-toggle">
+          <i class="icon-calendar icon-large"></i><span>2013年12月11号 - 2013年12月31号</span>
+          <b class="caret"></b>
+        </div>
+        <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
+        <input type="hidden" name="action" value="run">
+        <input type="submit" class="btn btn-primary" value="识别">
+      </form>
+      <ul id="TopicTab" class="nav nav-tabs">
+        <li><a href="#area_1" data-toggle="tab"><strong>系统定制</strong></a></li>
+        <li><a href="#TopicTabContent" onclick="add2custom();"><i class="icon-plus"></i></a></li>
+        <li><a href="#TopicTabContent" onclick="delcustom();"><i class="icon-minus"></i></a></li>  
+        <li><a href="/sysadmin/" target="_blank"><i class="icon-cog"></i></a></li> 
+      </ul>
+      <div id="alert_topic"></div>
+      <div id="TopicTabContent" class="tab-content">
+        <div class="tab-pane fade active in" id="area_1">
+          <ul class="inline">
+          </ul>
+        </div>
       </div>
-      <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
-      <input type="hidden" name="action" value="run">
-      <input type="submit" class="btn btn-primary" value="识别">
-    </form>
-    
-      </div>
-      
+    </div>
       
   </div>
 {% endblock %}
 
 {% block script %}
-  <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/identify/burst.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
+  <script src="/static/js/bootstrap-alert.js"></script>
   <script type="text/javascript">
-    //all_emotion
-    $(document).ready(function() {
-  $('#reportrange_1').daterangepicker({
-      ranges: {
-         'Today': [moment(), moment()],
-         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         'Last 7 Days': [moment().subtract('days', 6), moment()],
-         'Last 30 Days': [moment().subtract('days', 29), moment()],
-         'This Month': [moment().startOf('month'), moment().endOf('month')],
-         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-      },
-      startDate: moment().subtract('days', 29),
-      endDate: moment()
-    }, 
-    function(start, end) {
-  $('#reportrange_1 span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-    }
-  );
-});
-    //field_emotion
-    $(document).ready(function() {
-  $('#reportrange_2').daterangepicker({
-      ranges: {
-         'Today': [moment(), moment()],
-         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         'Last 7 Days': [moment().subtract('days', 6), moment()],
-         'Last 30 Days': [moment().subtract('days', 29), moment()],
-         'This Month': [moment().startOf('month'), moment().endOf('month')],
-         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-      },
-      startDate: moment().subtract('days', 29),
-      endDate: moment()
-    }, 
-    function(start, end) {
-  $('#reportrange_2 span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-    }
-  );
-});
-    //topic_emotion
-$(document).ready(function() {
-  $('#reportrange_3').daterangepicker({
-      ranges: {
-         'Today': [moment(), moment()],
-         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         'Last 7 Days': [moment().subtract('days', 6), moment()],
-         'Last 30 Days': [moment().subtract('days', 29), moment()],
-         'This Month': [moment().startOf('month'), moment().endOf('month')],
-         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-      },
-      startDate: moment().subtract('days', 29),
-      endDate: moment()
-    }, 
-    function(start, end) {
-  $('#reportrange_3 span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-    }
-  );
-});
 
-</script>
+    $('#TopicTabContent:checkbox').click(function(){
+      var $this = $(this);
+      if ($this.is(':checked')) {
+          $.each($('#TopicTabContent :checkbox'), function(i, val) {
+              if ($(this) != $this) {
+                  $(this).attr('checked', false);
+              }
+          });
+          $this.attr('checked', true);
+          var topic_str = $this.parent().text().replace(/^\s+|\s+$/g,'');
+          $('#keyword').val(topic_str);
+      } else {
+          $this.attr('checked', false);
+          var topic_str = $this.parent().text().replace(/^\s+|\s+$/g,'');
+          var current_val = $('#keyword').val();
+          current_val = current_val.replace(topic_str, '');
+          $('#keyword').val(current_val);
+      }
+    })
+
+    //all_emotion
+    $('#reportrange_1').daterangepicker({
+        ranges: {
+           'Today': [moment(), moment()],
+           'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           'Last 7 Days': [moment().subtract('days', 6), moment()],
+           'Last 30 Days': [moment().subtract('days', 29), moment()],
+           'This Month': [moment().startOf('month'), moment().endOf('month')],
+           'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+        },
+        startDate: moment().subtract('days', 29),
+        endDate: moment()
+        }, 
+        function(start, end) {
+          $('#reportrange_1 span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        }
+    );
+
+    //field_emotion
+    $('#reportrange_2').daterangepicker({
+      ranges: {
+         'Today': [moment(), moment()],
+         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+         'Last 7 Days': [moment().subtract('days', 6), moment()],
+         'Last 30 Days': [moment().subtract('days', 29), moment()],
+         'This Month': [moment().startOf('month'), moment().endOf('month')],
+         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+      },
+        startDate: moment().subtract('days', 29),
+        endDate: moment()
+     }, 
+     function(start, end) {
+        $('#reportrange_2 span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+     }
+    );
+
+    //topic_emotion
+    $('#reportrange_3').daterangepicker({
+        ranges: {
+           'Today': [moment(), moment()],
+           'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           'Last 7 Days': [moment().subtract('days', 6), moment()],
+           'Last 30 Days': [moment().subtract('days', 29), moment()],
+           'This Month': [moment().startOf('month'), moment().endOf('month')],
+           'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+        },
+        startDate: moment().subtract('days', 29),
+        endDate: moment()
+      }, 
+      function(start, end) {
+        $('#reportrange_3 span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+      }
+    );    
+
+    // 动态获取系统定制的话题
+    function getCustomizedTopics(){
+      $.ajax({
+        url: '/moodlens/topics.json',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#area_1').empty();
+          var html = "<ul class=\"inline\">";
+          for(idx in data){
+            html += "<li><input type=\"checkbox\" name=\"topics_checkbox\" value=\"" + data[idx] + "\">" + data[idx] + "</li>";
+          }
+          html += "</ul>";
+          $('#area_1').append(html);
+        }
+      });
+    }
+
+    // 动态增加定制话题
+    function add2custom(){
+      var added_topic = $('#keyword').val();
+      if( added_topic == undefined || added_topic == ''){
+         var alert_html = "<div class=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\">&times;</button><strong>注意!</strong>请从上方文本框中选择您要添加的话题</div>";
+         $('#alert_topic').empty();
+         $('#alert_topic').append(alert_html);
+      }
+      else{
+        $.ajax({
+          url: '/moodlens/topics.json',
+          dataType: 'json',
+          data: {'operator': 'add', 'topic': added_topic},
+          type: "POST",   
+          success: function (data) {
+            var status = data['status'];
+            var item = data['item'];
+            getCustomizedTopics();
+          }
+        });
+      }
+    }
+    
+    // 动态删除定制话题
+    function delcustom(){
+      var del_topic = $("input[name=topics_checkbox]:checked").val();
+      if( del_topic == undefined || del_topic == ''){
+         var alert_html = "<div class=\"alert\"><button type=\"button\" class=\"close\" data-dismiss=\"alert\">&times;</button><strong>注意!</strong>请从下方选择您删除的话题</div>";
+         $('#alert_topic').empty();
+         $('#alert_topic').append(alert_html);
+      }
+      else{
+        $.ajax({
+          url: '/moodlens/topics.json',
+          dataType: 'json',
+          data: {'operator': 'del', 'topic': del_topic},
+          type: "POST",   
+          success: function (data) {
+            var status = data['status'];
+            var item = data['item'];
+            getCustomizedTopics();
+          }
+        });
+      }
+    }
+    
+    $(document).ready(function() {
+      getCustomizedTopics();
+    });
+  </script>
 </body>
   
 {% endblock %}

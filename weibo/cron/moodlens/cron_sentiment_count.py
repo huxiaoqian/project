@@ -102,13 +102,24 @@ def cal_sentiment_count_by_date(datestr, duration):
 
 if __name__ == '__main__':
     # test mysql write
-    
+    '''
     for date in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
         cal_sentiment_count_by_date(date, Fifteenminutes)
         cal_sentiment_count_by_date(date, Day)
+    '''
 
    
     # test mysql read
-    # start_range_ts = datetime2ts('2013-09-29')
-    # end_range_ts = datetime2ts('2013-10-03')
-    # test_read_count_results(start_range_ts, end_range_ts)
+    '''
+    start_range_ts = datetime2ts('2013-09-29')
+    end_range_ts = datetime2ts('2013-10-03')
+    test_read_count_results(start_range_ts, end_range_ts)
+    '''
+    ts = datetime2ts('2013-09-01')
+    print read_count_results(ts, 1, Fifteenminutes)
+
+    ts = datetime2ts('2013-09-02')
+    print read_count_results(ts, 1, Fifteenminutes)
+
+    ts = datetime2ts('2013-09-03')
+    print read_count_results(ts, 1, Fifteenminutes)

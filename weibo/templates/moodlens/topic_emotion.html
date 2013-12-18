@@ -1,4 +1,4 @@
-{% extends "master.html" %}
+{% extends "moodlens/base.html" %}
 {% block title %}网民情绪监测和预警{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="/static/css/toggle_switch.css">
@@ -137,7 +137,7 @@
         <div class="row-fluid">
             <div style="text-align: center">
                 <div id="presets">
-                    <a class="first" href="/moodlens/">全网</a>
+                    <a class="first" href="/moodlens/all/">全网</a>
                     <a class="" href="/moodlens/field">领域</a>
                     <a class="active" href="/moodlens/topic">话题</a>
                 </div>
@@ -146,7 +146,7 @@
                     时间范围：
                     <div id="reportrange" class="btn dropdown-toggle">
                             <i class="icon-calendar icon-large"></i>
-                            <span>2013年12月11号 - 2013年12月31号</span> <b class="caret"></b>
+                            <span>September 20, 2013 - September 25, 2013</span> <b class="caret"></b>
                     </div>
                     <div class="btn dropdown-toggle" style="position:relative;">
                         <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
@@ -253,7 +253,7 @@
     var sad_list = [];
     var ts_list = [];
     var chart_type;
-    var total_days = 30;
+    var total_days = parseInt('{{dur_day}}');
     var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
     var now_ts = parseInt((new Date(2013, 9, 30)).getTime() / 1000) + 2 * 3600;
     

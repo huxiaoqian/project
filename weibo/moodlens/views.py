@@ -11,13 +11,16 @@ from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_resu
 from xapian_weibo.utils import top_keywords
 from topics import _all_topics, _add_topic, _drop_topic
 import simplejson as json
-import datetime
+from datetime import date
+from datetime import datetime
 import time
 import leveldb
 import os
 import weibo.model
 import json
 import re
+
+month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
@@ -31,6 +34,56 @@ def get_bucket(bucket):
     buckets[bucket] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_' + bucket),
                                       block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     return buckets[bucket]
+
+def _utf_encode(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.encode('utf-8')
+
+
+def _utf_decode(s):
+    if isinstance(s, str):
+        return s.decode('utf-8')
+    else:
+        return s
+
+def strToDate(dur_time):
+    m = '1'
+    d = '1'
+    y = '2013'
+    items = dur_time.split(', ')
+    n = 0
+    for item in items:
+        if n == 0:
+            mds = item.split(' ')
+            t = 0
+            for md in mds:
+                if t==0:
+                    m = month_value[md]
+                    t = 1
+                else:
+                    d = md
+            n = 1
+        else:
+            y = item
+
+    time_str = str(y)+'-'+str(m)+'-'+str(d)
+
+    return time_str
+
+def str2ts(s):
+    temp_during = _utf_encode(s)
+    if re.match(r'\d+分钟', temp_during):
+        pattern=re.compile(r'分钟')
+        temp_during=int(pattern.split(temp_during)[0])*60
+    elif re.match((r'\d+小时'),temp_during):
+        pattern=re.compile(r'小时')
+        temp_during=int(pattern.split(temp_during)[0])*3600
+    elif re.match(r'\d+天',temp_during):
+        pattern=re.compile(r'天')
+        temp_during=int(pattern.split(temp_during)[0])*24*3600
+    return temp_during
 
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
@@ -60,18 +113,74 @@ def index():
         return redirect('/')
 
 
-@mod.route('/all', methods=['GET','POST'])
-def topic():
+@mod.route('/all/', methods=['GET','POST'])
+def all_emotion():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
-            return render_template('moodlens/all_emotion.html', active='moodlens')
+            dur_time = request.args.get('time', '')
+            during = request.args.get('during', '')
+            times = dur_time.split(' - ')
+            n = 0
+            for ti in times:
+                if n==0:
+                    beg_time = strToDate(ti)
+                    n = 1
+                else:
+                    end_time = strToDate(ti)
+
+            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+
+            end_time = datetime.strptime(end_time,"%Y-%m-%d")
+            end_time_year = int(end_time.year)
+            end_time_month = int(end_time.month)
+            end_time_day = int(end_time.day)
+
+            d1=datetime.date(end_time)
+            d2=datetime.date(beg_time)
+            dur_day=int((d1-d2).days)
+
+            if during == '':
+                during = 15*60
+                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
+            else:
+                during = str2ts(during)
+                
+                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
                     if identy == 1:
-                        return render_template('moodlens/all_emotion.html', active='moodlens')
+                        dur_time = request.args.get('time', '')
+                        during = request.args.get('during', '')
+            
+                        times = dur_time.split(' - ')
+                        n = 0
+                        for ti in times:
+                            if n==0:
+                                beg_time = strToDate(ti)
+                                n = 1
+                            else:
+                                end_time = strToDate(ti)
+
+                        beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+
+                        end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                        end_time_year = int(end_time.year)
+                        end_time_month = int(end_time.month)
+                        end_time_day = int(end_time.day)
+
+                        d1=datetime.date(end_time)
+                        d2=datetime.date(beg_time)
+                        dur_day=int((d1-d2).days)
+
+                        if during == '':
+                            during = 15*60
+                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
+                        else:
+                            during = str2ts(during)
+                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -79,7 +188,7 @@ def topic():
         return redirect('/')
 
 
-@mod.route('/field', methods=['GET','POST'])
+@mod.route('/field/', methods=['GET','POST'])
 def field():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
@@ -97,34 +206,7 @@ def field():
     else:
         return redirect('/')
 
-def _utf_encode(s):
-    if isinstance(s, str):
-        return s
-    else:
-        return s.encode('utf-8')
-
-
-def _utf_decode(s):
-    if isinstance(s, str):
-        return s.decode('utf-8')
-    else:
-        return s
-
-
-def str2ts(s):
-    temp_during = _utf_encode(s)
-    if re.match(r'\d+分钟', temp_during):
-        pattern=re.compile(r'分钟')
-        temp_during=int(pattern.split(temp_during)[0])*60
-    elif re.match((r'\d+小时'),temp_during):
-        pattern=re.compile(r'小时')
-        temp_during=int(pattern.split(temp_during)[0])*3600
-    elif re.match(r'\d+天',temp_during):
-        pattern=re.compile(r'天')
-        temp_during=pattern.split(temp_during)*24*3600
-    return temp_during
-
-@mod.route('/topic', methods=['GET','POST'])
+@mod.route('/topic/', methods=['GET','POST'])
 def topic():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
@@ -166,6 +248,7 @@ def data(area='global'):
     during = int(during)
     
     results = []
+    print 'here'
 
     if query and query != '':
         results = sentimentFromDB(end_ts, during, method='topic', query=query)
@@ -462,3 +545,4 @@ def topics_customized():
             status, item = 'NoTopic', 'Null'
 
         return json.dumps({'status': status, 'item': item})
+

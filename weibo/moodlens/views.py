@@ -8,6 +8,8 @@ from weibo.global_config import xapian_search_weibo, emotions_kv, \
 from flask import Blueprint, render_template, request, session, redirect
 from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_results, \
                   sentimentFromDB, sentimentRealTime, read_range_weibos_results
+#from keywords import search_keywords, search_topic_keywords, search_domain_keywords
+import keywords as keywordsModule
 from xapian_weibo.utils import top_keywords
 from topics import _all_topics, _add_topic, _drop_topic
 import simplejson as json
@@ -251,63 +253,45 @@ def flag_data(emotion, area='global'):
 
 @mod.route('/keywords_data/<area>/')
 def keywords_data(area='global'):
-    """
-    /keywords_data 接口已备好，只是差领域数据
+    """情绪关键词数据
     """
 
-    query = request.args.get('query', '')
-    query = query.strip()
-    ts = request.args.get('ts', '')
-    ts = long(ts)
+    query = request.args.get('query', None)
+    if query:
+        query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    
+    print during
+    ts = request.args.get('ts', '')
+    ts = long(ts)
     begin_ts = ts - during
     end_ts = ts
-    results = read_range_kcount_results(begin_ts, end_ts, during)
+    emotion = request.args.get('emotion', 'global')
 
-    happy = results['happy']
-    sad = results['sad']
-    angry = results['angry']
-    happy = happy[:10]
-    sad = sad[:10]
-    angry = angry[:10]
-    results = {'happy':happy,'sad':sad,'angry':angry}
+    results = {}
+
+    if area == 'global':
+        search_method = 'global'
+        if query:
+            search_method = 'topic'
+        area = None
+    else:
+        search_method = 'domain'
+        
+    search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
+    print search_func
+
+    if search_func:
+        if emotion == 'global':
+            for k, v in emotions_kv.iteritems():
+                results[k] = search_func(end_ts, during, v, query=query, domain=area)
+        else:
+            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area)
     
+    else:
+        return json.dumps('search function undefined')
+
     return json.dumps(results)
-
-
-@mod.route('/field_keywords_data/<area>/')
-def field_keywords_data(area):
-    """
-    /keywords_data 接口已备好，只是差领域数据
-    """
-    ts = request.args.get('ts', '')
-    ts = long(ts)
-    emotion = request.args.get('emotion', 'all')
-    during = request.args.get('during', 24*3600)
-    during = int(during)
-
-    begin_ts = ts - during
-    end_ts = ts
-    
-    query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-    }
-    if emotion != 'all':
-        query_dict['sentiment'] = emotions_kv[emotion]
-
-    count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
-    if count:
-        query_dict['$or'] = []
-        for user in field_users():
-            query_dict['$or'].append({'user': user['_id']})
-
-    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
-    keywords_with_count = top_keywords(get_results, top=50)
-    keywords_with_count = [list(i) for i in keywords_with_count]
-
-    return json.dumps(keywords_with_count)
 
 
 @mod.route('/weibos_data/<emotion>/<area>/')

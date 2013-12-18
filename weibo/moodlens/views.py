@@ -10,6 +10,8 @@ from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_resu
                   sentimentFromDB, sentimentRealTime, read_range_weibos_results
 from xapian_weibo.utils import top_keywords
 import keywords as keywordsModule
+import weibos as weibosModule
+import counts as countsModule
 from topics import _all_topics, _add_topic, _drop_topic
 import simplejson as json
 from datetime import date
@@ -336,28 +338,43 @@ def topic():
 def data(area='global'):
     """分类情感数据
     """
-    query = request.args.get('query', None)
-    ts = request.args.get('ts', None)
-    if not ts:
-        return json.dumps('Null')
-    end_ts = ts = int(ts)
 
+    query = request.args.get('query', None)
+    if query:
+        query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    
-    results = []
-    print 'here'
+    print during
+    ts = request.args.get('ts', '')
+    ts = long(ts)
+    begin_ts = ts - during
+    end_ts = ts
+    emotion = request.args.get('emotion', 'global')
 
-    if query and query != '':
-        results = sentimentFromDB(end_ts, during, method='topic', query=query)
-        if not results:
-            results = sentimentRealTime(end_ts, during, method='topic', query=query)
+    results = {}
+
+    if area == 'global':
+        search_method = 'global'
+        if query:
+            search_method = 'topic'
+        area = None
     else:
-        results = sentimentFromDB(end_ts, during, method='whole')
+        search_method = 'domain'
+        
+    search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
 
-    results = results['count']
+    if search_func:
+        if emotion == 'global':
+            for k, v in emotions_kv.iteritems():
+                results[k] = search_func(end_ts, during, v, query=query, domain=area)
+        else:
+            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area)
+    
+    else:
+        return json.dumps('search function undefined')
 
     return json.dumps(results)
+
     
 @mod.route('/field_data/<area>/')
 def field_data(area):
@@ -504,7 +521,6 @@ def weibos_data(emotion='global', area='global'):
         search_method = 'domain'
         
     search_func = getattr(weibosModule, 'search_%s_weibos' % search_method, None)
-    print search_func
 
     if search_func:
         if emotion == 'global':
@@ -515,6 +531,8 @@ def weibos_data(emotion='global', area='global'):
     
     else:
         return json.dumps('search function undefined')
+
+    print results
 
     return json.dumps(results)
 

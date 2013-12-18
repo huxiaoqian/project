@@ -248,7 +248,7 @@
         for(var i=0;i<data.length;i+=1){
             var emotion = emotion_content[data[i]['sentiment']-1];
             var name = data[i]['user'];
-            var user_link = 'weibo/u/'+data[i]['user'];
+            var user_link = 'http://weibo.com/u/'+data[i]['user'];
             var text = data[i]['text'];
             var weibo_link = 'http://weibo.com/'+data[i]['user']+'/'+data[i]['_id'];
             var time = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', parseInt(data[i]['timestamp']) * 1000);
@@ -289,7 +289,7 @@
         var emotion = ['happy', 'angry', 'sad'];
         //for(var e in emotion){
             $.ajax({
-                url: "/moodlens/weibos_data/happy/global/?ts=" + end_ts + "&during=" + during,
+                url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + during,
                 type: "GET",
                 dataType:"json",
                 success: function(data){
@@ -528,7 +528,7 @@
 
         var chart_obj = $('#emotion_container').highcharts({
             chart: {
-                type: 'spline',
+                type: 'line',//spline,
                 animation: Highcharts.svg, // don't animate in old IE
                 marginRight: 10,
                 events: {

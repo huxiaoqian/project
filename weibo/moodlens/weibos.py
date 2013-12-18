@@ -23,7 +23,7 @@ def _top_weibos(weibos_dict, top=TOP_READ):
     results_list = []
 
     if weibos_dict != {}:
-        results = sorted(weibos_dict.iteritems(), key=operator.itemgetter(1)[0], reverse=False)
+        results = sorted(weibos_dict.iteritems(), key=lambda(k,v): v[0], reverse=False)
         results = results[len(results) - top:]
 
         for k, v in results:
@@ -33,10 +33,11 @@ def _top_weibos(weibos_dict, top=TOP_READ):
 
 
 def parseWeibos(weibos):
-	weibo_dict = []
+    weibo_dict = {}
+    weibos = json.loads(weibos)
 
-	for weibo in weibos:
-		_id = weibo['_id']
+    for weibo in weibos:
+    	_id = weibo['_id']
         reposts_count = weibo['reposts_count']
         weibo_dict[_id] = [reposts_count, weibo]
 
@@ -49,7 +50,7 @@ def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
     	upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
     	item = TopWeibos.query.filter(TopWeibos.ts==upbound, \
                                       TopWeibos.sentiment==sentiment, \
-                                      TopWeibos.range==unit
+                                      TopWeibos.range==unit, \
                                       TopWeibos.limit==top).first()
         if item:
         	weibos_dict = parseWeibos(item.weibos)
@@ -61,7 +62,7 @@ def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
         items = TopWeibos.query.filter(TopWeibos.ts>lowbound, \
                                        TopWeibos.ts<=upbound, \
                                        TopWeibos.sentiment==sentiment, \
-                                       TopWeibos.range==unit
+                                       TopWeibos.range==unit, \
                                        TopWeibos.limit==top).all()
 
         for item in items:

@@ -22,7 +22,7 @@ import json
 import re
 
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
-
+field_id = {u'文化':'culture', u'教育':'education', u'娱乐':'entertainment', u'时尚':'fashion', u'财经':'finance', u'媒体':'media', u'体育':'sports', u'科技':'technology'}
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
 buckets = {}
@@ -207,14 +207,97 @@ def all_emotion():
 def field():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
-            return render_template('moodlens/field_emotion.html', active='moodlens')
+            dur_time = request.args.get('time', '')
+            during = request.args.get('during', '')
+            field_name = request.args.get('field_name', '')
+            if field_name == '':
+                return render_template('moodlens/index.html', active='moodlens')
+            else:
+                field_en = field_id[field_name]
+
+            if dur_time == '':
+                dur_day = 5
+                during = 15*60
+                end_time_day = 4
+                end_time_month = 9
+                end_time_year = 2013
+                return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
+            times = dur_time.split(' - ')
+            n = 0
+            for ti in times:
+                if n==0:
+                    beg_time = strToDate(ti)
+                    n = 1
+                else:
+                    end_time = strToDate(ti)
+
+            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+
+            end_time = datetime.strptime(end_time,"%Y-%m-%d")
+            end_time_year = int(end_time.year)
+            end_time_month = int(end_time.month)
+            end_time_day = int(end_time.day)
+
+            d1=datetime.date(end_time)
+            d2=datetime.date(beg_time)
+            dur_day=int((d1-d2).days)
+
+            if during == '':
+                during = 15*60
+                return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
+            else:
+                during = str2ts(during)
+                
+                return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
+            #return render_template('moodlens/field_emotion.html', active='moodlens')
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
                     if identy == 1:
-                        return render_template('moodlens/field_emotion.html', active='moodlens')
+                        dur_time = request.args.get('time', '')
+                        during = request.args.get('during', '')
+                        field_name = request.args.get('field_name', '')
+                        if field_name == '':
+                            return render_template('moodlens/index.html', active='moodlens')
+                        else:
+                            field_en = field_id[field_name]
+
+                        if dur_time == '':
+                            dur_day = 5
+                            during = 15*60
+                            end_time_day = 4
+                            end_time_month = 9
+                            end_time_year = 2013
+                            return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
+                        times = dur_time.split(' - ')
+                        n = 0
+                        for ti in times:
+                            if n==0:
+                                beg_time = strToDate(ti)
+                                n = 1
+                            else:
+                                end_time = strToDate(ti)
+
+                        beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+
+                        end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                        end_time_year = int(end_time.year)
+                        end_time_month = int(end_time.month)
+                        end_time_day = int(end_time.day)
+
+                        d1=datetime.date(end_time)
+                        d2=datetime.date(beg_time)
+                        dur_day=int((d1-d2).days)
+
+                        if during == '':
+                            during = 15*60
+                            return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
+                        else:
+                            during = str2ts(during)
+                
+                            return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
                     else:
                         return redirect('/')
             return redirect('/')

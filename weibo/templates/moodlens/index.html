@@ -48,7 +48,21 @@
 <option value="1小时"> 1小时 </option>
 <option value="12小时"> 12小时 </option>
 <option value="1天"> 1天 </option>
-</select></span><input id="field_time" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+</select></span><input id="field_durtime" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+</div>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp领域:</b></font>
+    <div class="btn dropdown-toggle" style="position:relative;">
+<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+<option value="文化"> 文化 </option>
+<option value="教育"> 教育 </option>
+<option value="娱乐"> 娱乐 </option>
+<option value="时尚"> 时尚 </option>
+<option value="财经"> 财经 </option>
+<option value="媒体"> 媒体 </option>
+<option value="体育"> 体育 </option>
+<option value="科技"> 科技 </option>
+</select></span><input id="field_name" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
 </div>
       <input type="submit" class="btn btn-primary" value="搜索" id="search_field">
     </div>
@@ -73,7 +87,7 @@
 <option value="1小时"> 1小时 </option>
 <option value="12小时"> 12小时 </option>
 <option value="1天"> 1天 </option>
-</select></span><input id="topic_time" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+</select></span><input id="topic_durtime" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
 </div>
       <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
       <input type="hidden" name="action" value="run">
@@ -103,7 +117,6 @@
   <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
   <script src="/static/js/bootstrap-alert.js"></script>
   <script type="text/javascript">
-
     $('#TopicTabContent:checkbox').click(function(){
       var $this = $(this);
       if ($this.is(':checked')) {
@@ -204,12 +217,15 @@
     });
     $("#search_field").click(function() {
       var time = $("#field_time").html();
-      window.location.href="/moodlens/field/?time="+time;
+      var during = document.getElementById("field_durtime").value;
+      var field_name = document.getElementById("field_name").value;
+      window.location.href="/moodlens/field/?time="+time+"&during="+during+"&field_name="+field_name;
     });
     $("#search_topic").click(function() {
       var time = $("#topic_time").html();
+      var during = document.getElementById("topic_durtime").value;
       var keyword = document.getElementById("keyword").value;
-      window.location.href="/moodlens/topic/?time="+time+"&keyword="+keyword;
+      window.location.href="/moodlens/topic/?time="+time+"&during="+during+"&keyword="+keyword;
     });
     // 动态增加定制话题
     function add2custom(){

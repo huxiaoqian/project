@@ -136,12 +136,13 @@
     <div class="container-fluid">
         <div class="row-fluid">
             <div style="text-align: center">
-                <div id="presets">
+                <p>全网情绪分析</p>
+                <!--<div id="presets">
                     <a class="first" href="/moodlens/all/">全网</a>
                     <a class="" href="/moodlens/field">领域</a>
                     <a class="active" href="/moodlens/topic">话题</a>
-                </div>
-                <form id="topic_emotion" action="/moodlens/topic" class="form-inline" method="POST">
+                </div>-->
+                <!--<form id="topic_emotion" action="/moodlens/topic" class="form-inline" method="POST">
                     <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;"> 
                     时间范围：
                     <div id="reportrange" class="btn dropdown-toggle">
@@ -161,7 +162,7 @@
                     <input type="submit" class="btn btn-primary" value="分析">
                 </form>
                 <hr class="soften">
-            </div>
+            </div>-->
         </div>
 
         <div id="emotion_chart_div" class="row-fluid">
@@ -284,14 +285,14 @@
         var cloud_list = [];
         var max_count = 0;
         var min_count = 0;
-        for (var i=0;i<data.length;i++) {
-            if(max_count < parseInt(data[i][1])){
-                max_count = parseInt(data[i][1]);
+        for (var i in data) {
+            if(max_count < parseInt(data[i])){
+                max_count = parseInt(data[i]);
             }
-            if(min_count > parseInt(data[i][1])){
-                min_count = parseInt(data[i][1]);
+            if(min_count > parseInt(data[i])){
+                min_count = parseInt(data[i]);
             }
-            cloud_list.push([parseInt(data[i][1]), data[i][0]]);
+            cloud_list.push([parseInt(data[i]), i]);
         }
         for (var i=0;i<cloud_list.length;i++) {
             $("#tags_ul").append("<li><a style=\"font-size:"+ defscale(cloud_list[i][0], min_count, max_count, min_word_size, max_word_size) +"ex\">"+ cloud_list[i][1] +"</a></li>");
@@ -374,24 +375,28 @@
                 }
             });
         }
-        $.ajax({
-            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during + "&query=" + query_args,
+        $.ajax({s
+            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during + "&query=" + query_args+"&limit=50",
             type: "GET",
             dataType:"json",
             success: function(data){
-                var happy_count = data['happy'].length;
-                var sad_count = data['sad'].length;
-                var angry_count = data['angry'].length;
-                var n = happy_count+sad_count+angry_count;
-                if(n>0){
-                   for(var e in emotion){
-                    chg_tagcloud(data[emotion[e]]); 
-                    }
-                }
-                else{
+                if(data=='search function undefined'){
+
                     $("#tags_ul").empty();
                     $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
                     redraw_tagcanvas();
+                }
+                else{
+                    if((data['happy']!=[])&&(data['sad']!=[])&&(data['angry']!=[])){
+                    for(var e in emotion){
+                        chg_tagcloud(data[emotion[e]]); 
+                        }
+                    }
+                    else{
+                        $("#tags_ul").empty();
+                        $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                        redraw_tagcanvas();
+                    }
                 }
             }
         });
@@ -502,18 +507,25 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&query=" + query_args,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&query=" + query_args+"&limit=50",
                         type: "GET",
                         dataType:"json",
                         success: function(data){
-                            if(data[emotion].length>0){
-                                chg_tagcloud(data[emotion]);
-                            }
-                            
-                            else{
+                            if(data=='search function undefined'){
                                 $("#tags_ul").empty();
                                 $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
                                 redraw_tagcanvas();
+                            }
+                            else{
+                                if(data!=[]){
+                                    chg_tagcloud(data);
+                                }
+                            
+                                else{
+                                    $("#tags_ul").empty();
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    redraw_tagcanvas();
+                                }
                             }
                         }
                     });

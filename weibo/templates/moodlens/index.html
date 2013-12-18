@@ -7,41 +7,56 @@
 <body>
 <div class="container">
   <div class="well">
-    <legend>全网情绪分析</legend>
-    <form id="all_eomtion" action="/moodlens/all" class="form-inline" method="POST">
+    <legend>微博情绪全网分析</legend>
+    <div id="all_eomtion" class="inline">
+    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
    <div id="reportrange_1" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
+    <span id="all_time">September 20, 2013 - September 25, 2013</span> 
 	 <b class="caret"></b>
 	    </div>
-	<input type="submit" class="btn btn-primary" value="识别">
-    </form>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间间隔:</b></font>
+    <div class="btn dropdown-toggle" style="position:relative;">
+<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+<option value="15分钟"> 15分钟 </option>
+<option value="30分钟"> 30分钟 </option>
+<option value="1小时"> 1小时 </option>
+<option value="12小时"> 12小时 </option>
+<option value="1天"> 1天 </option>
+</select></span><input id="dur_time" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+</div>
+	<input type="submit" class="btn btn-primary" value="搜索" id="search_all">
+    </div>
   </div>
   
   <div class="well">
-    <legend>领域情绪分析</legend>
-    <form id="field_emotion" action="/moodlens/field" class="form-inline" method="POST">
+    <legend>微博情绪领域分析</legend>
+    <div id="field_emotion" class="inline">
      <div id="reportrange_2" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
+    <span id="field_time">September 20, 2013 - September 25, 2013</span> 
    <b class="caret"></b>
       </div>
-      <input type="submit" class="btn btn-primary" value="识别">
-    </form>
+      <input type="submit" class="btn btn-primary" value="搜索" id="search_field">
+    </div>
 
   </div>
   
     <div class="well">
-      <legend>话题情绪分析</legend>
-      <form id="topic_emotion" action="/moodlens/topic" class="form-inline" method="POST">
-        <div id="reportrange_3" class="btn dropdown-toggle">
-          <i class="icon-calendar icon-large"></i><span>2013年12月11号 - 2013年12月31号</span>
-          <b class="caret"></b>
-        </div>
-        <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
-        <input type="hidden" name="action" value="run">
-        <input type="submit" class="btn btn-primary" value="识别">
-      </form>
+    <legend>微博情绪话题分析</legend>
+    <div id="topic_emotion" class="inline">
+      
+      <div id="reportrange_3" class="btn dropdown-toggle">
+    <i class="icon-calendar icon-large"></i>
+    <span id="topic_time">September 20, 2013 - September 25, 2013</span> 
+   <b class="caret"></b>
+      </div>
+      <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
+      <input type="hidden" name="action" value="run">
+      <input type="submit" class="btn btn-primary" value="搜索" id="search_topic">
+    </div>
+
       <ul id="TopicTab" class="nav nav-tabs">
         <li><a href="#area_1" data-toggle="tab"><strong>系统定制</strong></a></li>
         <li><a href="#TopicTabContent" onclick="add2custom();"><i class="icon-plus"></i></a></li>
@@ -158,6 +173,21 @@
       });
     }
 
+    $("#search_all").click(function() {
+      var time = $("#all_time").html();
+      var during = document.getElementById("dur_time").value;
+      console.log(time,during);
+      window.location.href="/moodlens/all/?time="+time+"&during="+during;
+    });
+    $("#search_field").click(function() {
+      var time = $("#field_time").html();
+      window.location.href="/moodlens/field/?time="+time;
+    });
+    $("#search_topic").click(function() {
+      var time = $("#topic_time").html();
+      var keyword = document.getElementById("keyword").value;
+      window.location.href="/moodlens/topic/?time="+time+"&keyword="+keyword;
+    });
     // 动态增加定制话题
     function add2custom(){
       var added_topic = $('#keyword').val();

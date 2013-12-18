@@ -4,7 +4,7 @@
 import json
 from config import cron_start, cron_end, xapian_search_weibo, \
                    xapian_search_domain, xapian_search_user, emotions_kv
-from time_utils import datetime2ts
+from time_utils import datetime2ts, ts2HourlyTime
 from xapian_weibo.utils import top_keywords
 from config import db
 from model import SentimentDomainCount, SentimentDomainKeywords, \
@@ -73,16 +73,16 @@ def _maintain_domain():
 
         item = Domain(idx, name, zhname, active)
         item_exist = Domain.query.filter_by(idx=idx, name=name, zhname=zhname).first()
-        
+
         if item_exist:
             db.session.delete(item_exist)
             db.session.add(item)
         else:
             db.session.add(item)
-    
+
     db.session.commit()
     count = len(Domain.query.all())
-    
+
     print 'maintain domain over, there is %s domains now' % count
 
 
@@ -90,36 +90,29 @@ def getDomainUsers(domain, top=TOP_DOMAIN_LIMIT):
     active = _is_domain_active(domain)
     domain_id = domain
     domain_uids = []
-    
+
     if not active or not domain_id:
         return []
-    
+
     if domain != 'oversea':
         count, get_results = xapian_search_domain.search(query={'domain': str(domain_id)}, sort_by=['followers_count'], fields=['_id'], max_offset=top)
     else:
         count, get_results = xapian_search_user.search(query={'location': FIELDS2ZHNAME('oversea')}, sort_by=['followers_count'], fields=['_id'], max_offset=top)
-        
+
     for user in get_results():
         domain_uids.append(user['_id'])
 
     return domain_uids
 
 
-def ts2HourlyTime(ts, interval):
-    # interval 取 Minite、Hour
-
-    ts = ts - ts % interval
-    return ts
-
-
 def save_count_results(domain, dic, during):
     for k, v in dic.iteritems():
         sentiment = k
         ts, count = v
-        
+
         item = SentimentDomainCount(domain, during, ts, sentiment, count)
         item_exist = SentimentDomainCount.query.filter_by(domain=domain, range=during, ts=ts, sentiment=sentiment).first()
-        
+
         if item_exist:
             db.session.delete(item_exist)
             db.session.add(item)
@@ -150,10 +143,10 @@ def save_weibos_results(domain, dic, during, limit):
     for k, v in dic.iteritems():
         sentiment = k
         ts, weibos = v
-        
+
         item = SentimentDomainTopWeibos(domain, during, limit, ts, sentiment, json.dumps(weibos))
         item_exist = SentimentDomainTopWeibos.query.filter_by(domain=domain, range=during, limit=limit, ts=ts, sentiment=sentiment).first()
-        
+
         if item_exist:
             db.session.delete(item_exist)
             db.session.add(item)
@@ -181,7 +174,7 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
 def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
     domain_uids = getDomainUsers(domain)
     print len(domain_uids)
-    
+
     if domain_uids != []:
         start_ts = int(start_ts)
         over_ts = int(over_ts)
@@ -190,7 +183,7 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
         interval = (over_ts - start_ts) / during
 
         for i in range(0, interval):
-    	    emotions_count = {}
+            emotions_count = {}
             emotions_kcount = {}
             emotions_weibo = {}
 
@@ -198,9 +191,9 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
             begin_ts = end_ts - during
 
             query_dict = {
-    	        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-    	        '$or': []
-    	    }
+                'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+                '$or': []
+            }
 
             for uid in domain_uids:
                 query_dict['$or'].append({'user': uid})
@@ -216,7 +209,7 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
                 emotions_count[v] = [end_ts, scount]
                 emotions_kcount[v] = [end_ts, kcount]
                 emotions_weibo[v] = [end_ts, top_ws]
-        
+
             print 'saved emotions count, keywords and weibos'
             print emotions_count
             print emotions_kcount
@@ -259,7 +252,7 @@ if __name__ == '__main__':
             jobs.append(p)
             p.start()
             '''
-    
+
     # test mysql read
     # start_range_ts = datetime2ts('2013-09-29')
     # end_range_ts = datetime2ts('2013-10-03')

@@ -66,9 +66,6 @@ def index():
 def topic():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
-<<<<<<< HEAD
-            return render_template('moodlens/all_emotion.html', active='moodlens')
-=======
             dur_time = request.args.get('time', '')
             during = request.args.get('during', '')
             if dur_time == '':
@@ -105,16 +102,12 @@ def topic():
                 during = str2ts(during)
                 
                 return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
->>>>>>> cd6317b85a60cbf1489f229c16cb23d567bd1db2
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
                     if identy == 1:
-<<<<<<< HEAD
-                        return render_template('moodlens/all_emotion.html', active='moodlens')
-=======
                         dur_time = request.args.get('time', '')
                         during = request.args.get('during', '')
             
@@ -151,7 +144,6 @@ def topic():
                         else:
                             during = str2ts(during)
                             return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
->>>>>>> cd6317b85a60cbf1489f229c16cb23d567bd1db2
                     else:
                         return redirect('/')
             return redirect('/')

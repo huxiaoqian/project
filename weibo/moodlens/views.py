@@ -9,6 +9,7 @@ from flask import Blueprint, render_template, request, session, redirect
 from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_results, \
                   sentimentFromDB, sentimentRealTime, read_range_weibos_results
 from xapian_weibo.utils import top_keywords
+import keywords as keywordsModule
 from topics import _all_topics, _add_topic, _drop_topic
 import simplejson as json
 from datetime import date

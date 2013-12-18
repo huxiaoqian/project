@@ -293,9 +293,18 @@
                 dataType:"json",
                 success: function(data){
                     $("#vertical-ticker").empty();
-                    for(var e in emotion){
+                    var happy_count = data['happy'].length;
+                    var sad_count = data['sad'].length;
+                    var angry_count = data['angry'].length;
+                    var n = happy_count+sad_count+angry_count;
+                    if(n>0){
+                        for(var e in emotion){
                         
                         chg_weibos(data[emotion[e]]);
+                        }
+                    }
+                    else{
+                        $("#vertical-ticker").append("关键微博为空！");
                     }
                 }
             });
@@ -305,9 +314,20 @@
             type: "GET",
             dataType:"json",
             success: function(data){
-                for(var e in emotion){
-                    chg_tagcloud(data[emotion[e]]);
-            }
+                var happy_count = data['happy'].length;
+                var sad_count = data['sad'].length;
+                var angry_count = data['angry'].length;
+                var n = happy_count+sad_count+angry_count;
+                if(n>0){
+                   for(var e in emotion){
+                    chg_tagcloud(data[emotion[e]]); 
+                    }
+                }
+                else{
+                    $("#tags_ul").empty();
+                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                    redraw_tagcanvas();
+                }
             }
         });
         $.ajax({
@@ -398,8 +418,13 @@
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
-                            chg_weibos(data[emotion]);
-                            $("#event_title").html(title);
+                            if(data[emotion].length>0){
+                                chg_weibos(data[emotion]);
+                                $("#event_title").html(title);
+                            }
+                            else{
+                                $("#vertical-ticker").append("关键微博为空！");
+                            }
                         }
                     });
                     $.ajax({
@@ -407,7 +432,15 @@
                         type: "GET",
                         dataType:"json",
                         success: function(data){
-                            chg_tagcloud(data[emotion]);
+                            if(data[emotion].length>0){
+                                chg_tagcloud(data[emotion]);
+                            }
+                            
+                            else{
+                                $("#tags_ul").empty();
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                redraw_tagcanvas();
+                            }
                         }
                     });
                     chg_emotion_pie(emotion_ratio[this.x]);     

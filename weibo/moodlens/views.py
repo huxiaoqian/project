@@ -348,29 +348,46 @@ def flag_data(emotion, area='global'):
 
 @mod.route('/keywords_data/<area>/')
 def keywords_data(area='global'):
-    """
-    /keywords_data 接口已备好，只是差领域数据
+    """情绪关键词数据
     """
 
-    query = request.args.get('query', '')
-    query = query.strip()
-    ts = request.args.get('ts', '')
-    ts = long(ts)
+    query = request.args.get('query', None)
+    if query:
+        query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    
+    print during
+    ts = request.args.get('ts', '')
+    ts = long(ts)
     begin_ts = ts - during
     end_ts = ts
-    results = read_range_kcount_results(begin_ts, end_ts, during)
+    limit = request.args.get('limit', 50)
+    limit = int(limit)
+    emotion = request.args.get('emotion', 'global')
 
-    happy = results['happy']
-    sad = results['sad']
-    angry = results['angry']
-    happy = happy[:10]
-    sad = sad[:10]
-    angry = angry[:10]
-    results = {'happy':happy,'sad':sad,'angry':angry}
+    results = {}
+
+    if area == 'global':
+        search_method = 'global'
+        if query:
+            search_method = 'topic'
+        area = None
+    else:
+        search_method = 'domain'
+        
+    search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
+    print search_func
+
+    if search_func:
+        if emotion == 'global':
+            for k, v in emotions_kv.iteritems():
+                results[k] = search_func(end_ts, during, v, query=query, domain=area, top=limit)
+        else:
+            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, top=limit)
     
+    else:
+        return json.dumps('search function undefined')
+
     return json.dumps(results)
 
 

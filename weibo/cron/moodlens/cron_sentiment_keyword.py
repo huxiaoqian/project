@@ -108,7 +108,7 @@ def sentiment_keywords(xapian_weibo=xapian_search_weibo, start_ts=start_range_ts
             emotions_data[v] = [end_ts, keywords_with_count]
             emotions_weibo[v] = [end_ts, top_ws]
         
-        print 'saved emotions keywords and weibos', emotions_weibo
+        print 'saved emotions keywords and weibos'
         save_count_results(emotions_data, during, TOP_KEYWORDS_LIMIT)
         save_weibos_results(emotions_weibo, during, TOP_WEIBOS_LIMIT)
 
@@ -132,6 +132,23 @@ def test_read_count_results(start_ts=start_range_ts, over_ts=end_range_ts, durin
     return sentiment_results
 
 
+def sentiment_keywords_search(start_ts, end_ts, during=Hour, limit=TOP_KEYWORDS_LIMIT):
+    for k, sentiment in emotions_kv.iteritems():
+        items = SentimentKeywords.query.filter(SentimentKeywords.range==during, \
+                                                    SentimentKeywords.ts>start_ts, \
+                                                    SentimentKeywords.ts<end_ts, \
+                                                    SentimentKeywords.limit==limit, \
+                                                    SentimentKeywords.sentiment==sentiment).all()
+        items = [item.kcount for item in items]
+        print items
+        for item_exist in items:
+            print item_exist
+            if item_exist:
+                return json.loads(item_exist.kcount)
+            else:
+                return []
+
+
 
 def cal_sentiment_kcount_by_date(datestr, duration):
     start_ts = datetime2ts(datestr)
@@ -143,12 +160,15 @@ def cal_sentiment_kcount_by_date(datestr, duration):
 
 if __name__ == '__main__':
     # test mysql write
-
+    
+    '''
     for date in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
         cal_sentiment_kcount_by_date(date, Fifteenminutes)
         cal_sentiment_kcount_by_date(date, Day)
+    '''
     
     # test mysql read
-    # start_ts = datetime2ts('2013-09-30')
-    # end_ts = datetime2ts('2013-10-01')
-    # test_read_count_results(start_ts=start_ts, over_ts=end_ts, during=Fifteenminutes)
+    start_ts = datetime2ts('2013-09-01')
+    end_ts = datetime2ts('2013-09-05')
+    #test_read_count_results(start_ts=start_ts, over_ts=end_ts, during=Fifteenminutes)
+    print sentiment_keywords_search(start_ts, end_ts, during=Fifteenminutes)

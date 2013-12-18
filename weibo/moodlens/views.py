@@ -392,70 +392,46 @@ def keywords_data(area='global'):
     return json.dumps(results)
 
 
-@mod.route('/field_keywords_data/<area>/')
-def field_keywords_data(area):
-    """
-    /keywords_data 接口已备好，只是差领域数据
-    """
-    ts = request.args.get('ts', '')
-    ts = long(ts)
-    emotion = request.args.get('emotion', 'all')
-    during = request.args.get('during', 24*3600)
-    during = int(during)
-
-    begin_ts = ts - during
-    end_ts = ts
-    
-    query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-    }
-    if emotion != 'all':
-        query_dict['sentiment'] = emotions_kv[emotion]
-
-    count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
-    if count:
-        query_dict['$or'] = []
-        for user in field_users():
-            query_dict['$or'].append({'user': user['_id']})
-
-    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=100000, sort_by=['-reposts_count'], fields=['terms'])
-    keywords_with_count = top_keywords(get_results, top=50)
-    keywords_with_count = [list(i) for i in keywords_with_count]
-
-    return json.dumps(keywords_with_count)
-
-
 @mod.route('/weibos_data/<emotion>/<area>/')
-def weibos_data(emotion='happy', area='global'):
+def weibos_data(emotion='global', area='global'):
     """关键微博
     """
-    query = request.args.get('query', '')
-    query = query.strip()
+
+    query = request.args.get('query', None)
+    if query:
+        query = query.strip()
+    during = request.args.get('during', 24*3600)
+    during = int(during)
+    print during
     ts = request.args.get('ts', '')
     ts = long(ts)
-    during = request.args.get('during', 24 * 3600)
-    during = int(during)
+    begin_ts = ts - during
+    end_ts = ts
+    limit = request.args.get('limit', 50)
+    limit = int(limit)
 
-    limit = 10
-    
-    # query为空，是全网情绪检测
-    if query == '':
-        begin_ts = ts - during
-        end_ts = ts
-        results = read_range_weibos_results(begin_ts, end_ts, during)
+    results = {}
 
-        #results = sorted(results, key=lambda tup: tup[1])
-        happy = results['happy']
-        sad = results['sad']
-        angry = results['angry']
-        happy = happy[:10]
-        sad = sad[:10]
-        angry = angry[:10]
-        results = {'happy':happy,'sad':sad,'angry':angry}
-    
-    # query不为空，是话题情绪监测
+    if area == 'global':
+        search_method = 'global'
+        if query:
+            search_method = 'topic'
+        area = None
     else:
-        pass
+        search_method = 'domain'
+        
+    search_func = getattr(weibosModule, 'search_%s_weibos' % search_method, None)
+    print search_func
+
+    if search_func:
+        if emotion == 'global':
+            for k, v in emotions_kv.iteritems():
+                results[k] = search_func(end_ts, during, v, query=query, domain=area, top=limit)
+        else:
+            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, top=limit)
+    
+    else:
+        return json.dumps('search function undefined')
 
     return json.dumps(results)
 

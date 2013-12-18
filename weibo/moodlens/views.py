@@ -119,6 +119,13 @@ def all_emotion():
         if session['user'] == 'admin':
             dur_time = request.args.get('time', '')
             during = request.args.get('during', '')
+            if dur_time == '':
+                dur_day = 5
+                during = 15*60
+                end_time_day = 4
+                end_time_month = 9
+                end_time_year = 2013
+                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
             times = dur_time.split(' - ')
             n = 0
             for ti in times:
@@ -155,6 +162,13 @@ def all_emotion():
                         dur_time = request.args.get('time', '')
                         during = request.args.get('during', '')
             
+                        if dur_time == '':
+                            dur_day = 5
+                            during = 15*60
+                            end_time_day = 4
+                            end_time_month = 9
+                            end_time_year = 2013
+                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
                         times = dur_time.split(' - ')
                         n = 0
                         for ti in times:

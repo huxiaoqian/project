@@ -81,7 +81,7 @@ def _maintain_domain():
             db.session.add(item)
 
     db.session.commit()
-    count = len(Domain.query.all())
+    count = Domain.query.count()
 
     print 'maintain domain over, there is %s domains now' % count
 
@@ -182,7 +182,7 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
         over_ts = ts2HourlyTime(over_ts, during)
         interval = (over_ts - start_ts) / during
 
-        for i in range(0, interval):
+        for i in range(interval):
             emotions_count = {}
             emotions_kcount = {}
             emotions_weibo = {}
@@ -192,7 +192,6 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
 
             query_dict = {
                 'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-                '$or': []
             }
 
             for uid in domain_uids:

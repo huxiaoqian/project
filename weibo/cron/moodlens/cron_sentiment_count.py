@@ -22,9 +22,9 @@ end_range_ts = datetime2ts(cron_end)
 def save_count_results(dic, during):
     countrange = during
     for k, v in dic.iteritems():
-	sentiment = k
-	ts, count = v
-	item = SentimentCount(range=countrange, ts=ts, sentiment=sentiment, count=count)
+        sentiment = k
+        ts, count = v
+        item = SentimentCount(range=countrange, ts=ts, sentiment=sentiment, count=count)
         item_exist = SentimentCount.query.filter_by(range=countrange, ts=ts, sentiment=sentiment).first()
         if item_exist:
             db.session.delete(item_exist)
@@ -49,16 +49,15 @@ def sentiment_count(xapian_weibo=xapian_search_weibo, start_ts=start_range_ts, o
     over_ts = ts2HourlyTime(over_ts, during)
     interval = (over_ts - start_ts) / during
 
-    for i in range(0, interval):
-    	emotions_data = {}
+    for i in range(interval):
+        emotions_data = {}
 
         end_ts = over_ts - during * i
         begin_ts = end_ts - during
 
         query_dict = {
-	        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-	        '$or': [],
-	    }
+            'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+        }
 
         for k, v in emotions_kv.iteritems():
             query_dict['sentiment'] = v

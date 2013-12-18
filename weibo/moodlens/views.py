@@ -72,18 +72,18 @@ def strToDate(dur_time):
 
     return time_str
 
-##def str2ts(s):
-##    temp_during = _utf_encode(s)
-##    if re.match(r'\d+分钟', temp_during):
-##        pattern=re.compile(r'分钟')
-##        temp_during=int(pattern.split(temp_during)[0])*60
-##    elif re.match((r'\d+小时'),temp_during):
-##        pattern=re.compile(r'小时')
-##        temp_during=int(pattern.split(temp_during)[0])*3600
-##    elif re.match(r'\d+天',temp_during):
-##        pattern=re.compile(r'天')
-##        temp_during=pattern.split(temp_during)*24*3600
-##    return temp_during
+def str2ts(s):
+    temp_during = _utf_encode(s)
+    if re.match(r'\d+分钟', temp_during):
+        pattern=re.compile(r'分钟')
+        temp_during=int(pattern.split(temp_during)[0])*60
+    elif re.match((r'\d+小时'),temp_during):
+        pattern=re.compile(r'小时')
+        temp_during=int(pattern.split(temp_during)[0])*3600
+    elif re.match(r'\d+天',temp_during):
+        pattern=re.compile(r'天')
+        temp_during=int(pattern.split(temp_during)[0])*24*3600
+    return temp_during
 
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
@@ -118,27 +118,34 @@ def all_emotion():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
             dur_time = request.args.get('time', '')
-            if dur_time == '':
-                dur_day = 30
-                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day)
+            during = request.args.get('during', '')
+            times = dur_time.split(' - ')
+            n = 0
+            for ti in times:
+                if n==0:
+                    beg_time = strToDate(ti)
+                    n = 1
+                else:
+                    end_time = strToDate(ti)
+
+            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+
+            end_time = datetime.strptime(end_time,"%Y-%m-%d")
+            end_time_year = int(end_time.year)
+            end_time_month = int(end_time.month)
+            end_time_day = int(end_time.day)
+
+            d1=datetime.date(end_time)
+            d2=datetime.date(beg_time)
+            dur_day=int((d1-d2).days)
+
+            if during == '':
+                during = 15*60
+                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
             else:
-                times = dur_time.split(' - ')
-                n = 0
-                for ti in times:
-                    if n==0:
-                        beg_time = strToDate(ti)
-                        n = 1
-                    else:
-                        end_time = strToDate(ti)
-
-                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
-
-                end_time = datetime.strptime(end_time,"%Y-%m-%d")
-
-                d1=datetime.date(end_time)
-                d2=datetime.date(beg_time)
-                dur_day=int((d1-d2).days)
-                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day)
+                during = str2ts(during)
+                
+                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -146,27 +153,34 @@ def all_emotion():
                     identy = pa.moodlens
                     if identy == 1:
                         dur_time = request.args.get('time', '')
-                        if dur_time == '':
-                            dur_day = 30
-                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day)
+                        during = request.args.get('during', '')
+            
+                        times = dur_time.split(' - ')
+                        n = 0
+                        for ti in times:
+                            if n==0:
+                                beg_time = strToDate(ti)
+                                n = 1
+                            else:
+                                end_time = strToDate(ti)
+
+                        beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+
+                        end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                        end_time_year = int(end_time.year)
+                        end_time_month = int(end_time.month)
+                        end_time_day = int(end_time.day)
+
+                        d1=datetime.date(end_time)
+                        d2=datetime.date(beg_time)
+                        dur_day=int((d1-d2).days)
+
+                        if during == '':
+                            during = 15*60
+                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
                         else:
-                            times = dur_time.split(' - ')
-                            n = 0
-                            for ti in times:
-                                if n==0:
-                                    beg_time = strToDate(ti)
-                                    n = 1
-                                else:
-                                    end_time = strToDate(ti)
-
-                            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
-
-                            end_time = datetime.strptime(end_time,"%Y-%m-%d")
-
-                            d1=datetime.date(end_time)
-                            d2=datetime.date(beg_time)
-                            dur_day=int((d1-d2).days)
-                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day)
+                            during = str2ts(during)
+                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -531,3 +545,4 @@ def topics_customized():
             status, item = 'NoTopic', 'Null'
 
         return json.dumps({'status': status, 'item': item})
+

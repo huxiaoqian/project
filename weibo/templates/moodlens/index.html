@@ -9,11 +9,23 @@
   <div class="well">
     <legend>微博情绪全网分析</legend>
     <div id="all_eomtion" class="inline">
+    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
    <div id="reportrange_1" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
     <span id="all_time">September 20, 2013 - September 25, 2013</span> 
 	 <b class="caret"></b>
 	    </div>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间间隔:</b></font>
+    <div class="btn dropdown-toggle" style="position:relative;">
+<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+<option value="15分钟"> 15分钟 </option>
+<option value="30分钟"> 30分钟 </option>
+<option value="1小时"> 1小时 </option>
+<option value="12小时"> 12小时 </option>
+<option value="1天"> 1天 </option>
+</select></span><input id="dur_time" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+</div>
 	<input type="submit" class="btn btn-primary" value="搜索" id="search_all">
     </div>
   </div>
@@ -163,7 +175,9 @@
 
     $("#search_all").click(function() {
       var time = $("#all_time").html();
-      window.location.href="/moodlens/all/?time="+time;
+      var during = document.getElementById("dur_time").value;
+      console.log(time,during);
+      window.location.href="/moodlens/all/?time="+time+"&during="+during;
     });
     $("#search_field").click(function() {
       var time = $("#field_time").html();
@@ -172,7 +186,7 @@
     $("#search_topic").click(function() {
       var time = $("#topic_time").html();
       var keyword = document.getElementById("keyword").value;
-      window.location.href="/moodlens/topic/?time="+time+"keyword="+keyword;
+      window.location.href="/moodlens/topic/?time="+time+"&keyword="+keyword;
     });
     // 动态增加定制话题
     function add2custom(){

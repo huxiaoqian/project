@@ -142,11 +142,11 @@
             <div class="span8">
                 <div class="control-group" id="togglecount">
                     <div class="controls btn switch switch-two">
-                        <input id="absolute" name="view" type="radio">
-                        <label for="absolute" onclick="switch2('absolute');">绝对数量</label>
+                        <input id="relative" name="view" type="radio" checked>
+                        <label for="relative" onclick="switch2('relative');">相对比例</label>
 
-                        <input id="relative" name="view" type="radio" checked>    
-                        <label for="relative" onclick="switch2('relative');">相对比例</label>                       
+                        <input id="absolute" name="view" type="radio">    
+                        <label for="absolute" onclick="switch2('absolute');">绝对数量</label>                       
                         <span class="slide-button btn btn-success"></span>
                     </div>
                 </div>
@@ -181,16 +181,25 @@
 
   <script>
     var emotion_ratio = {};
+    var emotion_absolute={};
+
     var happy_absolute = [];
     var angry_absolute = [];
     var sad_absolute = [];
     var happy_ratio = [];
     var angry_ratio = [];
     var sad_ratio = [];
+
     var happy_list = [];
     var angry_list = [];
     var sad_list = [];
     var ts_list = [];
+
+    var happy_alist = [];
+    var angry_alist = [];
+    var sad_alist = [];
+    var ts_alist = [];
+
     var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
     var max_word_size = 10;
     var min_word_size = 1;
@@ -368,20 +377,31 @@
                     series1.addPoint([ts * 1000, happy_emotion_ratio], true, isShift);
                     series2.addPoint([ts * 1000, angry_emotion_ratio], true, isShift);
                     series3.addPoint([ts * 1000, sad_emotion_ratio], true, isShift);
+
                     emotion_ratio[ts * 1000] = [happy_emotion_ratio, angry_emotion_ratio, sad_emotion_ratio, total_emotion_count];
+                    emotion_absolute[ts*1000]=[happy_emotion_count, angry_emotion_count, sad_emotion_count, total_emotion_count];
+
                     happy_absolute.push([ts * 1000, happy_emotion_count]);
                     angry_absolute.push([ts * 1000, angry_emotion_count]);
                     sad_absolute.push([ts * 1000, sad_emotion_count]);
+
                     happy_ratio.push([ts * 1000, happy_emotion_ratio]);
                     angry_ratio.push([ts * 1000, angry_emotion_ratio]);
                     sad_ratio.push([ts * 1000, sad_emotion_ratio]);
+
                     happy_list.push(happy_emotion_ratio);
                     angry_list.push(angry_emotion_ratio);
                     sad_list.push(sad_emotion_ratio);
                     ts_list.push(ts);
+
+                    happy_alist.push(happy_emotion_count);
+                    angry_alist.push(angry_emotion_count);
+                    sad_alist.push(sad_emotion_count);
+                    ts_alist.push(ts);
                 }
                 else{
                     emotion_ratio[ts * 1000] = [0, 0, 0, 0];
+                    emotion_absolute[ts*1000]= [0, 0, 0, 0];
                 }
                 times++;
                 pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6);
@@ -389,12 +409,94 @@
         });
     }
 
+    function get_absolute_peaks(series4, series5, series6){
+        console.log("here");
+        console.log(happy_alist);
+        console.log(angry_alist);
+        console.log(sad_alist);
+        console.log(ts_alist);
+        console.log("there");
+        console.log(happy_list);
+        $.ajax({
+            url: "/moodlens/emotionpeak/?happy=" + happy_alist.join(',') + "&angry=" + angry_alist.join(',') + "&sad=" + sad_alist.join(',') + "&ts=" + ts_alist,
+            type: "GET",
+            dataType:"json",
+            success: function(data){
+              console.log("juedui");
+              console.log(data);
+              if ( data != 'Null Data'){
+              var isShift = false;
+              for(var i in data){
+                var x = data[i]['ts'];
+                var title = data[i]['title'];
+                var happy_title = title['happy'];
+                var angry_title = title['angry'];
+                var sad_title = title['sad'];
+                var text = data[i]['text'];
+                var happy_text = text['happy'];
+                var angry_text = text['angry'];
+                var sad_text = text['sad'];
+                var flagClick = function(event){
+                    var click_ts = this.x / 1000;
+                    var emotion = this.emotion;
+                    var title = this.title;
+                    $.ajax({
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
+                        type: "GET",
+                        dataType:"json",
+                        success: function(data){
+                            $("#vertical-ticker").empty();
+                            if(data[emotion].length>0){
+                                chg_weibos(data[emotion]);
+                                $("#event_title").html(title);
+                            }
+                            else{
+                                $("#vertical-ticker").append("关键微博为空！");
+                            }
+                        }
+                    });
+                    $.ajax({
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=50",
+                        type: "GET",
+                        dataType:"json",
+                        success: function(data){
+                            if(data=='search function undefined'){
+                                $("#tags_ul").empty();
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                redraw_tagcanvas();
+                            }
+                            else{
+                                if(data!=[]){
+                                    chg_tagcloud(data);
+                                }
+                            
+                                else{
+                                    $("#tags_ul").empty();
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    redraw_tagcanvas();
+                                }
+                            }
+                        }
+                    });
+                    chg_emotion_pie(emotion_absolute[this.x]);     
+                }
+                series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
+                series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
+                series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
+              }
+
+            }
+        }
+        })
+    }
     function get_peaks(series4, series5, series6){
         $.ajax({
             url: "/moodlens/emotionpeak/?happy=" + happy_list.join(',') + "&angry=" + angry_list.join(',') + "&sad=" + sad_list.join(',') + "&ts=" + ts_list,
             type: "GET",
             dataType:"json",
             success: function(data){
+              console.log("xiangdui");
+              console.log(data);
               if ( data != 'Null Data'){
               var isShift = false;
               for(var i in data){
@@ -455,6 +557,7 @@
                 series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
                 series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
+
             }
         }
         })
@@ -674,6 +777,7 @@
             chart.series[2].update({
                 data : sad_absolute
             });
+            get_absolute_peaks(chart.series[3], chart.series[4], chart.series[5]);
         }
         else{
             var chart = $('#emotion_container').highcharts();

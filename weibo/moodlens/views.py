@@ -371,7 +371,7 @@ def data(area='global'):
     else:
         return json.dumps('search function undefined')
 
-    print results
+    #1 print results
 
     return json.dumps(results)
 
@@ -388,7 +388,7 @@ def field_data(area):
 
     begin_ts = ts - during
     end_ts = ts
-    print begin_ts, end_ts
+    #2 print begin_ts, end_ts
 
     emotions_data = {}
     count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
@@ -436,7 +436,7 @@ def flag_data(emotion, area='global'):
             'sentiment': emotions_kv[emotion],
         }
         count, get_results = xapian_search_weibo.search(query=query_dict, fields=['terms'])
-        print count
+        # 3print count
         keywords_with_count = top_keywords(get_results, top=10)
         text = ','.join([tp[0] for tp in keywords_with_count])
         data.append({
@@ -457,7 +457,7 @@ def keywords_data(area='global'):
         query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    print during
+    # 4print during
     ts = request.args.get('ts', '')
     ts = long(ts)
     begin_ts = ts - during
@@ -477,7 +477,7 @@ def keywords_data(area='global'):
         search_method = 'domain'
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
-    print search_func
+    #5 print search_func
 
     if search_func:
         if emotion == 'global':
@@ -501,7 +501,7 @@ def weibos_data(emotion='global', area='global'):
         query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    print during
+    #6 print during
     ts = request.args.get('ts', '')
     ts = long(ts)
     begin_ts = ts - during
@@ -531,7 +531,7 @@ def weibos_data(emotion='global', area='global'):
     else:
         return json.dumps('search function undefined')
 
-    print results
+    #7 print results
 
     return json.dumps(results)
 
@@ -578,9 +578,20 @@ def getPeaks():
     angry_lis = request.args.get('angry', '')
     sad_lis = request.args.get('sad', '')
     ts_lis = request.args.get('ts', '')
+    #print "happy_lis: "+happy_lis
+    #print "angry_lis: "+angry_lis
+    #print "sad_lis: "+sad_lis
+    #print "ts_lis: "+ts_lis
     query = request.args.get('query', '')
     query = query.strip()
-    
+    print "here"
+    happy_lis=happy_lis.strip(",")
+    #f = file("moodlens.txt",'w+')
+    #f.write("happy_list: \n")
+    #for num in happy_lis:
+    #    f.write("%d\n" % int(num))
+    #f.close()
+    print "there"
     if not happy_lis or not angry_lis or not sad_lis:
         return 'Null Data'
     happy_lis = [float(da) for da in happy_lis.split(',')]
@@ -591,6 +602,7 @@ def getPeaks():
     sentiment_variation = st_variation(happy_lis, angry_lis, sad_lis)
     ##peak_x返回前N个点的在list中的序数0,1.
     ##peak_y返回前N个点的情绪波动值
+    #print 'djfhjd: ', sentiment_variation
     try:
         peak_x, peak_y = find_topN(sentiment_variation,topN)
     except:

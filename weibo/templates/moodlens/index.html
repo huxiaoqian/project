@@ -12,7 +12,7 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
       <div id="reportrange_1" class="btn dropdown-toggle">
       <i class="icon-calendar icon-large"></i>
-      <span id="all_time">September 1, 2013 - September 5, 2013</span> 
+      <span id="all_time">9月 2,2013 - 9月 4,2013</span> 
 	   <b class="caret"></b>
 	   </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间间隔:</b></font>
@@ -37,7 +37,7 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
      <div id="reportrange_2" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span id="field_time">September 1, 2013 - September 5, 2013</span> 
+    <span id="field_time">9月 2,2013 - 9月 4,2013</span> 
    <b class="caret"></b>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间间隔:</b></font>
@@ -80,7 +80,7 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
       <div id="reportrange_3" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span id="topic_time">September 1, 2013 - September 5, 2013</span> 
+    <span id="topic_time">9月 2,2013 - 9月 4,2013</span> 
    <b class="caret"></b>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间间隔:</b></font>
@@ -118,8 +118,8 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/moodlens/moment.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/moodlens/datarangepiker.js') }}"></script>
   <script src="/static/js/bootstrap-alert.js"></script>
   <script type="text/javascript">
     $('#TopicTabContent:checkbox').click(function(){
@@ -145,12 +145,12 @@
     //all_emotion
     $('#reportrange_1').daterangepicker({
         ranges: {
-           'Today': [moment(), moment()],
-           'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-           'Last 7 Days': [moment().subtract('days', 6), moment()],
-           'Last 30 Days': [moment().subtract('days', 29), moment()],
-           'This Month': [moment().startOf('month'), moment().endOf('month')],
-           'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+           '今天': [moment(), moment()],
+           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [moment().subtract('days', 6), moment()],
+           '最近30天': [moment().subtract('days', 29), moment()],
+           '本月内': [moment().startOf('month'), moment().endOf('month')],
+           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
         },
         startDate: moment().subtract('days', 29),
         endDate: moment()
@@ -163,12 +163,12 @@
     //field_emotion
     $('#reportrange_2').daterangepicker({
       ranges: {
-         'Today': [moment(), moment()],
-         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         'Last 7 Days': [moment().subtract('days', 6), moment()],
-         'Last 30 Days': [moment().subtract('days', 29), moment()],
-         'This Month': [moment().startOf('month'), moment().endOf('month')],
-         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+         '今天': [moment(), moment()],
+         '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+         '最近7天': [moment().subtract('days', 6), moment()],
+         '最近30天': [moment().subtract('days', 29), moment()],
+         '本月内': [moment().startOf('month'), moment().endOf('month')],
+         '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
       },
         startDate: moment().subtract('days', 29),
         endDate: moment()
@@ -181,12 +181,12 @@
     //topic_emotion
     $('#reportrange_3').daterangepicker({
         ranges: {
-           'Today': [moment(), moment()],
-           'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-           'Last 7 Days': [moment().subtract('days', 6), moment()],
-           'Last 30 Days': [moment().subtract('days', 29), moment()],
-           'This Month': [moment().startOf('month'), moment().endOf('month')],
-           'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+           '今天': [moment(), moment()],
+           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [moment().subtract('days', 6), moment()],
+           '最近30天': [moment().subtract('days', 29), moment()],
+           '本月内': [moment().startOf('month'), moment().endOf('month')],
+           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
         },
         startDate: moment().subtract('days', 29),
         endDate: moment()

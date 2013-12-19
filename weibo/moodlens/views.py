@@ -8,6 +8,7 @@ from weibo.global_config import xapian_search_weibo, emotions_kv, \
 from flask import Blueprint, render_template, request, session, redirect
 from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_results, \
                   sentimentFromDB, sentimentRealTime, read_range_weibos_results
+from peak_detection import detect_peaks
 from xapian_weibo.utils import top_keywords
 import keywords as keywordsModule
 import weibos as weibosModule
@@ -574,68 +575,61 @@ def field_weibos_data(emotion, area):
 
 @mod.route('/emotionpeak/')
 def getPeaks():
-    happy_lis = request.args.get('happy', '')
-    angry_lis = request.args.get('angry', '')
-    sad_lis = request.args.get('sad', '')
+    limit = request.args.get('limit', 10)
+    query = request.args.get('query', None)
+    if query:
+        query = query.strip()
+    during = request.args.get('during', 24 * 3600)
+    during = int(during)
+
+    area = request.args.get('area', 'global')
+    emotion = request.args.get('emotion', 'happy')
+    print emotion
+    lis = request.args.get('lis', '')
+    lis = [float(da) for da in lis.split(',')]
+    if not lis or not len(lis):
+        return 'Null Data'
+
     ts_lis = request.args.get('ts', '')
-    #print "happy_lis: "+happy_lis
-    #print "angry_lis: "+angry_lis
-    #print "sad_lis: "+sad_lis
-    #print "ts_lis: "+ts_lis
-    query = request.args.get('query', '')
-    query = query.strip()
-    print "here"
-    happy_lis=happy_lis.strip(",")
-    #f = file("moodlens.txt",'w+')
-    #f.write("happy_list: \n")
-    #for num in happy_lis:
-    #    f.write("%d\n" % int(num))
-    #f.close()
-    print "there"
-    if not happy_lis or not angry_lis or not sad_lis:
-        return 'Null Data'
-    happy_lis = [float(da) for da in happy_lis.split(',')]
-    angry_lis = [float(da) for da in angry_lis.split(',')]
-    sad_lis = [float(da) for da in sad_lis.split(',')]
     ts_lis = [float(da) for da in ts_lis.split(',')]
-    topN = 10
-    sentiment_variation = st_variation(happy_lis, angry_lis, sad_lis)
-    ##peak_x返回前N个点的在list中的序数0,1.
-    ##peak_y返回前N个点的情绪波动值
-    #print 'djfhjd: ', sentiment_variation
-    try:
-        peak_x, peak_y = find_topN(sentiment_variation,topN)
-    except:
-        return 'Null Data'
-    sorted_peak_x = sorted(peak_x)
+
+    new_zeros, dif, dea = detect_peaks(lis)
+
+    if area == 'global':
+        search_method = 'global'
+        if query:
+            search_method = 'topic'
+        area = None
+    else:
+        search_method = 'domain'
+        
+    search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
+    print search_func
+
+    if not search_func:
+        return json.dumps('search function undefined')
+
+    title_text = {'happy': [], 'angry': [], 'sad': []}
+    title = {'happy': 'A', 'angry': 'B', 'sad': 'C'}
+
     time_lis = {}
-    for i in peak_x:
-        ts = ts_lis[i]
-        during = 24 * 3600
-        begin_ts = ts - during
-        end_ts = ts
-        title_text = {'happy': [], 'angry': [], 'sad': []}
-        title = {'happy': 'A', 'angry': 'B', 'sad': 'C'}
-        for emotion in emotions_kv.keys():
-            query_dict = {
-                'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-                'sentiment': emotions_kv[emotion],
-                '$or': []
+    for i in range(0, len(ts_lis)):
+        if i in new_zeros:
+            ts = ts_lis[i]
+            begin_ts = ts - during
+            end_ts = ts
+
+            v = emotions_kv[emotion]
+            keywords_with_count = search_func(end_ts, during, v, query=query, domain=area, top=limit)
+            text = ','.join([k for k, v in keywords_with_count.iteritems()])
+
+            time_lis[i] = {
+                'ts': end_ts * 1000,
+                'title': title[emotion] + str(new_zeros.index(i)),
+                'text': text
             }
-            for term in query.split(','):
-                if term:
-                    query_dict['$or'].append({'text': [term]})
-            count, get_results = xapian_search_weibo.search(query=query_dict, fields=['terms', 'text', 'user'])
-            keywords_with_10count = top_keywords(get_results, top=10)
-            title_text[emotion] = ','.join([tp[0] for tp in keywords_with_10count])
-            title[emotion] = title[emotion] + str(sorted_peak_x.index(i))
-
-        time_lis[i] = {
-            'ts': end_ts * 1000,
-            'title': title,
-            'text': title_text
-        }
-
+            print title[emotion] + str(new_zeros.index(i))
+        
     return json.dumps(time_lis)
 
 @mod.route('/topics.json', methods=['GET','POST'])
@@ -665,4 +659,3 @@ def topics_customized():
             status, item = 'NoTopic', 'Null'
 
         return json.dumps({'status': status, 'item': item})
-

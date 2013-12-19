@@ -135,11 +135,6 @@
         <div class="row-fluid">
             <div style="text-align: center">
                 <p>全网情绪分析</p>
-                <!--<div id="presets">
-                    <a class="first active" href="/moodlens/all/">全网</a>
-                    <a class="" href="/moodlens/field/">领域</a>
-                    <a class="" href="/moodlens/topic/">话题</a>
-                </div>-->
             </div>
             <hr class="soften">
         </div>
@@ -287,29 +282,27 @@
 
     function init_statistics(end_ts, during){
         var emotion = ['happy', 'angry', 'sad'];
-        //for(var e in emotion){
-            $.ajax({
-                url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + during,
-                type: "GET",
-                dataType:"json",
-                success: function(data){
-                    $("#vertical-ticker").empty();
-                    var happy_count = data['happy'].length;
-                    var sad_count = data['sad'].length;
-                    var angry_count = data['angry'].length;
-                    var n = happy_count+sad_count+angry_count;
-                    if(n>0){
-                        for(var e in emotion){
-                        
-                        chg_weibos(data[emotion[e]]);
-                        }
-                    }
-                    else{
-                        $("#vertical-ticker").append("关键微博为空！");
+        $.ajax({
+            url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + during,
+            type: "GET",
+            dataType:"json",
+            success: function(data){
+                $("#vertical-ticker").empty();
+                var happy_count = data['happy'].length;
+                var sad_count = data['sad'].length;
+                var angry_count = data['angry'].length;
+                var n = happy_count+sad_count+angry_count;
+                if(n>0){
+                    for(var e in emotion){
+                    
+                    chg_weibos(data[emotion[e]]);
                     }
                 }
-            });
-        //}
+                else{
+                    $("#vertical-ticker").append("关键微博为空！");
+                }
+            }
+        });
         $.ajax({
             url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during+"&limit=50",
             type: "GET",
@@ -503,17 +496,8 @@
             },
             series: [{
                 type: 'pie',
-                name: '微博情绪占比',
-                data: data/*[
-                    ['高兴',   45.0],
-                    ['愤怒',       26.8],
-                    {
-                        name: '悲伤',
-                        y: 12.8,
-                        sliced: true,
-                        selected: true
-                    },
-                ]*/
+                name: '情绪数值',
+                data: data
             }]
         });
     }
@@ -588,6 +572,7 @@
                 title: {
                     text: '微 博 条 数'
                 },
+                /*
                 plotLines : [{
                     value : 5000,
                     color : 'silver',
@@ -604,7 +589,7 @@
                     label : {
                         text : 'high'
                     }
-                }]
+                }]*/
             },
             tooltip: {
                 valueDecimals: 2,
@@ -623,7 +608,7 @@
                 enabled: true
             },
             series: [{
-                name: 'happy',
+                name: '高兴',
                 data: [],
                 id: 'happy',
                 color: '#006600',
@@ -631,7 +616,7 @@
                     enabled : false,    
                 }
             },{
-                name: 'angry',
+                name: '愤怒',
                 data: [],
                 id: 'angry',
                 color: '#FF0000',
@@ -639,7 +624,7 @@
                     enabled : false,    
                 }
             },{
-                name: 'sad',
+                name: '悲伤',
                 data: [],
                 id: 'sad',
                 color: '#000099',
@@ -647,7 +632,7 @@
                     enabled : false,    
                 }
             },{
-                name: 'happy-events',
+                name: '高兴情绪拐点',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -656,7 +641,7 @@
                 width : 16,
                 color: '#006600'
             },{
-                name: 'angry-events',
+                name: '愤怒情绪拐点',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -665,7 +650,7 @@
                 width : 16,
                 color: '#FF0000'
             },{
-                name: 'sad-events',
+                name: '悲伤情绪拐点',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',

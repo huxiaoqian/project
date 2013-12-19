@@ -192,6 +192,7 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
 
             query_dict = {
                 'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+                '$or': []
             }
 
             for uid in domain_uids:
@@ -202,17 +203,16 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
                 scount = xapian_search_weibo.search(query=query_dict, count_only=True)
                 count, get_results = xapian_search_weibo.search(query=query_dict, fields=save_fields, \
                                                                 sort_by=[sort_field], max_offset=w_limit)
+                count, get_results_1 = xapian_search_weibo.search(query=query_dict, fields=save_fields, \
+                                                                sort_by=[sort_field], max_offset=w_limit)
                 kcount = top_keywords(get_results, top=k_limit)
-                top_ws = top_weibos(get_results, top=w_limit)
+                top_ws = top_weibos(get_results_1, top=w_limit)
 
                 emotions_count[v] = [end_ts, scount]
                 emotions_kcount[v] = [end_ts, kcount]
                 emotions_weibo[v] = [end_ts, top_ws]
 
             print 'saved emotions count, keywords and weibos'
-            print emotions_count
-            print emotions_kcount
-            print emotions_weibo
             save_count_results(domain, emotions_count, during)
             save_kcount_results(domain, emotions_kcount, during, TOP_KEYWORDS_LIMIT)
             save_weibos_results(domain, emotions_weibo, during, TOP_WEIBOS_LIMIT)
@@ -240,17 +240,13 @@ if __name__ == '__main__':
     # _maintain_domain()
 
     # test mysql write
-
     domains = _domains_active()
     jobs = []
     for datestr in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
         for domain in domains:
-            worker(domain['idx'], datestr)
-            '''
-            p = multiprocessing.Process(target=worker, args=(domainid, datestr))
+            p = multiprocessing.Process(target=worker, args=(domain['idx'], datestr))
             jobs.append(p)
             p.start()
-            '''
 
     # test mysql read
     # start_range_ts = datetime2ts('2013-09-29')

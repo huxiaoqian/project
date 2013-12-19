@@ -251,7 +251,6 @@ def field():
                 during = str2ts(during)
                 
                 return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-            #return render_template('moodlens/field_emotion.html', active='moodlens')
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -344,7 +343,6 @@ def data(area='global'):
         query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    print during
     ts = request.args.get('ts', '')
     ts = long(ts)
     begin_ts = ts - during
@@ -367,11 +365,13 @@ def data(area='global'):
         if emotion == 'global':
             for k, v in emotions_kv.iteritems():
                 results[k] = search_func(end_ts, during, v, query=query, domain=area)
+
         else:
             results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area)
-    
     else:
         return json.dumps('search function undefined')
+
+    print results
 
     return json.dumps(results)
 
@@ -490,7 +490,6 @@ def keywords_data(area='global'):
         return json.dumps('search function undefined')
 
     return json.dumps(results)
-
 
 @mod.route('/weibos_data/<emotion>/<area>/')
 def weibos_data(emotion='global', area='global'):

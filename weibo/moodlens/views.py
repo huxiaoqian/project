@@ -240,25 +240,23 @@ def field():
                 end_time_month = 9
                 end_time_year = 2013
                 return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-            times = dur_time.split(' - ')
-            n = 0
-            for ti in times:
-                if n==0:
-                    beg_time = strToDate(ti)
-                    n = 1
-                else:
-                    end_time = strToDate(ti)
+            
+            print dur_time
+            dur_time = _utf_encode(dur_time)
+            print type(dur_time)
+            t = dur_time.split(' - ')
+            first = t[0]
+            second = t[1]
 
-            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+            et = get_date(second)
+            bt = get_date(first)
 
-            end_time = datetime.strptime(end_time,"%Y-%m-%d")
-            end_time_year = int(end_time.year)
-            end_time_month = int(end_time.month)
-            end_time_day = int(end_time.day)
-
-            d1=datetime.date(end_time)
-            d2=datetime.date(beg_time)
-            dur_day=int((d1-d2).days)
+            end_time_year = et[0]
+            end_time_month = et[1]
+            end_time_day = et[2]
+            print end_time_year,end_time_month,end_time_day
+            dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
+            print dur_day
 
             if during == '':
                 during = 15*60
@@ -288,25 +286,22 @@ def field():
                             end_time_month = 9
                             end_time_year = 2013
                             return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-                        times = dur_time.split(' - ')
-                        n = 0
-                        for ti in times:
-                            if n==0:
-                                beg_time = strToDate(ti)
-                                n = 1
-                            else:
-                                end_time = strToDate(ti)
+                        print dur_time
+                        dur_time = _utf_encode(dur_time)
+                        print type(dur_time)
+                        t = dur_time.split(' - ')
+                        first = t[0]
+                        second = t[1]
 
-                        beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                        et = get_date(second)
+                        bt = get_date(first)
 
-                        end_time = datetime.strptime(end_time,"%Y-%m-%d")
-                        end_time_year = int(end_time.year)
-                        end_time_month = int(end_time.month)
-                        end_time_day = int(end_time.day)
-
-                        d1=datetime.date(end_time)
-                        d2=datetime.date(beg_time)
-                        dur_day=int((d1-d2).days)
+                        end_time_year = et[0]
+                        end_time_month = et[1]
+                        end_time_day = et[2]
+                        print end_time_year,end_time_month,end_time_day
+                        dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
+                        print dur_day
 
                         if during == '':
                             during = 15*60

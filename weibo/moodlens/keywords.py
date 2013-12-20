@@ -87,12 +87,9 @@ def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_R
             kcounts_dict = parseKcount(item.kcount)
 
     else:
-        print unit
         start_ts = end_ts - during
-        print start_ts, end_ts
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         lowbound = (start_ts / unit) * unit
-        print lowbound, upbound
         items = db.session.query(SentimentTopicKeywords).filter(SentimentTopicKeywords.end>lowbound, \
                                                SentimentTopicKeywords.end<=upbound, \
                                                SentimentTopicKeywords.sentiment==sentiment, \
@@ -100,7 +97,6 @@ def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_R
                                                SentimentTopicKeywords.query==query).all()
         for item in items:
             kcount_dict = parseKcount(item.kcount)
-            print kcount_dict
             for k, v in kcount_dict.iteritems():
                 try:
                     kcounts_dict[k] += v

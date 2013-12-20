@@ -101,7 +101,7 @@ def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_REA
                                                    SentimentTopicTopWeibos.query==query, \
                                                    SentimentTopicTopWeibos.limit==top).all()
         for item in items:
-            weibo_dict = parseWeibos(item.weibo)
+            weibo_dict = parseWeibos(item.weibos)
             for k, v in weibo_dict.iteritems():
                 try:
                     weibos_dict[k] += v
@@ -137,7 +137,7 @@ def search_domain_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
                                                       SentimentDomainTopWeibos.limit==top).all()
 
         for item in items:
-            weibo_dict = parseWeibos(item.weibo)
+            weibo_dict = parseWeibos(item.weibos)
             for k, v in weibo_dict.iteritems():
                 try:
                     weibos_dict[k] += v

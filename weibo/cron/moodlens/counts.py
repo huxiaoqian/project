@@ -5,9 +5,9 @@ import json
 import math
 import operator
 from sqlalchemy import func
-from weibo.extensions import db
+from config import db
 from time_utils import datetime2ts
-from weibo.model import SentimentCount, SentimentDomainCount, SentimentTopicCount
+from model import SentimentCount, SentimentDomainCount, SentimentTopicCount
 
 
 Minute = 60
@@ -107,8 +107,12 @@ def search_domain_counts(end_ts, during, sentiment, unit=MinInterval, query=None
 
 if __name__ == '__main__':
     emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
-    end_ts = datetime2ts('2013-09-01')
-    during = 5 * Day
+    FIELDS_VALUE = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
+    end_ts = datetime2ts('2013-09-02')
+    end_ts = end_ts - Fifteenminutes * (24 * 4 - 1)
+    during = Fifteenminutes
 
     for k, v in emotions_kv.iteritems():
-        count = search_domain_counts(end_ts, during, v, domain=0)
+        for domain in FIELDS_VALUE:
+            count = search_domain_counts(end_ts, during, v, domain=FIELDS_VALUE.index(domain))
+            print count

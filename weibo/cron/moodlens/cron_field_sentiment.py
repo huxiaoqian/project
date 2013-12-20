@@ -5,7 +5,7 @@ import json
 from config import cron_start, cron_end, xapian_search_weibo, \
                    xapian_search_domain, xapian_search_user, emotions_kv
 from time_utils import datetime2ts, ts2HourlyTime
-from xapian_weibo.utils import top_keywords
+from xapian_weibo.utils import top_keywords, gen_mset_iter
 from config import db
 from model import SentimentDomainCount, SentimentDomainKeywords, \
                   SentimentDomainTopWeibos, Domain
@@ -156,14 +156,6 @@ def save_weibos_results(domain, dic, during, limit):
     db.session.commit()
 
 
-def read_count_results(domain, ts, sentiment, range=Hour):
-    item_exist = SentimentCount.query.filter_by(range=range, ts=ts, sentiment=sentiment).first()
-    if item_exist:
-        return item_exist.count
-    else:
-        return 0
-
-
 def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
     weibos = []
     for r in get_results():
@@ -173,7 +165,8 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
 
 def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
     domain_uids = getDomainUsers(domain)
-    print len(domain_uids)
+
+    print 'domain uid: ', len(domain_uids)
 
     if domain_uids != []:
         start_ts = int(start_ts)
@@ -201,14 +194,13 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
             for k, v in emotions_kv.iteritems():
                 query_dict['sentiment'] = v
                 scount = xapian_search_weibo.search(query=query_dict, count_only=True)
-                count, get_results = xapian_search_weibo.search(query=query_dict, fields=save_fields, \
-                                                                sort_by=[sort_field], max_offset=w_limit)
-                count, get_results_1 = xapian_search_weibo.search(query=query_dict, fields=save_fields, \
-                                                                sort_by=[sort_field], max_offset=w_limit)
-                kcount = top_keywords(get_results, top=k_limit)
-                top_ws = top_weibos(get_results_1, top=w_limit)
+                mset = xapian_search_weibo.search(query=query_dict, sort_by=[sort_field], \
+                                                  max_offset=w_limit, mset_direct=True)
+                kcount = top_keywords(gen_mset_iter(xapian_search_weibo, mset, fields=['terms']), top=k_limit)
+                top_ws = top_weibos(gen_mset_iter(xapian_search_weibo, mset, fields=save_fields), top=w_limit)
 
                 emotions_count[v] = [end_ts, scount]
+                print end_ts, scount
                 emotions_kcount[v] = [end_ts, kcount]
                 emotions_weibo[v] = [end_ts, top_ws]
 
@@ -227,12 +219,8 @@ def cal_field_sentiment_by_date(domainid, datestr, duration):
 
 
 def worker(domainid, datestr):
-    print 'domainid:', domainid
-    print 'datestr:', datestr
-    print 'Fifteenminutes: '
+    print 'domainid:', domainid, 'datestr:', datestr, 'Fifteenminutes: '
     cal_field_sentiment_by_date(domainid, datestr, Fifteenminutes)
-    print 'Day'
-    cal_field_sentiment_by_date(domainid, datestr, Day)
 
 
 if __name__ == '__main__':
@@ -244,9 +232,12 @@ if __name__ == '__main__':
     jobs = []
     for datestr in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
         for domain in domains:
+            worker(domain['idx'], datestr)
+            '''
             p = multiprocessing.Process(target=worker, args=(domain['idx'], datestr))
             jobs.append(p)
             p.start()
+            '''
 
     # test mysql read
     # start_range_ts = datetime2ts('2013-09-29')

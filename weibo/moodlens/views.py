@@ -24,9 +24,19 @@ import weibo.model
 import json
 import re
 
+mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
+
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 field_id = {u'文化':'culture', u'教育':'education', u'娱乐':'entertainment', u'时尚':'fashion', u'财经':'finance', u'媒体':'media', u'体育':'sports', u'科技':'technology'}
-mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
+FIELDS_VALUE = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
+FIELDS_ZH_NAME = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒体', u'体育', u'科技', u'海外']
+FIELDS2ID = {}
+FIELDS2ZHNAME = {}
+
+for key in FIELDS_VALUE:
+    idx = FIELDS_VALUE.index(key)
+    FIELDS2ID[key] = idx
+    FIELDS2ZHNAME[key] = FIELDS_ZH_NAME[idx]
 
 buckets = {}
 total_days = 90
@@ -75,6 +85,27 @@ def strToDate(dur_time):
     time_str = str(y)+'-'+str(m)+'-'+str(d)
 
     return time_str
+
+
+def get_date(ymd):
+    c=[]
+    son=ymd.split(',')
+    y=int(son[1])
+    md=son[0].split(' ')
+    m=int(filter(str.isdigit,md[0]))
+    d=int(md[1])
+    c.append(y)
+    c.append(m)
+    c.append(d)
+    return c
+
+
+def get_total_days(time_str):
+    t=time_str.split(' - ')
+    first=t[0]
+    second=t[1]
+    return get_days(second)-get_days(first)
+
 
 def str2ts(s):
     temp_during = _utf_encode(s)
@@ -130,26 +161,23 @@ def all_emotion():
                 end_time_month = 9
                 end_time_year = 2013
                 return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
-            times = dur_time.split(' - ')
-            n = 0
-            for ti in times:
-                if n==0:
-                    beg_time = strToDate(ti)
-                    n = 1
-                else:
-                    end_time = strToDate(ti)
+            print dur_time
+            dur_time = _utf_encode(dur_time)
+            print type(dur_time)
+            t = dur_time.split(' - ')
+            first = t[0]
+            second = t[1]
 
-            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+            et = get_date(second)
+            bt = get_date(first)
 
-            end_time = datetime.strptime(end_time,"%Y-%m-%d")
-            end_time_year = int(end_time.year)
-            end_time_month = int(end_time.month)
-            end_time_day = int(end_time.day)
-
-            d1=datetime.date(end_time)
-            d2=datetime.date(beg_time)
-            dur_day=int((d1-d2).days)
-
+            end_time_year = et[0]
+            end_time_month = et[1]
+            end_time_day = et[2]
+            print end_time_year,end_time_month,end_time_day
+            dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
+            print dur_day
+            
             if during == '':
                 during = 15*60
                 return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
@@ -173,26 +201,23 @@ def all_emotion():
                             end_time_month = 9
                             end_time_year = 2013
                             return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
-                        times = dur_time.split(' - ')
-                        n = 0
-                        for ti in times:
-                            if n==0:
-                                beg_time = strToDate(ti)
-                                n = 1
-                            else:
-                                end_time = strToDate(ti)
+                        print dur_time
+                        dur_time = _utf_encode(dur_time)
+                        print type(dur_time)
+                        t = dur_time.split(' - ')
+                        first = t[0]
+                        second = t[1]
 
-                        beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                        et = get_date(second)
+                        bt = get_date(first)
 
-                        end_time = datetime.strptime(end_time,"%Y-%m-%d")
-                        end_time_year = int(end_time.year)
-                        end_time_month = int(end_time.month)
-                        end_time_day = int(end_time.day)
-
-                        d1=datetime.date(end_time)
-                        d2=datetime.date(beg_time)
-                        dur_day=int((d1-d2).days)
-
+                        end_time_year = et[0]
+                        end_time_month = et[1]
+                        end_time_day = et[2]
+                        print end_time_year,end_time_month,end_time_day
+                        dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
+                        print dur_day
+                        
                         if during == '':
                             during = 15*60
                             return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
@@ -225,25 +250,23 @@ def field():
                 end_time_month = 9
                 end_time_year = 2013
                 return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-            times = dur_time.split(' - ')
-            n = 0
-            for ti in times:
-                if n==0:
-                    beg_time = strToDate(ti)
-                    n = 1
-                else:
-                    end_time = strToDate(ti)
+            
+            print dur_time
+            dur_time = _utf_encode(dur_time)
+            print type(dur_time)
+            t = dur_time.split(' - ')
+            first = t[0]
+            second = t[1]
 
-            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+            et = get_date(second)
+            bt = get_date(first)
 
-            end_time = datetime.strptime(end_time,"%Y-%m-%d")
-            end_time_year = int(end_time.year)
-            end_time_month = int(end_time.month)
-            end_time_day = int(end_time.day)
-
-            d1=datetime.date(end_time)
-            d2=datetime.date(beg_time)
-            dur_day=int((d1-d2).days)
+            end_time_year = et[0]
+            end_time_month = et[1]
+            end_time_day = et[2]
+            print end_time_year,end_time_month,end_time_day
+            dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
+            print dur_day
 
             if during == '':
                 during = 15*60
@@ -273,25 +296,22 @@ def field():
                             end_time_month = 9
                             end_time_year = 2013
                             return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-                        times = dur_time.split(' - ')
-                        n = 0
-                        for ti in times:
-                            if n==0:
-                                beg_time = strToDate(ti)
-                                n = 1
-                            else:
-                                end_time = strToDate(ti)
+                        print dur_time
+                        dur_time = _utf_encode(dur_time)
+                        print type(dur_time)
+                        t = dur_time.split(' - ')
+                        first = t[0]
+                        second = t[1]
 
-                        beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                        et = get_date(second)
+                        bt = get_date(first)
 
-                        end_time = datetime.strptime(end_time,"%Y-%m-%d")
-                        end_time_year = int(end_time.year)
-                        end_time_month = int(end_time.month)
-                        end_time_day = int(end_time.day)
-
-                        d1=datetime.date(end_time)
-                        d2=datetime.date(beg_time)
-                        dur_day=int((d1-d2).days)
+                        end_time_year = et[0]
+                        end_time_month = et[1]
+                        end_time_day = et[2]
+                        print end_time_year,end_time_month,end_time_day
+                        dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
+                        print dur_day
 
                         if during == '':
                             during = 15*60
@@ -359,6 +379,8 @@ def data(area='global'):
         area = None
     else:
         search_method = 'domain'
+        area = FIELDS2ID[area]
+        print area
         
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
 
@@ -372,7 +394,7 @@ def data(area='global'):
     else:
         return json.dumps('search function undefined')
 
-    print results
+    #1 print results
 
     return json.dumps(results)
 
@@ -389,7 +411,7 @@ def field_data(area):
 
     begin_ts = ts - during
     end_ts = ts
-    print begin_ts, end_ts
+    #2 print begin_ts, end_ts
 
     emotions_data = {}
     count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
@@ -437,7 +459,7 @@ def flag_data(emotion, area='global'):
             'sentiment': emotions_kv[emotion],
         }
         count, get_results = xapian_search_weibo.search(query=query_dict, fields=['terms'])
-        print count
+        #3 print count
         keywords_with_count = top_keywords(get_results, top=10)
         text = ','.join([tp[0] for tp in keywords_with_count])
         data.append({
@@ -458,7 +480,7 @@ def keywords_data(area='global'):
         query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    print during
+    #4 print during
     ts = request.args.get('ts', '')
     ts = long(ts)
     begin_ts = ts - during
@@ -476,9 +498,10 @@ def keywords_data(area='global'):
         area = None
     else:
         search_method = 'domain'
+        area = FIELDS2ID[area]
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
-    print search_func
+    #5 print search_func
 
     if search_func:
         if emotion == 'global':
@@ -502,7 +525,7 @@ def weibos_data(emotion='global', area='global'):
         query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    print during
+    #6 print during
     ts = request.args.get('ts', '')
     ts = long(ts)
     begin_ts = ts - during
@@ -519,6 +542,7 @@ def weibos_data(emotion='global', area='global'):
         area = None
     else:
         search_method = 'domain'
+        area = FIELDS2ID[area]
         
     search_func = getattr(weibosModule, 'search_%s_weibos' % search_method, None)
 
@@ -532,7 +556,7 @@ def weibos_data(emotion='global', area='global'):
     else:
         return json.dumps('search function undefined')
 
-    print results
+    #7 print results
 
     return json.dumps(results)
 
@@ -581,19 +605,21 @@ def getPeaks():
         query = query.strip()
     during = request.args.get('during', 24 * 3600)
     during = int(during)
-
     area = request.args.get('area', 'global')
     emotion = request.args.get('emotion', 'happy')
-    print emotion
     lis = request.args.get('lis', '')
-    lis = [float(da) for da in lis.split(',')]
+
+    try:
+        lis = [float(da) for da in lis.split(',')]
+    except:
+        lis = []
     if not lis or not len(lis):
         return 'Null Data'
 
     ts_lis = request.args.get('ts', '')
     ts_lis = [float(da) for da in ts_lis.split(',')]
 
-    new_zeros, dif, dea = detect_peaks(lis)
+    new_zeros = detect_peaks(lis)
 
     if area == 'global':
         search_method = 'global'
@@ -604,7 +630,6 @@ def getPeaks():
         search_method = 'domain'
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
-    print search_func
 
     if not search_func:
         return json.dumps('search function undefined')
@@ -628,7 +653,7 @@ def getPeaks():
                 'title': title[emotion] + str(new_zeros.index(i)),
                 'text': text
             }
-            print title[emotion] + str(new_zeros.index(i))
+            #print title[emotion] + str(new_zeros.index(i))
         
     return json.dumps(time_lis)
 

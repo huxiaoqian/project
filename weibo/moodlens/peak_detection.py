@@ -1,35 +1,85 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 import numpy as np
+def min_variation(lis,dur=7,form=0):
+	vs = []
+	for cursor in range(len(lis)):
+		if dur < len(lis):                       				
+			begin = cursor - int(dur/2)
+			if begin < 0:
+				begin = 0
+			end = begin + dur		
+			if end > len(lis)-1:
+	                    end = len(lis)-1
+	                    begin = end-dur
+		else:            
+			begin = 0
+			end = len(lis)-1
+		seg = lis[begin:end+1]
+		min_num = min(seg)
+		if form == 0:
+			vs.append((lis[cursor]-min_num))
+		else:
+			vs.append((lis[cursor]-min_num)/min_num)
+	return vs
+
+def filter_min_gap(lis,cursor,dur=7,form=1):
+	vs = min_variation(lis,dur=dur,form=form)
+	if vs[cursor] >= np.mean(vs):
+		return 1
+	else:
+		return 0
 
 def sentiment_variation(lis,cursor,dur=7):
+	stds = []
+	for i in range(len(lis)):
+		if i+dur > len(lis):
+			break
+		seg = lis[i:i+dur]
+		stds.append(np.std(seg))
+	global_std = np.mean(stds)
+	
+	if dur < len(lis):                       				
+		begin = cursor - int(dur/2)
+		if begin < 0:
+			begin = 0
+		end = begin + dur		
+		if end > len(lis)-1:
+                    end = len(lis)-1
+                    begin = end-dur
+	else:            
+		begin = 0
+		end = len(lis)-1
+	
+	seg = lis[begin:end]
+
+	ave = (seg[0]+seg[-1])/2
+	local_std = np.std(seg)
+	# print begin,end,cursor,seg,ave,ave*1.2,lis[cursor],global_std,local_std,'seg begin,end,cursor'+st	
+	if lis[cursor]> 1.2*ave or local_std > 0.5*global_std:
+		return 1
+	else:
+		return 0
+
+def save_domain(lis,cursor,dur=11):
 	if dur < len(lis):                       				
 		begin = cursor - int(dur/2)
 		st = ''
 		if begin < 0:
 			begin = 0
-			st += '0'
 		end = begin + dur		
 		if end > len(lis)-1:
                     end = len(lis)-1
                     begin = end-dur
-                    st += '2'
-                cursor = cursor-begin
-
-	else:
-            
+	else:            
 		begin = 0
-		end = len(lis)
-		st = ''
-	print begin,end,cursor,'seg begin,end,cursor'+st
+		end = len(lis)-1
+
 	seg = lis[begin:end+1]
-	ave = np.mean(seg)
-	variation = [np.abs(ave-i)/ave for i in seg]
-	ave = np.mean(variation)
-	if variation[cursor] < ave:
-		return 0
-	else:
+	if lis[cursor] == max(seg):
 		return 1
+	else:
+		return 0
 
 def ema_list(lis,day):
 	day = day+1
@@ -79,81 +129,70 @@ def find_topN(lis,n):
 	cursor = 0
 	for y in new:
 		if rank[cursor]!=0 and rank[cursor]!=len(new)-1:
-			if y > lis[rank[cursor]+1] and y > lis[rank[cursor]-1]:
+			if y >= lis[rank[cursor]+1] and y >= lis[rank[cursor]-1]:
 				peak_x.append(rank[cursor])
-				peak_y.append(y)
 
 		elif rank[cursor]==0:
-			if y > lis[rank[cursor]+1]:
+			if y >= lis[rank[cursor]+1]:
 				peak_x.append(rank[cursor])
-				peak_y.append(y)
-		elif rank[cursor]==rank[cursor]!=len(new)-1:
-			if y > lis[rank[cursor]+1]:
+
+		elif rank[cursor]==len(new)-1:
+			if y >= lis[rank[cursor]-1]:
 				peak_x.append(rank[cursor])
-				peak_y.append(y)
+
 		if len(peak_x)==n:
 			break
 		cursor += 1
 	return peak_x[:n]
 
-def detect_peaks(y1,topN=10):
-	if len(y1) == 0:
-		return []
-	else:
-		new_zeros = find_topN(y1,topN)
-		print new_zeros,'step1 top'+str(topN)+'nodes'
-		if y1[0] > y1[1]:
-			new_zeros.append(0)
-		if y1[-1] > y1[-2]:
-			new_zeros.append(len(y1)-1)
-		print new_zeros,'step2 edge nodes'
-		if len(y1) >= 4:
-			short_ema = ema_list(y1,12) ##计算12天的快速移动平均值
-			long_ema = ema_list(y1,26)  ##计算26天的慢速移动平均值
-			dif = dif_list(short_ema,long_ema)  ##根据 快速移动平均值 -慢速移动平均值 计算"差离值"（DIF）
-			dea = dea_lis(dif,9) ##计算离差值 DIF的9日的移动平均值EM
-			MACD = MACD_list(dif,dea) ##最后用DIFF减DEA，得MACD 若MACD符号发生变化，即DIF与DEA线发生交叉，则有拐点出现
-
-			zeros = []
-			for i in range(len(MACD)-1):
-				if MACD[i] <= 0 and MACD[i+1] >= 0:
-					zeros.append(i+1)
-
-				elif MACD[i] > 0 and MACD[i+1] < 0:
-					zeros.append(i+1)
-
-			for zr in zeros:
-				if zr != 0  and zr != len(y1)-1:
-					if y1[zr]>y1[zr-1] and y1[zr]>y1[zr+1]:
-						new_zeros.append(zr)
-					for cursor in range(zr+1,zr+4):
-						try:
-							if y1[cursor]>=y1[cursor-1] and y1[cursor]>=y1[cursor+1]:
-								new_zeros.append(cursor)
-						except:
-							continue
-					for cursor in range(zr-4,zr-1):
-						try:
-							if y1[cursor]>=y1[cursor-1] and y1[cursor]>=y1[cursor+1]:
-								new_zeros.append(cursor)
-						except:
-							continue
-	new_zeros = set(new_zeros)
-	new_zeros = list(new_zeros)
-	new_zeros = sorted(new_zeros)
-	print new_zeros,'step3 MACD nodes'
+def filter_variation(lis,peaks):
 	cursor = -1
 	filters = []
-	for zr in new_zeros:                        
-			cursor += 1
-			if zr < 0 or zr > len(y1)-1:
-				del new_zeros[cursor]
-				filters.append(zr)
-				continue
-			vr = sentiment_variation(y1,zr)
-			if vr == 0:
-				del new_zeros[cursor]
-				filters.append(zr)
-	print filters,'filtered nodes'
+	cursors = []
+	for zr in peaks:
+		cursor += 1
+		if zr < 0 or zr > len(lis)-1:
+			filters.append(zr)
+			cursors.append(cursors)
+			continue
+		vr = sentiment_variation(lis,zr)
+		if vr == 0:
+			filters.append(zr)
+			cursors.append(cursors)
+	peaks = [peaks[i] for i in range(len(peaks)) if i not in cursors]
+
+	return peaks,filters
+
+
+def detect_peaks(lis,topN=10,form=1):
+	if len(lis) ==[]:
+		return []
+	elif len(lis) == 1:
+		return [0]
+	else:
+		peaks = find_topN(lis,topN)
+		print peaks,'step1 top'+str(topN)+'nodes'
+		if lis[0] > lis[1]:
+			peaks.append(0)
+		if lis[-1] > lis[-2]:
+			peaks.append(len(lis)-1)
+		print peaks,'step2 edge nodes'
+	# peaks,filters = filter_variation(lis,peaks)
+	# print filters,'filtered nodes'
+	# print peaks,'step3 MACD nodes'
+	
+	remove_nodes = []
+	for pk in peaks:
+		remove_stay = [0,0]
+		remove_stay[0] = filter_min_gap(lis,pk,dur=7,form=1)
+		remove_stay[1] = save_domain(lis,pk,dur=13)
+		print pk,remove_stay
+		
+		if remove_stay == [0,0]:
+			remove_nodes.append(pk)
+	print 'remove_nodes',remove_nodes
+	new_zeros = set([pk for pk in peaks if pk not in remove_nodes])
+	new_zeros = list(new_zeros)
+	new_zeros = sorted(new_zeros)	
 	print new_zeros,'final nodes'
-	return new_zeros,dif,dea
+	return new_zeros

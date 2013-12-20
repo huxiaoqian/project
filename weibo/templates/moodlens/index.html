@@ -9,24 +9,25 @@
   <div class="well">
     <legend>微博情绪全网分析</legend>
     <div id="all_eomtion" class="inline">
-    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
-   <div id="reportrange_1" class="btn dropdown-toggle">
-    <i class="icon-calendar icon-large"></i>
-    <span id="all_time">September 1, 2013 - September 5, 2013</span> 
-	 <b class="caret"></b>
-	    </div>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
+      <div id="reportrange_1" class="btn dropdown-toggle">
+      <i class="icon-calendar icon-large"></i>
+      <span id="all_time">9月 2,2013 - 9月 4,2013</span> 
+	   <b class="caret"></b>
+	   </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间间隔:</b></font>
-    <div class="btn dropdown-toggle" style="position:relative;">
-<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
-<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
-<option value="15分钟"> 15分钟 </option>
-<option value="30分钟"> 30分钟 </option>
-<option value="1小时"> 1小时 </option>
-<option value="12小时"> 12小时 </option>
-<option value="1天"> 1天 </option>
-</select></span><input id="dur_time" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
-</div>
-	<input type="submit" class="btn btn-primary" value="搜索" id="search_all">
+      <div class="btn dropdown-toggle" style="position:relative;height: 30px;margin-top: 0px;">
+
+        <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+        <select name="top_n" style="width:110px;margin-left:-100px;" onchange="this.parentNode.nextSibling.value=this.value">
+          <option value="15分钟"> 15分钟 </option>
+          <option value="30分钟"> 30分钟 </option>
+          <option value="1小时"> 1小时 </option>
+          <option value="12小时"> 12小时 </option>
+          <option value="1天"> 1天 </option>
+          </select></span><input id="dur_time" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+      </div>
+	   <input type="submit" class="btn btn-primary" value="搜索" id="search_all">
     </div>
   </div>
   
@@ -36,34 +37,38 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
      <div id="reportrange_2" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span id="field_time">September 1, 2013 - September 5, 2013</span> 
+    <span id="field_time">9月 2,2013 - 9月 4,2013</span> 
    <b class="caret"></b>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间间隔:</b></font>
-    <div class="btn dropdown-toggle" style="position:relative;">
-<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
-<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
-<option value="15分钟"> 15分钟 </option>
-<option value="30分钟"> 30分钟 </option>
-<option value="1小时"> 1小时 </option>
-<option value="12小时"> 12小时 </option>
-<option value="1天"> 1天 </option>
-</select></span><input id="field_durtime" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
-</div>
+      <div class="btn dropdown-toggle" style="position:relative;height: 30px;margin-top: 0px;">
+        <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+          <select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+            <option value="15分钟"> 15分钟 </option>
+            <option value="30分钟"> 30分钟 </option>
+            <option value="1小时"> 1小时 </option>
+            <option value="12小时"> 12小时 </option>
+            <option value="1天"> 1天 </option>
+          </select>
+        </span>
+        <input id="field_durtime" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+      </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp领域:</b></font>
-    <div class="btn dropdown-toggle" style="position:relative;">
-<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
-<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
-<option value="文化"> 文化 </option>
-<option value="教育"> 教育 </option>
-<option value="娱乐"> 娱乐 </option>
-<option value="时尚"> 时尚 </option>
-<option value="财经"> 财经 </option>
-<option value="媒体"> 媒体 </option>
-<option value="体育"> 体育 </option>
-<option value="科技"> 科技 </option>
-</select></span><input id="field_name" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
-</div>
+      <div class="btn dropdown-toggle" style="position:relative;height: 30px;margin-top: 0px;">
+        <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+        <select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+          <option value="文化"> 文化 </option>
+          <option value="教育"> 教育 </option>
+          <option value="娱乐"> 娱乐 </option>
+          <option value="时尚"> 时尚 </option>
+          <option value="财经"> 财经 </option>
+          <option value="媒体"> 媒体 </option>
+          <option value="体育"> 体育 </option>
+          <option value="科技"> 科技 </option>
+        </select>
+        </span>
+        <input id="field_name" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+      </div>
       <input type="submit" class="btn btn-primary" value="搜索" id="search_field">
     </div>
 
@@ -75,20 +80,20 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
       <div id="reportrange_3" class="btn dropdown-toggle">
     <i class="icon-calendar icon-large"></i>
-    <span id="topic_time">September 1, 2013 - September 5, 2013</span> 
+    <span id="topic_time">9月 2,2013 - 9月 4,2013</span> 
    <b class="caret"></b>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间间隔:</b></font>
-    <div class="btn dropdown-toggle" style="position:relative;">
-<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
-<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
-<option value="15分钟"> 15分钟 </option>
-<option value="30分钟"> 30分钟 </option>
-<option value="1小时"> 1小时 </option>
-<option value="12小时"> 12小时 </option>
-<option value="1天"> 1天 </option>
-</select></span><input id="topic_durtime" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
-</div>
+      <div class="btn dropdown-toggle" style="position:relative;height: 30px;margin-top: 0px;">
+        <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+          <select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+            <option value="15分钟"> 15分钟 </option>
+            <option value="30分钟"> 30分钟 </option>
+            <option value="1小时"> 1小时 </option>
+            <option value="12小时"> 12小时 </option>
+            <option value="1天"> 1天 </option>
+          </select></span><input id="topic_durtime" name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;">
+      </div>
       <input type="text" id="keyword" name="keyword" value="" placeholder="输入关键词..." style="margin-top: 11px;margin-left: 62px;">
       <input type="hidden" name="action" value="run">
       <input type="submit" class="btn btn-primary" value="搜索" id="search_topic">
@@ -113,8 +118,8 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/moodlens/moment.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/moodlens/datarangepiker.js') }}"></script>
   <script src="/static/js/bootstrap-alert.js"></script>
   <script type="text/javascript">
     $('#TopicTabContent:checkbox').click(function(){
@@ -140,12 +145,12 @@
     //all_emotion
     $('#reportrange_1').daterangepicker({
         ranges: {
-           'Today': [moment(), moment()],
-           'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-           'Last 7 Days': [moment().subtract('days', 6), moment()],
-           'Last 30 Days': [moment().subtract('days', 29), moment()],
-           'This Month': [moment().startOf('month'), moment().endOf('month')],
-           'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+           '今天': [moment(), moment()],
+           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [moment().subtract('days', 6), moment()],
+           '最近30天': [moment().subtract('days', 29), moment()],
+           '本月内': [moment().startOf('month'), moment().endOf('month')],
+           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
         },
         startDate: moment().subtract('days', 29),
         endDate: moment()
@@ -158,12 +163,12 @@
     //field_emotion
     $('#reportrange_2').daterangepicker({
       ranges: {
-         'Today': [moment(), moment()],
-         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         'Last 7 Days': [moment().subtract('days', 6), moment()],
-         'Last 30 Days': [moment().subtract('days', 29), moment()],
-         'This Month': [moment().startOf('month'), moment().endOf('month')],
-         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+         '今天': [moment(), moment()],
+         '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+         '最近7天': [moment().subtract('days', 6), moment()],
+         '最近30天': [moment().subtract('days', 29), moment()],
+         '本月内': [moment().startOf('month'), moment().endOf('month')],
+         '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
       },
         startDate: moment().subtract('days', 29),
         endDate: moment()
@@ -176,12 +181,12 @@
     //topic_emotion
     $('#reportrange_3').daterangepicker({
         ranges: {
-           'Today': [moment(), moment()],
-           'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-           'Last 7 Days': [moment().subtract('days', 6), moment()],
-           'Last 30 Days': [moment().subtract('days', 29), moment()],
-           'This Month': [moment().startOf('month'), moment().endOf('month')],
-           'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+           '今天': [moment(), moment()],
+           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [moment().subtract('days', 6), moment()],
+           '最近30天': [moment().subtract('days', 29), moment()],
+           '本月内': [moment().startOf('month'), moment().endOf('month')],
+           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
         },
         startDate: moment().subtract('days', 29),
         endDate: moment()

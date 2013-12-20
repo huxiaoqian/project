@@ -24,9 +24,19 @@ import weibo.model
 import json
 import re
 
+mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
+
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 field_id = {u'文化':'culture', u'教育':'education', u'娱乐':'entertainment', u'时尚':'fashion', u'财经':'finance', u'媒体':'media', u'体育':'sports', u'科技':'technology'}
-mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
+FIELDS_VALUE = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
+FIELDS_ZH_NAME = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒体', u'体育', u'科技', u'海外']
+FIELDS2ID = {}
+FIELDS2ZHNAME = {}
+
+for key in FIELDS_VALUE:
+    idx = FIELDS_VALUE.index(key)
+    FIELDS2ID[key] = idx
+    FIELDS2ZHNAME[key] = FIELDS_ZH_NAME[idx]
 
 buckets = {}
 total_days = 90
@@ -359,6 +369,8 @@ def data(area='global'):
         area = None
     else:
         search_method = 'domain'
+        area = FIELDS2ID[area]
+        print area
         
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
 
@@ -476,6 +488,7 @@ def keywords_data(area='global'):
         area = None
     else:
         search_method = 'domain'
+        area = FIELDS2ID[area]
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
     print search_func
@@ -519,6 +532,7 @@ def weibos_data(emotion='global', area='global'):
         area = None
     else:
         search_method = 'domain'
+        area = FIELDS2ID[area]
         
     search_func = getattr(weibosModule, 'search_%s_weibos' % search_method, None)
 
@@ -581,19 +595,21 @@ def getPeaks():
         query = query.strip()
     during = request.args.get('during', 24 * 3600)
     during = int(during)
-
     area = request.args.get('area', 'global')
     emotion = request.args.get('emotion', 'happy')
-    print emotion
     lis = request.args.get('lis', '')
-    lis = [float(da) for da in lis.split(',')]
+
+    try:
+        lis = [float(da) for da in lis.split(',')]
+    except:
+        lis = []
     if not lis or not len(lis):
         return 'Null Data'
 
     ts_lis = request.args.get('ts', '')
     ts_lis = [float(da) for da in ts_lis.split(',')]
 
-    new_zeros, dif, dea = detect_peaks(lis)
+    new_zeros = detect_peaks(lis)
 
     if area == 'global':
         search_method = 'global'
@@ -604,7 +620,6 @@ def getPeaks():
         search_method = 'domain'
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
-    print search_func
 
     if not search_func:
         return json.dumps('search function undefined')

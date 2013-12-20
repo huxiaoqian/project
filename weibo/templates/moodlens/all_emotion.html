@@ -155,7 +155,7 @@
             <div id="weibo_container" class="span4">
                 <ul id="vertical-ticker">
                 </ul>
-                <p><span class="label label-info" id="event_title"></span><a href="#" id="ticker-previous">前一页</a> / <a href="#" id="ticker-next">后一页</a> / <a id="stop" href="#">停止滚动</a> / <a id="start" href="#">开始滚动</a></p>
+                <p><span class="label label-info" id="event_title"></span><a href="#" id="ticker-previous">向上滚动</a> / <a href="#" id="ticker-next">向下滚动</a> / <a id="stop" href="#">停止滚动</a> / <a id="start" href="#">开始滚动</a></p>
             </div>
         </div>
         <div class="row-fluid" style="border:1px solid gray;">
@@ -164,7 +164,7 @@
                     <p>Anything in here will be replaced on browsers that support the canvas element</p>
                 </canvas>
                 <div id="tags_div">
-                    <ul id="tags_ul"><li><a style="font-size:1ex">Tags Cloud</a></li></ul>
+                    <ul id="tags_ul"><li><a style="font-size:1ex">关键词云数据为空</a></li></ul>
                 </div>
             </div>
             <div id="emotion_pie_container" class="span4">
@@ -233,7 +233,7 @@
             cloud_list.push([parseInt(data[i]), i]);
         }
         for (var i=0;i<cloud_list.length;i++) {
-            $("#tags_ul").append("<li><a style=\"font-size:"+ defscale(cloud_list[i][0], min_count, max_count, min_word_size, max_word_size) +"ex\">"+ cloud_list[i][1] +"</a></li>");
+            $("#tags_ul").append("<li><a href='#tag_cloud_div' style=\"font-size:"+ defscale(cloud_list[i][0], min_count, max_count, min_word_size, max_word_size) +"ex\">"+ cloud_list[i][1] +"</a></li>");
         }
         redraw_tagcanvas();
     }
@@ -280,6 +280,13 @@
         });
     }
 
+    function isEmptyObject(obj){
+        for ( var name in obj ) { 
+            return false;
+        } 
+        return true; 
+    } 
+
     function init_statistics(end_ts, during){
         var emotion = ['happy', 'angry', 'sad'];
         $.ajax({
@@ -299,34 +306,34 @@
                     }
                 }
                 else{
+                    $("#vertical-ticker").empty();
                     $("#vertical-ticker").append("关键微博为空！");
                 }
             }
         });
         $.ajax({
-            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during+"&limit=50",
+            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during+"&limit=10",
             type: "GET",
             dataType:"json",
             success: function(data){
                 if(data=='search function undefined'){
 
                     $("#tags_ul").empty();
-                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                    $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                     redraw_tagcanvas();
                 }
                 else{
-                    if((data['happy']!=[])&&(data['sad']!=[])&&(data['angry']!=[])){
-                    for(var e in emotion){
-                        chg_tagcloud(data[emotion[e]]); 
-                        }
-                    }
-                    else{
+                    if(isEmptyObject(data['happy']) && isEmptyObject(data['angry']) && isEmptyObject(data['sad'])){
                         $("#tags_ul").empty();
-                        $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                        $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                         redraw_tagcanvas();
                     }
+                    else{
+                        for(var e in emotion){
+                            chg_tagcloud(data[emotion[e]]); 
+                        }
+                    }
                 }
-                
             }
         });
         $.ajax({
@@ -362,9 +369,9 @@
 
                 var total_emotion_count = happy_emotion_count + angry_emotion_count + sad_emotion_count;
                 if(total_emotion_count > 0){
-                    var happy_emotion_ratio = parseInt(happy_emotion_count * 100 / total_emotion_count) / 100.0;
-                    var angry_emotion_ratio = parseInt(angry_emotion_count * 100 / total_emotion_count) / 100.0;
-                    var sad_emotion_ratio = parseInt(sad_emotion_count * 100 / total_emotion_count) / 100.0;
+                    var happy_emotion_ratio = parseInt(happy_emotion_count * 10000 / total_emotion_count) / 10000.0;
+                    var angry_emotion_ratio = parseInt(angry_emotion_count * 10000 / total_emotion_count) / 10000.0;
+                    var sad_emotion_ratio = parseInt(sad_emotion_count * 10000 / total_emotion_count) / 10000.0;
                     series1.addPoint([ts * 1000, happy_emotion_ratio], true, isShift);
                     series2.addPoint([ts * 1000, angry_emotion_ratio], true, isShift);
                     series3.addPoint([ts * 1000, sad_emotion_ratio], true, isShift);
@@ -417,9 +424,9 @@
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
+                            $("#event_title").html(title);
                             if(data[emotion].length>0){
                                 chg_weibos(data[emotion]);
-                                $("#event_title").html(title);
                             }
                             else{
                                 $("#vertical-ticker").append("关键微博为空！");
@@ -427,24 +434,23 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=50",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=10",
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             if(data=='search function undefined'){
                                 $("#tags_ul").empty();
-                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                 redraw_tagcanvas();
                             }
                             else{
-                                if(data!=[]){
-                                    chg_tagcloud(data);
-                                }
-                            
-                                else{
+                                if(isEmptyObject(data[emotion])){
                                     $("#tags_ul").empty();
-                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                     redraw_tagcanvas();
+                                }
+                                else{
+                                    chg_tagcloud(data[emotion]);
                                 }
                             }
                         }
@@ -485,9 +491,9 @@
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
+                            $("#event_title").html(title);
                             if(data[emotion].length>0){
                                 chg_weibos(data[emotion]);
-                                $("#event_title").html(title);
                             }
                             else{
                                 $("#vertical-ticker").append("关键微博为空！");
@@ -495,24 +501,23 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=50",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=10",
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             if(data=='search function undefined'){
                                 $("#tags_ul").empty();
-                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                 redraw_tagcanvas();
                             }
                             else{
-                                if(data!=[]){
-                                    chg_tagcloud(data);
-                                }
-                            
-                                else{
+                                if(isEmptyObject(data[emotion])){
                                     $("#tags_ul").empty();
-                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                     redraw_tagcanvas();
+                                }
+                                else{
+                                    chg_tagcloud(data[emotion]);
                                 }
                             }
                         }
@@ -553,9 +558,9 @@
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
+                            $("#event_title").html(title);
                             if(data[emotion].length>0){
                                 chg_weibos(data[emotion]);
-                                $("#event_title").html(title);
                             }
                             else{
                                 $("#vertical-ticker").append("关键微博为空！");
@@ -563,24 +568,23 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=50",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=10",
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             if(data=='search function undefined'){
                                 $("#tags_ul").empty();
-                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                 redraw_tagcanvas();
                             }
                             else{
-                                if(data!=[]){
-                                    chg_tagcloud(data);
-                                }
-                            
-                                else{
+                                if(isEmptyObject(data[emotion])){
                                     $("#tags_ul").empty();
-                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                     redraw_tagcanvas();
+                                }
+                                else{
+                                    chg_tagcloud(data[emotion]);
                                 }
                             }
                         }

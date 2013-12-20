@@ -15,10 +15,15 @@ TD {FONT-SIZE: 12px; COLOR: #333;}
 <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
 <script type="text/javascript" src="/static/js/admin/bootstrap.js"></script>
 <script type="text/javascript" src="/static/js/admin/bootstrap.min.js"></script>
+<script type="text/javascript" src="/static/js/admin/bootstrap-fileupload.js"></script>
+<script type="text/javascript" src="/static/js/admin/bootstrap-fileupload.min.js"></script>
+
 <link href="/static/css/admin/bootstrap.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap-responsive.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap.min.css" rel="stylesheet">
 <link href="/static/css/admin/bootstrap-responsive.min.css" rel="stylesheet">
+<link href="/static/css/admin/bootstrap-fileupload.css" rel="stylesheet">
+<link href="/static/css/admin/bootstrap-fileupload.min.css" rel="stylesheet">
 <style type="text/css" media="all">
 ul{  
     list-style-type:none;  
@@ -48,50 +53,57 @@ ul{
 
 function add_field(){<!-- 添加按钮 -->
 
-               var fl=prompt("请输入新的重要媒体ID","");
-               if(fl)
-               {
-                  $.ajax({   
-                    type:"POST",  
-                    url:"/sysadmin/add_media",
-                    dataType: "json",
-                    async:false,
-                    data:{topic : fl},
-                    success: function(data){
-                      if(data=='Right') {
-                                alert("添加重要媒体成功！");
-                                location.reload();
-                              } 
-                      else{
-                        alert("您输入的ID有误，请重新输入！");
-                      }
-                    }              
-                  });
-               }
+    var fl=prompt("请输入要添加的定制话题","");
+    var f2=prompt("请输入过期时间（如：2020-12-31）","");
+    if(fl)
+    {
+        if(isNaN(f2)){
+          f2 = '2020-12-31';
+        }
+        $.ajax({   
+          type:"POST",  
+          url:"/sysadmin/usertopic_new",
+          dataType: "json",
+          async:false,
+          data:{topic : fl,se_weight: f2},
+          success: function(data){
+              if(data == 'Right') {
+                  alert("添加定制话题成功！");
+                  location.reload();
+              } 
+              else{
+                  alert("定制话题已存在！");
+              }
+          }              
+        })
+    }
 }
  
 
 function drop_menu(){<!-- 选择下拉菜单 -->
-    var lis = document.getElementById("drop_m");
+    var lis = document.getElementById("drop");
     lis.style.display='block';
  }
  
+ 
+
 function declear_all(){<!-- 全选 -->
 
       $(document).ready(function(){
-           var divs=$("input[name='field_media']");
+           var divs=$("input[name='topic_new']");
            for(var i = 0;i<divs.length;i++)
               divs[i].checked = true;
-           });
-      var lis = document.getElementById("drop_m");
+      });
+      var lis = document.getElementById("drop");
       lis.style.display='none';
 
  }
  
 
+
 function declear_re(){<!-- 反选 -->
         
-        $("[name='field_media']").each(function(){
+        $("[name='topic_new']").each(function(){
      
    
              if(this.checked)
@@ -104,11 +116,13 @@ function declear_re(){<!-- 反选 -->
              }
    
            });
-        var lis = document.getElementById("drop_m");
+        var lis = document.getElementById("drop");
         lis.style.display='none';
 
  }
   
+
+
 
 
 </SCRIPT>
@@ -145,46 +159,52 @@ function declear_re(){<!-- 反选 -->
 
           <li> <a id="Hei" href="/sysadmin/paraset/black/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >垃圾用户管理</a></li>
 
-          <li  class="active" > <a id="Media" href="/sysadmin/paraset/media/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >重要媒体管理</a></li>
+          <li> <a id="Media" href="/sysadmin/paraset/media/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >重要媒体管理</a></li>
 
-          <li> <a id="Material" href="/sysadmin/paraset/material/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >微博素材管理</a></li>
+          <li href="/material/"> <a id="Material" href="/sysadmin/paraset/material/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >微博素材管理</a></li>
 
           <li> <a id="Bai" href="/sysadmin/paraset/userlist/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >用户权限管理</a></li>
 
-          <li> <a id="Topic_user" href="/sysadmin/paraset/topic/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >定制话题管理</a></li>
+          <li  class="active" > <a id="Topic_user" href="/sysadmin/paraset/topic/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >定制话题管理</a></li>
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
 
 
         <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:900px;width:1000px;">
-        <p style="font-size:20pt;color:#FE642E;">重要媒体管理</p>
+        <p style="font-size:20pt;color:#FE642E;">定制话题管理</p>
         <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
-                <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
-                    <div class="btn-group" >
+               <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
+                    <div class="btn-group" style="float:left;padding-right:10px;">
                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu()">
                          选择
                        <span class="caret"></span>
                       </a>
-                       <ul class="dropdown-menu" id="drop_m">
+                       <ul class="dropdown-menu" id="drop">
                     
                          <li><a href='#' onClick="declear_all()">全选</a></li>
                          <li><a href='#' onClick="declear_re()">反选</a></li>
                     </ul>
                     </div>
-                    <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
-                    <button id='de_media' type="button" class="btn btn-danger">删除</button>
-                </div>
+                    <div class="fileupload">
+                        <input type="file" id="files" name="files[]" multiple style="display:none" onchange="handleFileSelect(this.files)"/>
+                        <button id="mo_new" type="button" class="btn btn-warning">修改</button>
+                        <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
+                        <button id="de_new" type="button" class="btn btn-danger">删除</button>
+                    </div>
+                                                            
+               </div>
                 <div class="bs-docs-example">
-                  <table class="table">
+                  <table class="table" id="new_table">
                     <thead>
-                      <tr>
-                        <th style="text-align:center">是否选择</th>
-                        <th style="text-align:center">用户ID</th>
-                        <th style="text-align:center">用户昵称</th>
+                      <tr>                        
+                        <th style="text-align:center;display:none;">序号</th>
+                        <th style="text-align:center">定制话题</th>
+                        <th style="text-align:center">过期时间</th>
+                        <th style="text-align:center">选择</th>
                       </tr>
                     </thead>
-                <tbody id="word_table">
+                    <tbody id="word_table">
                        
                     </tbody>   
                 </table>
@@ -197,7 +217,7 @@ function declear_re(){<!-- 反选 -->
                 function getRankData(countperpage_args, limit_arg){
                     var total_page_number;
                     $.ajax({
-                        url: "/sysadmin/media_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        url: "/sysadmin/topic_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
                         dataType: 'json',   
                         type: "GET",
                         success: function (data) {
@@ -205,10 +225,10 @@ function declear_re(){<!-- 反选 -->
                         var html = "";
                         for(var i=0;i < data['news'].length;i += 1){
                             user = data['news'][i];
-                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_media' style='font-size:12pt;'/></td>";
-                            html += "<td style='text-align:center'>" + user['mediaID'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['mediaName'] + "</td></tr>";
-                            
+                            html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['topic'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['expire_date'] + "</td>";
+                            html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                         }
                     $("#word_table").empty();
                     $("#word_table").append(html);
@@ -218,17 +238,17 @@ function declear_re(){<!-- 反选 -->
                     }).on("page", function(event, /* page number here */ num){
                     $("#word_table").empty();
                     $.ajax({
-                        url: "/sysadmin/media_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        url: "/sysadmin/topic_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
                         dataType: 'json',   
                         type: "GET",
                         success: function (data) {
                           var html = "";
                           for(var i=0;i < data['news'].length;i += 1){
                             user = data['news'][i];
-                            //console.log(user['id'],user['wordsName'],user['seWeight']);
-                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_media' style='font-size:12pt;'/></td>";
-                            html += "<td style='text-align:center'>" + user['mediaID'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['mediaName'] + "</td></tr>";
+                            html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['topic'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['expire_date'] + "</td>";
+                            html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                           }
                           $("#word_table").append(html);
                         }
@@ -240,38 +260,83 @@ function declear_re(){<!-- 反选 -->
         $(document).ready(function(){
           getRankData(countperpage_args, limit_arg);
         })
-                      $("#de_media").click(function() {
-                          n = 0;
-                          $("[name='field_media']").each(function(){
+
+                      
+        $("#de_new").click(function() {
+            n = 0;
+            $("[name='topic_new']").each(function(){
                               
-                              if(this.checked)
-                              {
-                                  var fa = $(this).parent();
-                                  var ne = $(fa).next();
-                                  var f_id = $(ne).html();
+                if(this.checked)
+                {
+                    var fa = $(this).parent();
+                    var ne = $(fa).prev().prev().prev();                                
+                    var f_id = $(ne).html();
+                    $.ajax({   
+                      type:"POST",  
+                      url:"/sysadmin/usertopic_de",
+                      dataType: "json",
+                      async:false,
+                      data:{f_id : f_id},
+                      success: function(data){
+                          if( data =='Right'){
+                              n = n+1;
+                          }
+                      }           
+                    });
+                }   
+            });
+            if(n > 0){
+                alert("删除成功！");
+            }
+            location.reload();
+                          //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
+            });
+                    
+            $("#mo_new").click(function() {
+                    $("[name='topic_new']").each(function(){                              
+                        if(this.checked)
+                        {
+                              var fa = $(this).parent();
+                              var ne = $(fa).prev().prev();
+                              var uname = $(ne).html();                  
+                              var f_id = $(uname).prev().html();
+                              if(confirm("您要修改的是"+uname+"的过期时间？")){
+                                var time=prompt("请输入过期时间（如：2020-12-31）","");
+                                
+                                if(time){
                                   $.ajax({   
                                     type:"POST",  
-                                    url:"/sysadmin/media_de",
+                                    url:"/sysadmin/usertopic_modify",
                                     dataType: "json",
                                     async:false,
-                                    data:{f_id : f_id},
+                                    data:{f_id : f_id,time : time},
                                     success: function(data){
                                       if( data =='Right'){
-                                          n = n + 1;
-                                        }
-                                    }           
+                                        alert("修改成功！");
+                                      }
+                                      else{
+                                        alert("修改失败，请重新修改！");
+                                      }
+                                    }            
                                   });
-                              }   
-                          });
-                          if(n > 0){
-                            alert("删除成功！");
-                          }
-                          location.reload();
+                                }
+                                else{
+                                  alert("输入有误，请重新输入！");
+                                }
+                              }
+                              else{
+                                alert("您已取消修改操作！");
+                              }
+                        }   
                     });
-                  </script>
-              </div> 
-               
+                    location.reload();
+                          //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
+                });
+                </script>
+           </div>
+           </div>
         </div>
+
       </div>
 
      </div>

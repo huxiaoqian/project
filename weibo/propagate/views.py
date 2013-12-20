@@ -43,6 +43,49 @@ month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
 
+def _utf_encode(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.encode('utf-8')
+
+
+def _utf_decode(s):
+    if isinstance(s, str):
+        return s.decode('utf-8')
+    else:
+        return s
+
+def _default_time_zone():
+    '''默认时间段为最新一周
+    '''
+
+    end_ts = time.time()
+    start_ts = end_ts - 7 * 24 * 3600
+
+    return start_ts, end_ts
+
+
+def _time_zone(stri):
+    dates = stri.split(' - ')
+    tslist = []
+
+    for date in dates:
+        month_day, year = date.split(',')
+        month, day = month_day.split('月 ')
+        year = int(year)
+        month = int(month)
+        day = int(day)
+##        ts = datetime(year, month, day, 0, 0, 0)
+##        ts = time.mktime(ts.timetuple())
+        ts = str(year)+'-'+str(month)+'-'+str(day)
+        tslist.append(ts)
+
+    start_ts = tslist[0]
+    end_ts = tslist[1]
+
+    return start_ts, end_ts
+
 def getFieldTopics():
     topic_names = []
     topics = db.session.query(Topic)
@@ -86,30 +129,6 @@ def fieldsEn2Zh(name):
         return '时尚'
     if name == 'sports':
         return '体育'
-
-def strToDate(dur_time):
-    m = '1'
-    d = '1'
-    y = '2013'
-    items = dur_time.split(', ')
-    n = 0
-    for item in items:
-        if n == 0:
-            mds = item.split(' ')
-            t = 0
-            for md in mds:
-                if t==0:
-                    m = month_value[md]
-                    t = 1
-                else:
-                    d = md
-            n = 1
-        else:
-            y = item
-
-    time_str = str(y)+'-'+str(m)+'-'+str(d)
-
-    return time_str
                 
 
 @mod.route('/log_in', methods=['GET','POST'])
@@ -152,14 +171,21 @@ def showresult_by_topic():
             keyuser = request.args.get('keyuser', '')
             dur_time = request.args.get('time', '')
 
-            times = dur_time.split(' - ')
-            n = 0
-            for ti in times:
-                if n==0:
-                    beg_time = strToDate(ti)
-                    n = 1
-                else:
-                    end_time = strToDate(ti)
+##            times = dur_time.split(' - ')
+##            n = 0
+##            for ti in times:
+##                if n==0:
+##                    beg_time = strToDate(ti)
+##                    n = 1
+##                else:
+##                    end_time = strToDate(ti)
+
+            dur_time = _utf_encode(dur_time)
+            if not dur_time or dur_time == '':
+                beg_time, end_time = _default_time_zone()
+            else:
+                dur_time = _utf_encode(dur_time)
+                beg_time, end_time = _time_zone(dur_time)
 
             keyword = keyword.strip('@\r\n\t')
             keyuser = keyuser.strip('@\r\n\t')
@@ -231,14 +257,12 @@ def showresult_by_topic():
                         keyuser = request.args.get('keyuser', '')
                         dur_time = request.args.get('time', '')
 
-                        times = dur_time.split(' - ')
-                        n = 0
-                        for ti in times:
-                            if n==0:
-                                beg_time = strToDate(ti)
-                                n = 1
-                            else:
-                                end_time = strToDate(ti)
+                        dur_time = _utf_encode(dur_time)
+                        if not dur_time or dur_time == '':
+                            beg_time, end_time = _default_time_zone()
+                        else:
+                            dur_time = _utf_encode(dur_time)
+                            beg_time, end_time = _time_zone(dur_time)
     
                         keyword = keyword.strip('@\r\n\t')
                         keyuser = keyuser.strip('@\r\n\t')
@@ -1121,14 +1145,12 @@ def hot_status():
         if session['user'] == 'admin':
             dur_time = request.args.get('time', '')
 
-            times = dur_time.split(' - ')
-            n = 0
-            for ti in times:
-                if n==0:
-                    beg_time = strToDate(ti)
-                    n = 1
-                else:
-                    end_time = strToDate(ti)
+            dur_time = _utf_encode(dur_time)
+            if not dur_time or dur_time == '':
+                beg_time, end_time = _default_time_zone()
+            else:
+                dur_time = _utf_encode(dur_time)
+                beg_time, end_time = _time_zone(dur_time)
             
             status_hot = getHotStatus(beg_time,end_time)
             return render_template('propagate/hot_status.html',status_hot = status_hot)
@@ -1140,14 +1162,12 @@ def hot_status():
                     if identy == 1:
                         dur_time = request.args.get('time', '')
 
-                        times = dur_time.split(' - ')
-                        n = 0
-                        for ti in times:
-                            if n==0:
-                                beg_time = strToDate(ti)
-                                n = 1
-                            else:
-                                end_time = strToDate(ti)
+                        dur_time = _utf_encode(dur_time)
+                        if not dur_time or dur_time == '':
+                            beg_time, end_time = _default_time_zone()
+                        else:
+                            dur_time = _utf_encode(dur_time)
+                            beg_time, end_time = _time_zone(dur_time)
             
                         status_hot = getHotStatus(beg_time,end_time)
                         return render_template('propagate/hot_status.html',status_hot = status_hot)

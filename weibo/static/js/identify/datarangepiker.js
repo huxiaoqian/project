@@ -29,12 +29,12 @@
         this.separator = ' - ';
 
         this.locale = {
-            applyLabel: 'Apply',
-            cancelLabel: 'Cancel',
-            fromLabel: 'FROM',
-            toLabel: 'TO',
+            applyLabel: '申请',
+            cancelLabel: '取消',
+            fromLabel: '从',
+            toLabel: '到',
             weekLabel: 'W',
-            customRangeLabel: 'Custom Range',
+            customRangeLabel: '自定义',
             daysOfWeek: moment()._lang._weekdaysMin.slice(),
             monthNames: moment()._lang._monthsShort.slice(),
             firstDay: 0

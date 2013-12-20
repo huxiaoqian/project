@@ -31,6 +31,8 @@ from time_utils import ts2datetime, datetime2ts, window2time
 
 from hadoop_utils import monitor
 
+from weibo.global_config import xapian_search_domain, fields_id
+
 
 mod = Blueprint('identify', __name__, url_prefix='/identify')
 
@@ -99,6 +101,7 @@ def whole():
                            previous_data = rank_func(top_n, previous_date, window_size)
                     return json.dumps({'status': 'previous finished', 'data': previous_data})
                 elif action == 'run':
+                    print 'ok'
                     return render_template('identify/whole.html', rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num)
                 else:
                    abort(404)
@@ -256,79 +259,47 @@ def area():
             if request_method == 'GET':
                 return render_template('identify/area.html', from_external=True)
             elif request_method == 'POST':
-        #form data
                 form = request.form
-
-        #follow actions: rank|previous_rank|check_status
-                action = form.get('action', None)
-        #field
-                field = form.get('field', None)
-                print field
-
-        #total results count
+                action = form.get('action', 'run')
                 top_n = int(form.get('top_n', 2000))
-        #results count for every page
+        #limit max results count to 2000
+                if top_n > 2000:
+                    top_n = 2000
                 page_num = int(form.get('page_num', 20))
-        #window size for idenfity i.e. adding time limit on input data
+                rank_method = form.get('rank_method', 'followers')
                 window_size = int(form.get('window_size', 1))
-               
-
-        #acquire topic id
-                if not topic_id:
-                    if topic:
-                        topic_id = acquire_topic_id(topic)
-                    else:
-                        if action == 'run':
-                            flash(u'请输入关键词！')
-                            return render_template('identify/area.html', from_external=True)
-                        else:
-                            return json.dumps({'error': 'need a topic'})
-
-        # current_time = time.time()
-                current_time = datetime2ts('2013-3-7')
-                if action == 'rank':
-                    current_date = ts2datetime(current_time)
-                    current_data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
-                    if not current_data:
-                        if rank_method == 'pagerank':
-                            rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                            if rank_func:
-                                current_data = rank_func(top_n, current_date, topic_id, window_size)
-                        elif rank_method == 'degree':
-                            rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                            if rank_func:
-                                current_data = rank_func(top_n, current_date, topic_id, window_size)
-                    return json.dumps({'status': 'current finished', 'data': current_data})
-
-                elif action == 'previous_rank':
-                    previous_date = ts2datetime(current_time-window2time(window_size))
-                    previous_data = read_rank_results(top_n, 'area', rank_method, previous_date, window_size, topic_id=topic_id)
-                    if not previous_data and window_size <= 7:
-                        if rank_method == 'pagerank':
-                            rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                            if rank_func:
-                                previous_data = rank_func(top_n, previous_date, topic_id, window_size)
-                        elif rank_method == 'degree':
-                            rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                            if rank_func:
-                                previous_data = rank_func(top_n, previous_date, topic_id, window_size)
-                    return json.dumps({'status': 'previous finished', 'data': previous_data})
-
-                elif action == 'check_rank_status':
-            #check Hadoop Job Status
-                    job_id = form.get('job_id', None)
-                    if not job_id:
-                        return json.dumps({'error': 'need a job'})
-                    status = monitor(job_id)
-                    return json.dumps({'status': status})
-
-                elif action == 'run':
-                    return render_template('identify/area.html', field=field, topic=topic, topic_id=topic_id, rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num)
-
-                else:
-                    abort(404)
-            else:
-                abort(404)
+                field = form.get('field', 'finance')
+                sort_by_field = rank_method + '_count'
+                #page = int(request.form['page'])
+                #if page == 1:
+                #    startoffset = 0
+                #else:
+                ##    startoffset = (page - 1) * page_num
+                startoffset = 0
+                endoffset = startoffset + page_num - 1
+                fieldEnName = field
+                
+                count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=[sort_by_field], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=10000)
+                users = []
+                count = 0
+                for field_user in field_users():#[startoffset: endoffset]:
+                    if count < startoffset:
+                        count += 1
+                        continue
+                    if count > endoffset:
+                        break
+                    field_user['id'] = field_user['_id']
+                    field_user['profileImageUrl'] = field_user['profile_image_url']
+                    field_user['userName'] = field_user['name']
+                    field_user['statusesCount'] = field_user['statuses_count']
+                    field_user['friendsCount'] = field_user['friends_count']
+                    field_user['followersCount'] = field_user['followers_count']
+                    field_user['description'] = field_user['description']
+                    users.append(field_user)
+                    count += 1
+                #return json.dumps(users)
+                if action == 'run':
+                    return render_template('identify/area.html', rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num, field=field)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -339,86 +310,45 @@ def area():
                         if request_method == 'GET':
                             return render_template('identify/area.html', from_external=True)
                         elif request_method == 'POST':
-        #form data
                             form = request.form
+                            action = form.get('action', 'run')
 
-        #follow actions: rank|previous_rank|check_status
-                            action = form.get('action', None)
-        #field
-                            field = form.get('field', None)
-        #topic or sub-field
-                            topic = form.get('topic', None)
-                            topic_id = form.get('topic_id', None)
-        #total results count
                             top_n = int(form.get('top_n', 2000))
-        #results count for every page
-                            page_num = int(form.get('page_num', 20))
-        #window size for idenfity i.e. adding time limit on input data
-                            window_size = int(form.get('window_size', 1))
-        #use PageRank if and only if window size equals 1
-                            if window_size == 1 or window_size == 7:
-                                rank_method = 'pagerank'
-                            else:
-                                rank_method = 'degree'
+        #limit max results count to 2000
+                        if top_n > 2000:
+                            top_n = 2000
+                        page_num = int(form.get('page_num', 20))
+                        rank_method = form.get('rank_method', 'followers')
+                        window_size = int(form.get('window_size', 1))
+                        field = form.get('field', None)
+                        sort_by_field = rank_method + '_count'
 
-        #acquire topic id
-                            if not topic_id:
-                                if topic:
-                                    topic_id = acquire_topic_id(topic)
-                                else:
-                                    if action == 'run':
-                                        flash(u'请输入关键词！')
-                                        return render_template('identify/area.html', from_external=True)
-                                    else:
-                                        return json.dumps({'error': 'need a topic'})
-
-        # current_time = time.time()
-                            current_time = datetime2ts('2013-3-7')
-                            if action == 'rank':
-                                current_date = ts2datetime(current_time)
-                                current_data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
-                                if not current_data:
-                                    if rank_method == 'pagerank':
-                                        rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                                        if rank_func:
-                                            current_data = rank_func(top_n, current_date, topic_id, window_size)
-                                    elif rank_method == 'degree':
-                                        rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                                        if rank_func:
-                                            current_data = rank_func(top_n, current_date, topic_id, window_size)
-                                return json.dumps({'status': 'current finished', 'data': current_data})
-
-                            elif action == 'previous_rank':
-                                previous_date = ts2datetime(current_time-window2time(window_size))
-                                previous_data = read_rank_results(top_n, 'area', rank_method, previous_date, window_size, topic_id=topic_id)
-                                if not previous_data and window_size <= 7:
-                                    if rank_method == 'pagerank':
-                                        rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                                        if rank_func:
-                                            previous_data = rank_func(top_n, previous_date, topic_id, window_size)
-                                    elif rank_method == 'degree':
-                                        rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
-                                        if rank_func:
-                                            previous_data = rank_func(top_n, previous_date, topic_id, window_size)
-                                return json.dumps({'status': 'previous finished', 'data': previous_data})
-
-                            elif action == 'check_rank_status':
-            #check Hadoop Job Status
-                                job_id = form.get('job_id', None)
-                                if not job_id:
-                                    return json.dumps({'error': 'need a job'})
-                                status = monitor(job_id)
-                                return json.dumps({'status': status})
-
-                            elif action == 'run':
-                                return render_template('identify/area.html', field=field, topic=topic, topic_id=topic_id, rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num)
-
-                            else:
-                                abort(404)
+                        page = int(request.form['page'])
+                        if page == 1:
+                            startoffset = 0
                         else:
-                            abort(404)
-                    else:
-                        return redirect('/')
+                            startoffset = (page - 1) * page_num
+                        endoffset = startoffset + page_num - 1
+                        fieldEnName = field
+                        count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=[sort_by_field], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=10000)
+                        users = []
+                        count = 0
+                        for field_user in field_users():#[startoffset: endoffset]:
+                            if count < startoffset:
+                                count += 1
+                                continue
+                            if count > endoffset:
+                                break
+                            field_user['id'] = field_user['_id']
+                            field_user['profileImageUrl'] = field_user['profile_image_url']
+                            field_user['userName'] = field_user['name']
+                            field_user['statusesCount'] = field_user['statuses_count']
+                            field_user['friendsCount'] = field_user['friends_count']
+                            field_user['followersCount'] = field_user['followers_count']
+                            field_user['description'] = field_user['description']
+                            users.append(field_user)
+                            count += 1
+                        return json.dumps(users)
             return redirect('/')
     else:
         return redirect('/')
@@ -468,7 +398,7 @@ def topic():
                 current_time = datetime2ts('2013-3-7')
                 if action == 'rank':
                     current_date = ts2datetime(current_time)
-                    current_data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
+                    current_data = read_rank_results(top_n, 'topic', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
                     if not current_data:
                         if rank_method == 'pagerank':
                             rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
@@ -482,7 +412,7 @@ def topic():
 
                 elif action == 'previous_rank':
                     previous_date = ts2datetime(current_time-window2time(window_size))
-                    previous_data = read_rank_results(top_n, 'area', rank_method, previous_date, window_size, topic_id=topic_id)
+                    previous_data = read_rank_results(top_n, 'topic', rank_method, previous_date, window_size, topic_id=topic_id)
                     if not previous_data and window_size <= 7:
                         if rank_method == 'pagerank':
                             rank_func = getattr(areaModule, '%s_rank' % rank_method, None)

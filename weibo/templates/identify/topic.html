@@ -1,5 +1,5 @@
 {% extends "identify/base.html" %}
-{% block title %}领域博主识别{% endblock %}
+{% block title %}话题博主识别{% endblock %}
 {% block head %}
     {{ super() }}
     <style>
@@ -21,70 +21,99 @@
 	      <li><a href="/identify/"><h5>主页</h5></a></li>
 	      <li><a href="/identify/whole/"><h5>全网识别</h5></a></li>
 		  <li><a href="/identify/burst/"><h5>突发识别</h5></a></li>
-	      <li class="active"><a href="/identify/area/"><h5>领域识别</h5></a></li>
-	      <li><a href="/identify/topic/"><h5>话题识别</h5></a></li>
+	      <li><a href="/identify/area/"><h5>领域识别</h5></a></li>
+	      <li class="active"><a href="/identify/topic/"><h5>话题识别</h5></a></li>
             </ul>
           </div>
         </div>
 	<div class="span9">
-      	  <legend><strong><h3>领域敏感博主识别</h3></strong></legend>
+      	  <legend><strong><h3>话题敏感博主识别</h3></strong></legend>
 	  <div>
-      	    <form id="area_identify" action="/identify/area/" class="form-inline" method="POST">
+      	    <form id="topic_identify" action="/identify/topic/" class="form-inline" method="POST">
+	      {% if topic %}
+      	      <input id="topic_keywords" name="topic" type="text" value="{{ topic }}" class="span2 search-query" placeholder="话题">
+	      {% else %}
+	      <input id="topic_keywords" name="topic" type="text" class="span2 search-query" placeholder="话题">
+	      {% endif %}
+  
+      	   <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
+	      <div class="btn-group">
+		<a id="topic_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+		  {% if window_size == 1 %}1天
+		  {% elif window_size == 7 %}1周
+		  {% elif window_size == 30 %}1个月
+		  {% elif window_size == 90 %}3个月
+		  {% else %}1周
+		  {% endif %}
+		  <span class="caret"></span>
+		</a>
+		<ul id="topic_window_size_dropdown_menu" class="dropdown-menu">
+		  <li><a href="#" onclick="choose_window('topic', 1);" data-toggle="tab">1天</a></li>
+      		  <li><a href="#" onclick="choose_window('topic', 7);" data-toggle="tab">1周</a></li>
+      		  <li><a href="#" onclick="choose_window('topic', 30);" data-toggle="tab">1个月</a></li>
+      		  <li><a href="#" onclick="choose_window('topic', 90);" data-toggle="tab">3个月</a></li>
+		</ul>
+	      </div>
 
-        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>排序标准:</b></font>
-      <div class="btn-group">
-  <a id="area1_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-    粉丝数
-    <span class="caret"></span>
-  </a>
-  <ul id="area1_rank_method_dropdown_menu" class="dropdown-menu">
-    <li><a href="#" onClick="choose_method('area1', 'followers');" data-toggle="tab">粉丝数</a></li>
-          <li><a href="#" onClick="choose_method('area1', 'active');" data-toggle="tab">活跃度</a></li>
-          <li><a href="#" onClick="choose_method('area1', 'important');" data-toggle="tab">重要度</a></li>
-  </ul>
-      </div>
-	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp领域:</b></font>
-      <div class="btn-group">
-  <a  id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-    {% if field == 'finance' %}财经
-              {% elif field == 'fashion' %}时尚
-              {% elif field == 'entertainment' %}娱乐
-              {% elif field == 'media' %}媒体
-              {% elif field == 'sports' %}体育
-              {% elif field == 'culture' %}文化
-              {% elif field == 'education' %}教育
-              {% elif field == 'technology' %}科技
-              {% elif field == 'abroad' %}境外
-              {% else %}财经
-              {% endif %}
-    <span class="caret"></span>
-  </a>
-  <ul id="area_rank_method_dropdown_menu" class="dropdown-menu">
-    <li><a href="#" onClick="choose_field('area', 'finance');" data-toggle="tab">财经</a></li>
-          <li><a href="#" onClick="choose_field('area', 'fashion');" data-toggle="tab">时尚</a></li>
-          <li><a href="#" onClick="choose_field('area', 'entertainment');" data-toggle="tab">娱乐</a></li>
-          <li><a href="#" onClick="choose_field('area', 'media');" data-toggle="tab">媒体</a></li>
-          <li><a href="#" onClick="choose_field('area', 'sports');" data-toggle="tab">体育</a></li>
-          <li><a href="#" onClick="choose_field('area', 'culture');" data-toggle="tab">文化</a></li>
-          <li><a href="#" onClick="choose_field('area', 'education');" data-toggle="tab">教育</a></li>
-          <li><a href="#" onClick="choose_field('area', 'technology');" data-toggle="tab">科技</a></li>
-          <li><a href="#" onClick="choose_field('area', 'abroad');" data-toggle="tab">境外</a></li>
-  </ul>
-      </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="500" class="span1">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
+      	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+      	      <input type="hidden" name="action" value="run">
+	      <input id="topic_window_size" type="hidden" name="window_size" value="7">
         &nbsp&nbsp&nbsp
 	      <input type="submit" class="btn btn-primary" value="识别">
-        <input type="hidden" name="action" value="run">
-        <input type="hidden" id="topic_hidden" name="field" value="finance">
       	    </form>
-      	    
-      	    
+      	    <ul id="TopicTab" class="nav nav-tabs">
+      	      <li><a href="#topic_1" data-toggle="tab"><strong>系统定制</strong></a></li>
+      	      
+	      <li><a href="/admin/" target="_blank"><i class="icon-cog"></i></a></li> 
+            </ul>
+      	    <div id="TopicTabContent" class="tab-content">
+              <div class="tab-pane fade active in" id="topic_1">
+		<ul class="inline">
+      		  <li>
+      		    <input type="checkbox"> 两会
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 长春婴儿
+      		  </li>
+      		  <li>
+      		    <input type="checkbox"> 异地高考
+      		  </li>
+		</ul>
+              </div>
+             
+      	    </div>
 
 	  <hr>
 
+	  <div class="well">
+	    <legend><strong>网络呈现</strong></legend>
+	    <form class="form-inline">
+	      <img src="{{ url_for('static', filename='img/identify/network.png') }}" class="img-polaroid">
+	      <label>
+		<input type="checkbox" checked="true"> 动画演示
+	      </label>
+	      <label>
+		<input type="checkbox" checked="true"> 标注关键节点
+	      </label>
+	      <a1 href="javascript:void(0);" onclick="show_network({{ topic_id }}, {{ window_size }});" class="btn btn-danger"><i class="icon-picture"></i>生成并查看网络</a1>
+              <a2 href="javascript:void(0);" onclick="download();" class="btn btn-danger" ><i class="icon-picture"></i>下载图片</a2>
+	    </form>
+	    
+	    <div id="network" class="collapse out">
+	      <div id="loading_network_data" class="alert alert-info" style="display:none;">
+	      </div>
+	      <label>
+		<div id="network_progress" class="progress progress-striped active">
+		  <div class="bar" style="width: 100%;"></div>
+		</div>
+	      </label>
+	      <div class="sigma-expand" id="sigma-graph"></div>
+	    </div>
+	  </div>
 
 	  <div class="well">
 	    <legend><strong>本期排序结果</strong></legend>
@@ -116,6 +145,32 @@
 	  </div>
 	  
 	  <hr>
+
+	  <div class="well">
+	    <legend><strong>上期排序结果</strong></legend>
+	    {% if not from_external %}
+	    <div>
+	      <div id="loading_previous_data" class="alert alert-info">
+		上期结果计算中，请稍后...
+	      </div>
+	      <label>
+		<div id="previous_process" class="progress progress-striped active">
+		  <div id="previous_process_bar" class="bar" style="width: 100%;"></div>
+		</div>
+	      </label>
+	    </div>
+	    {% endif %}
+	    <div>
+	      <p>
+		<a class="btn btn-small btn-success" href="#" id="previous_out"><i class="icon-download-alt"></i> 导出</a>
+	      </p>
+	    </div>
+	    <div id="previous_rank_table">
+	      <table id="previous_rank" class="table table-bordered">
+	      </table>
+	    </div>
+	    <div id="previous_rank_page_selection" class="pagination-centered"></div>
+	  </div>
 
 	</div>
       </div>
@@ -311,35 +366,6 @@
 
       </script>
       <script src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}"></script>
-      <script src="{{ url_for('static', filename='js/identify/area_identify.js') }}"></script>
-      <script type="text/javascript">
-       function choose_field(prefix, area){
-    $("#topic_hidden").val(area)
-    cn_area = '';
-    if(area=='finance')
-        cn_area = '财经';
-    else if(area=='media')
-        cn_area = '媒体';
-    else if(area=='sports')
-        cn_area = '体育';
-    else if(area=='fashion')
-        cn_area = '时尚';
-    else if(area=='culture')
-        cn_area = '文化';
-    else if(area=='education')
-        cn_area = '教育';
-    else if(area=='technology')
-        cn_area = '科技';
-    else if(area=='abroad')
-        cn_area = '境外';
-    else if(area=='entertainment')
-        cn_area = '娱乐';
-    $("#area_rank_method_choosen").text(cn_area);
-    $("#area_rank_method_choosen").append(' <span class="caret"></span>');
-    //close dropdown
-    $("#area_rank_method_choosen").parent().removeClass('open');
-    $("#area_rank_method_dropdown_menu").children().removeClass('active');
-  }
-      </script>
+      <script src="{{ url_for('static', filename='js/identify/topic_identify.js') }}"></script>
     {% endif %}
 {% endblock %}

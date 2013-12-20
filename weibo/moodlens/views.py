@@ -7,7 +7,7 @@ from weibo.global_config import xapian_search_weibo, emotions_kv, \
                                 xapian_search_domain, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
 from utils import getWeiboByMid, st_variation, find_topN, read_range_kcount_results, \
-                  sentimentFromDB, sentimentRealTime, read_range_weibos_results
+                  sentimentFromDB, sentimentRealTime, read_range_weibos_results, weiboinfo2url
 from peak_detection import detect_peaks
 from xapian_weibo.utils import top_keywords
 import keywords as keywordsModule
@@ -23,6 +23,8 @@ import os
 import weibo.model
 import json
 import re
+from datetime import datetime
+
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
@@ -32,6 +34,13 @@ FIELDS_VALUE = ['culture', 'education', 'entertainment', 'fashion', 'finance', '
 FIELDS_ZH_NAME = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒体', u'体育', u'科技', u'海外']
 FIELDS2ID = {}
 FIELDS2ZHNAME = {}
+
+Minute = 60
+Fifteenminutes = 15 * Minute
+Hour = 3600
+SixHour = Hour * 6
+Day = Hour * 24
+MinInterval = Fifteenminutes
 
 for key in FIELDS_VALUE:
     idx = FIELDS_VALUE.index(key)
@@ -147,86 +156,59 @@ def index():
     else:
         return redirect('/')
 
+def _default_time_zone():
+    '''默认时间段为最新一周
+    '''
+
+    end_ts = time.time()
+    start_ts = end_ts - 7 * 24 * 3600
+
+    return start_ts, end_ts
+
+
+def _time_zone(stri):
+    dates = stri.split(' - ')
+    tslist = []
+
+    for date in dates:
+        month_day, year = date.split(',')
+        month, day = month_day.split('月 ')
+        year = int(year)
+        month = int(month)
+        day = int(day)
+        ts = datetime(year, month, day, 0, 0, 0)
+        ts = time.mktime(ts.timetuple())
+        tslist.append(ts)
+
+    start_ts = tslist[0]
+    end_ts = tslist[1]
+
+    return int(start_ts), int(end_ts)
+
 
 @mod.route('/all/', methods=['GET','POST'])
 def all_emotion():
-    if 'logged_in' in session and session['logged_in']:        
+    if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            dur_time = request.args.get('time', '')
-            during = request.args.get('during', '')
-            if dur_time == '':
-                dur_day = 5
-                during = 15*60
-                end_time_day = 4
-                end_time_month = 9
-                end_time_year = 2013
-                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
-            print dur_time
-            dur_time = _utf_encode(dur_time)
-            print type(dur_time)
-            t = dur_time.split(' - ')
-            first = t[0]
-            second = t[1]
-
-            et = get_date(second)
-            bt = get_date(first)
-
-            end_time_year = et[0]
-            end_time_month = et[1]
-            end_time_day = et[2]
-            print end_time_year,end_time_month,end_time_day
-            dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
-            print dur_day
-            
-            if during == '':
-                during = 15*60
-                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
+            during = request.args.get('during', None)
+            if not during or during == '':
+                during = MinInterval
             else:
                 during = str2ts(during)
-                
-                return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
-        else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.moodlens
-                    if identy == 1:
-                        dur_time = request.args.get('time', '')
-                        during = request.args.get('during', '')
             
-                        if dur_time == '':
-                            dur_day = 5
-                            during = 15*60
-                            end_time_day = 4
-                            end_time_month = 9
-                            end_time_year = 2013
-                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
-                        print dur_time
-                        dur_time = _utf_encode(dur_time)
-                        print type(dur_time)
-                        t = dur_time.split(' - ')
-                        first = t[0]
-                        second = t[1]
+            dur_time = request.args.get('time', None)
+            dur_time = _utf_encode(dur_time)
+            if not dur_time or dur_time == '':
+                start_ts, end_ts = _default_time_zone()
+            else:
+                dur_time = _utf_encode(dur_time)
+                start_ts, end_ts = _time_zone(dur_time)
 
-                        et = get_date(second)
-                        bt = get_date(first)
+            return render_template('moodlens/all_emotion.html', start_ts=start_ts, end_ts=end_ts, during=during)
+            
+        else:
+            pass
 
-                        end_time_year = et[0]
-                        end_time_month = et[1]
-                        end_time_day = et[2]
-                        print end_time_year,end_time_month,end_time_day
-                        dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
-                        print dur_day
-                        
-                        if during == '':
-                            during = 15*60
-                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
-                        else:
-                            during = str2ts(during)
-                            return render_template('moodlens/all_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year)
-                    else:
-                        return redirect('/')
-            return redirect('/')
     else:
         return redirect('/')
 
@@ -383,7 +365,7 @@ def data(area='global'):
         print area
         
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
-
+    print search_func
     if search_func:
         if emotion == 'global':
             for k, v in emotions_kv.iteritems():
@@ -545,7 +527,7 @@ def weibos_data(emotion='global', area='global'):
         area = FIELDS2ID[area]
         
     search_func = getattr(weibosModule, 'search_%s_weibos' % search_method, None)
-
+    
     if search_func:
         if emotion == 'global':
             for k, v in emotions_kv.iteritems():

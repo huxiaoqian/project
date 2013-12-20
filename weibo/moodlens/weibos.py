@@ -6,6 +6,7 @@ import operator
 from weibo.extensions import db
 from weibo.model import TopWeibos, SentimentDomainTopWeibos, SentimentTopicTopWeibos
 from time_utils import datetime2ts
+from utils import weiboinfo2url
 
 
 TOP_WEIBOS_LIMIT = 50
@@ -39,6 +40,7 @@ def parseWeibos(weibos):
     for weibo in weibos:
     	_id = weibo['_id']
         reposts_count = weibo['reposts_count']
+        weibo['weibo_link'] = weiboinfo2url(weibo['user'], _id)
         weibo_dict[_id] = [reposts_count, weibo]
 
     return weibo_dict

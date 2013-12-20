@@ -86,21 +86,23 @@ def search_domain_counts(end_ts, during, sentiment, unit=MinInterval, query=None
         	count = [end_ts * 1000, item.count]
         else:
         	count = [end_ts * 1000, 0]
+        print end_ts, count
 
     else:
         start_ts = end_ts - during
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         lowbound = (start_ts / unit) * unit
-        count = db.session.query(func.sum(SentimentTopicCount.count)).filter(SentimentDomainCount.ts>lowbound, \
-                                               SentimentDomainCount.ts<=upbound, \
-                                               SentimentDomainCount.sentiment==sentiment, \
-                                               SentimentDomainCount.range==unit, \
-                                               SentimentDomainCount.domain==domain).all()
+        count = db.session.query(func.sum(SentimentDomainCount.count)).filter(SentimentDomainCount.ts>lowbound, \
+                                                                              SentimentDomainCount.ts<=upbound, \
+                                                                              SentimentDomainCount.sentiment==sentiment, \
+                                                                              SentimentDomainCount.range==unit, \
+                                                                              SentimentDomainCount.domain==domain).all()
 
         if count and count[0] and count[0][0]:
             count = [end_ts * 1000, int(count[0][0])]
         else:
             count = [end_ts * 1000, 0]
+        print during, during > unit, end_ts, count
 
     return count
 

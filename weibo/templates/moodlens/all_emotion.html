@@ -180,12 +180,16 @@
   <script src="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>
 
   <script>
+    var START_TS = parseInt('{{start_ts}}');
+    var END_TS = parseInt('{{end_ts}}');
+    var DURING_INTERGER = parseInt('{{during}}');
+
     var emotion_ratio = {};
     var emotion_absolute={};
-
     var happy_absolute = [];
     var angry_absolute = [];
     var sad_absolute = [];
+
     var happy_ratio = [];
     var angry_ratio = [];
     var sad_ratio = [];
@@ -203,11 +207,9 @@
     var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
     var max_word_size = 10;
     var min_word_size = 1;
-    var dur_day = parseInt('{{dur_day}}');
-    var dur_time = parseInt('{{during}}');
-    var end_day = parseInt('{{end_day}}');
-    var end_month = parseInt('{{end_month}}');
-    var end_year = parseInt('{{end_year}}');
+    var keywords_weibos_limit = 10;
+    var emotion_keys = ['happy', 'angry', 'sad'];
+    
 
     $(document).ready(function(){  
         display_realtime_emotion();
@@ -254,7 +256,7 @@
             var name = data[i]['user'];
             var user_link = 'http://weibo.com/u/'+data[i]['user'];
             var text = data[i]['text'];
-            var weibo_link = 'http://weibo.com/'+data[i]['user']+'/'+data[i]['_id'];
+            var weibo_link = data[i]['weibo_link'];
             var time = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', parseInt(data[i]['timestamp']) * 1000);
             var repost_count = data[i]['reposts_count'];
             var retweeted_text = 'None';
@@ -296,22 +298,23 @@
         return true; 
     } 
 
-    function init_statistics(end_ts, during){
-        var emotion = ['happy', 'angry', 'sad'];
+    function init_statistics(end_ts, duration){
+        //end_ts为截止时间戳, duration为整个时间段的秒数
+        
         $.ajax({
-            url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + during,
+            url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + duration,
             type: "GET",
             dataType:"json",
             success: function(data){
+                console.log(data);
                 $("#vertical-ticker").empty();
-                var happy_count = data['happy'].length;
-                var sad_count = data['sad'].length;
-                var angry_count = data['angry'].length;
-                var n = happy_count+sad_count+angry_count;
-                if(n>0){
-                    for(var e in emotion){
-                    
-                    chg_weibos(data[emotion[e]]);
+                var happy_length = data['happy'].length;
+                var sad_length = data['sad'].length;
+                var angry_length = data['angry'].length;
+                var total_length  = happy_length + sad_length + angry_length;
+                if(total_length > 0) {
+                    for(var e in emotion_keys){
+                        chg_weibos(data[emotion_keys[e]]);
                     }
                 }
                 else{
@@ -321,12 +324,11 @@
             }
         });
         $.ajax({
-            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + during+"&limit=10",
+            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + duration + "&limit=" + keywords_weibos_limit,
             type: "GET",
             dataType:"json",
             success: function(data){
                 if(data=='search function undefined'){
-
                     $("#tags_ul").empty();
                     $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                     redraw_tagcanvas();
@@ -338,15 +340,15 @@
                         redraw_tagcanvas();
                     }
                     else{
-                        for(var e in emotion){
-                            chg_tagcloud(data[emotion[e]]); 
+                        for(var e in emotion_keys){
+                            chg_tagcloud(data[emotion_keys[e]]); 
                         }
                     }
                 }
             }
         });
         $.ajax({
-            url: "/moodlens/data/global/?ts=" + end_ts + "&during=" + during,
+            url: "/moodlens/data/global/?ts=" + end_ts + "&during=" + duration,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -361,14 +363,14 @@
 
     function pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6,series7,series8,series9){
         if(times > total_days){
-            get_peaks(series4, series5, series6);
-            get_absolute_peaks(series7, series8, series9);
+            get_peaks(series4, series5, series6, during);
+            get_absolute_peaks(series7, series8, series9, during);
             return;
         }
         
         var ts = begin_ts + times * during;
         $.ajax({
-            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts,
+            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + '&during=' + during,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -417,9 +419,9 @@
         });
     }
 
-    function get_absolute_peaks(series7, series8, series9){
+    function get_absolute_peaks(series7, series8, series9, during){
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + happy_alist.join(',') + "&ts=" + ts_alist + '&during=' + dur_time + "&emotion=happy",
+            url: "/moodlens/emotionpeak/?lis=" + happy_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=happy",
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -484,7 +486,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + angry_alist.join(',') + "&ts=" + ts_alist + '&during=' + dur_time + "&emotion=angry",
+            url: "/moodlens/emotionpeak/?lis=" + angry_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=angry",
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -552,7 +554,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + sad_alist.join(',') + "&ts=" + ts_alist + '&during=' + dur_time + "&emotion=sad",
+            url: "/moodlens/emotionpeak/?lis=" + sad_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=sad",
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -622,32 +624,27 @@
         })
     }
 
-    function get_peaks(series4, series5, series6){
+    function get_peaks(series4, series5, series6, during){
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + happy_list.join(',') + "&ts=" + ts_list + '&during=' + dur_time + "&emotion=happy",
+            url: "/moodlens/emotionpeak/?lis=" + happy_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=happy",
             type: "GET",
             dataType:"json",
             success: function(data){
-              console.log("xiangdui");
-              console.log(data);
               if ( data != 'Null Data'){
               var isShift = false;
               for(var i in data){
                 var x = data[i]['ts'];
                 var title = data[i]['title'];
                 var happy_title = title;
-                //var angry_title = title['angry'];
-                //var sad_title = title['sad'];
+
                 var text = data[i]['text'];
                 var happy_text = text;
-                //var angry_text = text['angry'];
-                //var sad_text = text['sad'];
                 var flagClick = function(event){
                     var click_ts = this.x / 1000;
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -662,7 +659,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=10",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + keywords_weibos_limit + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -693,7 +690,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + angry_list.join(',') + "&ts=" + ts_list + '&during=' + dur_time + "&emotion=angry",
+            url: "/moodlens/emotionpeak/?lis=" + angry_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=angry",
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -714,7 +711,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -729,7 +726,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=10",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + keywords_weibos_limit + + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -760,7 +757,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + sad_list.join(',') + "&ts=" + ts_list + '&during=' + dur_time + "&emotion=sad",
+            url: "/moodlens/emotionpeak/?lis=" + sad_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=sad",
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -781,7 +778,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -796,7 +793,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=10",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + keywords_weibos_limit + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -892,24 +889,15 @@
                 marginRight: 10,
                 events: {
                     load: function() {
-                        if (isNaN(dur_day))
-                        {
-                            var total_days=5;
-                            var now_ts = parseInt((new Date(2013, 8, 4)).getTime() / 1000) ;
-                        }
-                        else{
-                            var total_days = dur_day;
-                            var now_ts = parseInt((new Date(end_year, end_month-1, end_day)).getTime() / 1000) ;
-                        }
-                        //var now_ts = parseInt((new Date(end_year, end_month-1, end_day)).getTime() / 1000) ;
-                        //var begin_ts = parseInt((new Date(2013, 9, 1)).getTime() / 1000) + 2 * 3600;
-                        /*total_days = 5
-                        var now_ts = parseInt((new Date(2013, 8, 5)).getTime() / 1000) ;*/
-                        var during = 24 * 3600;
-                        var begin_ts = now_ts-total_days * during;
-                        init_statistics(now_ts, total_days * during)
-                        var total_number = total_days * during/dur_time;                                           
-                        pull_emotion_count('global', total_number, 0, begin_ts, dur_time, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5], this.series[6], this.series[7], this.series[8]);
+                        var during = DURING_INTERGER;
+                        var begin_ts = START_TS;
+                        var end_ts = END_TS;
+                        var total_nodes = (end_ts - begin_ts) / during;
+                        var times_init = 0;
+
+                        init_statistics(end_ts, end_ts - begin_ts);
+                              
+                        pull_emotion_count('global', total_nodes, times_init, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5], this.series[6], this.series[7], this.series[8]);
                     }
                 }
             },
@@ -947,24 +935,6 @@
                 title: {
                     text: '微 博 条 数'
                 },
-                /*
-                plotLines : [{
-                    value : 5000,
-                    color : 'silver',
-                    dashStyle : 'shortdash',
-                    width : 2,
-                    label : {
-                        text : 'low'
-                    }
-                }, {
-                    value : 20000,
-                    color : 'red',
-                    dashStyle : 'shortdash',
-                    width : 2,
-                    label : {
-                        text : 'high'
-                    }
-                }]*/
             },
             tooltip: {
                 valueDecimals: 2,

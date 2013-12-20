@@ -54,6 +54,7 @@ def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
                                       TopWeibos.sentiment==sentiment, \
                                       TopWeibos.range==unit, \
                                       TopWeibos.limit==top).first()
+        print item
         if item:
         	weibos_dict = parseWeibos(item.weibos)
 
@@ -66,7 +67,6 @@ def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
                                        TopWeibos.sentiment==sentiment, \
                                        TopWeibos.range==unit, \
                                        TopWeibos.limit==top).all()
-
         for item in items:
             weibo_dict = parseWeibos(item.weibos)
             for k, v in weibo_dict.iteritems():

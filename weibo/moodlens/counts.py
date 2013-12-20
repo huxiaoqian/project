@@ -28,6 +28,7 @@ def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None
         	count = [end_ts * 1000, item.count]
         else:
         	count = [end_ts * 1000, 0]
+        print '1: ', end_ts, count
 
     else:
         start_ts = end_ts - during
@@ -42,6 +43,8 @@ def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None
             count = [end_ts * 1000, int(count[0][0])]
         else:
             count = [end_ts * 1000, 0]
+
+        print '2: ', end_ts, count
 
     return count
 

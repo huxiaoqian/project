@@ -71,52 +71,11 @@ def _utf_decode(s):
     else:
         return s
 
-def strToDate(dur_time):
-    m = '1'
-    d = '1'
-    y = '2013'
-    items = dur_time.split(', ')
-    n = 0
-    for item in items:
-        if n == 0:
-            mds = item.split(' ')
-            t = 0
-            for md in mds:
-                if t==0:
-                    m = month_value[md]
-                    t = 1
-                else:
-                    d = md
-            n = 1
-        else:
-            y = item
-
-    time_str = str(y)+'-'+str(m)+'-'+str(d)
-
-    return time_str
-
-
-def get_date(ymd):
-    c=[]
-    son=ymd.split(',')
-    y=int(son[1])
-    md=son[0].split(' ')
-    m=int(filter(str.isdigit,md[0]))
-    d=int(md[1])
-    c.append(y)
-    c.append(m)
-    c.append(d)
-    return c
-
-
-def get_total_days(time_str):
-    t=time_str.split(' - ')
-    first=t[0]
-    second=t[1]
-    return get_days(second)-get_days(first)
-
 
 def str2ts(s):
+    '''
+    返回以秒为单位的时间间隔
+    '''
     temp_during = _utf_encode(s)
     if re.match(r'\d+分钟', temp_during):
         pattern=re.compile(r'分钟')
@@ -175,6 +134,7 @@ def _time_zone(stri):
         month, day = month_day.split('月 ')
         year = int(year)
         month = int(month)
+        day = filter(str.isdigit, day)#只保留数字，去掉“日”
         day = int(day)
         ts = datetime(year, month, day, 0, 0, 0)
         ts = time.mktime(ts.timetuple())

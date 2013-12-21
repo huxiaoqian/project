@@ -431,12 +431,10 @@
                 var x = data[i]['ts'];
                 var title = data[i]['title'];
                 var happy_title = title;
-                //var angry_title = title['angry'];
-                //var sad_title = title['sad'];
+                
                 var text = data[i]['text'];
                 var happy_text = text;
-                //var angry_text = text['angry'];
-                //var sad_text = text['sad'];
+                
                 var flagClick = function(event){
                     var click_ts = this.x / 1000;
                     var emotion = this.emotion;
@@ -482,8 +480,7 @@
                     chg_emotion_pie(emotion_ratio[this.x]);     
                 }
                 series7.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
-                //series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
-                //series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
+                
               }
             }
         }
@@ -861,6 +858,12 @@
 
                     },
                     showInLegend: true
+                }
+            },
+            navigation: {
+                buttonOptions: {
+                    verticalAlign: 'bottom',
+                    y: -20
                 }
             },
             series: [{

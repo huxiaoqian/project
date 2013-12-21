@@ -57,7 +57,7 @@ function add_field(){<!-- 添加按钮 -->
     var f2=prompt("请输入过期时间（如：2020-12-31）","");
     if(fl)
     {
-        if(isNaN(f2)){
+        if(!f2){
           f2 = '2020-12-31';
         }
         $.ajax({   
@@ -173,7 +173,7 @@ function declear_re(){<!-- 反选 -->
 
         <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:900px;width:1000px;">
         <p style="font-size:20pt;color:#FE642E;">定制话题管理</p>
-        <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
+        <div id="well" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
                <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
                     <div class="btn-group" style="float:left;padding-right:10px;">
                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu()">
@@ -195,7 +195,7 @@ function declear_re(){<!-- 反选 -->
                                                             
                </div>
                 <div class="bs-docs-example">
-                  <table class="table" id="new_table">
+                  <table class="table table-bordered" id="new_table">
                     <thead>
                       <tr>                        
                         <th style="text-align:center;display:none;">序号</th>
@@ -204,12 +204,17 @@ function declear_re(){<!-- 反选 -->
                         <th style="text-align:center">选择</th>
                       </tr>
                     </thead>
+                    <div id="users_area">
                     <tbody id="word_table">
                        
-                    </tbody>   
+                    </tbody>  
+                    </div> 
                 </table>
                 <div id="page-selection" class="pagination pagination-centered"></div>
                 <script src="/static/js/profile/jquery.bootpag.min.js"></script>
+                <script src="/static/js/profile/jquery.bootpag.min.js"></script>
+                <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
+                <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
                 <script>
                 var countperpage_args = 10;
                 var limit_arg = 1000000;
@@ -299,10 +304,10 @@ function declear_re(){<!-- 反选 -->
                               var fa = $(this).parent();
                               var ne = $(fa).prev().prev();
                               var uname = $(ne).html();                  
-                              var f_id = $(uname).prev().html();
+                              var f_id = $(ne).prev().html();
                               if(confirm("您要修改的是"+uname+"的过期时间？")){
                                 var time=prompt("请输入过期时间（如：2020-12-31）","");
-                                
+
                                 if(time){
                                   $.ajax({   
                                     type:"POST",  
@@ -321,7 +326,7 @@ function declear_re(){<!-- 反选 -->
                                   });
                                 }
                                 else{
-                                  alert("输入有误，请重新输入！");
+                                  alert("日期不能为空！");
                                 }
                               }
                               else{

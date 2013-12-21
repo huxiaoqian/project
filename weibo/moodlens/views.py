@@ -28,7 +28,7 @@ from datetime import datetime
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
 
-month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
+#month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 field_id = {u'文化':'culture', u'教育':'education', u'娱乐':'entertainment', u'时尚':'fashion', u'财经':'finance', u'媒体':'media', u'体育':'sports', u'科技':'technology'}
 FIELDS_VALUE = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
 FIELDS_ZH_NAME = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒体', u'体育', u'科技', u'海外']
@@ -176,96 +176,32 @@ def all_emotion():
 
 @mod.route('/field/', methods=['GET','POST'])
 def field():
-    if 'logged_in' in session and session['logged_in']:        
+    if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            dur_time = request.args.get('time', '')
-            during = request.args.get('during', '')
+            during = request.args.get('during', None)
+            if not during or during == '':
+                during = MinInterval
+            else:
+                during = str2ts(during)
+            
+            dur_time = request.args.get('time', None)
+            dur_time = _utf_encode(dur_time)
+            if not dur_time or dur_time == '':
+                start_ts, end_ts = _default_time_zone()
+            else:
+                start_ts, end_ts = _time_zone(dur_time)
+
             field_name = request.args.get('field_name', '')
             if field_name == '':
                 return render_template('moodlens/index.html', active='moodlens')
             else:
                 field_en = field_id[field_name]
 
-            if dur_time == '':
-                dur_day = 5
-                during = 15*60
-                end_time_day = 4
-                end_time_month = 9
-                end_time_year = 2013
-                return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
+            return render_template('moodlens/field_emotion.html', start_ts=start_ts, end_ts=end_ts, during=during,field_en=field_en)
             
-            print dur_time
-            dur_time = _utf_encode(dur_time)
-            print type(dur_time)
-            t = dur_time.split(' - ')
-            first = t[0]
-            second = t[1]
-
-            et = get_date(second)
-            bt = get_date(first)
-
-            end_time_year = et[0]
-            end_time_month = et[1]
-            end_time_day = et[2]
-            print end_time_year,end_time_month,end_time_day
-            dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
-            print dur_day
-
-            if during == '':
-                during = 15*60
-                return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-            else:
-                during = str2ts(during)
-                
-                return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
         else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.moodlens
-                    if identy == 1:
-                        dur_time = request.args.get('time', '')
-                        during = request.args.get('during', '')
-                        field_name = request.args.get('field_name', '')
-                        if field_name == '':
-                            return render_template('moodlens/index.html', active='moodlens')
-                        else:
-                            field_en = field_id[field_name]
+            pass
 
-                        if dur_time == '':
-                            dur_day = 5
-                            during = 15*60
-                            end_time_day = 4
-                            end_time_month = 9
-                            end_time_year = 2013
-                            return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-                        print dur_time
-                        dur_time = _utf_encode(dur_time)
-                        print type(dur_time)
-                        t = dur_time.split(' - ')
-                        first = t[0]
-                        second = t[1]
-
-                        et = get_date(second)
-                        bt = get_date(first)
-
-                        end_time_year = et[0]
-                        end_time_month = et[1]
-                        end_time_day = et[2]
-                        print end_time_year,end_time_month,end_time_day
-                        dur_day=(et[0]-bt[0])*365+(et[1]-bt[1])*30+(et[2]-bt[2])
-                        print dur_day
-
-                        if during == '':
-                            during = 15*60
-                            return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-                        else:
-                            during = str2ts(during)
-                
-                            return render_template('moodlens/field_emotion.html', active='moodlens',dur_day=dur_day,during=during,end_day=end_time_day,end_month=end_time_month,end_year=end_time_year,field_en=field_en)
-                    else:
-                        return redirect('/')
-            return redirect('/')
     else:
         return redirect('/')
 
@@ -301,7 +237,7 @@ def topic():
 def data(area='global'):
     """分类情感数据
     """
-
+    
     query = request.args.get('query', None)
     if query:
         query = query.strip()
@@ -323,7 +259,7 @@ def data(area='global'):
     else:
         search_method = 'domain'
         area = FIELDS2ID[area]
-        
+   
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
     
     if search_func:
@@ -437,6 +373,7 @@ def keywords_data(area='global'):
         area = None
     else:
         search_method = 'domain'
+        #print "here :"+area
         area = FIELDS2ID[area]
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)

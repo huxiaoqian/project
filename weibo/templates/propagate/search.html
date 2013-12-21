@@ -22,11 +22,11 @@
     	<div class="inline">
         <ul>
     	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>关键字词:</b></font> <input type="text" class="span2" placeholder="请输入关键字" value="" role="textbox" name="keyword" id="topic_keywords" style="margin-bottom: 0px;">
-    	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>关键用户: </b></font><input type="text" class="span2" placeholder="请输入用户" value="" role="textbox" name="keyuser" id="topic_keyusers" style="margin-bottom: 0px;">
-          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
+    	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp关键用户: </b></font><input type="text" class="span2" placeholder="请输入用户" value="" role="textbox" name="keyuser" id="topic_keyusers" style="margin-bottom: 0px;">
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
           <div id="reportrange_topic" class="btn dropdown-toggle">
             <i class="icon-calendar icon-large"></i>
-            <span id="topic_time">September 20, 2013 - September 25, 2013</span>
+            <span id="topic_time">9月 2,2013 - 9月 4,2013</span>
             <b class="caret"></b>
           </div>
           <input type="hidden" name="r" value="1">
@@ -57,7 +57,7 @@
           <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
           <div id="reportrange_single" class="btn dropdown-toggle">
             <i class="icon-calendar icon-large"></i>
-            <span id="weibo_time">September 20, 2013 - September 25, 2013</span> 
+            <span id="weibo_time">9月 2,2013 - 9月 4,2013</span> 
             <b class="caret"></b>
           </div>
           <input type="hidden" name="r" value="1">
@@ -76,12 +76,12 @@
     $(document).ready(function() {
   $('#reportrange_topic').daterangepicker({
       ranges: {
-         'Today': [moment(), moment()],
-         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         'Last 7 Days': [moment().subtract('days', 6), moment()],
-         'Last 30 Days': [moment().subtract('days', 29), moment()],
-         'This Month': [moment().startOf('month'), moment().endOf('month')],
-         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+         '今天': [moment(), moment()],
+         '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+         '最近7天': [moment().subtract('days', 6), moment()],
+         '最近30天': [moment().subtract('days', 29), moment()],
+         '本月内': [moment().startOf('month'), moment().endOf('month')],
+         '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
       },
       startDate: moment().subtract('days', 29),
       endDate: moment()
@@ -92,12 +92,12 @@
   );
   $('#reportrange_single').daterangepicker({
       ranges: {
-         'Today': [moment(), moment()],
-         'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         'Last 7 Days': [moment().subtract('days', 6), moment()],
-         'Last 30 Days': [moment().subtract('days', 29), moment()],
-         'This Month': [moment().startOf('month'), moment().endOf('month')],
-         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+         '今天': [moment(), moment()],
+         '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+         '最近7天': [moment().subtract('days', 6), moment()],
+         '最近30天': [moment().subtract('days', 29), moment()],
+         '本月内': [moment().startOf('month'), moment().endOf('month')],
+         '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
       },
       startDate: moment().subtract('days', 29),
       endDate: moment()

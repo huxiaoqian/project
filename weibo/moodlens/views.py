@@ -73,6 +73,9 @@ def _utf_decode(s):
 
 
 def str2ts(s):
+    '''
+    返回以秒为单位的时间间隔
+    '''
     temp_during = _utf_encode(s)
     if re.match(r'\d+分钟', temp_during):
         pattern=re.compile(r'分钟')
@@ -133,7 +136,7 @@ def _time_zone(stri):
         month, day = month_day.split('月 ')
         year = int(year)
         month = int(month)
-        day=filter(str.isdigit,day)
+        day = filter(str.isdigit, day)#只保留数字，去掉“日”
         day = int(day)
         ts = datetime(year, month, day, 0, 0, 0)
         ts = time.mktime(ts.timetuple())

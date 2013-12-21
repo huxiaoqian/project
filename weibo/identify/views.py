@@ -101,7 +101,6 @@ def whole():
                            previous_data = rank_func(top_n, previous_date, window_size)
                     return json.dumps({'status': 'previous finished', 'data': previous_data})
                 elif action == 'run':
-                    print 'ok'
                     return render_template('identify/whole.html', rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num)
                 else:
                    abort(404)
@@ -486,7 +485,7 @@ def topic():
                             current_time = datetime2ts('2013-3-7')
                             if action == 'rank':
                                 current_date = ts2datetime(current_time)
-                                current_data = read_rank_results(top_n, 'area', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
+                                current_data = read_rank_results(top_n, 'topic', rank_method, current_date, window_size, topic_id=topic_id, compare=True)
                                 if not current_data:
                                     if rank_method == 'pagerank':
                                         rank_func = getattr(areaModule, '%s_rank' % rank_method, None)
@@ -500,7 +499,7 @@ def topic():
 
                             elif action == 'previous_rank':
                                 previous_date = ts2datetime(current_time-window2time(window_size))
-                                previous_data = read_rank_results(top_n, 'area', rank_method, previous_date, window_size, topic_id=topic_id)
+                                previous_data = read_rank_results(top_n, 'topic', rank_method, previous_date, window_size, topic_id=topic_id)
                                 if not previous_data and window_size <= 7:
                                     if rank_method == 'pagerank':
                                         rank_func = getattr(areaModule, '%s_rank' % rank_method, None)

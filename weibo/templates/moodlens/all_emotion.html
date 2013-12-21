@@ -437,8 +437,10 @@
                 var x = data[i]['ts'];
                 var title = data[i]['title'];
                 var happy_title = title;
+                
                 var text = data[i]['text'];
                 var happy_text = text;
+                
                 var flagClick = function(event){
                     var click_ts = this.x / 1000;
                     var emotion = this.emotion;
@@ -854,6 +856,12 @@
 
                     },
                     showInLegend: true
+                }
+            },
+            navigation: {
+                buttonOptions: {
+                    verticalAlign: 'bottom',
+                    y: -20
                 }
             },
             series: [{

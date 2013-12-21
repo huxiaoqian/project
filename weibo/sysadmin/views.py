@@ -7,6 +7,7 @@ from weibo.extensions import db
 import json
 import csv
 import os
+import time
 from xapian_weibo.xapian_backend import XapianSearch
 from weibo.global_config import xapian_search_user
 #xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
@@ -90,6 +91,15 @@ def help_material():
     if 'logged_in' in session and session['logged_in']:
         materials = db.session.query(M_Weibo).filter().all()
         return render_template('admin/para_ma.html', materials = materials) 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/topic/')
+def help_topic():
+    if 'logged_in' in session and session['logged_in']:
+##        local = int(time.time())
+##        topics = db.session.query(Topics).filter((iscustom==True)&(expire_date>=local)).all()
+        return render_template('admin/para_topic.html') 
     else:
         return redirect('/sysadmin/')
 
@@ -506,6 +516,37 @@ def t_rank():
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
+@mod.route('/topic_rank/')
+def topic_rank():
+    page = 1
+    countperpage = 5
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    local = int(time.time())
+    topics = db.session.query(Topics).filter((Topics.iscustom==True)&(Topics.expire_date>=local)).all()
+    news=[]
+    n = 0
+    for topic in topics:
+        if topic:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break
+                expire_date = time.strftime('%Y-%m-%d', time.localtime(topic.expire_date))
+                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'expire_date':expire_date})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
 @mod.route('/add_user', methods=['GET','POST'])
 def add_user():
     user = request.form['user']
@@ -557,3 +598,64 @@ def user_modify():
     else:        
         return json.dumps('Wrong')
 
+@mod.route('/usertopic_de', methods=['GET','POST'])
+def usertopic_de():
+    result = 'Right'
+    user_id = request.form['f_id']
+    local = int(time.time())
+    old_items = db.session.query(Topics).filter(Topics.id==user_id).all()
+    if len(old_items):
+        for old_item in old_items:
+            topic = old_item.topic.encode('utf-8')
+            db.session.delete(old_item)
+            db.session.commit()
+            new_item = Topics(user='admin',topic=topic,iscustom=False,expire_date=local)
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
+
+@mod.route('/usertopic_new', methods=['GET','POST'])
+def usertopic_new():
+    result = 'Right'
+    new_field = request.form['topic']
+    se_weight = request.form['se_weight']
+    s = time.mktime(time.strptime(se_weight, '%Y-%m-%d'))
+    s = int(s)
+    old_items = db.session.query(Topics).filter(Topics.topic==new_field).all()
+    if len(old_items):
+        for old_item in old_items:
+            if old_item.iscustom == True:
+                result = 'Wrong'
+            else:
+                topic = old_item.topic.encode('utf-8')
+                db.session.delete(old_item)
+                db.session.commit()
+                new_item = Topics(user='admin',topic=topic,iscustom=True,expire_date=s)
+                db.session.add(new_item)
+                db.session.commit()
+    else:
+	new_item = Topics(user='admin',topic=new_field,iscustom=True,expire_date=s)
+	db.session.add(new_item)
+	db.session.commit()
+    return json.dumps(result)
+
+@mod.route('/usertopic_modify', methods=['GET','POST'])
+def usertopic_modify():
+    user = request.form['f_id']
+    time = request.form['time']
+    s = time.mktime(time.strptime(se_weight, '%Y-%m-%d'))
+    s = int(s)
+    old_items = db.session.query(Topics).filter(Topics.topic==user).all()
+    if len(old_items):
+        for old_item in old_items:
+            topic = old_item.topic.encode('utf-8')
+            db.session.delete(old_item)
+            db.session.commit()
+            new_item = Topics(user='admin',topic=topic,iscustom=True,expire_date=s)
+            db.session.add(new_item)
+            db.session.commit()
+        return json.dumps('Right')
+    else:        
+        return json.dumps('Wrong')

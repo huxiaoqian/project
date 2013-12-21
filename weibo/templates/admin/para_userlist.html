@@ -100,7 +100,7 @@ ul{
                     <button id="de_user" type="button" class="btn btn-danger">删除</button>
                </div>
                <div class="bs-docs-example">
-                  <table class="table" id="new_table">
+                  <table class="table table-bordered" id="new_table">
                     <thead>
                       <tr> 
                         <th style="text-align:center;display:none;">ID</th>                       
@@ -112,6 +112,7 @@ ul{
                         <th style="text-align:center">选择</th>
                       </tr>
                     </thead>
+                    <div id="users_area">
                     <tbody>
                       {% for user in userlists %}
                       <tr>
@@ -142,7 +143,8 @@ ul{
                       </tr>
                       {% endfor %}
                        
-                  </tbody>   
+                  </tbody> 
+                  </div>  
                 </table>
                 <script>
                 function add_field(){<!-- 添加按钮 -->

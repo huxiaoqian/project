@@ -40,22 +40,19 @@ def index():
 @mod.route('/paraset/field/')
 def help_field():
     if 'logged_in' in session and session['logged_in']:
-        fields = db.session.query(Field).filter().all()
-        topics = db.session.query(Topic).filter().all()
-        return render_template('admin/para_field.html', fields = fields, topics = topics) 
+        return render_template('admin/para_field.html') 
     else:
         return redirect('/sysadmin/')
 
 @mod.route('/paraset/new/')
 def help_new():
     if 'logged_in' in session and session['logged_in']:
-        newwords = db.session.query(NewWords).filter().all()
-        return render_template('admin/para_new.html', newwords = newwords) 
+        return render_template('admin/para_new.html') 
     else:
         return redirect('/sysadmin/')
 
 @mod.route('/paraset/userlist/')
-def help_white():
+def help_userlist():
     if 'logged_in' in session and session['logged_in']:
         userlists = db.session.query(UserList).filter().all()
         return render_template('admin/para_userlist.html', userlists = userlists) 
@@ -73,32 +70,27 @@ def help_weight():
 @mod.route('/paraset/black/')
 def help_black():
     if 'logged_in' in session and session['logged_in']:
-        blacks = db.session.query(BlackList).filter().all()
-        return render_template('admin/para_hei.html',blacks = blacks) 
+        return render_template('admin/para_hei.html') 
     else:
         return redirect('/sysadmin/')
 
 @mod.route('/paraset/media/')
 def help_media():
     if 'logged_in' in session and session['logged_in']:
-        medias = db.session.query(IMedia).filter().all()
-        return render_template('admin/para_media.html', medias = medias) 
+        return render_template('admin/para_media.html') 
     else:
         return redirect('/sysadmin/')
 
 @mod.route('/paraset/material/')
 def help_material():
     if 'logged_in' in session and session['logged_in']:
-        materials = db.session.query(M_Weibo).filter().all()
-        return render_template('admin/para_ma.html', materials = materials) 
+        return render_template('admin/para_ma.html') 
     else:
         return redirect('/sysadmin/')
 
 @mod.route('/paraset/topic/')
 def help_topic():
     if 'logged_in' in session and session['logged_in']:
-##        local = int(time.time())
-##        topics = db.session.query(Topics).filter((iscustom==True)&(expire_date>=local)).all()
         return render_template('admin/para_topic.html') 
     else:
         return redirect('/sysadmin/')
@@ -644,10 +636,10 @@ def usertopic_new():
 @mod.route('/usertopic_modify', methods=['GET','POST'])
 def usertopic_modify():
     user = request.form['f_id']
-    time = request.form['time']
-    s = time.mktime(time.strptime(se_weight, '%Y-%m-%d'))
+    new_time = request.form['time']
+    s = time.mktime(time.strptime(new_time, '%Y-%m-%d'))
     s = int(s)
-    old_items = db.session.query(Topics).filter(Topics.topic==user).all()
+    old_items = db.session.query(Topics).filter(Topics.id==user).all()
     if len(old_items):
         for old_item in old_items:
             topic = old_item.topic.encode('utf-8')
@@ -657,5 +649,5 @@ def usertopic_modify():
             db.session.add(new_item)
             db.session.commit()
         return json.dumps('Right')
-    else:        
+    else:
         return json.dumps('Wrong')

@@ -169,7 +169,7 @@
                     <ul id="tags_ul"><li><a style="font-size:1ex">关键词云数据为空</a></li></ul>
                 </div>
             </div>
-            <div id="emotion_pie_container" class="span4" >
+            <div id="emotion_pie_container" class="span4" >情绪饼图数据为空
             </div>
         </div>
     </div>
@@ -461,7 +461,7 @@
                                 chg_weibos(data[emotion]);
                             }
                             else{
-                                $("#vertical-ticker").append("关键微博为空！");
+                                $("#vertical-ticker").append(" 关键微博为空！");
                             }
                         }
                     });
@@ -526,7 +526,7 @@
                                 chg_weibos(data[emotion]);
                             }
                             else{
-                                $("#vertical-ticker").append("关键微博为空！");
+                                $("#vertical-ticker").append(" 关键微博为空！");
                             }
                         }
                     });
@@ -591,10 +591,10 @@
                                 chg_weibos(data[emotion]);
                             }
                             else{
-                                $("#vertical-ticker").append("关键微博为空！");
+                                $("#vertical-ticker").append(" 关键微博为空！");
                             }
                         }
-                    });
+                    }); 
                     $.ajax({
                         url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
                         type: "GET",

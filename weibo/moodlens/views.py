@@ -237,8 +237,7 @@ def topic():
 def data(area='global'):
     """分类情感数据
     """
-    #fn=open("area.txt","w+")
-    #fn.write(FIELDS2ID[area])
+    
     query = request.args.get('query', None)
     if query:
         query = query.strip()
@@ -260,11 +259,7 @@ def data(area='global'):
     else:
         search_method = 'domain'
         area = FIELDS2ID[area]
-
-    print area
-    #fn.write("culture : ")
-    #fn.write(area)
-    #fn.close()    
+   
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
     
     if search_func:

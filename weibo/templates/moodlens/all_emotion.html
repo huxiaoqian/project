@@ -143,10 +143,10 @@
                 <div class="control-group" id="togglecount">
                     <div class="controls btn switch switch-two">
                         <input id="relative" name="view" type="radio" checked>
-                        <label for="relative" onclick="switch2('relative');">相对比例</label>
+                        <label for="relative" onclick="load_relative();">相对比例</label>
 
                         <input id="absolute" name="view" type="radio">    
-                        <label for="absolute" onclick="switch2('absolute');">绝对数量</label>                       
+                        <label for="absolute" onclick="load_absolute();">绝对数量</label>                       
                         <span class="slide-button btn btn-success"></span>
                     </div>
                 </div>
@@ -169,7 +169,7 @@
                     <ul id="tags_ul"><li><a style="font-size:1ex">关键词云数据为空</a></li></ul>
                 </div>
             </div>
-            <div id="emotion_pie_container" class="span4" >
+            <div id="emotion_pie_container" class="span4" >情绪饼图数据为空
             </div>
         </div>
     </div>
@@ -187,9 +187,11 @@
     var DURING_INTERGER = parseInt('{{during}}');
     var WEIBOS_LIMIT = 10;
     var KEYWORDS_LIMIT = 10;
+    var click_flag=false;
 
     var emotion_ratio = {};
     var emotion_absolute={};
+
     var happy_absolute = [];
     var angry_absolute = [];
     var sad_absolute = [];
@@ -371,6 +373,7 @@
         if(times > total_days){
             get_peaks(series4, series5, series6, during);
             get_absolute_peaks(series7, series8, series9, during);
+            click_flag=true;
             return;
         }
         
@@ -423,6 +426,8 @@
                 pull_emotion_count(area_type, total_days, times, begin_ts, during, series1, series2, series3, series4, series5, series6, series7,series8, series9);
             }
         });
+        //预防用户在series加载完毕前，变换相对绝对。
+        document.getElementById("relative").checked="checked";
     }
 
     function get_absolute_peaks(series7, series8, series9, during){
@@ -456,7 +461,7 @@
                                 chg_weibos(data[emotion]);
                             }
                             else{
-                                $("#vertical-ticker").append("关键微博为空！");
+                                $("#vertical-ticker").append(" 关键微博为空！");
                             }
                         }
                     });
@@ -521,7 +526,7 @@
                                 chg_weibos(data[emotion]);
                             }
                             else{
-                                $("#vertical-ticker").append("关键微博为空！");
+                                $("#vertical-ticker").append(" 关键微博为空！");
                             }
                         }
                     });
@@ -549,9 +554,7 @@
                     });
                     chg_emotion_pie(emotion_absolute[this.x]);     
                 }
-                //series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
                 series8.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
-                //series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
             }
         }
@@ -588,10 +591,10 @@
                                 chg_weibos(data[emotion]);
                             }
                             else{
-                                $("#vertical-ticker").append("关键微博为空！");
+                                $("#vertical-ticker").append(" 关键微博为空！");
                             }
                         }
-                    });
+                    }); 
                     $.ajax({
                         url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
                         type: "GET",
@@ -616,8 +619,6 @@
                     });
                     chg_emotion_pie(emotion_absolute[this.x]);     
                 }
-                //series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
-                //series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
                 series9.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
 
@@ -749,9 +750,7 @@
                     });
                     chg_emotion_pie(emotion_absolute[this.x]);     
                 }
-                //series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
                 series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
-                //series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
             }
         }
@@ -838,13 +837,6 @@
             title: {
                 text: '微博情绪饼图',
             },
-            //tooltip: {
-                //pointFormat: '{series.name}: <b>{point.percentage}%</b>',
-               // percentageDecimals: 1,
-                //valueDecimals: 2,
-               // enabled: false
-
-           // },
             plotOptions: {
                 pie: {
                     allowPointSelect: true,
@@ -1035,8 +1027,8 @@
         });
     }
 
-    function switch2(status){
-        if(status == 'absolute'){
+    function load_absolute(){ 
+        if(click_flag){
             var chart = $('#emotion_container').highcharts();
             chart.series[0].update({
                 data : happy_absolute
@@ -1055,23 +1047,27 @@
             chart.series[8].show();
         }
         else{
-            var chart = $('#emotion_container').highcharts();
-            chart.series[0].update({
-                data : happy_ratio
-            });
-            chart.series[1].update({
-                data : angry_ratio
-            });
-            chart.series[2].update({
-                data : sad_ratio
-            });
-            chart.series[6].hide();
-            chart.series[7].hide();
-            chart.series[8].hide();
-            chart.series[3].show();
-            chart.series[4].show();
-            chart.series[5].show();
+            alert("请等待相对曲线加载完毕！");
         }
+    }
+    function load_relative(){
+        var chart = $('#emotion_container').highcharts();
+        chart.series[0].update({
+            data : happy_ratio
+        });
+        chart.series[1].update({
+            data : angry_ratio
+        });
+        chart.series[2].update({
+            data : sad_ratio
+        });
+        chart.series[6].hide();
+        chart.series[7].hide();
+        chart.series[8].hide();
+        chart.series[3].show();
+        chart.series[4].show();
+        chart.series[5].show();
+       
     }
   </script>
 {% endblock %}

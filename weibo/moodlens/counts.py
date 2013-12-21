@@ -28,7 +28,6 @@ def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None
         	count = [end_ts * 1000, item.count]
         else:
         	count = [end_ts * 1000, 0]
-        print '1: ', end_ts, count
 
     else:
         start_ts = end_ts - during
@@ -38,13 +37,11 @@ def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None
                                             SentimentCount.ts<=upbound, \
                                             SentimentCount.sentiment==sentiment, \
                                             SentimentCount.range==unit).all()
-
+        
         if count and count[0] and count[0][0]:
             count = [end_ts * 1000, int(count[0][0])]
         else:
             count = [end_ts * 1000, 0]
-
-        print '2: ', end_ts, count
 
     return count
 
@@ -89,7 +86,6 @@ def search_domain_counts(end_ts, during, sentiment, unit=MinInterval, query=None
         	count = [end_ts * 1000, item.count]
         else:
         	count = [end_ts * 1000, 0]
-        print end_ts, count
 
     else:
         start_ts = end_ts - during
@@ -105,7 +101,6 @@ def search_domain_counts(end_ts, during, sentiment, unit=MinInterval, query=None
             count = [end_ts * 1000, int(count[0][0])]
         else:
             count = [end_ts * 1000, 0]
-        print during, during > unit, end_ts, count
 
     return count
 

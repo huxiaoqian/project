@@ -155,7 +155,9 @@
             <div id="weibo_container" class="span4">
                 <ul id="vertical-ticker">
                 </ul>
-                <p><span class="label label-info" id="event_title"></span><a href="#" id="ticker-previous">向上滚动</a> / <a href="#" id="ticker-next">向下滚动</a> / <a id="stop" href="#">停止滚动</a> / <a id="start" href="#">开始滚动</a></p>
+                <p><span class="label label-info" id="event_title"></span>
+                   <span class="label label-success">关键微博列表</span>
+                <!--<a href="#" id="ticker-previous">向上滚动</a> / <a href="#" id="ticker-next">向下滚动</a> / <a id="stop" href="#">停止滚动</a> / <a id="start" href="#">开始滚动</a>--></p>
             </div>
         </div>
         <div class="row-fluid" style="border:1px solid gray;">
@@ -183,6 +185,8 @@
     var START_TS = parseInt('{{start_ts}}');
     var END_TS = parseInt('{{end_ts}}');
     var DURING_INTERGER = parseInt('{{during}}');
+    var WEIBOS_LIMIT = 10;
+    var KEYWORDS_LIMIT = 10;
 
     var emotion_ratio = {};
     var emotion_absolute={};
@@ -207,7 +211,7 @@
     var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
     var max_word_size = 10;
     var min_word_size = 1;
-    var keywords_weibos_limit = 10;
+    
     var emotion_keys = ['happy', 'angry', 'sad'];
     
 
@@ -273,9 +277,9 @@
     }
 
     function chg_emotion_pie(raw_data){
+        $('#emotion_pie_container').empty();
         if(raw_data[3] != 0){
-            var data = [['高兴', raw_data[0] * 100], ['愤怒', raw_data[1] * 100], ['悲伤', raw_data[2] * 100]];
-            $('#emotion_pie_container').empty();
+            var data = [['高兴', raw_data[0]], ['愤怒', raw_data[1]], ['悲伤', raw_data[2]]];
             display_emotion_pie(data);
         }
     }
@@ -302,20 +306,22 @@
         //end_ts为截止时间戳, duration为整个时间段的秒数
         
         $.ajax({
-            url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + duration,
+            url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + duration + '&limit=' + WEIBOS_LIMIT,
             type: "GET",
             dataType:"json",
             success: function(data){
-                console.log(data);
                 $("#vertical-ticker").empty();
                 var happy_length = data['happy'].length;
                 var sad_length = data['sad'].length;
                 var angry_length = data['angry'].length;
                 var total_length  = happy_length + sad_length + angry_length;
                 if(total_length > 0) {
+                    var weibos = [];
                     for(var e in emotion_keys){
-                        chg_weibos(data[emotion_keys[e]]);
+                        for(var i=0; i< data[emotion_keys[e]].length; i+=1)
+                            weibos.push(data[emotion_keys[e]][i]);
                     }
+                    chg_weibos(weibos);
                 }
                 else{
                     $("#vertical-ticker").empty();
@@ -324,7 +330,7 @@
             }
         });
         $.ajax({
-            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + duration + "&limit=" + keywords_weibos_limit,
+            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + duration + "&limit=" + KEYWORDS_LIMIT,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -431,25 +437,21 @@
                 var x = data[i]['ts'];
                 var title = data[i]['title'];
                 var happy_title = title;
-                //var angry_title = title['angry'];
-                //var sad_title = title['sad'];
                 var text = data[i]['text'];
                 var happy_text = text;
-                //var angry_text = text['angry'];
-                //var sad_text = text['sad'];
                 var flagClick = function(event){
                     var click_ts = this.x / 1000;
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
+                            $("#event_title").html(title);
                             if(data[emotion].length>0){
                                 chg_weibos(data[emotion]);
-                                $("#event_title").html(title);
                             }
                             else{
                                 $("#vertical-ticker").append("关键微博为空！");
@@ -457,33 +459,30 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=50",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             if(data=='search function undefined'){
                                 $("#tags_ul").empty();
-                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                 redraw_tagcanvas();
                             }
                             else{
-                                if(data!=[]){
-                                    chg_tagcloud(data);
-                                }
-                            
-                                else{
+                                if(isEmptyObject(data[emotion])){
                                     $("#tags_ul").empty();
-                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                     redraw_tagcanvas();
+                                }
+                                else{
+                                    chg_tagcloud(data[emotion]);
                                 }
                             }
                         }
                     });
-                    chg_emotion_pie(emotion_ratio[this.x]);     
+                    chg_emotion_pie(emotion_absolute[this.x]);     
                 }
                 series7.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
-                //series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
-                //series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
             }
         }
@@ -510,14 +509,14 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
+                            $("#event_title").html(title);
                             if(data[emotion].length>0){
                                 chg_weibos(data[emotion]);
-                                $("#event_title").html(title);
                             }
                             else{
                                 $("#vertical-ticker").append("关键微博为空！");
@@ -525,29 +524,28 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=50",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             if(data=='search function undefined'){
                                 $("#tags_ul").empty();
-                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                 redraw_tagcanvas();
                             }
                             else{
-                                if(data!=[]){
-                                    chg_tagcloud(data);
-                                }
-                            
-                                else{
+                                if(isEmptyObject(data[emotion])){
                                     $("#tags_ul").empty();
-                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                     redraw_tagcanvas();
+                                }
+                                else{
+                                    chg_tagcloud(data[emotion]);
                                 }
                             }
                         }
                     });
-                    chg_emotion_pie(emotion_ratio[this.x]);     
+                    chg_emotion_pie(emotion_absolute[this.x]);     
                 }
                 //series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
                 series8.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
@@ -578,14 +576,14 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             $("#vertical-ticker").empty();
+                            $("#event_title").html(title);
                             if(data[emotion].length>0){
                                 chg_weibos(data[emotion]);
-                                $("#event_title").html(title);
                             }
                             else{
                                 $("#vertical-ticker").append("关键微博为空！");
@@ -593,29 +591,28 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=50",
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
                             if(data=='search function undefined'){
                                 $("#tags_ul").empty();
-                                $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                 redraw_tagcanvas();
                             }
                             else{
-                                if(data!=[]){
-                                    chg_tagcloud(data);
-                                }
-                            
-                                else{
+                                if(isEmptyObject(data[emotion])){
                                     $("#tags_ul").empty();
-                                    $("#tags_ul").append("<li><a style='font-size:1ex'>Tags Cloud</a></li>");
+                                    $("#tags_ul").append("<li><a style='font-size:1ex'>关键词云数据为空</a></li>");
                                     redraw_tagcanvas();
+                                }
+                                else{
+                                    chg_tagcloud(data[emotion]);
                                 }
                             }
                         }
                     });
-                    chg_emotion_pie(emotion_ratio[this.x]);     
+                    chg_emotion_pie(emotion_absolute[this.x]);     
                 }
                 //series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
                 //series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
@@ -647,7 +644,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -662,7 +659,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + keywords_weibos_limit + "&during=" + during,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -683,11 +680,9 @@
                             }
                         }
                     });
-                    chg_emotion_pie(emotion_ratio[this.x]);     
+                    chg_emotion_pie(emotion_absolute[this.x]);     
                 }
                 series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
-                //series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
-                //series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
             }
         }
@@ -714,7 +709,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -729,7 +724,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + keywords_weibos_limit + + "&during=" + during,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -750,7 +745,7 @@
                             }
                         }
                     });
-                    chg_emotion_pie(emotion_ratio[this.x]);     
+                    chg_emotion_pie(emotion_absolute[this.x]);     
                 }
                 //series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
                 series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
@@ -781,7 +776,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -796,7 +791,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + keywords_weibos_limit + "&during=" + during,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -817,10 +812,8 @@
                             }
                         }
                     });
-                    chg_emotion_pie(emotion_ratio[this.x]);     
+                    chg_emotion_pie(emotion_absolute[this.x]);     
                 }
-                //series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
-                //series5.addPoint({'x': x, 'title': angry_title, 'text': angry_text, 'emotion': 'angry', 'events': {'click': flagClick}}, true, isShift);
                 series6.addPoint({'x': x, 'title': sad_title, 'text': sad_text, 'emotion': 'sad', 'events': {'click': flagClick}}, true, isShift);
               }
 

@@ -49,7 +49,8 @@ def search_global_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_
     	upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
     	item = SentimentKeywords.query.filter(SentimentKeywords.ts==upbound, \
                                               SentimentKeywords.sentiment==sentiment, \
-                                              SentimentKeywords.range==unit).first()
+                                              SentimentKeywords.range==unit, \
+                                              SentimentKeywords.limit==limit).first()
         if item:
         	kcounts_dict = parseKcount(item.kcount)
 
@@ -60,7 +61,8 @@ def search_global_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_
         items = SentimentKeywords.query.filter(SentimentKeywords.ts>lowbound, \
                                                SentimentKeywords.ts<=upbound, \
                                                SentimentKeywords.sentiment==sentiment, \
-                                               SentimentKeywords.range==unit).all()
+                                               SentimentKeywords.range==unit, \
+                                               SentimentKeywords.limit==limit).all()
 
         for item in items:
             kcount_dict = parseKcount(item.kcount)
@@ -82,7 +84,8 @@ def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_R
         item = db.session.query(SentimentTopicKeywords).filter(SentimentTopicKeywords.end==upbound, \
                                               SentimentTopicKeywords.sentiment==sentiment, \
                                               SentimentTopicKeywords.range==unit, \
-                                              SentimentTopicKeywords.query==query).first()
+                                              SentimentTopicKeywords.query==query, \
+                                              SentimentTopicKeywords.limit==limit).first()
         if item:
             kcounts_dict = parseKcount(item.kcount)
 
@@ -94,7 +97,8 @@ def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_R
                                                SentimentTopicKeywords.end<=upbound, \
                                                SentimentTopicKeywords.sentiment==sentiment, \
                                                SentimentTopicKeywords.range==unit, \
-                                               SentimentTopicKeywords.query==query).all()
+                                               SentimentTopicKeywords.query==query, \
+                                               SentimentTopicKeywords.limit==limit).all()
         for item in items:
             kcount_dict = parseKcount(item.kcount)
             for k, v in kcount_dict.iteritems():
@@ -115,7 +119,8 @@ def search_domain_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_
         item = SentimentDomainKeywords.query.filter(SentimentDomainKeywords.ts==upbound, \
                                               SentimentDomainKeywords.sentiment==sentiment, \
                                               SentimentDomainKeywords.range==unit, \
-                                              SentimentDomainKeywords.domain==domain).first()
+                                              SentimentDomainKeywords.domain==domain, \
+                                              SentimentDomainKeywords.limit==limit).first()
         if item:
             kcounts_dict = parseKcount(item.kcount)
 
@@ -127,7 +132,8 @@ def search_domain_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_
                                                SentimentDomainKeywords.ts<=upbound, \
                                                SentimentDomainKeywords.sentiment==sentiment, \
                                                SentimentDomainKeywords.range==unit, \
-                                               SentimentDomainKeywords.domain==domain).all()
+                                               SentimentDomainKeywords.domain==domain, \
+                                               SentimentDomainKeywords.limit==limit).all()
 
         for item in items:
             kcount_dict = parseKcount(item.kcount)

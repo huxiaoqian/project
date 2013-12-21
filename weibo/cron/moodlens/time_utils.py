@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import time
+import datetime
+
 
 def unix2hadoop_date(ts):
     return time.strftime('%Y_%m_%d', time.localtime(ts))
@@ -20,3 +22,13 @@ def ts2HourlyTime(ts, interval):
 
     ts = ts - ts % interval
     return ts
+
+
+def datetimezero2ts(date):
+	return int(time.mktime(datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S').timetuple()))
+
+
+if __name__ == '__main__':
+	print time.time()
+	print datetime2ts('2013-09-01')
+	print datetimezero2ts('2013-09-01 00:00:00')

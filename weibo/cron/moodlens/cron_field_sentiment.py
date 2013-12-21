@@ -2,7 +2,7 @@
 
 
 import json
-from config import cron_start, cron_end, xapian_search_weibo, \
+from config import cron_start, cron_end, \
                    xapian_search_domain, xapian_search_user, emotions_kv
 from time_utils import datetime2ts, ts2HourlyTime
 from xapian_weibo.utils import top_keywords, gen_mset_iter
@@ -12,6 +12,8 @@ from model import SentimentDomainCount, SentimentDomainKeywords, \
 from sqlalchemy.exc import IntegrityError
 from dynamic_xapian_weibo import getXapianWeiboByDate
 import multiprocessing
+from domain_user import _domain_user
+from domain import _is_domain_active, _domain_en_name, _domains_active
 
 
 Minute = 60
@@ -25,7 +27,7 @@ end_range_ts = datetime2ts(cron_end)
 
 TOP_KEYWORDS_LIMIT = 50
 TOP_WEIBOS_LIMIT = 50
-TOP_DOMAIN_LIMIT = 10000
+TOP_DOMAIN_LIMIT = 5000
 
 RESP_ITER_KEYS = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', 'reposts_count', 'bmiddle_pic', 'geo', 'comments_count', 'sentiment', 'terms']
 FIELDS_VALUE = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
@@ -39,68 +41,20 @@ for key in FIELDS_VALUE:
     FIELDS2ZHNAME[key] = FIELDS_ZH_NAME[idx]
 
 
-def _is_domain_active(domain):
-    domain = Domain.query.filter_by(idx=domain).first()
-    if domain:
-        return domain.active
-    else:
-        return False
-
-
-def _domains_active():
-    domains = []
-    items = Domain.query.filter_by(active=True).all()
-
-    for item in items:
-        domains.append({'idx': item.idx, 'name': item.name, 'zhname': item.zhname})
-
-    return domains
-
-
-def _domain_id(domain):
-    domain = Domain.query.filter_by(name=domain)
-    if domain:
-        return domain.id
-    else:
-        return None
-
-
-def _maintain_domain():
-    for name in FIELDS_VALUE:
-        idx = FIELDS2ID[name]
-        zhname = FIELDS2ZHNAME[name]
-        active = True
-
-        item = Domain(idx, name, zhname, active)
-        item_exist = Domain.query.filter_by(idx=idx, name=name, zhname=zhname).first()
-
-        if item_exist:
-            db.session.delete(item_exist)
-            db.session.add(item)
-        else:
-            db.session.add(item)
-
-    db.session.commit()
-    count = Domain.query.count()
-
-    print 'maintain domain over, there is %s domains now' % count
-
-
 def getDomainUsers(domain, top=TOP_DOMAIN_LIMIT):
     active = _is_domain_active(domain)
-    domain_id = domain
+    domain_en_name = _domain_en_name(domain)
     domain_uids = []
 
-    if not active or not domain_id:
+    if not active or not domain_en_name:
         return []
 
-    if domain != 'oversea':
-        count, get_results = xapian_search_domain.search(query={'domain': str(domain_id)}, sort_by=['followers_count'], fields=['_id'], max_offset=top)
+    if domain_en_name != 'oversea':
+        domain_uids = _domain_user(domain_en_name, top)
     else:
-        count, get_results = xapian_search_user.search(query={'location': FIELDS2ZHNAME('oversea')}, sort_by=['followers_count'], fields=['_id'], max_offset=top)
-
-    for user in get_results():
-        domain_uids.append(user['_id'])
+        count, get_results = xapian_search_user.search(query={'location': FIELDS2ZHNAME['oversea']}, sort_by=['followers_count'], fields=['_id'], max_offset=top)
+        for user in get_results():
+            domain_uids.append(user['_id'])
 
     return domain_uids
 
@@ -163,8 +117,8 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
     return weibos
 
 
-def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
-    domain_uids = getDomainUsers(domain)
+def sentiment_field(domain, xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
+    domain_uids = getDomainUsers(domain, top=TOP_DOMAIN_LIMIT)
 
     print 'domain uid: ', len(domain_uids)
 
@@ -175,13 +129,14 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
         over_ts = ts2HourlyTime(over_ts, during)
         interval = (over_ts - start_ts) / during
 
-        for i in range(interval):
+        for i in range(interval, 0, -1):
             emotions_count = {}
             emotions_kcount = {}
             emotions_weibo = {}
 
-            end_ts = over_ts - during * i
-            begin_ts = end_ts - during
+            begin_ts = over_ts - during * i
+            end_ts = begin_ts + during
+            print begin_ts, end_ts, 'domain %s starts calculate' % domain
 
             query_dict = {
                 'timestamp': {'$gt': begin_ts, '$lt': end_ts},
@@ -200,11 +155,12 @@ def sentiment_field(domain, xapian_search_weibo=xapian_search_weibo, start_ts=st
                 top_ws = top_weibos(gen_mset_iter(xapian_search_weibo, mset, fields=save_fields), top=w_limit)
 
                 emotions_count[v] = [end_ts, scount]
-                print end_ts, scount
                 emotions_kcount[v] = [end_ts, kcount]
                 emotions_weibo[v] = [end_ts, top_ws]
 
-            print 'saved emotions count, keywords and weibos'
+                print k, v, ', emotions count: ', emotions_count, ', emotion keywords length: ', len(kcount), ', emotion weibos length: ', len(top_ws)
+
+            print '%s %s saved emotions counts, keywords and weibos' % (begin_ts, end_ts)
             save_count_results(domain, emotions_count, during)
             save_kcount_results(domain, emotions_kcount, during, TOP_KEYWORDS_LIMIT)
             save_weibos_results(domain, emotions_weibo, during, TOP_WEIBOS_LIMIT)
@@ -223,12 +179,27 @@ def worker(domainid, datestr):
     cal_field_sentiment_by_date(domainid, datestr, Fifteenminutes)
 
 
+def test_domain():
+    users = xapian_search_domain.iter_all_docs(fields=['_id', 'domain'])
+    count = 0
+    domain_count = {}
+    for user in users:
+        try:
+            domain_count[user['domain']] += 1
+        except KeyError:
+            domain_count[user['domain']] = 1
+    print domain_count
+
+
 if __name__ == '__main__':
     # maintain domains
     # _maintain_domain()
 
+    #test_domain()
+
     # test mysql write
     domains = _domains_active()
+    domains = [{'idx': 8}]
     jobs = []
     for datestr in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
         for domain in domains:

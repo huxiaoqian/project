@@ -4,7 +4,8 @@ from config import db
 
 __all__ = ['SentimentCount', 'SentimentKeywords', 'TopWeibos', 'Domain', \
            'SentimentDomainCount', 'SentimentDomainKeywords', 'SentimentDomainTopWeibos', \
-           'SentimentTopicCount', 'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics']
+           'SentimentTopicCount', 'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', \
+           'DomainUsers', 'DomainUser']
 
 
 class SentimentCount(db.Model):
@@ -167,3 +168,34 @@ class Topics(db.Model):
         self.topic = topic
         self.iscustom = iscustom
         self.expire_date = expire_date
+
+class DomainUsers(db.Model):
+    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    domains = db.Column(db.Text)
+    updateTime = db.Column(db.String(10))
+
+    def __init__(self, userid, domains, updatetimestr):
+        self.userId = userid
+        self.domains = domains
+        self.updateTime = updatetimestr
+
+class DomainUser(db.Model):
+    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    domains = db.Column(db.Text)
+    updateTime = db.Column(db.String(10))
+
+    def __init__(self, userid, domains, updatetimestr):
+        self.userId = userid
+        self.domains = domains
+        self.updateTime = updatetimestr
+
+class TopicStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    module = db.Column(db.String(10))
+    status = db.Column(db.Integer)# 1: completed 0: computing
+    topic = db.Column(db.Text)
+
+    def __init__(self, module, topic, status):
+        self.module = module
+        self.topic = topic
+        self.status = status

@@ -71,50 +71,6 @@ def _utf_decode(s):
     else:
         return s
 
-def strToDate(dur_time):
-    m = '1'
-    d = '1'
-    y = '2013'
-    items = dur_time.split(', ')
-    n = 0
-    for item in items:
-        if n == 0:
-            mds = item.split(' ')
-            t = 0
-            for md in mds:
-                if t==0:
-                    m = month_value[md]
-                    t = 1
-                else:
-                    d = md
-            n = 1
-        else:
-            y = item
-
-    time_str = str(y)+'-'+str(m)+'-'+str(d)
-
-    return time_str
-
-
-def get_date(ymd):
-    c=[]
-    son=ymd.split(',')
-    y=int(son[1])
-    md=son[0].split(' ')
-    m=int(filter(str.isdigit,md[0]))
-    d=int(md[1])
-    c.append(y)
-    c.append(m)
-    c.append(d)
-    return c
-
-
-def get_total_days(time_str):
-    t=time_str.split(' - ')
-    first=t[0]
-    second=t[1]
-    return get_days(second)-get_days(first)
-
 
 def str2ts(s):
     temp_during = _utf_encode(s)
@@ -167,6 +123,8 @@ def _default_time_zone():
 
 
 def _time_zone(stri):
+    '''时间段参数从前台时间控件传来
+    '''
     dates = stri.split(' - ')
     tslist = []
 
@@ -175,6 +133,7 @@ def _time_zone(stri):
         month, day = month_day.split('月 ')
         year = int(year)
         month = int(month)
+        day=filter(str.isdigit,day)
         day = int(day)
         ts = datetime(year, month, day, 0, 0, 0)
         ts = time.mktime(ts.timetuple())
@@ -201,7 +160,6 @@ def all_emotion():
             if not dur_time or dur_time == '':
                 start_ts, end_ts = _default_time_zone()
             else:
-                dur_time = _utf_encode(dur_time)
                 start_ts, end_ts = _time_zone(dur_time)
 
             return render_template('moodlens/all_emotion.html', start_ts=start_ts, end_ts=end_ts, during=during)
@@ -362,10 +320,9 @@ def data(area='global'):
     else:
         search_method = 'domain'
         area = FIELDS2ID[area]
-        print area
         
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
-    print search_func
+    
     if search_func:
         if emotion == 'global':
             for k, v in emotions_kv.iteritems():
@@ -375,8 +332,6 @@ def data(area='global'):
             results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area)
     else:
         return json.dumps('search function undefined')
-
-    #1 print results
 
     return json.dumps(results)
 
@@ -393,7 +348,6 @@ def field_data(area):
 
     begin_ts = ts - during
     end_ts = ts
-    #2 print begin_ts, end_ts
 
     emotions_data = {}
     count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
@@ -441,7 +395,7 @@ def flag_data(emotion, area='global'):
             'sentiment': emotions_kv[emotion],
         }
         count, get_results = xapian_search_weibo.search(query=query_dict, fields=['terms'])
-        #3 print count
+
         keywords_with_count = top_keywords(get_results, top=10)
         text = ','.join([tp[0] for tp in keywords_with_count])
         data.append({
@@ -462,7 +416,7 @@ def keywords_data(area='global'):
         query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    #4 print during
+
     ts = request.args.get('ts', '')
     ts = long(ts)
     begin_ts = ts - during
@@ -483,7 +437,6 @@ def keywords_data(area='global'):
         area = FIELDS2ID[area]
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
-    #5 print search_func
 
     if search_func:
         if emotion == 'global':
@@ -507,7 +460,7 @@ def weibos_data(emotion='global', area='global'):
         query = query.strip()
     during = request.args.get('during', 24*3600)
     during = int(during)
-    #6 print during
+
     ts = request.args.get('ts', '')
     ts = long(ts)
     begin_ts = ts - during
@@ -538,46 +491,8 @@ def weibos_data(emotion='global', area='global'):
     else:
         return json.dumps('search function undefined')
 
-    #7 print results
-
     return json.dumps(results)
 
-
-@mod.route('/field_weibos_data/<emotion>/<area>/')
-def field_weibos_data(emotion, area):
-    """
-    此接口差领域数据，并且还跟另外的接口差领域数据检索途径不大一样
-    """
-    ts = request.args.get('ts', '')
-    ts = long(ts)
-    during = request.args.get('during', 24*3600)
-    during = int(during)
-
-    begin_ts = ts - during
-    end_ts = ts
-    query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-        #'reposts_count': {'$gt': 100},
-        'sentiment': emotions_kv[emotion]
-    }
-
-    count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
-    if count:
-        query_dict['$or'] = []
-        for user in field_users():
-            query_dict['$or'].append({'user': user['_id']})
-
-    count, get_results = xapian_search_weibo.search(query=query_dict, max_offset=10, sort_by=['-reposts_count'], fields=['_id'])
-    data = []
-    count = 0
-    for r in get_results():
-        if count == 10:
-            break
-        count += 1
-        weibo_data = getWeiboByMid(r['_id'], emotion)
-        if weibo_data:
-            data.append(weibo_data)
-    return json.dumps(data)
 
 @mod.route('/emotionpeak/')
 def getPeaks():
@@ -635,7 +550,6 @@ def getPeaks():
                 'title': title[emotion] + str(new_zeros.index(i)),
                 'text': text
             }
-            #print title[emotion] + str(new_zeros.index(i))
         
     return json.dumps(time_lis)
 

@@ -2,7 +2,7 @@
 
 
 from dynamic_xapian_weibo import getXapianWeiboByDate
-from config import cron_start, cron_end, xapian_search_weibo, emotions_kv
+from config import cron_start, cron_end, emotions_kv
 from time_utils import datetime2ts, ts2HourlyTime
 from config import db
 from model import SentimentCount
@@ -42,18 +42,19 @@ def read_count_results(ts, sentiment, range=Hour):
         return 0
 
 
-def sentiment_count(xapian_weibo=xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def sentiment_count(xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
     start_ts = int(start_ts)
     over_ts = int(over_ts)
 
     over_ts = ts2HourlyTime(over_ts, during)
     interval = (over_ts - start_ts) / during
 
-    for i in range(interval):
+    for i in range(interval, 0, -1):
         emotions_data = {}
 
-        end_ts = over_ts - during * i
-        begin_ts = end_ts - during
+        begin_ts = over_ts - during * i
+        end_ts = begin_ts + during
+        print begin_ts, end_ts, ' starts calculate'
 
         query_dict = {
             'timestamp': {'$gt': begin_ts, '$lt': end_ts},
@@ -61,7 +62,7 @@ def sentiment_count(xapian_weibo=xapian_search_weibo, start_ts=start_range_ts, o
 
         for k, v in emotions_kv.iteritems():
             query_dict['sentiment'] = v
-            count = xapian_weibo.search(query=query_dict, count_only=True)
+            count = xapian_search_weibo.search(query=query_dict, count_only=True)
             emotions_data[v] = [end_ts, count]
 
         print 'saved: ', emotions_data
@@ -94,24 +95,12 @@ def cal_sentiment_count_by_date(datestr, duration):
 
 if __name__ == '__main__':
     # test mysql write
-    '''
     for date in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
         cal_sentiment_count_by_date(date, Fifteenminutes)
-        cal_sentiment_count_by_date(date, Day)
-    '''
 
 
     # test mysql read
     '''
     start_range_ts = datetime2ts('2013-09-29')
     end_range_ts = datetime2ts('2013-10-03')
-    test_read_count_results(start_range_ts, end_range_ts)
     '''
-    ts = datetime2ts('2013-09-01')
-    print read_count_results(ts, 1, Fifteenminutes)
-
-    ts = datetime2ts('2013-09-02')
-    print read_count_results(ts, 1, Fifteenminutes)
-
-    ts = datetime2ts('2013-09-03')
-    print read_count_results(ts, 1, Fifteenminutes)

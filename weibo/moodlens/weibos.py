@@ -53,8 +53,7 @@ def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
     	item = TopWeibos.query.filter(TopWeibos.ts==upbound, \
                                       TopWeibos.sentiment==sentiment, \
                                       TopWeibos.range==unit, \
-                                      TopWeibos.limit==top).first()
-        print item
+                                      TopWeibos.limit==limit).first()
         if item:
         	weibos_dict = parseWeibos(item.weibos)
 
@@ -66,7 +65,7 @@ def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
                                        TopWeibos.ts<=upbound, \
                                        TopWeibos.sentiment==sentiment, \
                                        TopWeibos.range==unit, \
-                                       TopWeibos.limit==top).all()
+                                       TopWeibos.limit==limit).all()
         for item in items:
             weibo_dict = parseWeibos(item.weibos)
             for k, v in weibo_dict.iteritems():
@@ -88,7 +87,7 @@ def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_REA
                                                   SentimentTopicTopWeibos.sentiment==sentiment, \
                                                   SentimentTopicTopWeibos.range==unit, \
                                                   SentimentTopicTopWeibos.query==query, \
-                                                  SentimentTopicTopWeibos.limit==top).first()
+                                                  SentimentTopicTopWeibos.limit==limit).first()
         if item:
             weibos_dict = parseWeibos(item.weibos)
 
@@ -101,7 +100,7 @@ def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_REA
                                                    SentimentTopicTopWeibos.sentiment==sentiment, \
                                                    SentimentTopicTopWeibos.range==unit, \
                                                    SentimentTopicTopWeibos.query==query, \
-                                                   SentimentTopicTopWeibos.limit==top).all()
+                                                   SentimentTopicTopWeibos.limit==limit).all()
         for item in items:
             weibo_dict = parseWeibos(item.weibos)
             for k, v in weibo_dict.iteritems():
@@ -123,7 +122,7 @@ def search_domain_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
                                                      SentimentDomainTopWeibos.sentiment==sentiment, \
                                                      SentimentDomainTopWeibos.range==unit, \
                                                      SentimentDomainTopWeibos.domain==domain, \
-                                                     SentimentDomainTopWeibos.limit==top).first()
+                                                     SentimentDomainTopWeibos.limit==limit).first()
         if item:
             weibos_dict = parseWeibos(item.weibos)
 
@@ -136,7 +135,7 @@ def search_domain_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
                                                       SentimentDomainTopWeibos.sentiment==sentiment, \
                                                       SentimentDomainTopWeibos.range==unit, \
                                                       SentimentDomainTopWeibos.domain==domain, \
-                                                      SentimentDomainTopWeibos.limit==top).all()
+                                                      SentimentDomainTopWeibos.limit==limit).all()
 
         for item in items:
             weibo_dict = parseWeibos(item.weibos)

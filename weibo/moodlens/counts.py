@@ -62,10 +62,11 @@ def search_topic_counts(end_ts, during, sentiment, unit=MinInterval, query=None,
         start_ts = end_ts - during
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         lowbound = (start_ts / unit) * unit
-        count = db.session.query(func.sum(SentimentTopicCount.count)).filter(SentimentCount.ts>lowbound, \
-                                            SentimentCount.ts<=upbound, \
-                                            SentimentCount.sentiment==sentiment, \
-                                            SentimentCount.range==unit).all()
+        count = db.session.query(func.sum(SentimentTopicCount.count)).filter(SentimentTopicCount.end>lowbound, \
+                                            SentimentTopicCount.end<=upbound, \
+                                            SentimentTopicCount.sentiment==sentiment, \
+                                            SentimentTopicCount.range==unit, \
+                                            SentimentTopicCount.query==query).all()
 
         if count and count[0] and count[0][0]:
             count = [end_ts * 1000, int(count[0][0])]

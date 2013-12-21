@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
 import json
-import numpy as np
-from weibo.extensions import db
-from weibo.model import SentimentCount, SentimentKeywords, TopWeibos, \
-                        SentimentTopicCount, SentimentTopicKeywords, \
-                        SentimentTopicTopWeibos
 import os
 import time
 import datetime
 import operator
-from time_utils import datetime2ts
-from weibo.global_config import xapian_search_weibo, xapian_search_user, \
-                                cron_start, cron_end, emotions_kv
-
+import numpy as np
 from sqlalchemy import func
+from time_utils import datetime2ts
+
+try:
+    from weibo.extensions import db
+    from weibo.model import SentimentCount, SentimentKeywords, TopWeibos, \
+                            SentimentTopicCount, SentimentTopicKeywords, \
+                            SentimentTopicTopWeibos
+    from weibo.global_config import xapian_search_weibo, xapian_search_user, \
+                                    cron_start, cron_end, emotions_kv
+    start_range_ts = datetime2ts(cron_start)
+    end_range_ts = datetime2ts(cron_end)
+except:
+    print 'warning:not in web environment'
 
 
 Minute = 60
@@ -27,8 +32,6 @@ MinInterval = Fifteenminutes
 TOP_KEYWORDS_LIMIT = 50
 TOP_WEIBOS_LIMIT = 50
 
-start_range_ts = datetime2ts(cron_start)
-end_range_ts = datetime2ts(cron_end)
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
@@ -49,7 +52,7 @@ def ts2HourlyTime(ts, interval):
     return ts
 
 
-def read_count_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def read_count_results(sentiment, start_ts, over_ts, during=Hour):
     if during <= MinInterval:
         item_exist = SentimentCount.query.filter_by(ts=over_ts, \
                                                     sentiment=sentiment, \
@@ -69,7 +72,7 @@ def read_count_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts,
             return 0
 
 
-def read_kcount_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def read_kcount_results(sentiment, start_ts, over_ts, during=Hour):
     if during <= MinInterval:
         item_exist = SentimentKeywords.query.filter_by(ts=over_ts, \
                                                        sentiment=sentiment, \
@@ -95,7 +98,7 @@ def read_kcount_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts
         return list(kcounts_dict)
 
 
-def read_weibo_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def read_weibo_results(sentiment, start_ts, over_ts, during=Hour):
     if during <= MinInterval:
         weibos = []
         item_exist = TopWeibos.query.filter_by(ts=over_ts, \
@@ -119,7 +122,7 @@ def read_weibo_results(sentiment, start_ts=start_range_ts, over_ts=end_range_ts,
         return list(results)
 
 
-def read_range_weibos_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def read_range_weibos_results(start_ts, over_ts, during=Hour):
     over_ts = ts2HourlyTime(over_ts, MinInterval)
     interval = (over_ts - start_ts) / during
     
@@ -140,7 +143,7 @@ def read_range_weibos_results(start_ts=start_range_ts, over_ts=end_range_ts, dur
     return emotion_dic
 
 
-def read_range_kcount_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def read_range_kcount_results(start_ts, over_ts, during=Hour):
     over_ts = ts2HourlyTime(over_ts, MinInterval)
     interval = (over_ts - start_ts) / during
     
@@ -164,7 +167,7 @@ def read_range_kcount_results(start_ts=start_range_ts, over_ts=end_range_ts, dur
     return emotion_dic
 
 
-def read_range_count_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def read_range_count_results(start_ts, over_ts, during=Hour):
     over_ts = ts2HourlyTime(over_ts, MinInterval)
     interval = (over_ts - start_ts) / during
     
@@ -205,7 +208,7 @@ def getWeiboByMid(mid, emotion):
         if getUsernameByUid(uid):
             name = getUsernameByUid(uid)
         user_link = "http://weibo.com/u/" + str(uid)
-        weibo_link = weiboinfo2url(uid, mid)
+        weibo_link = weiboinfo2url(uid, int(mid))
         return [emotion, name, user_link, text, weibo_link, int(ts), reposts_count, retweeted_text]
 
 
@@ -219,8 +222,11 @@ def getUsernameByUid(uid):
     return None
 
 
-def weiboinfo2url(uid, mid):
-    return "http://weibo.com/{uid}/{mid}".format(uid=uid, mid=mid_to_url(mid))
+def weiboinfo2url(uid, _mid):
+    mid_str =  mid2str(_mid)
+    if mid_str == 'A7pmVewf0':
+        print _mid, mid_str
+    return "http://weibo.com/{uid}/{mid}".format(uid=uid, mid=mid_str)
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
  
@@ -322,61 +328,12 @@ def mid_to_url(midint):
     return ''.join(result)
 
 
-def st_variation(lis1, lis2, lis3):
-    ave = np.mean(lis1)    
-    variation1 = [np.abs(num - ave)/ave for num in lis1]
-    ave = np.mean(lis2)
-    variation2 = [np.abs(num - ave)/ave for num in lis2]
-    ave = np.mean(lis3)
-    variation3 = [np.abs(num - ave)/ave for num in lis3]
-    variation = [variation1[cursor]+variation2[cursor]+variation3[cursor] for cursor in range(len(lis1))]
-    return variation
-
-
-def find_topN(lis,n):
-    new = [lis[0]]
-    rank = [0]
-    num_cursor = 1
-    for num in lis[1:]:
-        num_cursor += 1
-        find = 0
-        cursor = 0
-        if num > new[0]:
-            new[0:0] = [num]
-            rank[0:0] = [num_cursor-1]
-        else:
-            for i in new:
-                if num > i:
-                    new[cursor:cursor] = [num]
-                    rank[cursor:cursor] = [num_cursor-1]
-                    find = 1
-                    break
-                cursor += 1
-            if find == 0:
-                new.append(num)
-                rank.append(num_cursor-1)
-            
-    peak_x = []
-    peak_y = []
-    cursor = 0
-    for y in new:
-        if rank[cursor]!=0 and rank[cursor]!=len(new)-1:
-            if y > lis[rank[cursor]+1] and y > lis[rank[cursor]-1]:
-                peak_x.append(rank[cursor])
-                peak_y.append(y)
-
-        elif rank[cursor]==0:
-            if y > lis[rank[cursor]+1]:
-                peak_x.append(rank[cursor])
-                peak_y.append(y)
-        elif rank[cursor]==rank[cursor]!=len(new)-1:
-            if y > lis[rank[cursor]+1]:
-                peak_x.append(rank[cursor])
-                peak_y.append(y)
-        if len(peak_x)==n:
-            break
-        cursor += 1
-    return peak_x[:n],peak_y[:n]
+def mid2str(mid):
+    mid = str(mid)
+    s1 = base62_encode(int(mid[:2]))
+    s2 = base62_encode(int(mid[2:9]))
+    s3 = base62_encode(int(mid[9:16]))
+    return s1+s2+s3
 
 
 def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wlimit=TOP_WEIBOS_LIMIT):
@@ -547,4 +504,5 @@ def SentimentKeywordsRealTime(end_ts, during, method='whole', query=None):
 
 
 if __name__ == '__main__':
-    print os.getcwd()
+    print mid2str(3618955195344752)
+    print mid_to_url(3617699454295114L)

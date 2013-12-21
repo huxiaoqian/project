@@ -83,7 +83,7 @@ def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_REA
     weibos_dict = {}
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
-        item = db.session.query(SentimentTopicTopWeibos).filter(SentimentTopicTopWeibos.ts==upbound, \
+        item = db.session.query(SentimentTopicTopWeibos).filter(SentimentTopicTopWeibos.end==upbound, \
                                                   SentimentTopicTopWeibos.sentiment==sentiment, \
                                                   SentimentTopicTopWeibos.range==unit, \
                                                   SentimentTopicTopWeibos.query==query, \

@@ -209,22 +209,51 @@ def field():
 def topic():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
-            temp_keyword=request.form.get('keyword', None)
-            temp_during=request.form.get('during', 24*3600)
-            if not isinstance(temp_during, int):
-                temp_during = str2ts(temp_during)
-            if temp_keyword:
-                return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, temp_during=temp_during)
+            during = request.args.get('during', None)
+            if not during or during == '':
+                during = MinInterval
             else:
-                return render_template('moodlens/topic_emotion.html', active='moodlens')
-            return render_template('moodlens/topic_emotion.html', active='moodlens') 
+                during = str2ts(during)
+            
+            dur_time = request.args.get('time', None)
+            dur_time = _utf_encode(dur_time)
+            if not dur_time or dur_time == '':
+                start_ts, end_ts = _default_time_zone()
+            else:
+                start_ts, end_ts = _time_zone(dur_time)
+
+            temp_keyword = request.args.get('keyword', '')
+            
+            if temp_keyword:
+                return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, start_ts=start_ts, end_ts=end_ts, during=during)
+            else:
+                return render_template('moodlens/index.html', active='moodlens')
+
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
                     if identy == 1:
-                        return render_template('moodlens/topic_emotion.html', active='moodlens')
+                        during = request.args.get('during', None)
+                        if not during or during == '':
+                            during = MinInterval
+                        else:
+                            during = str2ts(during)
+	    
+                        dur_time = request.args.get('time', None)
+                        dur_time = _utf_encode(dur_time)
+                        if not dur_time or dur_time == '':
+                            start_ts, end_ts = _default_time_zone()
+                        else:
+                            start_ts, end_ts = _time_zone(dur_time)
+
+                        temp_keyword = request.args.get('keyword', '')
+	    
+                        if temp_keyword:
+                            return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, start_ts=start_ts, end_ts=end_ts, during=during)
+                        else:
+                            return render_template('moodlens/index.html', active='moodlens')
                     else:
                         return redirect('/')
 

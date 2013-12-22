@@ -50,7 +50,6 @@ def search_topic_counts(end_ts, during, sentiment, unit=MinInterval, query=None,
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         if customized == '0':
-            print 'here'
             item = db.session.query(SentimentRtTopicCount).filter(SentimentRtTopicCount.end==upbound, \
                                               SentimentRtTopicCount.sentiment==sentiment, \
                                               SentimentRtTopicCount.range==unit, \

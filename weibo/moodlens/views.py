@@ -208,6 +208,8 @@ def field():
 def topic():
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
+            customized = request.args.get('customized', '1')
+ 
             during = request.args.get('during', None)
             if not during or during == '':
                 during = MinInterval
@@ -221,42 +223,16 @@ def topic():
             else:
                 start_ts, end_ts = _time_zone(dur_time)
 
-            temp_keyword = request.args.get('keyword', '')
-            
-            if temp_keyword:
-                return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, start_ts=start_ts, end_ts=end_ts, during=during)
+            keyword = request.args.get('keyword', None)
+
+            if keyword and keyword != '':
+                keyword = _utf_decode(keyword)
+                return render_template('moodlens/topic_emotion.html', keyword=keyword, start_ts=start_ts, end_ts=end_ts, during=during, customized=customized)
             else:
-                return render_template('moodlens/index.html', active='moodlens')
+                return render_template('moodlens/index.html')
 
         else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.moodlens
-                    if identy == 1:
-                        during = request.args.get('during', None)
-                        if not during or during == '':
-                            during = MinInterval
-                        else:
-                            during = str2ts(during)
-	    
-                        dur_time = request.args.get('time', None)
-                        dur_time = _utf_encode(dur_time)
-                        if not dur_time or dur_time == '':
-                            start_ts, end_ts = _default_time_zone()
-                        else:
-                            start_ts, end_ts = _time_zone(dur_time)
-
-                        temp_keyword = request.args.get('keyword', '')
-	    
-                        if temp_keyword:
-                            return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, start_ts=start_ts, end_ts=end_ts, during=during)
-                        else:
-                            return render_template('moodlens/index.html', active='moodlens')
-                    else:
-                        return redirect('/')
-
-            return redirect('/')
+            pass
     else:
         return redirect('/')
 
@@ -266,6 +242,8 @@ def data(area='global'):
     """分类情感数据
     """
     
+    customized = request.args.get('customized', '1')
+    print customized
     query = request.args.get('query', None)
     if query:
         query = query.strip()
@@ -293,91 +271,21 @@ def data(area='global'):
     if search_func:
         if emotion == 'global':
             for k, v in emotions_kv.iteritems():
-                results[k] = search_func(end_ts, during, v, query=query, domain=area)
-
+                results[k] = search_func(end_ts, during, v, query=query, domain=area, customized=customized)
         else:
-            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area)
+            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, customized=customized)
     else:
         return json.dumps('search function undefined')
 
     return json.dumps(results)
 
-    
-@mod.route('/field_data/<area>/')
-def field_data(area):
-    """/keywords_data 接口已备好，只是差领域数据
-    """
-
-    ts = request.args.get('ts', '')
-    ts = long(ts)
-    during = request.args.get('during', 24*3600)
-    during = int(during)
-
-    begin_ts = ts - during
-    end_ts = ts
-
-    emotions_data = {}
-    count, field_users = xapian_search_domain.search(query={'domain':str(area)}, sort_by=['-followers_count'], fields=['_id'], max_offset=10000)
-    
-    query_dict = {
-        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-        '$or': [],
-    }
-    if count:
-        for user in field_users():
-            query_dict['$or'].append({'user': user['_id']})
-    for k, v in emotions_kv.iteritems():
-        query_dict['sentiment'] = v
-        count = xapian_search_weibo.search(query=query_dict, count_only=True)
-        emotions_data[k] = [end_ts * 1000, count] 
-
-    return json.dumps(emotions_data)
-
-@mod.route('/flag_data/<emotion>/<area>/')
-def flag_data(emotion, area='global'):
-    """
-    此接口先只供调试用
-    /flag_data现在无法连上真实数据，得等拐点识别
-    """
-    ts = request.args.get('ts', '')
-    ts = long(ts)
-
-    today = datetime.datetime.today()
-    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
-    now_ts = long(now_ts)
-    during = 24 * 3600
-
-    timestamps = []
-    for i in xrange(-total_days + 5, 1, 10):
-        timestamps.append(now_ts + during * i)
-
-    during = 3600
-
-    data = []
-    if ts in timestamps:
-        begin_ts = ts - during
-        end_ts = ts
-        query_dict = {
-            'timestamp': {'$gt': begin_ts, '$lt': end_ts},
-            'sentiment': emotions_kv[emotion],
-        }
-        count, get_results = xapian_search_weibo.search(query=query_dict, fields=['terms'])
-
-        keywords_with_count = top_keywords(get_results, top=10)
-        text = ','.join([tp[0] for tp in keywords_with_count])
-        data.append({
-            'x': end_ts * 1000,
-            'title': chr(ord('A') + timestamps.index(end_ts)),
-            'text': text
-        })
-
-    return json.dumps(data)
 
 @mod.route('/keywords_data/<area>/')
 def keywords_data(area='global'):
     """情绪关键词数据
     """
-
+    
+    customized = request.args.get('customized', '1')
     query = request.args.get('query', None)
     if query:
         query = query.strip()
@@ -409,9 +317,9 @@ def keywords_data(area='global'):
     if search_func:
         if emotion == 'global':
             for k, v in emotions_kv.iteritems():
-                results[k] = search_func(end_ts, during, v, query=query, domain=area, top=limit)
+                results[k] = search_func(end_ts, during, v, query=query, domain=area, top=limit, customized=customized)
         else:
-            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, top=limit)
+            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, top=limit, customized=customized)
     
     else:
         return json.dumps('search function undefined')
@@ -422,7 +330,8 @@ def keywords_data(area='global'):
 def weibos_data(emotion='global', area='global'):
     """关键微博
     """
-
+    
+    customized = request.args.get('customized', '1')
     query = request.args.get('query', None)
     if query:
         query = query.strip()
@@ -452,9 +361,9 @@ def weibos_data(emotion='global', area='global'):
     if search_func:
         if emotion == 'global':
             for k, v in emotions_kv.iteritems():
-                results[k] = search_func(end_ts, during, v, query=query, domain=area, top=limit)
+                results[k] = search_func(end_ts, during, v, query=query, domain=area, top=limit, customized=customized)
         else:
-            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, top=limit)
+            results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, top=limit, customized=customized)
     
     else:
         return json.dumps('search function undefined')
@@ -464,6 +373,10 @@ def weibos_data(emotion='global', area='global'):
 
 @mod.route('/emotionpeak/')
 def getPeaks():
+    '''获取情绪拐点数据
+    '''
+
+    customized = request.args.get('customized', '1')
     limit = request.args.get('limit', 10)
     query = request.args.get('query', None)
     if query:
@@ -510,7 +423,7 @@ def getPeaks():
             end_ts = ts
 
             v = emotions_kv[emotion]
-            keywords_with_count = search_func(end_ts, during, v, query=query, domain=area, top=limit)
+            keywords_with_count = search_func(end_ts, during, v, query=query, domain=area, top=limit, customized=customized)
             text = ','.join([k for k, v in keywords_with_count.iteritems()])
 
             time_lis[i] = {

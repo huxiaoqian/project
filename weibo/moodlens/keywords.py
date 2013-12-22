@@ -5,7 +5,8 @@ import json
 import math
 import operator
 from weibo.extensions import db
-from weibo.model import SentimentKeywords, SentimentTopicKeywords, SentimentDomainKeywords
+from weibo.model import SentimentKeywords, SentimentTopicKeywords, \
+                        SentimentDomainKeywords, SentimentRtTopicKeywords
 from time_utils import datetime2ts
 
 
@@ -43,7 +44,7 @@ def _top_keywords(kcount_dict, top=TOP_READ):
     return results_dict
 
 
-def search_global_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_KEYWORDS_LIMIT, query=None, domain=None):
+def search_global_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_KEYWORDS_LIMIT, query=None, domain=None, customized='1'):
     kcounts_dict = {}
     if during <= unit:
     	upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
@@ -77,11 +78,18 @@ def search_global_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_
     return kcounts_dict
 
 
-def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_KEYWORDS_LIMIT, query=None, domain=None):
+def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_KEYWORDS_LIMIT, query=None, domain=None, customized='1'):
     kcounts_dict = {}
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
-        item = db.session.query(SentimentTopicKeywords).filter(SentimentTopicKeywords.end==upbound, \
+        if customized == '0':
+          item = db.session.query(SentimentRtTopicKeywords).filter(SentimentRtTopicKeywords.end==upbound, \
+                                              SentimentRtTopicKeywords.sentiment==sentiment, \
+                                              SentimentRtTopicKeywords.range==unit, \
+                                              SentimentRtTopicKeywords.query==query, \
+                                              SentimentRtTopicKeywords.limit==limit).first()
+        else:
+          item = db.session.query(SentimentTopicKeywords).filter(SentimentTopicKeywords.end==upbound, \
                                               SentimentTopicKeywords.sentiment==sentiment, \
                                               SentimentTopicKeywords.range==unit, \
                                               SentimentTopicKeywords.query==query, \
@@ -93,12 +101,20 @@ def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_R
         start_ts = end_ts - during
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         lowbound = (start_ts / unit) * unit
-        items = db.session.query(SentimentTopicKeywords).filter(SentimentTopicKeywords.end>lowbound, \
-                                               SentimentTopicKeywords.end<=upbound, \
-                                               SentimentTopicKeywords.sentiment==sentiment, \
-                                               SentimentTopicKeywords.range==unit, \
-                                               SentimentTopicKeywords.query==query, \
-                                               SentimentTopicKeywords.limit==limit).all()
+        if customized == '0':
+          items = db.session.query(SentimentRtTopicKeywords).filter(SentimentRtTopicKeywords.end>lowbound, \
+                                                 SentimentRtTopicKeywords.end<=upbound, \
+                                                 SentimentRtTopicKeywords.sentiment==sentiment, \
+                                                 SentimentRtTopicKeywords.range==unit, \
+                                                 SentimentRtTopicKeywords.query==query, \
+                                                 SentimentRtTopicKeywords.limit==limit).all()
+        else:
+          items = db.session.query(SentimentTopicKeywords).filter(SentimentTopicKeywords.end>lowbound, \
+                                                 SentimentTopicKeywords.end<=upbound, \
+                                                 SentimentTopicKeywords.sentiment==sentiment, \
+                                                 SentimentTopicKeywords.range==unit, \
+                                                 SentimentTopicKeywords.query==query, \
+                                                 SentimentTopicKeywords.limit==limit).all()
         for item in items:
             kcount_dict = parseKcount(item.kcount)
             for k, v in kcount_dict.iteritems():
@@ -112,7 +128,7 @@ def search_topic_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_R
     return kcounts_dict
 
 
-def search_domain_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_KEYWORDS_LIMIT, query=None, domain=None):
+def search_domain_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_KEYWORDS_LIMIT, query=None, domain=None, customized='1'):
     kcounts_dict = {}
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)

@@ -134,7 +134,7 @@
     <div class="container-fluid">
         <div class="row-fluid">
             <div style="text-align: center">
-                <p>{{temp_keyword}}情绪分析</p>
+                <p>{{keyword}}情绪分析</p>
             </div>
             <hr class="soften">
         </div>
@@ -185,7 +185,9 @@
     var START_TS = parseInt('{{start_ts}}');
     var END_TS = parseInt('{{end_ts}}');
     var DURING_INTERGER = parseInt('{{during}}');
-    var QUERY_ARG = '{{temp_keyword}}';
+    var QUERY_ARG = '{{keyword}}';
+    var CUSTOMIZED = '{{customized}}';
+
     var WEIBOS_LIMIT = 10;
     var KEYWORDS_LIMIT = 10;
 
@@ -307,7 +309,7 @@
         //end_ts为截止时间戳, duration为整个时间段的秒数
         
         $.ajax({
-            url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + duration + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG,
+            url: "/moodlens/weibos_data/global/global/?ts=" + end_ts + "&during=" + duration + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -331,7 +333,7 @@
             }
         });
         $.ajax({
-            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + duration + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG,
+            url: "/moodlens/keywords_data/global/?ts=" + end_ts + "&during=" + duration + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -355,7 +357,7 @@
             }
         });
         $.ajax({
-            url: "/moodlens/data/global/?ts=" + end_ts + "&during=" + duration + "&query=" + QUERY_ARG,
+            url: "/moodlens/data/global/?ts=" + end_ts + "&during=" + duration + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -377,7 +379,7 @@
         
         var ts = begin_ts + times * during;
         $.ajax({
-            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + '&during=' + during + "&query=" + QUERY_ARG,
+            url: "/moodlens/data/" + area_type + "/" + "?ts=" + ts + '&during=' + during + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -428,7 +430,7 @@
 
     function get_absolute_peaks(series7, series8, series9, during){
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + happy_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=happy" + "&query=" + QUERY_ARG,
+            url: "/moodlens/emotionpeak/?lis=" + happy_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=happy" + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -447,7 +449,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG + "&during=" + during + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -462,7 +464,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG+ "&during=" + during + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -491,7 +493,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + angry_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=angry" + "&query=" + QUERY_ARG,
+            url: "/moodlens/emotionpeak/?lis=" + angry_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=angry" + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -512,7 +514,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG + "&during=" + during + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -527,7 +529,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG + "&during=" + during + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -558,7 +560,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + sad_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=sad" + "&query=" + QUERY_ARG,
+            url: "/moodlens/emotionpeak/?lis=" + sad_alist.join(',') + "&ts=" + ts_alist + '&during=' + during + "&emotion=sad" + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -579,7 +581,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG + "&during=" + during + "&customized=" + CUSTOMIZED, 
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -594,7 +596,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&query=" + QUERY_ARG + "&during=" + during + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -629,7 +631,7 @@
 
     function get_peaks(series4, series5, series6, during){
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + happy_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=happy" + "&query=" + QUERY_ARG,
+            url: "/moodlens/emotionpeak/?lis=" + happy_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=happy" + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -647,7 +649,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -662,7 +664,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + "&during=" + during + "&query=" + QUERY_ARG,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + "&during=" + during + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -691,7 +693,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + angry_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=angry" + "&query=" + QUERY_ARG,
+            url: "/moodlens/emotionpeak/?lis=" + angry_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=angry" + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -712,7 +714,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -727,7 +729,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + + "&during=" + during + "&query=" + QUERY_ARG,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + "&during=" + during + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -758,7 +760,7 @@
         }
         })
         $.ajax({
-            url: "/moodlens/emotionpeak/?lis=" + sad_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=sad" + "&query=" + QUERY_ARG,
+            url: "/moodlens/emotionpeak/?lis=" + sad_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=sad" + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
             type: "GET",
             dataType:"json",
             success: function(data){
@@ -779,7 +781,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG,
+                        url: "/moodlens/weibos_data/" + emotion + "/global/?ts=" + click_ts + "&during=" + during + '&limit=' + WEIBOS_LIMIT + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -794,7 +796,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + "&during=" + during + "&query=" + QUERY_ARG,
+                        url: "/moodlens/keywords_data/global/?ts=" + click_ts + "&emotion=" + emotion+"&limit=" + KEYWORDS_LIMIT + "&during=" + during + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,
                         type: "GET",
                         dataType:"json",
                         success: function(data){

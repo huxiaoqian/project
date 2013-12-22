@@ -449,7 +449,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/"+field_en+"/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT,
+                        url: "/moodlens/weibos_data/" + emotion + "/"+field_en+"/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -464,7 +464,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/"+field_en+"/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
+                        url: "/moodlens/keywords_data/"+field_en+"/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -514,7 +514,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/"+field_en+"/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT,
+                        url: "/moodlens/weibos_data/" + emotion + "/"+field_en+"/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -529,7 +529,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/"+field_en+"/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
+                        url: "/moodlens/keywords_data/"+field_en+"/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -579,7 +579,7 @@
                     var emotion = this.emotion;
                     var title = this.title;
                     $.ajax({
-                        url: "/moodlens/weibos_data/" + emotion + "/"+field_en+"/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT,
+                        url: "/moodlens/weibos_data/" + emotion + "/"+field_en+"/?ts=" + click_ts + '&limit=' + WEIBOS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){
@@ -594,7 +594,7 @@
                         }
                     });
                     $.ajax({
-                        url: "/moodlens/keywords_data/"+field_en+"/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT,
+                        url: "/moodlens/keywords_data/"+field_en+"/?ts=" + click_ts + "&emotion=" + emotion + "&limit=" + KEYWORDS_LIMIT + "&during=" + during,
                         type: "GET",
                         dataType:"json",
                         success: function(data){

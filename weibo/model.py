@@ -7,7 +7,8 @@ __all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification'
            'UserWeight', 'BlackList', 'IMedia', 'M_Weibo', 'UserList','Topic_Search', 'SentimentCount', \
            'SentimentKeywords', 'TopWeibos', 'Domain', 'SentimentDomainCount', \
            'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
-           'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUsers', 'DomainUser']
+           'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
+           'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos']
 
 
 class Field(db.Model):
@@ -308,12 +309,13 @@ class Domain(db.Model):
         self.zhname = zhname
         self.active = active
 
-
 class SentimentDomainCount(db.Model):
-    domain = db.Column(db.Integer, primary_key=True)
-    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True)
+    domain = db.Column(db.Integer)
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    ts = db.Column(db.BigInteger(10, unsigned=True))
+    sentiment = db.Column(db.Integer(1, unsigned=True))
     count = db.Column(db.BigInteger(20, unsigned=True))
 
     def __init__(self, domain, range, ts, sentiment, count):
@@ -324,11 +326,12 @@ class SentimentDomainCount(db.Model):
         self.count = count
 
 class SentimentDomainKeywords(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     domain = db.Column(db.Integer, primary_key=True)
-    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    limit = db.Column(db.BigInteger(10, unsigned=True))
+    ts = db.Column(db.BigInteger(10, unsigned=True))
+    sentiment = db.Column(db.Integer(1, unsigned=True))
     kcount = db.Column(db.Text)
 
     def __init__(self, domain, range, limit, ts, sentiment, kcount):
@@ -340,11 +343,12 @@ class SentimentDomainKeywords(db.Model):
         self.kcount = kcount
 
 class SentimentDomainTopWeibos(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     domain = db.Column(db.Integer, primary_key=True)
-    range = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    ts = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
-    sentiment = db.Column(db.Integer(1, unsigned=True), primary_key=True)
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    limit = db.Column(db.BigInteger(10, unsigned=True))
+    ts = db.Column(db.BigInteger(10, unsigned=True))
+    sentiment = db.Column(db.Integer(1, unsigned=True))
     weibos = db.Column(db.Text)
 
     def __init__(self, domain, range, limit, ts, sentiment, weibos):
@@ -417,16 +421,6 @@ class Topics(db.Model):
         self.iscustom = iscustom
         self.expire_date = expire_date
 
-class DomainUsers(db.Model):
-    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    domains = db.Column(db.Text)
-    updateTime = db.Column(db.String(10))
-
-    def __init__(self, userid, domains, updatetimestr):
-        self.userId = userid
-        self.domains = domains
-        self.updateTime = updatetimestr
-
 class DomainUser(db.Model):
     userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
     domains = db.Column(db.Text)
@@ -440,10 +434,63 @@ class DomainUser(db.Model):
 class TopicStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     module = db.Column(db.String(10))
-    status = db.Column(db.Integer)# 1: completed 0: computing
+    status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start
     topic = db.Column(db.Text)
+    end = db.Column(db.BigInteger(10, unsigned=True))
+    range = db.Column(db.BigInteger(10, unsigned=True))
 
-    def __init__(self, module, topic, status):
+    def __init__(self, module, topic, status, end, range):
         self.module = module
         self.topic = topic
         self.status = status
+        self.end = end
+        self.range = range
+
+class SentimentRtTopicCount(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    query = db.Column(db.String(20))
+    end = db.Column(db.BigInteger(10, unsigned=True))
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    sentiment = db.Column(db.Integer(1, unsigned=True))
+    count = db.Column(db.BigInteger(20, unsigned=True))
+
+    def __init__(self, query, range, end, sentiment, count):
+        self.query = query 
+        self.range = range
+        self.end = end
+        self.sentiment = sentiment
+        self.count = count
+
+class SentimentRtTopicKeywords(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    query = db.Column(db.String(20))
+    end = db.Column(db.BigInteger(10, unsigned=True))
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True))
+    kcount = db.Column(db.Text)
+
+    def __init__(self, query, range, limit, end, sentiment, kcount):
+        self.query = query 
+        self.range = range
+        self.limit = limit
+        self.end = end
+        self.sentiment = sentiment
+        self.kcount = kcount
+
+class SentimentRtTopicTopWeibos(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    query = db.Column(db.String(20))
+    end = db.Column(db.BigInteger(10, unsigned=True))
+    range = db.Column(db.BigInteger(10, unsigned=True))
+    limit = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    sentiment = db.Column(db.Integer(1, unsigned=True))
+    weibos = db.Column(db.Text)
+
+    def __init__(self, query, range, limit, end, sentiment, weibos):
+        self.query = query 
+        self.range = range
+        self.limit = limit
+        self.end = end
+        self.sentiment = sentiment
+        self.weibos = weibos

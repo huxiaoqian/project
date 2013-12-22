@@ -4,7 +4,7 @@ import json
 import math
 import operator
 from weibo.extensions import db
-from weibo.model import TopWeibos, SentimentDomainTopWeibos, SentimentTopicTopWeibos
+from weibo.model import TopWeibos, SentimentDomainTopWeibos, SentimentTopicTopWeibos, SentimentRtTopicTopWeibos
 from time_utils import datetime2ts
 from utils import weiboinfo2url
 
@@ -33,20 +33,36 @@ def _top_weibos(weibos_dict, top=TOP_READ):
     return results_list
 
 
+def _json_loads(weibos):
+  try:
+    return json.loads(weibos)
+  except ValueError:
+    if isinstance(weibos, unicode):
+      return json.loads(json.dumps(weibos))
+    else:
+      return None
+
+
 def parseWeibos(weibos):
-    weibo_dict = {}
-    weibos = json.loads(weibos)
+  weibo_dict = {}
+  weibos = _json_loads(weibos)
 
-    for weibo in weibos:
-    	_id = weibo['_id']
-        reposts_count = weibo['reposts_count']
-        weibo['weibo_link'] = weiboinfo2url(weibo['user'], _id)
-        weibo_dict[_id] = [reposts_count, weibo]
+  if not weibos:
+    return {}
 
-    return weibo_dict
+  for weibo in weibos:
+    try:
+      _id = weibo['_id']
+      reposts_count = weibo['reposts_count']
+      weibo['weibo_link'] = weiboinfo2url(weibo['user'], _id)
+      weibo_dict[_id] = [reposts_count, weibo]
+    except:
+      continue
+
+  return weibo_dict
 
 
-def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_WEIBOS_LIMIT, query=None, domain=None):
+def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_WEIBOS_LIMIT, query=None, domain=None, customized='1'):
     weibos_dict = {}
     if during <= unit:
     	upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
@@ -79,11 +95,18 @@ def search_global_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_RE
     return weibos_list
 
 
-def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_WEIBOS_LIMIT, query=None, domain=None):
+def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_WEIBOS_LIMIT, query=None, domain=None, customized='1'):
     weibos_dict = {}
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
-        item = db.session.query(SentimentTopicTopWeibos).filter(SentimentTopicTopWeibos.ts==upbound, \
+        if customized == '0':
+          item = db.session.query(SentimentRtTopicTopWeibos).filter(SentimentRtTopicTopWeibos.end==upbound, \
+                                                  SentimentRtTopicTopWeibos.sentiment==sentiment, \
+                                                  SentimentRtTopicTopWeibos.range==unit, \
+                                                  SentimentRtTopicTopWeibos.query==query, \
+                                                  SentimentRtTopicTopWeibos.limit==limit).first()
+        else:
+          item = db.session.query(SentimentTopicTopWeibos).filter(SentimentTopicTopWeibos.end==upbound, \
                                                   SentimentTopicTopWeibos.sentiment==sentiment, \
                                                   SentimentTopicTopWeibos.range==unit, \
                                                   SentimentTopicTopWeibos.query==query, \
@@ -95,12 +118,20 @@ def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_REA
         start_ts = end_ts - during
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         lowbound = (start_ts / unit) * unit
-        items = db.session.query(SentimentTopicTopWeibos).filter(SentimentTopicTopWeibos.end>lowbound, \
-                                                   SentimentTopicTopWeibos.end<=upbound, \
-                                                   SentimentTopicTopWeibos.sentiment==sentiment, \
-                                                   SentimentTopicTopWeibos.range==unit, \
-                                                   SentimentTopicTopWeibos.query==query, \
-                                                   SentimentTopicTopWeibos.limit==limit).all()
+        if customized == '0':
+          items = db.session.query(SentimentRtTopicTopWeibos).filter(SentimentRtTopicTopWeibos.end>lowbound, \
+                                                   SentimentRtTopicTopWeibos.end<=upbound, \
+                                                   SentimentRtTopicTopWeibos.sentiment==sentiment, \
+                                                   SentimentRtTopicTopWeibos.range==unit, \
+                                                   SentimentRtTopicTopWeibos.query==query, \
+                                                   SentimentRtTopicTopWeibos.limit==limit).all()
+        else:
+          items = db.session.query(SentimentTopicTopWeibos).filter(SentimentTopicTopWeibos.end>lowbound, \
+                                                     SentimentTopicTopWeibos.end<=upbound, \
+                                                     SentimentTopicTopWeibos.sentiment==sentiment, \
+                                                     SentimentTopicTopWeibos.range==unit, \
+                                                     SentimentTopicTopWeibos.query==query, \
+                                                     SentimentTopicTopWeibos.limit==limit).all()
         for item in items:
             weibo_dict = parseWeibos(item.weibos)
             for k, v in weibo_dict.iteritems():
@@ -114,7 +145,7 @@ def search_topic_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_REA
     return weibos_dict
 
 
-def search_domain_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_WEIBOS_LIMIT, query=None, domain=None):
+def search_domain_weibos(end_ts, during, sentiment, unit=MinInterval, top=TOP_READ, limit=TOP_WEIBOS_LIMIT, query=None, domain=None, customized='1'):
     weibos_dict = {}
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)

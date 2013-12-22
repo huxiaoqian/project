@@ -3,16 +3,25 @@
 
 import json
 from topics import _all_topics
-from time_utils import datetime2ts
-from xapian_weibo.utils import top_keywords
+from time_utils import datetime2ts, ts2HourlyTime
+from xapian_weibo.utils import top_keywords, gen_mset_iter
 from dynamic_xapian_weibo import getXapianWeiboByDate, getXapianWeiboByDuration
-from config import cron_start, emotions_kv, xapian_search_weibo, db
+from config import cron_start, cron_end, emotions_kv, db
 from model import SentimentTopicCount, SentimentTopicKeywords, SentimentTopicTopWeibos
 
 
+Minute = 60
+Fifteenminutes = 15 * 60
+Hour = 3600
+SixHour = Hour * 6
+Day = Hour * 24
+
+start_range_ts = datetime2ts(cron_start)
+end_range_ts = datetime2ts(cron_end)
+
 TOP_KEYWORDS_LIMIT = 50
 TOP_WEIBOS_LIMIT = 50
-CRON_START_TS = datetime2ts(cron_start)
+
 RESP_ITER_KEYS = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', 'reposts_count', 'bmiddle_pic', 'geo', 'comments_count', 'sentiment', 'terms']
 SORT_FIELD = 'reposts_count'
 
@@ -30,7 +39,10 @@ def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wli
             sentiment = k
             ts, count = v
             item = SentimentTopicCount(query, during, ts, sentiment, count)
-            item_exist = db.session.query(SentimentTopicCount).filter_by(query=query, range=during, end=ts, sentiment=sentiment).first()
+            item_exist = db.session.query(SentimentTopicCount).filter(SentimentTopicCount.query==query, \
+                                                                         SentimentTopicCount.range==during, \
+                                                                         SentimentTopicCount.end==ts, \
+                                                                         SentimentTopicCount.sentiment==sentiment).first()
             if item_exist:
                 db.session.delete(item_exist)
             db.session.add(item)
@@ -42,7 +54,11 @@ def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wli
             sentiment = k
             ts, kcount = v
             item = SentimentTopicKeywords(query, during, klimit, ts, sentiment, json.dumps(kcount))
-            item_exist = db.session.query(SentimentTopicKeywords).filter_by(query=query, range=during, end=ts, limit=klimit, sentiment=sentiment).first()
+            item_exist = db.session.query(SentimentTopicKeywords).filter(SentimentTopicKeywords.query==query, \
+                                                                            SentimentTopicKeywords.range==during, \
+                                                                            SentimentTopicKeywords.end==ts, \
+                                                                            SentimentTopicKeywords.limit==klimit, \
+                                                                            SentimentTopicKeywords.sentiment==sentiment).first()
             if item_exist:
                 db.session.delete(item_exist)
             db.session.add(item)
@@ -54,7 +70,11 @@ def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wli
             sentiment = k
             ts, weibos = v
             item = SentimentTopicTopWeibos(query, during, wlimit, ts, sentiment, json.dumps(weibos))
-            item_exist = db.session.query(SentimentTopicTopWeibos).filter_by(query=query, range=during, end=ts, limit=wlimit, sentiment=sentiment).first()
+            item_exist = db.session.query(SentimentTopicTopWeibos).filter(SentimentTopicTopWeibos.query==query, 
+                                                                                   SentimentTopicTopWeibos.range==during, 
+                                                                                   SentimentTopicTopWeibos.end==ts, 
+                                                                                   SentimentTopicTopWeibos.limit==wlimit, 
+                                                                                   SentimentTopicTopWeibos.sentiment==sentiment).first()
             if item_exist:
                 db.session.delete(item_exist)
             db.session.add(item)
@@ -62,56 +82,51 @@ def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wli
         db.session.commit()
 
 
-def sentimentRealTime(xapian_search_weibo, end_ts, during, method='whole', calc='count', query=None, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
-    emotions_count = {}
-    emotions_kcount = {}
-    emotions_weibo = {}
+def sentimentCronTopic(topic, xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field=SORT_FIELD, save_fields=RESP_ITER_KEYS, during=Fifteenminutes, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
+    if topic and topic != '':
+        start_ts = int(start_ts)
+        over_ts = int(over_ts)
 
-    if method == 'topic' and query and query != '':
-        query_dict = {
-            'timestamp': {'$gt': end_ts-during, '$lt': end_ts},
-            '$or': []
-        }
+        over_ts = ts2HourlyTime(over_ts, during)
+        interval = (over_ts - start_ts) / during
 
-        for term in query.strip().split(','):
-            if term:
-                query_dict['$or'].append({'text': [term]})
+        topics = topic.strip().split(',')
 
-        for k, v in emotions_kv.iteritems():
-            query_dict['sentiment'] = v
+        for i in range(interval, 0, -1):
+            emotions_count = {}
+            emotions_kcount = {}
+            emotions_weibo = {}
 
-            if calc == 'all':
+            begin_ts = over_ts - during * i
+            end_ts = begin_ts + during
+            print begin_ts, end_ts, 'topic %s starts calculate' % topic
+
+            query_dict = {
+                'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+                '$or': []
+            }
+
+            for topic in topics:
+                query_dict['$or'].append({'text': topic})
+
+            for k, v in emotions_kv.iteritems():
+                query_dict['sentiment'] = v
                 scount = xapian_search_weibo.search(query=query_dict, count_only=True)
-                count, get_results = xapian_search_weibo.search(query=query_dict, fields=RESP_ITER_KEYS, \
-                                                                sort_by=[SORT_FIELD], max_offset=w_limit)
-                kcount = top_keywords(get_results, top=k_limit)
-                top_ws = top_weibos(get_results, top=w_limit)
+                mset = xapian_search_weibo.search(query=query_dict, sort_by=[sort_field], \
+                                                  max_offset=w_limit, mset_direct=True)
+                kcount = top_keywords(gen_mset_iter(xapian_search_weibo, mset, fields=['terms']), top=k_limit)
+                top_ws = top_weibos(gen_mset_iter(xapian_search_weibo, mset, fields=save_fields), top=w_limit)
+
                 emotions_count[v] = [end_ts, scount]
                 emotions_kcount[v] = [end_ts, kcount]
                 emotions_weibo[v] = [end_ts, top_ws]
-                save_rt_results('count', query, emotions_count, during)
-                save_rt_results('kcount', query, emotions_kcount, during, klimit=k_limit)
-                save_rt_results('weibos', query, emotions_weibo, during, wlimit=w_limit)
-            
-            elif calc == 'count':
-                scount = xapian_search_weibo.search(query=query_dict, count_only=True)
-                emotions_count[v] = [end_ts, scount]
-                save_rt_results('count', query, emotions_count, during)
-            
-            else:
-                count, get_results = xapian_search_weibo.search(query=query_dict, fields=RESP_ITER_KEYS, \
-                                                                sort_by=[SORT_FIELD], max_offset=w_limit)
-                if calc == 'kcount':
-                    kcount = top_keywords(get_results, top=k_limit)
-                    emotions_kcount[v] = [end_ts, kcount]
-                    save_rt_results('kcount', query, emotions_kcount, during, TOP_KEYWORDS_LIMIT)
 
-                if calc == 'weibos':
-                    top_ws = top_weibos(get_results, top=w_limit)
-                    emotions_weibo[v] = [end_ts, top_ws]
-                    save_rt_results('weibos', query, emotions_weibo, during, TOP_WEIBOS_LIMIT)
-        
-        return {'count': emotions_count, 'kcount': emotions_kcount, 'weibos': emotions_weibo}
+                print k, v, ', emotions count: ', emotions_count, ', emotion keywords length: ', len(kcount), ', emotion weibos length: ', len(top_ws)
+
+            print '%s %s saved emotions counts, keywords and weibos' % (begin_ts, end_ts)
+            save_rt_results('count', topic, emotions_count, during)
+            save_rt_results('kcount', topic, emotions_kcount, during, k_limit, w_limit)
+            save_rt_results('weibos', topic, emotions_weibo, during, k_limit, w_limit)
 
 
 def maintain_topic_sentiment(xapian_search_weibo, start_ts, end_ts):
@@ -123,13 +138,43 @@ def maintain_topic_sentiment(xapian_search_weibo, start_ts, end_ts):
 		results = sentimentRealTime(xapian_search_weibo, end_ts, during, method='topic', calc='all', query=topicname)
 
 
+def cal_topic_sentiment_by_date(topic, datestr, duration):
+    start_ts = datetime2ts(datestr)
+    end_ts = start_ts + Day
+    datestr = datestr.replace('-', '')
+    xapian_search_weibo = getXapianWeiboByDate(datestr)
+    sentimentCronTopic(topic, xapian_search_weibo, start_ts=start_ts, over_ts=end_ts, during=duration)
+
+
+def worker(topic, datestr):
+    print 'topic: ', topic, 'datestr:', datestr, 'Fifteenminutes: '
+    cal_topic_sentiment_by_date(topic, datestr, Fifteenminutes)
+
+
+def _topics_names():
+    results = []
+    topics = _all_topics(True)
+    for topic in topics:
+        results.append(topic.topic)
+
+    return results
+
+
 if __name__ == '__main__':
-    start_ts = CRON_START_TS
-    end_ts = datetime2ts('2013-09-05')
+    datestr = ('2013-09-01').replace('-', '')
+    xapian_search_weibo = getXapianWeiboByDate(datestr)
+    weibo = xapian_search_weibo.search_by_id(3617699454295110, fields=RESP_ITER_KEYS)
+    if weibo:
+        print weibo
 
+    '''
     datestr_list = ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']
-    datestr_list = [dl.replace('-', '') for dl in datestr_list]
-    xapian_search_weibo = getXapianWeiboByDuration(datestr_list)
-
-    if xapian_search_weibo:
- 	maintain_topic_sentiment(xapian_search_weibo, start_ts, end_ts)
+    topics_list = _topics_names()
+    for datestr in datestr_list:
+        for topic in topics_list:
+            worker(topic, datestr)
+    '''
+    
+    # maintain topic
+    #if xapian_search_weibo:
+    #    maintain_topic_sentiment(xapian_search_weibo, start_ts, end_ts)

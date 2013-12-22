@@ -7,7 +7,7 @@ import operator
 from sqlalchemy import func
 from weibo.extensions import db
 from time_utils import datetime2ts
-from weibo.model import SentimentCount, SentimentDomainCount, SentimentTopicCount
+from weibo.model import SentimentCount, SentimentDomainCount, SentimentTopicCount, SentimentRtTopicCount
 
 
 Minute = 60
@@ -18,7 +18,7 @@ Day = Hour * 24
 MinInterval = Fifteenminutes
 
 
-def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None):
+def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None, customized='1'):
     if during <= unit:
     	upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
     	item = SentimentCount.query.filter(SentimentCount.ts==upbound, \
@@ -46,10 +46,16 @@ def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None
     return count
 
 
-def search_topic_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None):
+def search_topic_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None, customized='1'):
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
-        item = db.session.query(SentimentTopicCount).filter(SentimentTopicCount.end==upbound, \
+        if customized == '0':
+            item = db.session.query(SentimentRtTopicCount).filter(SentimentRtTopicCount.end==upbound, \
+                                              SentimentRtTopicCount.sentiment==sentiment, \
+                                              SentimentRtTopicCount.range==unit, \
+                                              SentimentRtTopicCount.query==query).first()
+        else:
+            item = db.session.query(SentimentTopicCount).filter(SentimentTopicCount.end==upbound, \
                                               SentimentTopicCount.sentiment==sentiment, \
                                               SentimentTopicCount.range==unit, \
                                               SentimentTopicCount.query==query).first()
@@ -62,10 +68,19 @@ def search_topic_counts(end_ts, during, sentiment, unit=MinInterval, query=None,
         start_ts = end_ts - during
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         lowbound = (start_ts / unit) * unit
-        count = db.session.query(func.sum(SentimentTopicCount.count)).filter(SentimentCount.ts>lowbound, \
-                                            SentimentCount.ts<=upbound, \
-                                            SentimentCount.sentiment==sentiment, \
-                                            SentimentCount.range==unit).all()
+        if customized == '0':
+            count = db.session.query(func.sum(SentimentRtTopicCount.count)).filter(SentimentRtTopicCount.end>lowbound, \
+                                            SentimentRtTopicCount.end<=upbound, \
+                                            SentimentRtTopicCount.sentiment==sentiment, \
+                                            SentimentRtTopicCount.range==unit, \
+                                            SentimentRtTopicCount.query==query).all()
+
+        else:
+            count = db.session.query(func.sum(SentimentTopicCount.count)).filter(SentimentTopicCount.end>lowbound, \
+                                                SentimentTopicCount.end<=upbound, \
+                                                SentimentTopicCount.sentiment==sentiment, \
+                                                SentimentTopicCount.range==unit, \
+                                                SentimentTopicCount.query==query).all()
 
         if count and count[0] and count[0][0]:
             count = [end_ts * 1000, int(count[0][0])]
@@ -75,7 +90,7 @@ def search_topic_counts(end_ts, during, sentiment, unit=MinInterval, query=None,
     return count
 
 
-def search_domain_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None):
+def search_domain_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None, customized='1'):
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
         item = SentimentDomainCount.query.filter(SentimentDomainCount.ts==upbound, \

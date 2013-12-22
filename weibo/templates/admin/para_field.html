@@ -243,17 +243,20 @@ function declear_re(he){<!-- 反选 -->
                     <button id='de_field' type="button" class="btn btn-danger">删除</button>
                   </div>
                   <div class="bs-docs-example">
-                    <table class="table" style="width:300px;">
+                    <table class="table table-bordered" style="width:300px;">
                       <thead>
                         <tr>
-                          <th style="text-align:center">是否选择</th>
+                          
                           <th style="text-align:center">领域编号</th>
                           <th style="text-align:center">领域名称</th>
+                          <th style="text-align:center">是否选择</th>
                         </tr>
-                      </thead>  
+                      </thead> 
+                      <div id="users_area"> 
                     <tbody id="word_table">
                        
-                    </tbody>   
+                    </tbody>  
+                    </div> 
                 </table>
                 <div id="page-selection" class="pagination pagination-centered"></div>
                 <script src="/static/js/profile/jquery.bootpag.min.js"></script>
@@ -273,9 +276,9 @@ function declear_re(he){<!-- 反选 -->
                         var html = "";
                         for(var i=0;i < data['news'].length;i += 1){
                             user = data['news'][i];
-                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_f' style='font-size:12pt;'/></td>";
-                            html += "<td style='text-align:center'>" + user['id'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['fieldName'] + "</td></tr>";
+                            html += "<tr><td style='text-align:center'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['fieldName'] + "</td>";
+                            html += "<td style='text-align:center'><input type='checkbox' name='field_f' style='font-size:12pt;'/></td></tr>";
                         }
                     $("#word_table").empty();
                     $("#word_table").append(html);
@@ -293,9 +296,10 @@ function declear_re(he){<!-- 反选 -->
                           for(var i=0;i < data['news'].length;i += 1){
                             user = data['news'][i];
                             //console.log(user['id'],user['wordsName'],user['seWeight']);
-                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_f' style='font-size:12pt;'/></td>";
-                            html += "<td style='text-align:center'>" + user['id'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['fieldName'] + "</td></tr>";
+                            
+                            html += "<tr><td style='text-align:center'>" + user['id'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['fieldName'] + "</td>";
+                            html += "<td style='text-align:center'><input type='checkbox' name='field_f' style='font-size:12pt;'/></td></tr>";
                           }
                           $("#word_table").append(html);
                         }
@@ -315,7 +319,7 @@ function declear_re(he){<!-- 反选 -->
                               if(this.checked)
                               {
                                   var fa = $(this).parent();
-                                  var ne = $(fa).next();
+                                  var ne = $(fa).prev().prev();
                                   var f_id = $(ne).html();
                                   $.ajax({   
                                     type:"POST",  
@@ -358,17 +362,20 @@ function declear_re(he){<!-- 反选 -->
                     <button id="de_topic" type="button" class="btn btn-danger">删除</button>
                   </div>
                   <div class="bs-docs-example">
-                    <table class="table" style="width:600px;">
+                    <table class="table table-bordered" style="width:600px;">
                       <thead>
                         <tr>
-                          <th style="text-align:center">是否选择</th>
+                          <th style="text-align:center;display:none;">话题编号</th>
                           <th style="text-align:center">所属领域编号</th>
                           <th style="text-align:center">话题名称</th>
+                          <th style="text-align:center">是否选择</th>
                         </tr>
-                      </thead>  
+                      </thead> 
+                      <div id="users_area"> 
                     <tbody id="word_t">
                        
-                    </tbody>   
+                    </tbody> 
+                    </div>  
                 </table>
                 <div id="page-selection_t" class="pagination pagination-centered"></div>
                 <script src="/static/js/profile/jquery.bootpag.min.js"></script>
@@ -384,11 +391,11 @@ function declear_re(he){<!-- 反选 -->
                         total_page_number = parseInt(data['pages']);
                         var html = "";
                         for(var i=0;i < data['news'].length;i += 1){
-                            user = data['news'][i];
-                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td>";
-                            html += "<td style='text-align:center;display:none'>" + user['id'] + "</td>";
+                            user = data['news'][i];                            
+                            html += "<tr><td style='text-align:center;display:none'>" + user['id'] + "</td>";
                             html += "<td style='text-align:center'>" + user['fieldId'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['topicName'] + "</td></tr>";
+                            html += "<td style='text-align:center'>" + user['topicName'] + "</td>";
+                            html += "<td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td></tr>";
                         }
                     $("#word_t").empty();
                     $("#word_t").append(html);
@@ -406,10 +413,11 @@ function declear_re(he){<!-- 反选 -->
                           for(var i=0;i < data['news'].length;i += 1){
                             user = data['news'][i];
                             //console.log(user['id'],user['wordsName'],user['seWeight']);
-                            html += "<tr><td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td>";
-                            html += "<td style='text-align:center;display:none'>" + user['id'] + "</td>";
+                            
+                            html += "<tr><td style='text-align:center;display:none'>" + user['id'] + "</td>";
                             html += "<td style='text-align:center'>" + user['fieldId'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['topicName'] + "</td></tr>";
+                            html += "<td style='text-align:center'>" + user['topicName'] + "</td>";
+                            html += "<td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td></tr>";
                           }
                           $("#word_t").append(html);
                         }
@@ -425,7 +433,7 @@ function declear_re(he){<!-- 反选 -->
                               if(this.checked)
                               {
                                   var fa = $(this).parent();
-                                  var ne = $(fa).next();
+                                  var ne = $(fa).prev().prev().prev();
                                   var f_id = $(ne).html();
 
                                   $.ajax({   

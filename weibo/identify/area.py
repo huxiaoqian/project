@@ -11,7 +11,7 @@ from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acqui
 from xapian_weibo.utils import load_scws, cut
 from config import PAGERANK_ITER_MAX
 
-from xapian_config import xapian_search_weibo as statuses_search, xapian_search_user as user_search
+from weibo.global_config import xapian_search_weibo as statuses_search, xapian_search_user as user_search
 
 from pagerank import pagerank
 

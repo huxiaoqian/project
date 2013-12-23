@@ -11,20 +11,24 @@ emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
 fields_value = {'culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology'}
 fields_id = {'culture': 1, 'education': 2, 'entertainment': 3, 'fashion': 4, 'finance': 5, 'media': 6, 'sports': 7, 'technology': 8}
 
-IS_PROD = 0
+IS_PROD = 1
 
 if IS_PROD:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131208/'
+    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
+    REDIS_HOST = '192.168.2.11'
+    REDIS_PORT = 6379
 else:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131208/'
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
+    REDIS_HOST = '219.224.136.61'
+    REDIS_PORT = 6379
 
 READ_FROM_STUB = 1
 

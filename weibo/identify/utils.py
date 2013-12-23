@@ -11,7 +11,7 @@ except ImportError:
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
-from xapian_config import xapian_search_weibo as status_search, xapian_search_user as user_search
+from weibo.global_config import xapian_search_weibo as status_search, xapian_search_user as user_search
 
 
 def acquire_topic_id(name):

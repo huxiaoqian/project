@@ -99,7 +99,7 @@ def sentimentCronTopic(topic, xapian_search_weibo, start_ts=start_range_ts, over
 
             begin_ts = over_ts - during * i
             end_ts = begin_ts + during
-            print begin_ts, end_ts, 'topic %s starts calculate' % topic
+            print begin_ts, end_ts, 'topic %s starts calculate' % topic.encode('utf-8')
 
             query_dict = {
                 'timestamp': {'$gt': begin_ts, '$lt': end_ts},
@@ -143,8 +143,9 @@ def cal_topic_sentiment_by_date(topic, datestr, duration):
     end_ts = start_ts + Day
     datestr = datestr.replace('-', '')
     xapian_search_weibo = getXapianWeiboByDate(datestr)
-    sentimentCronTopic(topic, xapian_search_weibo, start_ts=start_ts, over_ts=end_ts, during=duration)
-
+    if xapian_search_weibo:
+        sentimentCronTopic(topic, xapian_search_weibo, start_ts=start_ts, over_ts=end_ts, during=duration)
+   
 
 def worker(topic, datestr):
     print 'topic: ', topic, 'datestr:', datestr, 'Fifteenminutes: '

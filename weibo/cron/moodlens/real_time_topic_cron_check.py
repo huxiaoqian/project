@@ -82,7 +82,7 @@ def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wli
         db.session.commit()
 
 
-def sentimentRealTimeTopic(xapian_search_weibo, query, start_ts, end_ts, save_fields=RESP_ITER_KEYS, during=Fifteenminutes, calc='all', w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT, sort_field=SORT_FIELD):
+def sentimentRealTimeTopic(query, start_ts, end_ts, save_fields=RESP_ITER_KEYS, during=Fifteenminutes, calc='all', w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT, sort_field=SORT_FIELD):
     if query and query != '':
 
     	start_ts = int(start_ts)
@@ -93,13 +93,18 @@ def sentimentRealTimeTopic(xapian_search_weibo, query, start_ts, end_ts, save_fi
 
         for i in range(interval, 0, -1):
 
-	    emotions_count = {}
-	    emotions_kcount = {}
-	    emotions_weibo = {}
+    	    emotions_count = {}
+    	    emotions_kcount = {}
+    	    emotions_weibo = {}
 
-	    begin_ts = over_ts - during * i
+    	    begin_ts = over_ts - during * i
+            xapian_datestr = datetime.date.fromtimestamp(begin_ts).isoformat()
+            xapian_search_weibo = getXapianWeiboByDate(xapian_datestr.replace('-', ''))
+            if not xapian_search_weibo:
+                return
+
             end_ts = begin_ts + during
-            print begin_ts, end_ts, 'topic not customed %s starts calculate' % query
+            print begin_ts, end_ts, 'topic realtime %s starts calculate' % query.encode('utf-8')
 
             query_dict = {
                 'timestamp': {'$gt': begin_ts, '$lt': end_ts},

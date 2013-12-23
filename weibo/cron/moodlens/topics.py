@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+'''定制话题表管理
+'''
+
 
 import time
 from config import db
@@ -55,3 +58,17 @@ def _add_topic(topic, user='admin', iscustom=True, expire_date=EXPIRE_TS):
 	        db.session.commit()
 
 	    	return 'success', item
+
+
+def _topic_not_custom_and_expire(now_ts):
+	topics = db.session.query(Topics).filter(Topics.iscustom==False, \
+		                                       Topics.expire_date<=now_ts).all()
+	return topics
+
+
+def _search_topic(topic, iscustom=True):
+	exist_item = Topics.query.filter_by(topic=topic, iscustom=True).all()
+	if exist_item:
+		return exist_item
+	else:
+		return None

@@ -8,7 +8,8 @@ __all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification'
            'SentimentKeywords', 'TopWeibos', 'Domain', 'SentimentDomainCount', \
            'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
-           'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos']
+           'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
+           'TopicStatus']
 
 
 class Field(db.Model):
@@ -432,17 +433,19 @@ class DomainUser(db.Model):
         self.updateTime = updatetimestr
 
 class TopicStatus(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    module = db.Column(db.String(10))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    module = db.Column(db.String(10))# 显示是哪个模块
     status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start
     topic = db.Column(db.Text)
-    end = db.Column(db.BigInteger(10, unsigned=True))
-    range = db.Column(db.BigInteger(10, unsigned=True))
+    start = db.Column(db.BigInteger(10, unsigned=True))#起始时间
+    end = db.Column(db.BigInteger(10, unsigned=True))#终止时间
+    range = db.Column(db.BigInteger(10, unsigned=True))#统计单元
 
-    def __init__(self, module, topic, status, end, range):
+    def __init__(self, module, status, topic, start, end, range):
         self.module = module
-        self.topic = topic
         self.status = status
+        self.topic = topic
+        self.start = start
         self.end = end
         self.range = range
 

@@ -18,6 +18,7 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+weibo/cron/moodlens/logs/*
 
 # Installer logs
 pip-log.txt

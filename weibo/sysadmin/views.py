@@ -95,6 +95,13 @@ def help_topic():
     else:
         return redirect('/sysadmin/')
 
+@mod.route('/paraset/topic_history/')
+def help_history():
+    if 'logged_in' in session and session['logged_in']:
+        return render_template('admin/para_history.html') 
+    else:
+        return redirect('/sysadmin/')
+
 @mod.route('/usermanage/')
 def contacts():
     if  'logged_in' in session and session['logged_in']:
@@ -539,6 +546,38 @@ def topic_rank():
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
+@mod.route('/history_rank/')
+def history_rank():
+    page = 1
+    countperpage = 5
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    local = int(time.time())
+    topics = db.session.query(TopicStatus).filter((TopicStatus.status==0)|(TopicStatus.status==1)|(TopicStatus.status==-1)).all()
+    news=[]
+    n = 0
+    for topic in topics:
+        if topic:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break
+                start = time.strftime('%Y-%m-%d', time.localtime(topic.start))
+                end = time.strftime('%Y-%m-%d', time.localtime(topic.end))
+                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'start':start,'end':end,'status':topic.status})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
 @mod.route('/add_user', methods=['GET','POST'])
 def add_user():
     user = request.form['user']
@@ -651,3 +690,50 @@ def usertopic_modify():
         return json.dumps('Right')
     else:
         return json.dumps('Wrong')
+
+@mod.route('/history_de', methods=['GET','POST'])
+def history_de():
+    result = 'Right'
+    user_id = request.form['f_id']
+    old_items = db.session.query(TopicStatus).filter(TopicStatus.id==user_id).all()
+    if len(old_items):
+        for old_item in old_items:
+            topic = old_item.topic.encode('utf-8')
+            start = old_item.start
+            end = old_item.end
+            db.session.delete(old_item)
+            db.session.commit()
+            new_item = TopicStatus(module='Sentiment',status=-2,topic=topic,start=start,end=end,range=900)
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
+
+@mod.route('/history_new', methods=['GET','POST'])
+def history_new():
+    result = 'Right'
+    new_field = request.form['topic']
+    start = request.form['start']
+    end = request.form['end']
+    start_time = time.mktime(time.strptime(start, '%Y-%m-%d'))
+    start_time = int(start_time)
+    end_time = time.mktime(time.strptime(end, '%Y-%m-%d'))
+    end_time = int(end_time)
+    old_items = db.session.query(TopicStatus).filter(TopicStatus.topic==new_field).all()
+    if len(old_items):
+        for old_item in old_items:
+            if old_item.status == -2:
+                topic = old_item.topic.encode('utf-8')
+                db.session.delete(old_item)
+                db.session.commit()
+                new_item = TopicStatus(module='Sentiment',status=-1,topic=topic,start=start_time,end=end_time,range=900)
+                db.session.add(new_item)
+                db.session.commit()                
+            else:
+                result = 'Wrong'
+    else:
+	new_item = TopicStatus(module='Sentiment',status=-1,topic=new_field,start=start_time,end=end_time,range=900)
+        db.session.add(new_item)
+        db.session.commit()
+    return json.dumps(result)

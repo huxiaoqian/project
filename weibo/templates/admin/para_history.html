@@ -71,6 +71,9 @@ function add_field(){<!-- 添加按钮 -->
           async:false,
           data:{topic : fl,start: f2,end: f3},
           success: function(data){
+              if(data == 'outindex'){
+                alert("添加失败，历史话题已达上限！");
+              }
               if(data == 'Right') {
                   alert("添加历史话题成功！");
                   location.reload();
@@ -207,6 +210,7 @@ function declear_re(){<!-- 反选 -->
                         <th style="text-align:center">起始时间</th>
                         <th style="text-align:center">结束时间</th>
                         <th style="text-align:center">状态</th>
+                        <th style="text-align:center">入库时间</th>
                         <th style="text-align:center">选择</th>
                       </tr>
                     </thead>
@@ -249,6 +253,7 @@ function declear_re(){<!-- 反选 -->
                             if(user['status']==-1){
                               html += "<td style='text-align:center'>等待计算</td>";
                             }
+                            html += "<td style='text-align:center'>" + user['enter_data'] + "</td>";
                             html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                         }
                     $("#word_table").empty();
@@ -279,6 +284,7 @@ function declear_re(){<!-- 反选 -->
                             if(user['status']==-1){
                               html += "<td style='text-align:center'>等待计算</td>";
                             }
+                            html += "<td style='text-align:center'>" + user['enter_data'] + "</td>";
                             html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                           }
                           $("#word_table").append(html);
@@ -300,7 +306,7 @@ function declear_re(){<!-- 反选 -->
                 if(this.checked)
                 {
                     var fa = $(this).parent();
-                    var ne = $(fa).prev().prev().prev().prev().prev();
+                    var ne = $(fa).prev().prev().prev().prev().prev().prev();
                     var f_id = $(ne).html();
                     $.ajax({   
                       type:"POST",  

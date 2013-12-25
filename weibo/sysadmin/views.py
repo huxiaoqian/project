@@ -151,20 +151,6 @@ def add_field():
         db.session.commit()
     return json.dumps(result)
 
-@mod.route('/add_topic', methods=['GET','POST'])
-def add_topic():
-    result = 'Right'
-    new_field = request.form['topic']
-    new_fid = request.form['field_id']
-    old_items = db.session.query(Topic).filter(Topic.topicName==new_field).all()
-    if len(old_items):
-        result = 'Wrong'
-    else:
-        new_item = Topic(topicName=new_field,fieldId=new_fid)
-        db.session.add(new_item)
-        db.session.commit()
-    return json.dumps(result)
-
 @mod.route('/add_new', methods=['GET','POST'])
 def add_new():
     result = 'Right'
@@ -225,25 +211,14 @@ def change_weight():
 @mod.route('/field_de', methods=['GET','POST'])
 def field_de():
     result = 'Right'
-    new_id = request.form['f_id']
-    conditions = db.session.query(Topic).filter(Topic.fieldId==new_id).all()
-    if len(conditions):
-        result = 'Wrong'
-    else:        
-        old_items = db.session.query(Field).filter(Field.id==new_id).all()
+    new_id = request.form['f_id']       
+    old_items = db.session.query(Field).filter(Field.id==new_id).all()
+    if len(old_items):
         for old_item in old_items:
             db.session.delete(old_item)
             db.session.commit()
-    return json.dumps(result)
-
-@mod.route('/topic_de', methods=['GET','POST'])
-def topic_de():
-    result = 'Right'
-    new_id = request.form['f_id']
-    old_items = db.session.query(Topic).filter(Topic.id==new_id).all()
-    for old_item in old_items:
-        db.session.delete(old_item)
-        db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/new_de', methods=['GET','POST'])
@@ -483,35 +458,6 @@ def f_rank():
                 if n > endoffset:
                     break 
                 news.append({'id':newword.id,'fieldName':newword.fieldName.encode('utf-8')})
-    total_pages = limit / countperpage + 1
-    return json.dumps({'news': news, 'pages': total_pages})
-
-@mod.route('/t_rank/')
-def t_rank():
-    page = 1
-    countperpage = 5
-    limit = 1000000
-    if request.args.get('page'):
-        page = int(request.args.get('page'))
-    if request.args.get('countperpage'):
-        countperpage = int(request.args.get('countperpage'))
-    if request.args.get('limit'):
-        limit = int(request.args.get('limit'))
-    if page == 1:
-        startoffset = 0
-    else:
-        startoffset = (page - 1) * countperpage
-    endoffset = startoffset + countperpage
-    newwords = db.session.query(Topic).filter().all()
-    news=[]
-    n = 0
-    for newword in newwords:
-        if newword:
-            n = n + 1
-            if n > startoffset:
-                if n > endoffset:
-                    break 
-                news.append({'id':newword.id,'topicName':newword.topicName.encode('utf-8'),'fieldId':newword.fieldId})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 

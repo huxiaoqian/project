@@ -488,7 +488,8 @@ def topic_rank():
                 if n > endoffset:
                     break
                 expire_date = time.strftime('%Y-%m-%d', time.localtime(topic.expire_date))
-                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'expire_date':expire_date})
+                db_date = time.strftime('%Y-%m-%d', time.localtime(topic.db_date))
+                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'expire_date':expire_date,'enter_data':db_date})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
@@ -520,7 +521,8 @@ def history_rank():
                     break
                 start = time.strftime('%Y-%m-%d', time.localtime(topic.start))
                 end = time.strftime('%Y-%m-%d', time.localtime(topic.end))
-                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'start':start,'end':end,'status':topic.status})
+                db_date = time.strftime('%Y-%m-%d', time.localtime(topic.db_date))
+                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'start':start,'end':end,'status':topic.status,'enter_data':db_date})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
@@ -576,17 +578,19 @@ def user_modify():
         return json.dumps('Wrong')
 
 @mod.route('/usertopic_de', methods=['GET','POST'])
-def usertopic_de():
+def usertopic_de():#定制话题删除
     result = 'Right'
     user_id = request.form['f_id']
+    status = request.form['status']
     local = int(time.time())
     old_items = db.session.query(Topics).filter(Topics.id==user_id).all()
     if len(old_items):
         for old_item in old_items:
             topic = old_item.topic.encode('utf-8')
+            db_date = old_item.db_date
             db.session.delete(old_item)
             db.session.commit()
-            new_item = Topics(user='admin',topic=topic,iscustom=False,expire_date=local)
+            new_item = Topics(user='admin',topic=topic,iscustom=False,expire_date=local,db_date=db_date,status=status)
             db.session.add(new_item)
             db.session.commit()
     else:
@@ -594,12 +598,16 @@ def usertopic_de():
     return json.dumps(result)
 
 @mod.route('/usertopic_new', methods=['GET','POST'])
-def usertopic_new():
+def usertopic_new():#添加定制话题
     result = 'Right'
     new_field = request.form['topic']
     se_weight = request.form['se_weight']
     s = time.mktime(time.strptime(se_weight, '%Y-%m-%d'))
     s = int(s)
+    local = int(time.time())
+    topics = db.session.query(Topics).filter((Topics.iscustom==True)&(Topics.expire_date>=local)).all()
+    if len(topics)>10:
+        return json.dumps('outindex')
     old_items = db.session.query(Topics).filter(Topics.topic==new_field).all()
     if len(old_items):
         for old_item in old_items:
@@ -609,17 +617,17 @@ def usertopic_new():
                 topic = old_item.topic.encode('utf-8')
                 db.session.delete(old_item)
                 db.session.commit()
-                new_item = Topics(user='admin',topic=topic,iscustom=True,expire_date=s)
+                new_item = Topics(user='admin',topic=topic,iscustom=True,expire_date=s,db_date=local,status=-1)
                 db.session.add(new_item)
                 db.session.commit()
     else:
-	new_item = Topics(user='admin',topic=new_field,iscustom=True,expire_date=s)
+	new_item = Topics(user='admin',topic=new_field,iscustom=True,expire_date=s,db_date=local,status=-1)
 	db.session.add(new_item)
 	db.session.commit()
     return json.dumps(result)
 
 @mod.route('/usertopic_modify', methods=['GET','POST'])
-def usertopic_modify():
+def usertopic_modify():#修改定制话题过期时间
     user = request.form['f_id']
     new_time = request.form['time']
     s = time.mktime(time.strptime(new_time, '%Y-%m-%d'))
@@ -628,9 +636,10 @@ def usertopic_modify():
     if len(old_items):
         for old_item in old_items:
             topic = old_item.topic.encode('utf-8')
+            local = old_item.db_date
             db.session.delete(old_item)
             db.session.commit()
-            new_item = Topics(user='admin',topic=topic,iscustom=True,expire_date=s)
+            new_item = Topics(user='admin',topic=topic,iscustom=True,expire_date=s,db_date=local,status=-1)
             db.session.add(new_item)
             db.session.commit()
         return json.dumps('Right')
@@ -638,7 +647,7 @@ def usertopic_modify():
         return json.dumps('Wrong')
 
 @mod.route('/history_de', methods=['GET','POST'])
-def history_de():
+def history_de():#删除历史话题
     result = 'Right'
     user_id = request.form['f_id']
     old_items = db.session.query(TopicStatus).filter(TopicStatus.id==user_id).all()
@@ -647,9 +656,10 @@ def history_de():
             topic = old_item.topic.encode('utf-8')
             start = old_item.start
             end = old_item.end
+            local = old_item.db_date
             db.session.delete(old_item)
             db.session.commit()
-            new_item = TopicStatus(module='Sentiment',status=-2,topic=topic,start=start,end=end,range=900)
+            new_item = TopicStatus(module='Sentiment',status=-2,topic=topic,start=start,end=end,range=900,db_date=local)
             db.session.add(new_item)
             db.session.commit()
     else:
@@ -657,7 +667,7 @@ def history_de():
     return json.dumps(result)
 
 @mod.route('/history_new', methods=['GET','POST'])
-def history_new():
+def history_new():#添加历史话题
     result = 'Right'
     new_field = request.form['topic']
     start = request.form['start']
@@ -666,6 +676,10 @@ def history_new():
     start_time = int(start_time)
     end_time = time.mktime(time.strptime(end, '%Y-%m-%d'))
     end_time = int(end_time)
+    local = int(time.time())
+    topics = db.session.query(TopicStatus).filter(TopicStatus.status==-1).all()
+    if len(topics)>10:
+        return json.dumps('outindex')
     old_items = db.session.query(TopicStatus).filter(TopicStatus.topic==new_field).all()
     if len(old_items):
         for old_item in old_items:
@@ -673,13 +687,13 @@ def history_new():
                 topic = old_item.topic.encode('utf-8')
                 db.session.delete(old_item)
                 db.session.commit()
-                new_item = TopicStatus(module='Sentiment',status=-1,topic=topic,start=start_time,end=end_time,range=900)
+                new_item = TopicStatus(module='Sentiment',status=-1,topic=topic,start=start_time,end=end_time,range=900,db_date=local)
                 db.session.add(new_item)
                 db.session.commit()                
             else:
                 result = 'Wrong'
     else:
-	new_item = TopicStatus(module='Sentiment',status=-1,topic=new_field,start=start_time,end=end_time,range=900)
+	new_item = TopicStatus(module='Sentiment',status=-1,topic=new_field,start=start_time,end=end_time,range=900,db_date=local)
         db.session.add(new_item)
         db.session.commit()
     return json.dumps(result)

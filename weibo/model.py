@@ -415,12 +415,16 @@ class Topics(db.Model):
     topic = db.Column(db.Text)
     iscustom = db.Column(db.Boolean)
     expire_date = db.Column(db.BigInteger(10, unsigned=True))
+    db_date = db.Column(db.BigInteger(10, unsigned=True))#入库时间
+    status = db.Column(db.Integer)#0:完全删除 1:过期不删除 -1:未删除
 
-    def __init__(self, user, topic, iscustom, expire_date):
+    def __init__(self, user, topic, iscustom, expire_date, db_date, status):
         self.user = user
         self.topic = topic
         self.iscustom = iscustom
         self.expire_date = expire_date
+        self.db_date = db_date
+        self.status = status
 
 class DomainUser(db.Model):
     userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -435,19 +439,21 @@ class DomainUser(db.Model):
 class TopicStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     module = db.Column(db.String(10))# 显示是哪个模块
-    status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start
+    status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start -2:删除
     topic = db.Column(db.Text)
     start = db.Column(db.BigInteger(10, unsigned=True))#起始时间
     end = db.Column(db.BigInteger(10, unsigned=True))#终止时间
     range = db.Column(db.BigInteger(10, unsigned=True))#统计单元
+    db_date = db.Column(db.BigInteger(10, unsigned=True))#入库时间
 
-    def __init__(self, module, status, topic, start, end, range):
+    def __init__(self, module, status, topic, start, end, range, db_date):
         self.module = module
         self.status = status
         self.topic = topic
         self.start = start
         self.end = end
         self.range = range
+        self.db_date = db_date
 
 class SentimentRtTopicCount(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -22,7 +22,7 @@
 	</ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
-      <div id="reportrange" class="btn dropdown-toggle">
+      <div id="whole_window_size_choosen" class="btn dropdown-toggle" href="#">
     <i class="icon-calendar icon-large"></i>
     <span>2013年12月11号 - 2013年12月31号</span> 
 	<b class="caret"></b>
@@ -248,7 +248,7 @@
   }
 
     $(document).ready(function() {
-  $('#reportrange').daterangepicker({
+  $('#whole_window_size_choosen').daterangepicker({
       ranges: {
          '1天': [moment(), moment()],
          '1周': [moment().subtract('days', 6), moment()],
@@ -259,7 +259,7 @@
       endDate: moment()
     }, 
     function(start, end) {
-	$('#reportrange span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+	$('#whole_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
     }
   );
 });

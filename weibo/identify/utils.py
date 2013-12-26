@@ -60,7 +60,7 @@ def user_status(uid):
 def is_in_trash_list(uid):
     return False
 
-def read_rank_results(top_n, identifyRange, method, date, window, topic_id=None, compare=False):
+def read_rank_results(top_n, identifyRange, method, date,  window, topic_id=None, compare=False):
     data = []
     if identifyRange == 'whole':
         items = db.session.query(WholeUserIdentification).filter_by(identifyMethod=method, identifyWindow=window, identifyDate=date).order_by(WholeUserIdentification.rank.asc()).limit(top_n)
@@ -85,7 +85,8 @@ def read_rank_results(top_n, identifyRange, method, date, window, topic_id=None,
             status = user_status(uid)
             if compare:
                 previous_rank = find_user_previous_rank(identifyRange, uid, date, method, window, topic_id)
-                comparison = rank_comparison(previous_rank, rank)
+                # comparison = rank_comparison(previous_rank, rank)
+                comparison = rank - previous_rank
                 row = (rank, uid, name, location, count1, count2, comparison, status)
             else:
                 row = (rank, uid, name, location, count1, count2, status)

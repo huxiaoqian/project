@@ -229,8 +229,10 @@
     }
     function get_and_show_history_now(){
       var during = document.getElementById("topic_durtime").value;
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
       $.ajax({
-        url: '/moodlens/history.json?now1=-1&now2=0',
+        url: '/moodlens/history.json?now1=-1&now2=0&timestamp=' + timestamp,
         dataType: 'json',   
         type: "GET",   
         success: function (data) {
@@ -240,6 +242,48 @@
             html += "<li>" + data[idx] + "</li>";
           }
           $('#show_history_now').append(html);
+        }
+      });
+    }
+    function max_history_limit(){
+      var max = 0;
+      var time = $("#topic_time").html();
+      var during = document.getElementById("topic_durtime").value;
+      var keyword = document.getElementById("keyword").value;
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
+      var search_msg = "请从上方文本框中输入话题"
+      $.ajax({
+        url: '/moodlens/history.json?now2=0&now1=-1',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          for(idx in data){
+            max += 1;
+          }
+          if (max > 5){
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中历史任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            $('#show_search_msg').empty();
+            $('#show_search_msg').append(search_html);
+            $('#search_topic').val('搜索');
+          }
+          else{
+            if(keyword.length < 2)
+              var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
+            else{
+              $('#search_topic').val('搜索');
+              $('#show_search_msg').empty();
+              $.ajax({
+                url: '/moodlens/topic/submit?keyword=' + keyword + "&during=" + during + "&time="+ time + "&timestamp=" + timestamp,
+                dataType: 'json',   
+                type: "GET",   
+                success: function (data) {
+                  check_status();
+                }
+              });
+              get_and_show_history_now();
+            }
+          }
         }
       });
     }
@@ -319,27 +363,10 @@
           $('#search_topic').val('确认提交');
         }
       }else if (command == '确认提交'){
-        var search_msg = "请从上方文本框中输入话题"
-        var time = $("#topic_time").html();
-        var during = document.getElementById("topic_durtime").value;
-        var keyword = document.getElementById("keyword").value;
-        if(keyword.length < 2)
-          var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
-        else{
-          $('#search_topic').val('搜索');
-          $('#show_search_msg').empty();
-          $.ajax({
-            url: '/moodlens/topic/submit?keyword=' + keyword + "&during=" + during + "&time="+ time,
-            dataType: 'json',   
-            type: "GET",   
-            success: function (data) {
-              check_status();
-            }
-          });
-          get_and_show_history_now();
-        }
-      }
+        max_history_limit();
+        
     }
+  }
     function check_status(){
       get_and_show_history_msg();
       get_and_show_history_now();

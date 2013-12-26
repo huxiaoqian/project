@@ -13,26 +13,28 @@ from config import FOLLOWERS_MIN_SUPPORT, REPOSTS_MIN_SUPPORT
 from user_sorter import user_rank
 
 from xapian_weibo.xapian_backend import XapianSearch
-
-LEVELDBPATH = '/home/mirage/leveldb'
+from global_config import xapian_search_user as user_search, LEVELDBPATH
+##LEVELDBPATH = '/home/mirage/leveldb'
 
 def save_to_db(method):
     def func(*args, **kw):
         data = method(*args, **kw)
         method_name = method.__name__
         rank_field = method_name.split('_')[0]
-        try:
-            save_rank_results(data, 'whole', rank_field, args[1], args[2])
-        except:
-            print '%s save results failed, it is ok if not in web environment.' % method.__name__
+##        try:
+##            print 'yuan'
+        save_rank_results(data, 'whole', rank_field, args[1], args[2])
+##        except:
+##            print '%s save results failed, it is ok if not in web environment.' % method.__name__
         return data
     return func
 
 @save_to_db
 def followers_rank(top_n, date, window_size):
-    user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
+    #user_search = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
     count, get_results = user_search.search(query={'followers_count': {'$gt': FOLLOWERS_MIN_SUPPORT}}, sort_by=['-followers_count'], fields=['_id'], max_offset=top_n)
     sorted_uids = []
+    print count
     for user in get_results():
         sorted_uids.append(user['_id'])
 
@@ -44,10 +46,14 @@ def active_rank(top_n, date, window_size):
     uid_active = {}
     if window_size == 1:
         db_name = get_leveldb('active', date_time)
+        print db_name
         daily_user_active_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-        
+
+        count = 0
         for uid, active in daily_user_active_bucket.RangeIter():
+            count = count + 1
+            print count
             uid = int(uid)
             active = float(active)
             uid_active[uid] = active
@@ -87,7 +93,11 @@ def important_rank(top_n, date, window_size):
         db_name = get_leveldb('important', date_time)
         daily_user_important_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, db_name),
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+
+        count = 0
         for uid, important in daily_user_important_bucket.RangeIter():
+            count = count + 1
+            print count
             uid = int(uid)
             important = float(important)
             uid_important[uid] = important

@@ -1,10 +1,13 @@
 #-*- coding: utf-8 -*-
+
 import heapq
 import random
 import time
-import model
-from model import *
-from config import db
+try:
+    from config import db
+    from model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification, Whole
+except ImportError:
+    print 'Warning: Not in web environment.'
 from global_config import xapian_search_user
 from time_utils import ts2datetime, datetime2ts
  
@@ -32,8 +35,8 @@ def rank():
     count =0 
     for result in get_results:
         count = count + 1
-        if count>500:
-            break;
+##        if count>500:
+##            break;
         if count%1000 == 0:
             print count
         i = {'id':result['_id'],'followers_count':result['followers_count']}
@@ -45,10 +48,10 @@ def save_mysql(date,user_id,user_followers,user_rank):
     current_time = datetime2ts(date)
     current_date = ts2datetime(current_time)
 
-    new_item = WholeUserIdentification(user_rank,user_id,current_date,1,'followers')
-    print new_item
-##    db.session.add(new_item)
-##    db.session.commit()
+    new_item = WholeUserIdentification(rank=user_rank, userId=user_id, identifyDate=current_date, identifyWindow=1, identifyMethod='followers')
+    #print type(new_item)
+    db.session.add(new_item)
+    db.session.commit()
     
     #print current_date,user_id,user_followers,user_rank
  

@@ -219,6 +219,7 @@ function show_network(topic_id, window_size) {
 	    current_data = data;
 	    if (current_data.length) {
 		$("#loading_current_data").text("计算完成!");
+		console.log('first here 2');
 		if (current_data.length < page_num) {
 		    page_num = current_data.length
 		    create_current_table(current_data, 0, page_num);
@@ -295,42 +296,29 @@ function show_network(topic_id, window_size) {
     }
     
     function create_current_table(data, start_row, end_row) {
-	var cellCount = 9;
+	var cellCount = 7;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>环比</th><th>敏感状态</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>粉丝数</th><th>关注数</th><th>微博数</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
 	var tbody = '<tbody>';
+	
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
-	    if (data[i][3].match("海外")) {
-		tr = '<tr class="success">';
-	    }
+	    
             for(var j = 0;j < cellCount;j++) {
-		if (j == 8) {
+		if (j == 6) {
 		    // checkbox
 		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
 		}
-		else if (j == 7) {
-		    // identify status
-		    if (data[i][j])
-			var td = '<td><i class="icon-ok"></i></td>';
-		    else
-			var td = '<td><i class="icon-remove"></i></td>';
-		}
-		else if(j == 6) {
-		    // comparsion
-		    if (data[i][j] > 0)
-			var td = '<td><i class="icon-arrow-up"></i></td>';
-		    else if (data[i][j] < 0)
-			var td = '<td><i class="icon-arrow-down"></i></td>';
-		    else
-			var td = '<td><i class="icon-minus"></i></td>';
-		}
+		
+		
 		else if(j == 0) {
 		    // rank status
-		    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
+		    var l = i + 1;
+		    var td = '<td><span class="label label-important">'+l+'</span></td>';
 		}
 		else{
-		    var td = '<td>'+data[i][j]+'</td>';
+			var p = j - 1;
+		    var td = '<td>'+data[i][p]+'</td>';
 		}
 		tr += td;
             }
@@ -352,24 +340,16 @@ function show_network(topic_id, window_size) {
     }
 
     function create_previous_table(data, start_row, end_row) {
-	var cellCount = 7;
+	var cellCount = 6;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>敏感状态</th></tr></thead>';
+	var thead = '<thead><tr><th>博主ID</th><th>博主昵称</th><th>状态数</th><th>好友数</th><th>粉丝数</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
-	    if (data[i][3].match("海外")) {
-		tr = '<tr class="success">';
-	    }
+	    
             for(var j = 0;j < cellCount;j++) {
-		if (j == 6) {
-		    // identify status
-		    if (data[i][j])
-			var td = '<td><i class="icon-ok"></i></td>';
-		    else
-			var td = '<td><i class="icon-remove"></i></td>';
-		}
-		else if(j == 0) {
+		
+		if(j == 0) {
 		    // rank status
 		    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
 		}
@@ -389,7 +369,8 @@ function show_network(topic_id, window_size) {
 
     function identify_request() {
 	// previous results
-	$.post("/identify/area/", {'action': 'previous_rank', 'topic_id': topic_id, 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
+	console.log('first here');
+	$.post("/identify/area/", {'action': 'rank', 'topic_id': topic_id, 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
     }
 
     identify_request();

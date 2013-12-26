@@ -123,7 +123,7 @@ function get_selected_uids() {
     function create_current_table(data, start_row, end_row) {
 	var cellCount = 9;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>环比</th><th>敏感状态</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>环比</th><th>敏感状态</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -154,6 +154,9 @@ function get_selected_uids() {
 		    // rank status
 		    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
 		}
+		else if(j == 1){
+		    var td = '<td style="display:none">'+data[i][j]+'</td>';
+		}
 		else{
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
@@ -179,7 +182,7 @@ function get_selected_uids() {
     function create_previous_table(data, start_row, end_row) {
 	var cellCount = 7;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>敏感状态</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -197,6 +200,9 @@ function get_selected_uids() {
 		else if(j == 0) {
 		    // rank status
 		    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
+		}
+		else if(j == 1){
+		    var td = '<td style="display:none">'+data[i][j]+'</td>';
 		}
 		else{
 		    var td = '<td>'+data[i][j]+'</td>';

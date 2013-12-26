@@ -12,7 +12,8 @@ from xapian_weibo.utils import top_keywords
 import keywords as keywordsModule
 import weibos as weibosModule
 import counts as countsModule
-from topics import _all_topics, _add_topic, _drop_topic
+from topics import _all_topics, _add_topic, _drop_topic, _search_topic
+from history import _all_history, _add_history, _search_history
 import simplejson as json
 from datetime import date
 from datetime import datetime
@@ -434,16 +435,81 @@ def getPeaks():
         
     return json.dumps(time_lis)
 
+@mod.route('/topic/submit', methods=['GET','POST'])
+def topic_submit():
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            keyword = request.args.get('keyword', None)
+            during = request.args.get('during', None)
+            time = request.args.get('time', None)
+            timestamp = request.args.get('timestamp', None)
+            timestamp = int(timestamp)
+            time = _utf_encode(time)
+            start_ts, end_ts = _time_zone(time)
+            if not during or during == '':
+                during = MinInterval
+            else:
+                during = str2ts(during)
+            status , item = _add_history('sentiment', -1 ,  keyword, start_ts, end_ts, during, timestamp)
+            return render_template('moodlens/topic_emotion.html', active='moodlens', temp_keyword=keyword, temp_during=during)
+        else:
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.moodlens
+                    if identy == 1:
+                        return render_template('moodlens/topic_emotion.html', active='moodlens')
+                    else:
+                        return redirect('/')
+
+            return redirect('/')
+    else:
+        return redirect('/')
+
+@mod.route('/history/', methods=['GET','POST'])
+def history():
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            temp_keyword=request.form.get('keyword', None)
+            temp_during=request.form.get('during', 24*3600)
+            temp_start=request.form.get('start',None)
+            temp_end=request.form.get('end',None)
+            if not isinstance(temp_during, int):
+                temp_during = str2ts(temp_during)
+            if temp_keyword:
+                return render_template('moodlens/topic_emotion.html', active='moodlens',temp_keyword=temp_keyword, temp_during=temp_during)
+            else:
+                return render_template('moodlens/topic_emotion.html', active='moodlens')
+            return render_template('moodlens/topic_emotion.html', active='moodlens') 
+        else:
+            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
+            if pas != []:
+                for pa in pas:
+                    identy = pa.moodlens
+                    if identy == 1:
+                        return render_template('moodlens/topic_emotion.html', active='moodlens')
+                    else:
+                        return redirect('/')
+
+            return redirect('/')
+    else:
+        return redirect('/')
+
 @mod.route('/topics.json', methods=['GET','POST'])
 def topics_customized():
     if request.method == 'GET':
-
-        topics = _all_topics(True)
+        keyword = request.args.get('keyword',None)
+        if keyword:
+            topics = _search_topic(keyword,True)
+        else:
+            topics = _all_topics(True)
         topics_names = []
-
-        for topic in topics:
-            topics_names.append(topic.topic)
-
+        if topics:
+            for topic in topics:
+                db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(topic.db_date))
+                datestr = '     提交时间: ' + db_date
+                # topics_names.append(topic.topic)
+                topics_names.append([topic.topic, datestr])
         return json.dumps(topics_names)
 
     else:
@@ -460,4 +526,87 @@ def topics_customized():
         else:
             status, item = 'NoTopic', 'Null'
 
+        return json.dumps({'status': status, 'item': item})
+
+@mod.route('/history.json', methods=['GET','POST'])
+def search_history():
+    if request.method == 'GET':
+        keyword = request.args.get('keyword',None)
+        now1 = request.args.get('now1', None)
+        now2 = request.args.get('now2', None)
+        now = request.args.get('now', None)
+        timestamp_end = request.args.get('timestamp', None)
+        if timestamp_end:
+            timestamp_end = int(timestamp_end)
+        if now1:
+            now1 = int(now1)
+        if now2:
+            now2 = int(now2)
+        if now:
+            now = int(now)
+        histories1 = None
+        histories2 = None
+        histories = None
+        if keyword != None:
+            status, histories = _search_history(keyword)
+        else:
+            if now:
+                status, histories = _all_history(now)
+            if now1:
+                status, histories1 = _all_history(now1)
+            if now2 == 0:
+                status, histories2 = _all_history(now2)
+        histories_names = []
+        if histories1:
+            for history in histories1:
+                start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                datestr  = str(start) + ' - ' + str(end)
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.topic, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.topic, datestr])
+        if histories2:
+            for history in histories2:
+                start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                datestr  = str(start) + ' - ' + str(end)
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.topic, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.topic, datestr])                
+        if histories:
+            for history in histories:
+                start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                datestr  = str(start) + ' - ' + str(end)
+                histories_names.append([history.topic, datestr])
+        return json.dumps(histories_names)
+    else:
+        operator = request.form.get('operator', 'add')
+        keyword = request.form.get('keyword', '')
+        start = request.form.get('start', '')
+        end = request.form.get('end', '')
+        range = request.form.get('during', '')
+        sentiment = request.form.get('sentiment', '')
+        if keyword != '' and start != '' and end != '' and range != '' and sentiment != '':
+            if operator == 'add':
+                status, item = _add_history('sentiment', sentiment,  keyword, start, end, range)
+                item = item.topic + '\t' + item.start + '\t' + item.end + '\t' + item.range + '\t' + item.status
+            else:
+                status, item = 'failed', 'Null'
+        else:
+            status, item = 'failed', 'Null'
         return json.dumps({'status': status, 'item': item})

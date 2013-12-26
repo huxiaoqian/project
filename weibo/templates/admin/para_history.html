@@ -53,29 +53,33 @@ ul{
 
 function add_field(){<!-- 添加按钮 -->
 
-    var fl=prompt("请输入要添加的定制话题","");
-    var f2=prompt("请输入过期时间（如：2020-12-31）","");
+    var fl=prompt("请输入要添加的话题","");
+    var f2=prompt("请输入起始时间（如：2013-9-1）","");
+    var f3=prompt("请输入结束时间（如：2020-12-31）","");
     if(fl)
     {
         if(!f2){
-          f2 = '2020-12-31';
+          f2 = '2013-9-1';
+        }
+        if(!f3){
+          f3 = '2020-12-31';
         }
         $.ajax({   
           type:"POST",  
-          url:"/sysadmin/usertopic_new",
+          url:"/sysadmin/history_new",
           dataType: "json",
           async:false,
-          data:{topic : fl,se_weight: f2},
+          data:{topic : fl,start: f2,end: f3},
           success: function(data){
               if(data == 'outindex'){
-                alert("添加失败，定制话题已达上限！");
+                alert("添加失败，历史话题已达上限！");
               }
               if(data == 'Right') {
-                  alert("添加定制话题成功！");
+                  alert("添加历史话题成功！");
                   location.reload();
               } 
               else{
-                  alert("定制话题已存在！");
+                  alert("历史话题已存在！");
               }
           }              
         })
@@ -168,16 +172,16 @@ function declear_re(){<!-- 反选 -->
 
           <li> <a id="Bai" href="/sysadmin/paraset/userlist/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >用户权限管理</a></li>
 
-          <li  class="active" > <a id="Topic_user" href="/sysadmin/paraset/topic/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >定制话题管理</a></li>
+          <li> <a id="Topic_user" href="/sysadmin/paraset/topic/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >定制话题管理</a></li>
 
-          <li> <a id="Topic_history" href="/sysadmin/paraset/topic_history/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >历史话题管理</a></li>
+          <li  class="active" > <a id="Topic_history" href="/sysadmin/paraset/topic_history/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >历史话题管理</a></li>
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
 
 
         <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:900px;width:1000px;">
-        <p style="font-size:20pt;color:#FE642E;">定制话题管理</p>
+        <p style="font-size:20pt;color:#FE642E;">历史话题管理</p>
         <div id="well" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
                <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
                     <div class="btn-group" style="float:left;padding-right:10px;">
@@ -192,7 +196,6 @@ function declear_re(){<!-- 反选 -->
                     </ul>
                     </div>
                     <div class="fileupload">
-                        <button id="mo_new" type="button" class="btn btn-warning">修改</button>
                         <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
                         <button id="de_new" type="button" class="btn btn-danger">删除</button>
                     </div>
@@ -203,8 +206,10 @@ function declear_re(){<!-- 反选 -->
                     <thead>
                       <tr>                        
                         <th style="text-align:center;display:none;">序号</th>
-                        <th style="text-align:center">定制话题</th>
-                        <th style="text-align:center">过期时间</th>
+                        <th style="text-align:center">历史话题</th>
+                        <th style="text-align:center">起始时间</th>
+                        <th style="text-align:center">结束时间</th>
+                        <th style="text-align:center">状态</th>
                         <th style="text-align:center">入库时间</th>
                         <th style="text-align:center">选择</th>
                       </tr>
@@ -227,7 +232,7 @@ function declear_re(){<!-- 反选 -->
                 function getRankData(countperpage_args, limit_arg){
                     var total_page_number;
                     $.ajax({
-                        url: "/sysadmin/topic_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        url: "/sysadmin/history_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
                         dataType: 'json',   
                         type: "GET",
                         success: function (data) {
@@ -237,7 +242,17 @@ function declear_re(){<!-- 反选 -->
                             user = data['news'][i];
                             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
                             html += "<td style='text-align:center'>" + user['topic'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['expire_date'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['start'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['end'] + "</td>";
+                            if(user['status']==0){
+                              html += "<td style='text-align:center'>计算完成</td>";
+                            }
+                            if(user['status']==1){
+                              html += "<td style='text-align:center'>计算中</td>";
+                            }
+                            if(user['status']==-1){
+                              html += "<td style='text-align:center'>等待计算</td>";
+                            }
                             html += "<td style='text-align:center'>" + user['enter_data'] + "</td>";
                             html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                         }
@@ -249,7 +264,7 @@ function declear_re(){<!-- 反选 -->
                     }).on("page", function(event, /* page number here */ num){
                     $("#word_table").empty();
                     $.ajax({
-                        url: "/sysadmin/topic_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
+                        url: "/sysadmin/history_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
                         dataType: 'json',   
                         type: "GET",
                         success: function (data) {
@@ -258,7 +273,17 @@ function declear_re(){<!-- 反选 -->
                             user = data['news'][i];
                             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
                             html += "<td style='text-align:center'>" + user['topic'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['expire_date'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['start'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['end'] + "</td>";
+                            if(user['status']==0){
+                              html += "<td style='text-align:center'>计算完成</td>";
+                            }
+                            if(user['status']==1){
+                              html += "<td style='text-align:center'>计算中</td>";
+                            }
+                            if(user['status']==-1){
+                              html += "<td style='text-align:center'>等待计算</td>";
+                            }
                             html += "<td style='text-align:center'>" + user['enter_data'] + "</td>";
                             html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                           }
@@ -280,39 +305,21 @@ function declear_re(){<!-- 反选 -->
                               
                 if(this.checked)
                 {
-
                     var fa = $(this).parent();
-                    var ne = $(fa).prev().prev().prev();
-                    var f_name = $(ne).html();                               
-                    var f_id = $(ne).prev().html();
-                    if(confirm("您是否要彻底删除"+f_name+"及其数据?")){
+                    var ne = $(fa).prev().prev().prev().prev().prev().prev();
+                    var f_id = $(ne).html();
                     $.ajax({   
                       type:"POST",  
-                      url:"/sysadmin/usertopic_de",
+                      url:"/sysadmin/history_de",
                       dataType: "json",
                       async:false,
-                      data:{f_id : f_id,status:0},
+                      data:{f_id : f_id},
                       success: function(data){
                           if( data =='Right'){
                               n = n+1;
                           }
                       }           
                     });
-                    }
-                    else{
-                    $.ajax({   
-                      type:"POST",  
-                      url:"/sysadmin/usertopic_de",
-                      dataType: "json",
-                      async:false,
-                      data:{f_id : f_id,status:1},
-                      success: function(data){
-                          if( data =='Right'){
-                              n = n+1;
-                          }
-                      }           
-                    });
-                    }
                 }   
             });
             if(n > 0){
@@ -320,48 +327,7 @@ function declear_re(){<!-- 反选 -->
             }
             location.reload();
                           //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
-            });
-                    
-            $("#mo_new").click(function() {
-                    $("[name='topic_new']").each(function(){                              
-                        if(this.checked)
-                        {
-                              var fa = $(this).parent();
-                              var ne = $(fa).prev().prev().prev();
-                              var uname = $(ne).html();                  
-                              var f_id = $(ne).prev().html();
-                              if(confirm("您要修改的是"+uname+"的过期时间？")){
-                                var time=prompt("请输入过期时间（如：2020-12-31）","");
-
-                                if(time){
-                                  $.ajax({   
-                                    type:"POST",  
-                                    url:"/sysadmin/usertopic_modify",
-                                    dataType: "json",
-                                    async:false,
-                                    data:{f_id : f_id,time : time},
-                                    success: function(data){
-                                      if( data =='Right'){
-                                        alert("修改成功！");
-                                      }
-                                      else{
-                                        alert("修改失败，请重新修改！");
-                                      }
-                                    }            
-                                  });
-                                }
-                                else{
-                                  alert("日期不能为空！");
-                                }
-                              }
-                              else{
-                                alert("您已取消修改操作！");
-                              }
-                        }   
-                    });
-                    location.reload();
-                          //document.getElementById("tab2").innerHTML=document.getElementById("tab2");
-                });
+            }); 
                 </script>
            </div>
            </div>

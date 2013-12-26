@@ -44,7 +44,7 @@ def _topic_completed(status=COMPLETED_STATUS, module='sentiment'):
     return topics_list
 
 
-def _add_not_start_topic(topic, status=NOT_CALC_STATUS, end=datetime2ts(cron_end), range=Day*5, module='sentiment'):
+def _add_not_start_topic(topic, status=NOT_CALC_STATUS, end=datetime2ts(cron_end), range=Fifteenminutes, module='sentiment'):
     item = TopicStatus(module, topic, status, end, range)
     item_exist = TopicStatus.query.filter_by(module=module, topic=topic, status=status, end=end, range=range).first()
     if item_exist:
@@ -53,5 +53,48 @@ def _add_not_start_topic(topic, status=NOT_CALC_STATUS, end=datetime2ts(cron_end
     db.session.commit()
 
 
+def _update_topic_status2Computing(topic, start, end, range=Fifteenminutes, module='sentiment'):
+    item = TopicStatus(module, IN_CALC_STATUS, topic, start, end, range)
+    item_exist = db.session.query(TopicStatus).filter(TopicStatus.module==module, \
+                                                      TopicStatus.status==NOT_CALC_STATUS, \
+                                                      TopicStatus.topic==topic, \
+                                                      TopicStatus.start==start, \
+                                                      TopicStatus.end==end, \
+                                                      TopicStatus.module==module).first()
+    if item_exist:
+        db.session.delete(item_exist)
+    db.session.add(item)
+    db.session.commit()
+
+
+def _update_topic_status2Completed(topic, start, end, range=Fifteenminutes, module='sentiment'):
+    item = TopicStatus(module, COMPLETED_STATUS, topic, start, end, range)
+    item_exist = db.session.query(TopicStatus).filter(TopicStatus.module==module, \
+                                                      TopicStatus.status==IN_CALC_STATUS, \
+                                                      TopicStatus.topic==topic, \
+                                                      TopicStatus.start==start, \
+                                                      TopicStatus.end==end, \
+                                                      TopicStatus.module==module).first()
+    if item_exist:
+        db.session.delete(item_exist)
+        db.session.delete(item_exist1)
+    db.session.add(item)
+    db.session.commit()
+
+
+def _drop_item(topic, start, end, status, range=Fifteenminutes, module='sentiment'):
+    item_exist = db.session.query(TopicStatus).filter(TopicStatus.module==module, \
+                                                      TopicStatus.status==status, \
+                                                      TopicStatus.topic==topic, \
+                                                      TopicStatus.start==start, \
+                                                      TopicStatus.end==end, \
+                                                      TopicStatus.module==module).first()
+    if item_exist:
+        db.session.delete(item_exist)
+    db.session.commit()
+
+
 if __name__ == '__main__':
-    _add_not_start_topic('开学')
+    #_update_topic_status2Completed('高考', 1377964800, 1378051200)
+    _drop_item('日本', 1377964800, 1378310400, IN_CALC_STATUS)
+    #_add_not_start_topic('开学')

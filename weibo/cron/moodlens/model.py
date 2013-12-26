@@ -6,7 +6,7 @@ __all__ = ['SentimentCount', 'SentimentKeywords', 'TopWeibos', 'Domain', \
            'SentimentDomainCount', 'SentimentDomainKeywords', 'SentimentDomainTopWeibos', \
            'SentimentTopicCount', 'SentimentTopicKeywords', 'SentimentTopicTopWeibos', \
            'Topics', 'DomainUser', 'SentimentRtTopicCount', 'SentimentRtTopicKeywords', \
-           'SentimentRtTopicTopWeibos']
+           'SentimentRtTopicTopWeibos', 'TopicStatus']
 
 
 class SentimentCount(db.Model):

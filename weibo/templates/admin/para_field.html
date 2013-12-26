@@ -45,135 +45,60 @@ ul{
 
 <SCRIPT>
 
-function add_field(nu){<!-- 添加按钮 -->
-  switch(nu)
+function add_field(){<!-- 添加按钮 -->
+  var fl=prompt("请输入要添加的领域名称","");
+  if(fl)
   {
-       case 1: var fl=prompt("请输入要添加的领域名称","");
-               if(fl)
-               {
-                  $.ajax({   
-                    type:"POST",  
-                    url:"/sysadmin/add_field",
-                    dataType: "json",
-                    async:false,
-                    data:{topic : fl},
-                    success: function(data){
-                      if(data == 'Right') {
-                                alert("添加领域成功！");
-                                location.reload();
-                              } 
-                      else{
-                        alert("领域已存在！");
-                      }
-                    }              
-                  })
-               }
-               break;
-       case 2: var fl=prompt("请输入要添加的话题名称","");
-               var f_id=prompt("请输入所属领域编号","");
-               if(fl)
-               {
-                  $.ajax({   
-                    type:"POST",  
-                    url:"/sysadmin/add_topic",
-                    dataType: "json",
-                    async:false,
-                    data:{topic : fl, field_id : f_id},
-                    success: function(data){
-                      if(data == 'Right') {
-                                alert("添加话题成功！");
-                                location.reload();
-                              } 
-                      else{
-                        alert("话题已存在！");
-                      }
-                    }              
-                  })
-               }
-               break;
-      default: break;
-}
+      $.ajax({   
+        type:"POST",  
+        url:"/sysadmin/add_field",
+        dataType: "json",
+        async:false,
+        data:{topic : fl},
+        success: function(data){
+            if(data == 'Right') {
+                alert("添加领域成功！");
+                location.reload();
+            } 
+            else{
+                alert("领域已存在！");
+            }
+        }              
+      })
+  }
  
 }
-function drop_menu(he){<!-- 选择下拉菜单 -->
- switch(he)
- {
-    case 1:var lis = document.getElementById("drop_f");
-           lis.style.display='block';
-           break;
-    case 2:var lis = document.getElementById("drop_t");
-           lis.style.display='block';
-           break;
-    default: break;
- }
- 
- 
-}
-function declear_all(he){<!-- 全选 -->
-  switch(he)
-  {
-      case 1:$(document).ready(function(){
-           var divs=$("input[name='field_f']");
-           for(var i = 0;i<divs.length;i++)
-              divs[i].checked = true;
-           })
-           var lis = document.getElementById("drop_f");
-           lis.style.display='none';
-           break;
-      case 2:$(document).ready(function(){
-           var divs=$("input[name='field_t']");
-           for(var i = 0;i<divs.length;i++)
-              divs[i].checked = true;
-           })
-           var lis = document.getElementById("drop_t");
-           lis.style.display='none';
-           break;
-      default: break;
-     
- }
- 
 
+function drop_menu(){<!-- 选择下拉菜单 -->
+  var lis = document.getElementById("drop_f");
+  lis.style.display='block';
 }
-function declear_re(he){<!-- 反选 -->
-  switch(he)
-  {  
-    case 1:$("[name='field_f']").each(function(){
-     
-   
-             if(this.checked)
-             {
-                 this.checked = false;
-             }
-             else
-             {
-                 this.checked = true;
-             }
-   
-           })
-           var lis = document.getElementById("drop_f");
-           lis.style.display='none';
-           break;
-    case 2:$("[name='field_t']").each(function(){
-     
-   
-             if(this.checked)
-             {
-                 this.checked = false;
-             }
-             else
-             {
-                 this.checked = true;
-             }
-   
-           })
-           var lis = document.getElementById("drop_t");
-           lis.style.display='none';
-           break;
-    default: break;
-        
- }
-  
 
+function declear_all(){<!-- 全选 -->
+  $(document).ready(function(){
+    var divs=$("input[name='field_f']");
+    for(var i = 0;i<divs.length;i++)
+        divs[i].checked = true;
+  })
+  var lis = document.getElementById("drop_f");
+  lis.style.display='none';
+}
+
+function declear_re(){<!-- 反选 -->
+    $("[name='field_f']").each(function(){
+        if(this.checked)
+        {
+            this.checked = false;
+        }
+        else
+        {
+            this.checked = true;
+        }
+   
+    })
+    var lis = document.getElementById("drop_f");
+    lis.style.display='none';
+ 
 }
 
 
@@ -203,7 +128,7 @@ function declear_re(he){<!-- 反选 -->
     <div class="tabbable tabs-left" style="float:left;">
         <ul class="nav nav-tabs" style="padding-left:20px;padding-top:20px;float:left;">
           
-          <li class="active"> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >领域及话题管理</a></li>
+          <li class="active"> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >领域管理</a></li>
           
           <li> <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >保留词管理</a></li>
 
@@ -217,29 +142,30 @@ function declear_re(he){<!-- 反选 -->
 
           <li> <a id="Bai" href="/sysadmin/paraset/userlist/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >用户权限管理</a></li>   
 
-          <li> <a id="Topic_user" href="/sysadmin/paraset/topic/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >定制话题管理</a></li>       
+          <li> <a id="Topic_user" href="/sysadmin/paraset/topic/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >定制话题管理</a></li>   
+
+          <li> <a id="Topic_history" href="/sysadmin/paraset/topic_history/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >历史话题管理</a></li>    
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
 
         <div class="tab-pane active" id="tab1" style="float:left;padding-left:30px;padding-top:50px;height:900px;width:1000px;">
-            <p style="font-size:20pt;color:#FE642E;">领域及话题管理</p>
+            <p style="font-size:20pt;color:#FE642E;">领域管理</p>
 
             <div id="info" style="padding-left:50px;padding-top:20px;height:600px;width:800px;">
-              <span class="label" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;"align="center">领域管理</span>
                   <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
                     <div class="btn-group" >
-                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu(1)">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu()">
                          选择
                         <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu" id="drop_f">
                     
-                         <li><a href='#' onClick="declear_all(1)">全选</a></li>
-                         <li><a href='#' onClick="declear_re(1)">反选</a></li>
+                         <li><a href='#' onClick="declear_all()">全选</a></li>
+                         <li><a href='#' onClick="declear_re()">反选</a></li>
                         </ul>
                     </div>
-                    <button type="button" class="btn btn-info" onClick="add_field(1)">添加</button>
+                    <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
                     <button id='de_field' type="button" class="btn btn-danger">删除</button>
                   </div>
                   <div class="bs-docs-example">
@@ -262,7 +188,7 @@ function declear_re(he){<!-- 反选 -->
                 <script src="/static/js/profile/jquery.bootpag.min.js"></script>
                 </div>
                 <script>
-                var countperpage_args = 5;
+                var countperpage_args = 10;
                 var limit_arg = 1000000;
 
                 function getRankData_f(countperpage_args, limit_arg){
@@ -310,7 +236,6 @@ function declear_re(he){<!-- 反选 -->
         }
         $(document).ready(function(){
           getRankData_f(countperpage_args, limit_arg);
-          getRankData_t(countperpage_args, limit_arg);
         })
                       $("#de_field").click(function() {
                           n = 0;
@@ -329,9 +254,6 @@ function declear_re(he){<!-- 反选 -->
                                     data:{f_id : f_id},
                                     success: function(data){
                                       if(data=='Wrong'){
-                                        alert("删除错误！该领域中有子话题，请先删除对应的子话题！");
-                                      }
-                                      else{
                                         n = n + 1;
                                       }
                                     }           
@@ -345,120 +267,6 @@ function declear_re(he){<!-- 反选 -->
                     });
                   </script>
                       
-              <span class="label label-inverse" style="width:100px;font-size:15pt;padding-top:15px;padding-bottom:15px;" align="center">话题管理</span>
-                  <div id="manage" style="width:500px; height:70px;padding-left:25px;padding-top: 25px">
-                      <div class="btn-group" >
-                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="width: 60px;" onClick="drop_menu(2)">
-                         选择
-                        <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu" id="drop_t">
-                    
-                         <li><a href='#' onClick="declear_all(2)">全选</a></li>
-                         <li><a href='#' onClick="declear_re(2)">反选</a></li>
-                        </ul>
-                      </div>
-                      <button type="button" class="btn btn-info" onClick="add_field(2)">添加</button>
-                    <button id="de_topic" type="button" class="btn btn-danger">删除</button>
-                  </div>
-                  <div class="bs-docs-example">
-                    <table class="table table-bordered" style="width:600px;">
-                      <thead>
-                        <tr>
-                          <th style="text-align:center;display:none;">话题编号</th>
-                          <th style="text-align:center">所属领域编号</th>
-                          <th style="text-align:center">话题名称</th>
-                          <th style="text-align:center">是否选择</th>
-                        </tr>
-                      </thead> 
-                      <div id="users_area"> 
-                    <tbody id="word_t">
-                       
-                    </tbody> 
-                    </div>  
-                </table>
-                <div id="page-selection_t" class="pagination pagination-centered"></div>
-                <script src="/static/js/profile/jquery.bootpag.min.js"></script>
-                </div>
-                <script>
-                function getRankData_t(countperpage_args, limit_arg){
-                    var total_page_number;
-                    $.ajax({
-                        url: "/sysadmin/t_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg,
-                        dataType: 'json',   
-                        type: "GET",
-                        success: function (data) {
-                        total_page_number = parseInt(data['pages']);
-                        var html = "";
-                        for(var i=0;i < data['news'].length;i += 1){
-                            user = data['news'][i];                            
-                            html += "<tr><td style='text-align:center;display:none'>" + user['id'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['fieldId'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['topicName'] + "</td>";
-                            html += "<td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td></tr>";
-                        }
-                    $("#word_t").empty();
-                    $("#word_t").append(html);
-                    $('#page-selection_t').bootpag({
-                        total: total_page_number,
-                        maxVisible: 10
-                    }).on("page", function(event, /* page number here */ num){
-                    $("#word_t").empty();
-                    $.ajax({
-                        url: "/sysadmin/t_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg,
-                        dataType: 'json',   
-                        type: "GET",
-                        success: function (data) {
-                          var html = "";
-                          for(var i=0;i < data['news'].length;i += 1){
-                            user = data['news'][i];
-                            //console.log(user['id'],user['wordsName'],user['seWeight']);
-                            
-                            html += "<tr><td style='text-align:center;display:none'>" + user['id'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['fieldId'] + "</td>";
-                            html += "<td style='text-align:center'>" + user['topicName'] + "</td>";
-                            html += "<td style='text-align:center'><input type='checkbox' name='field_t' style='font-size:12pt;'/></td></tr>";
-                          }
-                          $("#word_t").append(html);
-                        }
-                    });
-                });
-            }
-          });
-        }
-                      $("#de_topic").click(function() {
-                          n = 0;
-                          $("[name='field_t']").each(function(){
-                              
-                              if(this.checked)
-                              {
-                                  var fa = $(this).parent();
-                                  var ne = $(fa).prev().prev().prev();
-                                  var f_id = $(ne).html();
-
-                                  $.ajax({   
-                                    type:"POST",  
-                                    url:"/sysadmin/topic_de",
-                                    dataType: "json",
-                                    async:false,
-                                    data:{f_id : f_id},
-                                    success: function(data){
-                                      if(data=='Wrong'){
-                                        alert("删除错误！该话题被其他数据关联！");
-                                      }
-                                      else{
-                                        n = n + 1;
-                                      }
-                                    }           
-                                  });
-                              }   
-                          });
-                          if(n > 0){
-                            alert("删除成功！");
-                          }
-                          location.reload();
-                    });
-                  </script>
             </div>
               
         </div>

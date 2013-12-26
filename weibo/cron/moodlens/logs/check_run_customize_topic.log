@@ -1,0 +1,45 @@
+日本  run customized job from 1378017000.0 to 1378017900.0 
+1378017000 1378017900 topic 日本 starts calculate
+'keywords' 0.77 sec
+angry 2 , emotions count:  {2: [1378017900, 135L]} , emotion keywords length:  50 , emotion weibos length:  50
+'keywords' 0.72 sec
+sad 3 , emotions count:  {2: [1378017900, 135L], 3: [1378017900, 84L]} , emotion keywords length:  50 , emotion weibos length:  50
+'keywords' 0.79 sec
+happy 1 , emotions count:  {1: [1378017900, 467L], 2: [1378017900, 135L], 3: [1378017900, 84L]} , emotion keywords length:  50 , emotion weibos length:  50
+1378017000 1378017900 saved emotions counts, keywords and weibos
+开学  run customized job from 1378017000.0 to 1378017900.0 
+1378017000 1378017900 topic 开学 starts calculate
+'keywords' 0.73 sec
+angry 2 , emotions count:  {2: [1378017900, 381L]} , emotion keywords length:  50 , emotion weibos length:  50
+'keywords' 0.80 sec
+sad 3 , emotions count:  {2: [1378017900, 381L], 3: [1378017900, 3694L]} , emotion keywords length:  50 , emotion weibos length:  50
+'keywords' 0.78 sec
+happy 1 , emotions count:  {1: [1378017900, 1498L], 2: [1378017900, 381L], 3: [1378017900, 3694L]} , emotion keywords length:  50 , emotion weibos length:  50
+1378017000 1378017900 saved emotions counts, keywords and weibos
+中国  run customized job from 1378017000.0 to 1378017900.0 
+1378017000 1378017900 topic 中国 starts calculate
+'keywords' 0.77 sec
+angry 2 , emotions count:  {2: [1378017900, 335L]} , emotion keywords length:  50 , emotion weibos length:  50
+'keywords' 0.70 sec
+sad 3 , emotions count:  {2: [1378017900, 335L], 3: [1378017900, 157L]} , emotion keywords length:  50 , emotion weibos length:  50
+'keywords' 0.74 sec
+happy 1 , emotions count:  {1: [1378017900, 1343L], 2: [1378017900, 335L], 3: [1378017900, 157L]} , emotion keywords length:  50 , emotion weibos length:  50
+1378017000 1378017900 saved emotions counts, keywords and weibos
+中秋  run customized job from 1378017000.0 to 1378017900.0 
+1378017000 1378017900 topic 中秋 starts calculate
+'keywords' 0.38 sec
+angry 2 , emotions count:  {2: [1378017900, 18L]} , emotion keywords length:  50 , emotion weibos length:  18
+'keywords' 0.75 sec
+sad 3 , emotions count:  {2: [1378017900, 18L], 3: [1378017900, 252L]} , emotion keywords length:  50 , emotion weibos length:  50
+'keywords' 0.73 sec
+happy 1 , emotions count:  {1: [1378017900, 384L], 2: [1378017900, 18L], 3: [1378017900, 252L]} , emotion keywords length:  50 , emotion weibos length:  50
+1378017000 1378017900 saved emotions counts, keywords and weibos
+钓鱼岛  run customized job from 1378017000.0 to 1378017900.0 
+1378017000 1378017900 topic 钓鱼岛 starts calculate
+'keywords' 0.22 sec
+angry 2 , emotions count:  {2: [1378017900, 5L]} , emotion keywords length:  50 , emotion weibos length:  5
+'keywords' 0.22 sec
+sad 3 , emotions count:  {2: [1378017900, 5L], 3: [1378017900, 2L]} , emotion keywords length:  14 , emotion weibos length:  2
+'keywords' 0.24 sec
+happy 1 , emotions count:  {1: [1378017900, 9L], 2: [1378017900, 5L], 3: [1378017900, 2L]} , emotion keywords length:  50 , emotion weibos length:  9
+1378017000 1378017900 saved emotions counts, keywords and weibos

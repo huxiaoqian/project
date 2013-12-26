@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import redis
 from xapian_weibo.xapian_backend import XapianSearch
 
 
@@ -15,23 +16,27 @@ IS_PROD = 0
 
 if IS_PROD:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131208/'
+    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
+    REDIS_HOST = '192.168.2.11'
+    REDIS_PORT = 6379
 else:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131208/'
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
+    REDIS_HOST = '219.224.135.60'
+    REDIS_PORT = 6379
 
 READ_FROM_STUB = 1
 
 if READ_FROM_STUB:
     xapian_search_weibo = XapianSearch(stub=MASTER_TIMELINE_STUB, schema_version=5)
 else:
-	xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo_csv', schema_version=5)
+    xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo_csv', schema_version=5)
 
 xapian_search_domain  = XapianSearch(path=XAPIAN_DOMAIN_DATA_PATH, name='master_timeline_domain', schema_version=4)
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)

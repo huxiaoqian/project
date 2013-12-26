@@ -143,6 +143,7 @@ function get_selected_uids() {
 			var td = '<td><i class="icon-remove"></i></td>';
 		}
 		else if(j == 6) {
+			// comparsion
 		    if (data[i][j] > 0)
 			var td = '<td><i class="icon-arrow-up"></i>'+ data[i][j] + '</td>';
 		    else if (data[i][j] < 0)

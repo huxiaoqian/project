@@ -277,28 +277,41 @@ def area():
                 startoffset = 0
                 endoffset = startoffset + page_num - 1
                 fieldEnName = field
-                
-                count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=[sort_by_field], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=10000)
+                print 'here!',top_n,'here'
+                count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=[sort_by_field], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=top_n)
                 users = []
                 count = 0
                 for field_user in field_users():#[startoffset: endoffset]:
-                    if count < startoffset:
-                        count += 1
-                        continue
-                    if count > endoffset:
-                        break
+                    #if count < startoffset:
+                    #    count += 1
+                    #    continue
+                    #if count > endoffset:
+                    #    break
                     field_user['id'] = field_user['_id']
-                    field_user['profileImageUrl'] = field_user['profile_image_url']
+                    f_id = field_user['_id']
                     field_user['userName'] = field_user['name']
+                    f_name = field_user['name']
                     field_user['statusesCount'] = field_user['statuses_count']
+                    f_statusesCount = field_user['statuses_count']
                     field_user['friendsCount'] = field_user['friends_count']
+                    f_friendsCount = field_user['friends_count']
                     field_user['followersCount'] = field_user['followers_count']
-                    field_user['description'] = field_user['description']
-                    users.append(field_user)
+                    f_followersCount = field_user['followers_count']
+                    
+                    #users.append(field_user)
+                    #users['status'] == 'current finished'
+                    row = (f_id, f_name, f_followersCount, f_friendsCount, f_statusesCount)
+                    users.append(row)
                     count += 1
                 #return json.dumps(users)
-                if action == 'run':
+                if action == 'rank':
+                    current_data = users
+                    return json.dumps({'status': 'current finished', 'data': current_data})
+                elif action == 'run':
+                    print 'here!',rank_method,window_size,field,top_n,page_num
                     return render_template('identify/area.html', rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num, field=field)
+                elif action == 'previous_rank':
+                    return json.dumps({'status': 'previous finished', 'data': current_data})
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -339,13 +352,22 @@ def area():
                             if count > endoffset:
                                 break
                             field_user['id'] = field_user['_id']
+                            f_id = field_user['_id']
                             field_user['profileImageUrl'] = field_user['profile_image_url']
+                            f_image = field_user['profile_image_url']
                             field_user['userName'] = field_user['name']
+                            f_name = field_user['name']
                             field_user['statusesCount'] = field_user['statuses_count']
+                            f_statusesCount = field_user['statuses_count']
                             field_user['friendsCount'] = field_user['friends_count']
+                            f_friendsCount = field_user['friends_count']
                             field_user['followersCount'] = field_user['followers_count']
+                            f_followersCount = field_user['followers_count']
                             field_user['description'] = field_user['description']
-                            users.append(field_user)
+                            f_description = field_user['description']
+                            #users.append(field_user)
+                            row = (f_id, f_image, f_name, f_statusesCount, f_friendsCount, f_followersCount, f_description)
+                            users.append(row)
                             count += 1
                         return json.dumps(users)
             return redirect('/')

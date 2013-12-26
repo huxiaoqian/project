@@ -33,8 +33,12 @@
 
         <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>排序标准:</b></font>
       <div class="btn-group">
-  <a id="area1_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-    粉丝数
+  <a id="area1_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        {% if rank_method == 'followers' %}粉丝数
+        {% elif rank_method == 'active' %}活跃度
+        {% elif rank_method == 'important' %}重要度
+        {% else %}粉丝数
+        {% endif %}
     <span class="caret"></span>
   </a>
   <ul id="area1_rank_method_dropdown_menu" class="dropdown-menu">
@@ -45,8 +49,8 @@
       </div>
 	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp领域:</b></font>
       <div class="btn-group">
-  <a  id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-    {% if field == 'finance' %}财经
+  <a  id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+              {% if field == 'finance' %}财经
               {% elif field == 'fashion' %}时尚
               {% elif field == 'entertainment' %}娱乐
               {% elif field == 'media' %}媒体
@@ -71,9 +75,9 @@
           <li><a href="#" onClick="choose_field('area', 'abroad');" data-toggle="tab">境外</a></li>
   </ul>
       </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="500" class="span1">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
         &nbsp&nbsp&nbsp
 	      <input type="submit" class="btn btn-primary" value="识别">

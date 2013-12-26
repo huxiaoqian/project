@@ -21,12 +21,12 @@ def _search_history(topic):
 		return 'failed', None
 
 
-def _add_history(module, status, topic, start, end, range):
+def _add_history(module, status, topic, start, end, range, db_date):
 	exist_item = History.query.filter_by(topic=topic, start=start, end=end).first()
 	if exist_item:
 		return 'failed', None
 	else:
-		item = History('sentiment', status, topic, start, end, range)
+		item = History('sentiment', status, topic, start, end, range, db_date)
 		db.session.add(item)
 		db.session.commit()
 		return 'success', item

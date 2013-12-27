@@ -47,84 +47,79 @@ function show_user_statuses(uid) {
 (function ($) {
     function request_callback(data) {
 	var status = data['status'];
-	var data = data['data'];
+	var current_data = data['data'];
+	var pre_data = data['pre_data'];
 	if (status == 'current finished') {
 	    $("#current_process_bar").css('width', "100%")
 	    $("#current_process").removeClass("active");
 	    $("#current_process").removeClass("progress-striped");
-	    current_data = data;
-	    if (current_data.length) {
-		$("#loading_current_data").text("计算完成!");
-		if (current_data.length < page_num) {
-		    page_num = current_data.length
-		    create_current_table(current_data, 0, page_num);
-		}
-		else {
-		    create_current_table(current_data, 0, page_num);
-		    var total_pages = 0;
-		    if (current_data.length % page_num == 0) {
-			total_pages = current_data.length / page_num;
-		    }
-		    else {
-			total_pages = current_data.length / page_num + 1;
-		    }
-		    $('#rank_page_selection').bootpag({
-			total: total_pages,
-			page: 1,
-			maxVisible: 30
-		    }).on("page", function(event, num){
-			start_row = (num - 1)* page_num;
-			end_row = start_row + 20;
-			if (end_row > current_data.length)
-			    end_row = current_data.length;
-			create_current_table(current_data, start_row, end_row);
-		    });
-		}
-	    }
-	    else {
-		$("#loading_current_data").text("很抱歉，本期计算结果为空!");
-	    }
-	    
-	}
-	else if (status == 'previous finished') {
-	    // current results
-	    $.post("/identify/burst/", {'action': 'rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
-
+	    current_data = current_data;
 	    $("#previous_process_bar").css('width', "100%")
 	    $("#previous_process").removeClass("active");
 	    $("#previous_process").removeClass("progress-striped");
-	    previous_data = data;
+	    previous_data = pre_data;
+	    if (current_data.length) {
+			$("#loading_current_data").text("计算完成!");
+			if (current_data.length < page_num) {
+			    page_num = current_data.length;
+			    create_current_table(current_data, 0, page_num);
+			}
+			else {
+			    create_current_table(current_data, 0, page_num);
+			    var total_pages = 0;
+			    if (current_data.length % page_num == 0) {
+				total_pages = current_data.length / page_num;
+			    }
+			    else {
+				total_pages = current_data.length / page_num + 1;
+			    }
+			    $('#rank_page_selection').bootpag({
+				total: total_pages,
+				page: 1,
+				maxVisible: 30
+			    }).on("page", function(event, num){
+				start_row = (num - 1)* page_num + 1;
+				end_row = start_row + page_num - 1;
+				if (end_row > current_data.length)
+				    end_row = current_data.length;
+				create_current_table(current_data, start_row, end_row);
+			    });
+			}
+	    }
+	    else{
+			$("#loading_current_data").text("很抱歉，本期计算结果为空!");
+	    }
 	    if (previous_data.length) {
-		$("#loading_previous_data").text("计算完成!");
-		if (previous_data.length < page_num) {
-		    page_num = previous_data.length
-		    create_previous_table(previous_data, 0, page_num);
-		}
-		else {
-		    create_previous_table(previous_data, 0, page_num);
-		    var total_pages = 0;
-		    if (previous_data.length % page_num == 0) {
-			total_pages = previous_data.length / page_num;
-		    }
-		    else {
-			total_pages = previous_data.length / page_num + 1;
-		    }
-		    $('#previous_rank_page_selection').bootpag({
-			total: total_pages,
-			page: 1,
-			maxVisible: 30
-		    }).on("page", function(event, num){
-			start_row = (num - 1)* page_num;
-			end_row = start_row + 20;
-			if (end_row > previous_data.length)
-			    end_row = previous_data.length;
-			create_previous_table(previous_data, start_row, end_row);
-		    });
-		}
+			$("#loading_previous_data").text("计算完成!");
+			if (previous_data.length < page_num) {
+			    page_num = previous_data.length
+			    create_previous_table(previous_data, 0, page_num);
+			}
+			else {
+			    create_previous_table(previous_data, 0, page_num);
+			    var total_pages = 0;
+			    if (previous_data.length % page_num == 0) {
+				total_pages = previous_data.length / page_num;
+			    }
+			    else {
+				total_pages = previous_data.length / page_num + 1;
+			    }
+			    $('#previous_rank_page_selection').bootpag({
+				total: total_pages,
+				page: 1,
+				maxVisible: 30
+			    }).on("page", function(event, num){
+				start_row = (num - 1)* page_num;
+				end_row = start_row + 20;
+				if (end_row > previous_data.length)
+				    end_row = previous_data.length;
+				create_previous_table(previous_data, start_row, end_row);
+			    });
+			}
 	    }
 	    else {
-		$("#loading_previous_data").text("很抱歉，上期结果不存在!");
-	    }
+			$("#loading_previous_data").text("很抱歉，上期结果不存在!");
+	    }		    
 	}
 	else
 	    return
@@ -133,7 +128,7 @@ function show_user_statuses(uid) {
     function create_current_table(data, start_row, end_row) {
 	var cellCount = 9;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>环比</th><th>敏感状态</th><th><input id="select_all" type="checkbox">全选</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>环比</th><th>敏感状态</th><th><input id="select_all" type="checkbox">全选</th></tr></thead>';
 	table += thead;
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
@@ -167,6 +162,9 @@ function show_user_statuses(uid) {
 			    // rank status
 			    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
 			}
+			else if(j == 1) {
+				var td = '<td style="display:none">'+data[i][j]+'</td>';
+			}
 			else{
 			    var td = '<td>'+data[i][j]+'</td>';
 			}
@@ -198,7 +196,7 @@ function show_user_statuses(uid) {
     function create_previous_table(data, start_row, end_row) {
 	var cellCount = 7;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>敏感状态</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>转发数</th><th>评论数</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -217,6 +215,9 @@ function show_user_statuses(uid) {
 		else if(j == 0) {
 		    // rank status
 		    var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
+		}
+		else if(j == 1) {
+			var td = '<td style="display:none">'+data[i][j]+'</td>';
 		}
 		else{
 		    var td = '<td>'+data[i][j]+'</td>';
@@ -240,7 +241,7 @@ function show_user_statuses(uid) {
 
     function identify_request() {
 	// previous results
-	$.post("/identify/burst/", {'action': 'previous_rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
+	$.post("/identify/burst/", {'action': 'rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
     }
 
     identify_request();

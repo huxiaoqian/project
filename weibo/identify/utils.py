@@ -85,7 +85,8 @@ def read_rank_results(top_n, identifyRange, method, date, window, topic_id=None,
             status = user_status(uid)
             if compare:
                 previous_rank = find_user_previous_rank(identifyRange, uid, date, method, window, topic_id)
-                comparison = rank_comparison(previous_rank, rank)
+                # comparison = rank_comparison(previous_rank, rank)
+                comparison = rank - previous_rank
                 row = (rank, uid, name, location, count1, count2, comparison, status)
             else:
                 row = (rank, uid, name, location, count1, count2, status)

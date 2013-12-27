@@ -51,7 +51,6 @@ class WholeUserIdentification(db.Model):
     def __repr__(self):
         return self.id
 
-<<<<<<< HEAD
 class WholeIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rank = db.Column(db.Integer)
@@ -59,18 +58,10 @@ class WholeIdentification(db.Model):
     followersCount = db.Column(db.BigInteger(20, unsigned=True))
     activeCount = db.Column(db.BigInteger(20, unsigned=True))
     importantCount = db.Column(db.BigInteger(20, unsigned=True))
-=======
-class Whole(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    rank = db.Column(db.Integer)
-    userId = db.Column(db.BigInteger(11, unsigned=True))
-    count = db.Column(db.BigInteger(11))
->>>>>>> 18d6910aa0b1836b342da9c505aabf5710b36546
     identifyDate = db.Column(db.Date)
     identifyWindow = db.Column(db.Integer, default=1)
     identifyMethod = db.Column(db.String(20), default='followers')
 
-<<<<<<< HEAD
     def __init__(self, rank, userId, followersCount, activeCount, importantCount, identifyDate, identifyWindow, identifyMethod):
         self.rank = rank
         self.userId = userId
@@ -80,14 +71,22 @@ class Whole(db.Model):
         self.identifyDate = identifyDate
         self.identifyWindow = identifyWindow
         self.identifyMethod = identifyMethod
-=======
+
+class Whole(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    count = db.Column(db.BigInteger(11))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='followers')
+
     @classmethod
     def _name(cls):
         return u'全网博主识别（含粉丝数、重要度和活跃度）'
 
     def __repr__(self):
         return self.id
->>>>>>> 18d6910aa0b1836b342da9c505aabf5710b36546
 
 class AreaUserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)

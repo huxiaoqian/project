@@ -9,7 +9,7 @@ __all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification'
            'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
-           'TopicStatus']
+           'TopicStatus', 'WholeIdentification']
 
 
 class Field(db.Model):
@@ -50,6 +50,27 @@ class WholeUserIdentification(db.Model):
 
     def __repr__(self):
         return self.id
+
+class WholeIdentification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    followersCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeCount = db.Column(db.BigInteger(20, unsigned=True))
+    importantCount = db.Column(db.BigInteger(20, unsigned=True))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='followers')
+
+    def __init__(self, rank, userId, followersCount, activeCount, importantCount, identifyDate, identifyWindow, identifyMethod):
+        self.rank = rank
+        self.userId = userId
+        self.followersCount = followersCount
+        self.activeCount = activeCount
+        self.importantCount = importantCount
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod
 
 class AreaUserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)

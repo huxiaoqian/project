@@ -36,88 +36,83 @@ function get_selected_uids() {
 
 (function ($) {
     function request_callback(data) {
-	var status = data['status'];
-	var data = data['data'];
-	if (status == 'current finished') {
-	    $("#current_process_bar").css('width', "100%")
-	    $("#current_process").removeClass("active");
-	    $("#current_process").removeClass("progress-striped");
-	    current_data = data;
-	    if (current_data.length) {
-		$("#loading_current_data").text("计算完成!");
-		if (current_data.length < page_num) {
-		    page_num = current_data.length;
-		    create_current_table(current_data, 0, page_num);
-		}
-		else {
-		    create_current_table(current_data, 0, page_num);
-		    var total_pages = 0;
-		    if (current_data.length % page_num == 0) {
-			total_pages = current_data.length / page_num;
+		var status = data['status'];
+		var current_data = data['data'];
+		var pre_data = data['pre_data'];
+		if (status == 'current finished') {
+		    $("#current_process_bar").css('width', "100%")
+		    $("#current_process").removeClass("active");
+		    $("#current_process").removeClass("progress-striped");
+		    current_data = current_data;
+		    $("#previous_process_bar").css('width', "100%")
+		    $("#previous_process").removeClass("active");
+		    $("#previous_process").removeClass("progress-striped");
+		    previous_data = pre_data;
+		    if (current_data.length) {
+				$("#loading_current_data").text("计算完成!");
+				if (current_data.length < page_num) {
+				    page_num = current_data.length;
+				    create_current_table(current_data, 0, page_num);
+				}
+				else {
+				    create_current_table(current_data, 0, page_num);
+				    var total_pages = 0;
+				    if (current_data.length % page_num == 0) {
+					total_pages = current_data.length / page_num;
+				    }
+				    else {
+					total_pages = current_data.length / page_num + 1;
+				    }
+				    $('#rank_page_selection').bootpag({
+					total: total_pages,
+					page: 1,
+					maxVisible: 30
+				    }).on("page", function(event, num){
+					start_row = (num - 1)* page_num + 1;
+					end_row = start_row + page_num - 1;
+					if (end_row > current_data.length)
+					    end_row = current_data.length;
+					create_current_table(current_data, start_row, end_row);
+				    });
+				}
+		    }
+		    else{
+				$("#loading_current_data").text("很抱歉，本期计算结果为空!");
+		    }
+		    if (previous_data.length) {
+				$("#loading_previous_data").text("计算完成!");
+				if (previous_data.length < page_num) {
+				    page_num = previous_data.length
+				    create_previous_table(previous_data, 0, page_num);
+				}
+				else {
+				    create_previous_table(previous_data, 0, page_num);
+				    var total_pages = 0;
+				    if (previous_data.length % page_num == 0) {
+					total_pages = previous_data.length / page_num;
+				    }
+				    else {
+					total_pages = previous_data.length / page_num + 1;
+				    }
+				    $('#previous_rank_page_selection').bootpag({
+					total: total_pages,
+					page: 1,
+					maxVisible: 30
+				    }).on("page", function(event, num){
+					start_row = (num - 1)* page_num;
+					end_row = start_row + 20;
+					if (end_row > previous_data.length)
+					    end_row = previous_data.length;
+					create_previous_table(previous_data, start_row, end_row);
+				    });
+				}
 		    }
 		    else {
-			total_pages = current_data.length / page_num + 1;
-		    }
-		    $('#rank_page_selection').bootpag({
-			total: total_pages,
-			page: 1,
-			maxVisible: 30
-		    }).on("page", function(event, num){
-			start_row = (num - 1)* page_num + 1;
-			end_row = start_row + page_num - 1;
-			if (end_row > current_data.length)
-			    end_row = current_data.length;
-			create_current_table(current_data, start_row, end_row);
-		    });
+				$("#loading_previous_data").text("很抱歉，上期结果不存在!");
+		    }		    
 		}
-	    }
-	    else {
-		$("#loading_current_data").text("很抱歉，本期计算结果为空!");
-	    }
-	    
-	}
-	else if (status == 'previous finished') {
-	    // current results
-	    $.post("/identify/whole/", {'action': 'rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
-
-	    $("#previous_process_bar").css('width', "100%")
-	    $("#previous_process").removeClass("active");
-	    $("#previous_process").removeClass("progress-striped");
-	    previous_data = data;
-	    if (previous_data.length) {
-		$("#loading_previous_data").text("计算完成!");
-		if (previous_data.length < page_num) {
-		    page_num = previous_data.length
-		    create_previous_table(previous_data, 0, page_num);
-		}
-		else {
-		    create_previous_table(previous_data, 0, page_num);
-		    var total_pages = 0;
-		    if (previous_data.length % page_num == 0) {
-			total_pages = previous_data.length / page_num;
-		    }
-		    else {
-			total_pages = previous_data.length / page_num + 1;
-		    }
-		    $('#previous_rank_page_selection').bootpag({
-			total: total_pages,
-			page: 1,
-			maxVisible: 30
-		    }).on("page", function(event, num){
-			start_row = (num - 1)* page_num;
-			end_row = start_row + 20;
-			if (end_row > previous_data.length)
-			    end_row = previous_data.length;
-			create_previous_table(previous_data, start_row, end_row);
-		    });
-		}
-	    }
-	    else {
-		$("#loading_previous_data").text("很抱歉，上期结果不存在!");
-	    }
-	}
-	else
-	    return
+		else
+		    return
     }
     
     function create_current_table(data, start_row, end_row) {
@@ -221,7 +216,8 @@ function get_selected_uids() {
 
     function identify_request() {
 	// previous results
-	$.post("/identify/whole/", {'action': 'previous_rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
+	// $.post("/identify/whole/", {'action': 'previous_rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
+	$.post("/identify/whole/", {'action': 'rank', 'rank_method': rank_method, 'window_size': window_size, 'top_n': top_n}, request_callback, "json");
     }
 
     identify_request();

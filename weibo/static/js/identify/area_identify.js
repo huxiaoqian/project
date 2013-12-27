@@ -296,9 +296,9 @@ function show_network(topic_id, window_size) {
     }
     
     function create_current_table(data, start_row, end_row) {
-	var cellCount = 7;
+	var cellCount = 11;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>粉丝数</th><th>关注数</th><th>微博数</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>粉丝数</th><th>关注数</th><th>微博数</th><th>重要度</th><th>活跃度</th><th>环比</th><th>敏感</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
 	var tbody = '<tbody>';
 	
 	for (var i = start_row;i < end_row;i++) {

@@ -297,8 +297,10 @@ def area():
                 startoffset = 0
                 endoffset = startoffset + page_num - 1
                 fieldEnName = field
+
+                count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=[sort_by_field], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=top_n)
                 
-                count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=[sort_by_field], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=10000)
+                
                 users = []
                 count = 0
                 for field_user in field_users():#[startoffset: endoffset]:
@@ -317,7 +319,12 @@ def area():
                     users.append(field_user)
                     count += 1
                 #return json.dumps(users)
-                if action == 'run':
+
+                if action == 'rank':
+                    current_data = users
+                    return json.dumps({'status': 'current finished', 'data': current_data})
+                elif action == 'run':
+
                     return render_template('identify/area.html', rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num, field=field)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()

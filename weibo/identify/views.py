@@ -277,7 +277,6 @@ def area():
                 startoffset = 0
                 endoffset = startoffset + page_num - 1
                 fieldEnName = field
-                print 'here!',top_n,'here'
                 count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=[sort_by_field], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=top_n)
                 users = []
                 count = 0
@@ -308,7 +307,6 @@ def area():
                     current_data = users
                     return json.dumps({'status': 'current finished', 'data': current_data})
                 elif action == 'run':
-                    print 'here!',rank_method,window_size,field,top_n,page_num
                     return render_template('identify/area.html', rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num, field=field)
                 elif action == 'previous_rank':
                     return json.dumps({'status': 'previous finished', 'data': current_data})

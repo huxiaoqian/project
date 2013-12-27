@@ -121,6 +121,32 @@
 	  
 	  <hr>
 
+    <div class="well">
+      <legend><strong>上期排序结果</strong></legend>
+      {% if not from_external %}
+      <div>
+        <div id="loading_previous_data" class="alert alert-info">
+    上期结果计算中，请稍后...
+        </div>
+        <label>
+    <div id="previous_process" class="progress progress-striped active">
+      <div id="previous_process_bar" class="bar" style="width: 100%;"></div>
+    </div>
+        </label>
+      </div>
+      {% endif %}
+      <div>
+        <p>
+    <a class="btn btn-small btn-success" href="#" id="previous_out"><i class="icon-download-alt"></i> 导出</a>
+        </p>
+      </div>
+      <div id="previous_rank_table">
+        <table id="previous_rank" class="table table-bordered">
+        </table>
+      </div>
+      <div id="previous_rank_page_selection" class="pagination-centered"></div>
+    </div>
+
 	</div>
       </div>
     </div>

@@ -13,7 +13,7 @@ from config import FOLLOWERS_MIN_SUPPORT, REPOSTS_MIN_SUPPORT
 from user_sorter import user_rank
 
 from xapian_weibo.xapian_backend import XapianSearch
-from global_config import xapian_search_user as user_search, LEVELDBPATH
+from weibo.global_config import xapian_search_user as user_search, LEVELDBPATH
 ##LEVELDBPATH = '/home/mirage/leveldb'
 
 def save_to_db(method):

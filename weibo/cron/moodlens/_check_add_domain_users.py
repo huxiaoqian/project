@@ -15,6 +15,10 @@ def _add_domain_users(r, domainid):
 		domain_users = getDomainUsers(domainid)
 		for uid in domain_users:
 		    r.sadd(DOMAIN_USERS % domainid, uid)
+
+
+def _clear_domain_users(r, domainid):
+		r.delete(DOMAIN_USERS % domainid)
     
 
 if __name__ == '__main__':
@@ -22,4 +26,5 @@ if __name__ == '__main__':
 
 		domains = _domains_active()
 		for domain in domains:
-		    _add_domain_users(r, domain['idx'])
+				_clear_domain_users(r, domain['idx'])
+		    #_add_domain_users(r, domain['idx'])

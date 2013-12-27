@@ -18,7 +18,7 @@ def _utf8_encode(s):
         return s.encode('utf-8')
 
 
-def _clear_keywords():
+def _clear_keywords(r):
 	r.delete(SENTIMENT_TOPIC_KEYWORDS)
 
 

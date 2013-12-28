@@ -4,6 +4,7 @@ import redis
 import heapq
 import datetime
 from model import WholeIdentification
+from time_utils import datetimestr2ts, ts2datetime
 from config import REDIS_HOST, REDIS_PORT, fields_value, labels, db
 
 DOMAINS_LIST = fields_value + labels
@@ -64,6 +65,8 @@ def getUserFollowerscount(uid):
 
 
 def save_topK_results(data, now_datestr, identifyMethod='important', identifyWindow=1, domainid=-1):
+    now_datestr = parseDatestr2save(now_datestr)
+    rank = 1
     for score, uid, otherscore in data:
         followersCount = getUserFollowerscount(uid)
         if identifyMethod == 'important':
@@ -73,7 +76,7 @@ def save_topK_results(data, now_datestr, identifyMethod='important', identifyWin
             activeCount = score
             importantCount = otherscore
 
-        item = WholeIdentification(rank, uid, followersCount, activeCount, importantCount, identifyDate, identifyWindow, identifyMethod)
+        item = WholeIdentification(rank, uid, followersCount, activeCount, importantCount, now_datestr, identifyWindow, identifyMethod)
         item_exist = db.session.query(WholeIdentification).filter_by(WholeIdentification.identifyMethod==identifyMethod, \
                                                                      WholeIdentification.identifyWindow==identifyWindow, \
                                                                      WholeIdentification.userId==uid, \
@@ -81,7 +84,12 @@ def save_topK_results(data, now_datestr, identifyMethod='important', identifyWin
         if item_exist:
             db.session.delete(item_exist)
         db.session.add(item)
-        db.session.commit()    
+        db.session.commit()
+        rank += 1
+
+
+def parseDatestr2save(datestr):
+    return ts2datetime(datetimestr2ts(datestr))
 
 
 def identify_whole_rank(r, topk=CAL_TOPK):

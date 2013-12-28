@@ -30,7 +30,7 @@ if IS_PROD:
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8&passwd=Bh123456'
 else:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131208/'
+    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'

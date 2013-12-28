@@ -77,10 +77,10 @@ def save_topK_results(data, now_datestr, identifyMethod='important', identifyWin
             importantCount = otherscore
 
         item = WholeIdentification(rank, uid, followersCount, activeCount, importantCount, now_datestr, identifyWindow, identifyMethod)
-        item_exist = db.session.query(WholeIdentification).filter_by(WholeIdentification.identifyMethod==identifyMethod, \
-                                                                     WholeIdentification.identifyWindow==identifyWindow, \
-                                                                     WholeIdentification.userId==uid, \
-                                                                     WholeIdentification.identifyDate==now_datestr)
+        item_exist = db.session.query(WholeIdentification).filter(WholeIdentification.identifyMethod==identifyMethod, \
+                                                                  WholeIdentification.identifyWindow==identifyWindow, \
+                                                                  WholeIdentification.userId==uid, \
+                                                                  WholeIdentification.identifyDate==now_datestr).first()
         if item_exist:
             db.session.delete(item_exist)
         db.session.add(item)

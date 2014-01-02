@@ -9,7 +9,7 @@ __all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification'
            'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
-           'TopicStatus', 'WholeIdentification', 'Whole', 'Area', 'Burst']
+           'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification']
 
 
 class Field(db.Model):
@@ -72,21 +72,6 @@ class WholeIdentification(db.Model):
         self.identifyWindow = identifyWindow
         self.identifyMethod = identifyMethod
 
-class Whole(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    rank = db.Column(db.Integer)
-    userId = db.Column(db.BigInteger(11, unsigned=True))
-    count = db.Column(db.BigInteger(11))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='followers')
-
-    @classmethod
-    def _name(cls):
-        return u'全网博主识别（含粉丝数、重要度和活跃度）'
-
-    def __repr__(self):
-        return self.id
 
 class AreaUserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -104,22 +89,28 @@ class AreaUserIdentification(db.Model):
     def __repr__(self):
         return self.id
 
-class Area(db.Model):
+class AreaIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     topicId = db.Column(db.Integer)
     rank = db.Column(db.Integer)
     userId = db.Column(db.BigInteger(11, unsigned=True))
-    count = db.Column(db.BigInteger(11))
+    followersCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeCount = db.Column(db.BigInteger(20, unsigned=True))
+    importantCount = db.Column(db.BigInteger(20, unsigned=True))
     identifyDate = db.Column(db.Date)
     identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='pagerank')
+    identifyMethod = db.Column(db.String(20), default='followers')
 
-    @classmethod
-    def _name(cls):
-        return u'领域博主识别（含粉丝数、重要度和活跃度）'
-
-    def __repr__(self):
-        return self.id
+    def __init__(self, topicId, rank, userId, followersCount, activeCount, importantCount, identifyDate, identifyWindow, identifyMethod):
+        self.topicId = topicId
+        self.rank = rank
+        self.userId = userId
+        self.followersCount = followersCount
+        self.activeCount = activeCount
+        self.importantCount = importantCount
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod
 
 class BurstUserIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -136,21 +127,30 @@ class BurstUserIdentification(db.Model):
     def __repr__(self):
         return self.id
 
-class Burst(db.Model):
+class BurstIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rank = db.Column(db.Integer)
     userId = db.Column(db.BigInteger(11, unsigned=True))
-    count = db.Column(db.BigInteger(11))
+    followersCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeCount = db.Column(db.BigInteger(20, unsigned=True))
+    importantCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeDiff = db.Column(db.BigInteger(20))
+    importantDiff = db.Column(db.BigInteger(20))
     identifyDate = db.Column(db.Date)
     identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='followers')
+    identifyMethod = db.Column(db.String(20), default='active')
 
-    @classmethod
-    def _name(cls):
-        return u'突发博主识别（含粉丝数、重要度和活跃度）'
-
-    def __repr__(self):
-        return self.id
+    def __init__(self, rank, userId, followersCount, activeCount, importantCount, activeDiff, importantDiff, identifyDate, identifyWindow, identifyMethod):
+        self.rank = rank
+        self.userId = userId
+        self.followersCount = followersCount
+        self.activeCount = activeCount
+        self.importantCount = importantCount
+        self.activeDiff = activeDiff
+        self.importantDiff = importantDiff
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod
 
 class RangeCount(db.Model):
     index = db.Column(db.Integer, primary_key=True)

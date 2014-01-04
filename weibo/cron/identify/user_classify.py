@@ -5,6 +5,7 @@
 import os
 import sys
 import time
+import redis
 import leveldb
 from time_utils import datetimestr2ts
 from operator import itemgetter, attrgetter
@@ -21,7 +22,7 @@ except:
     print 'leveldb not available'
 mbr = {"culture":0, "entertainment":0, "fashion":0,'education':0,"finance":0, "sports":0, "technology":0,'media':0}
 DOMAIN_LIST = fields_value + labels
-GLOBAL_USER_AREA_COUNT = "global_user_area_count:%s" # uid
+GLOBAL_USER_AREA_COUNT = "global_user_area_count:%s" # area
 
 
 def _default_redis(host=REDIS_HOST, port=REDIS_PORT, db=0):
@@ -48,7 +49,8 @@ def readProtoWord():
         for word in words:
             try:
                 areas = protow[word]
-                protow[word] = areas + area
+                areas.extend(area)
+                protow[word] = areas
             except KeyError:
                 protow[word] = [area]
     
@@ -123,7 +125,7 @@ def calFieldByWords():
                 pass
 
         for area in areas_list:
-            r.zadd(GLOBAL_USER_AREA_COUNT % user, 1, area)
+            r.zadd(GLOBAL_USER_AREA_COUNT % area, 1, user)
 
         if iter_count % 10000 == 0:
             te = time.time()

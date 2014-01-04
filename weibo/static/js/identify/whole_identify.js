@@ -116,9 +116,9 @@ function get_selected_uids() {
     }
     
     function create_current_table(data, start_row, end_row) {
-	var cellCount = 9;
+	var cellCount = 11;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>环比</th><th>敏感状态</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>敏感状态</th><th>环比</th><th><input id="select_all" type="checkbox" />全选</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -126,18 +126,18 @@ function get_selected_uids() {
 		tr = '<tr class="success">';
 	    }
             for(var j = 0;j < cellCount;j++) {
-		if (j == 8) {
+		if (j == 10) {
 		    // checkbox
 		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
 		}
-		else if (j == 7) {
+		else if (j == 8) {
 		    // identify status
 		    if (data[i][j])
 			var td = '<td><i class="icon-ok"></i></td>';
 		    else
 			var td = '<td><i class="icon-remove"></i></td>';
 		}
-		else if(j == 6) {
+		else if(j == 9) {
 			// comparsion
 		    if (data[i][j] > 0)
 			var td = '<td><i class="icon-arrow-up"></i>'+ data[i][j] + '</td>';
@@ -176,9 +176,9 @@ function get_selected_uids() {
     }
 
     function create_previous_table(data, start_row, end_row) {
-	var cellCount = 7;
+	var cellCount = 9;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>敏感状态</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -186,7 +186,7 @@ function get_selected_uids() {
 		tr = '<tr class="success">';
 	    }
             for(var j = 0;j < cellCount;j++) {
-		if (j == 6) {
+		if (j == 8) {
 		    // identify status
 		    if (data[i][j])
 			var td = '<td><i class="icon-ok"></i></td>';

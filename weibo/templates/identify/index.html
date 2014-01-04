@@ -24,7 +24,7 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
       <div id="whole_window_size_choosen" class="btn dropdown-toggle" href="#">
     <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
+    <span id="whole_date">9月 1日,2013 - 9月 5日,2013</span> 
 	<b class="caret"></b>
 	</div>
 	
@@ -46,7 +46,7 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <input type="hidden" name="action" value="run">
       <input id="whole_rank_method" type="hidden" name="rank_method" value="followers">
-      <input id="whole_window_size" type="hidden" name="window_size" value="7">
+      <input id="whole_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
       &nbsp&nbsp&nbsp
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
@@ -248,6 +248,9 @@
   }
 
     $(document).ready(function() {
+  var whole_time = $('#whole_date').html();
+  document.getElementById('whole_window_size').value = whole_time;
+  
   $('#whole_window_size_choosen').daterangepicker({
       ranges: {
          '1天': [moment(), moment()],
@@ -258,10 +261,14 @@
       startDate: moment().subtract('days', 29),
       endDate: moment()
     }, 
+    
     function(start, end) {
 	$('#whole_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+    var whole_time = $('#whole_date').html();
+    document.getElementById('whole_window_size').value = whole_time;
     }
   );
+  
 });
 
 </script>

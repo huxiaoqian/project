@@ -9,7 +9,7 @@
           height: 500px;
       }
     </style>
-    <script src="{{ url_for('static', filename='js/identify/sigma.min.js') }}"></script>
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datarangepiker.css') }}">
 {% endblock %}
 {% block content %}
     <div class="container-fluid">
@@ -47,7 +47,7 @@
           <li><a href="#" onClick="choose_method('area1', 'important');" data-toggle="tab">重要度</a></li>
   </ul>
       </div>
-	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp领域:</b></font>
+	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp领域:</b></font>
       <div class="btn-group">
   <a  id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
               {% if field == 'finance' %}财经
@@ -59,6 +59,18 @@
               {% elif field == 'education' %}教育
               {% elif field == 'technology' %}科技
               {% elif field == 'abroad' %}境外
+              {% elif field == 'university' %}高校微博
+              {% elif field == 'homeadmin' %}境内机构
+              {% elif field == 'abroadadmin' %}境外机构
+              {% elif field == 'homemedia' %}境内媒体
+              {% elif field == 'abroadadmin' %}境外媒体
+              {% elif field == 'folkorg' %}民间组织
+              {% elif field == 'lawyer' %}律师
+              {% elif field == 'politician' %}政府官员
+              {% elif field == 'mediaworker' %}媒体人士
+              {% elif field == 'activer' %}活跃人士
+              {% elif field == 'grassroot' %}草根
+              {% elif field == 'other' %}其它
               {% else %}财经
               {% endif %}
     <span class="caret"></span>
@@ -73,16 +85,35 @@
           <li><a href="#" onClick="choose_field('area', 'education');" data-toggle="tab">教育</a></li>
           <li><a href="#" onClick="choose_field('area', 'technology');" data-toggle="tab">科技</a></li>
           <li><a href="#" onClick="choose_field('area', 'abroad');" data-toggle="tab">境外</a></li>
+          <li><a href="#" onClick="choose_field('area', 'university');" data-toggle="tab">高校微博</a></li>
+          <li><a href="#" onClick="choose_field('area', 'homeadmin');" data-toggle="tab">境内机构</a></li>
+          <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外机构</a></li>
+          <li><a href="#" onClick="choose_field('area', 'homemedia');" data-toggle="tab">境内媒体</a></li>
+          <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外媒体</a></li>
+          <li><a href="#" onClick="choose_field('area', 'folkorg');" data-toggle="tab">民间组织</a></li>
+          <li><a href="#" onClick="choose_field('area', 'lawyer');" data-toggle="tab">律师</a></li>
+          <li><a href="#" onClick="choose_field('area', 'politician');" data-toggle="tab">政府官员</a></li>
+          <li><a href="#" onClick="choose_field('area', 'mediaworker');" data-toggle="tab">媒体人士</a></li>
+          <li><a href="#" onClick="choose_field('area', 'activer');" data-toggle="tab">活跃人士</a></li>
+          <li><a href="#" onClick="choose_field('area', 'grassroot');" data-toggle="tab">草根</a></li>
+          <li><a href="#" onClick="choose_field('area', 'other');" data-toggle="tab">其它</a></li>
   </ul>
       </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp时间范围:</b></font>
+      <div id="area_window_size_choosen" class="btn dropdown-toggle" href="#">
+    <i class="icon-calendar icon-large"></i>
+    <span id="area_date">{{during_date}}</span> 
+    <b class="caret"></b>
+    </div>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
-        &nbsp&nbsp&nbsp
 	      <input type="submit" class="btn btn-primary" value="识别">
         <input type="hidden" name="action" value="run">
         <input type="hidden" id="topic_hidden" name="field" value="finance">
+        <input id="area1_rank_method" type="hidden" name="rank_method" value="followers">
+        <input id="area_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
       	    </form>
       	    
       	    
@@ -308,20 +339,40 @@
           alert("导出成功！");
         });
 
+    $(document).ready(function() {
+  var area_time = $('#area_date').html();
+  document.getElementById('area_window_size').value = area_time;
+  choose_field('area', '{{field}}');
+  
+  $('#area_window_size_choosen').daterangepicker({
+      ranges: {
+         '1天': [moment(), moment()],
+         '1周': [moment().subtract('days', 6), moment()],
+         '1个月': [moment().startOf('month'), moment().endOf('month')],
+         '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+      },
+      startDate: moment().subtract('days', 29),
+      endDate: moment()
+    }, 
+    
+    function(start, end) {
+  $('#area_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+    var area_time = $('#area_date').html();
+    document.getElementById('area_window_size').value = area_time;
+    }
+  );
+});
 	  </script>
 
     {% if not from_external %}
       <script>
 	//load parameters from previous page
-	{% if topic_id %}
-	var topic_id = '{{ topic_id }}';
-	{% else %}
-	var topic_id = '';
-	{% endif %}
+	
 	var rank_method = '{{ rank_method }}';
-        var window_size = {{ window_size }};
+        var window_size = '{{ during_date }}';
 	var top_n = {{ top_n }};
 	var page_num = {{ page_num }};
+  var field_name = '{{field}}';
 
 
 	function download(){
@@ -340,8 +391,9 @@
 };
 
       </script>
-      <script src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}"></script>
       <script src="{{ url_for('static', filename='js/identify/area_identify.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
       <script type="text/javascript">
        function choose_field(prefix, area){
     $("#topic_hidden").val(area)
@@ -364,6 +416,30 @@
         cn_area = '境外';
     else if(area=='entertainment')
         cn_area = '娱乐';
+    else if(area=='university')
+        cn_area = '高校微博';
+    else if(area=='homeadmin')
+        cn_area = '境内机构';
+    else if(area=='abroadadmin')
+        cn_area = '境外机构';
+    else if(area=='homemedia')
+        cn_area = '境内媒体';
+    else if(area=='abroadadmin')
+        cn_area = '境外媒体';
+    else if(area=='folkorg')
+        cn_area = '民间组织';
+    else if(area=='lawyer')
+        cn_area = '律师';
+    else if(area=='politician')
+        cn_area = '政府官员';
+    else if(area=='mediaworker')
+        cn_area = '媒体人士';
+    else if(area=='activer')
+        cn_area = '活跃人士';
+    else if(area=='grassroot')
+        cn_area = '草根';
+    else if(area=='other')
+        cn_area = '其它';
     $("#area_rank_method_choosen").text(cn_area);
     $("#area_rank_method_choosen").append(' <span class="caret"></span>');
     //close dropdown

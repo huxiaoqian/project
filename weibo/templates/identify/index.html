@@ -23,24 +23,19 @@
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
       <div id="whole_window_size_choosen" class="btn dropdown-toggle" href="#">
-    <i class="icon-calendar icon-large"></i>
-    <span id="whole_date">9月 1日,2013 - 9月 5日,2013</span> 
-	<b class="caret"></b>
-	</div>
-	
-	  
-	  
- 
-	  
+        <i class="icon-calendar icon-large"></i>
+        <span id="whole_date">9月 1日,2013 - 9月 5日,2013</span> 
+	      <b class="caret"></b>
+	    </div>	  
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
-	  <div class="btn dropdown-toggle" style="position:relative;">
-<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
-<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
-<option value="100"> 100 </option>
-<option value="300"> 300 </option>
-<option value="500"> 500 </option>
-</select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
-</div>
+  	  <div class="btn dropdown-toggle" style="position:relative;">
+        <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+        <select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+          <option value="100"> 100 </option>
+          <option value="300"> 300 </option>
+          <option value="500"> 500 </option>
+        </select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
+      </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
@@ -161,51 +156,57 @@
   
     <div class="well">
     <legend><strong>话题敏感博主识别</strong></legend>
+    <div id="topic_identify" class="inline">
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
+        <div id="reportrange_topic" class="btn dropdown-toggle">
+          <i class="icon-calendar icon-large"></i>
+          <span id="topic_time">9月 1日,2013 - 9月 5日,2013</span>
+          <b class="caret"></b>
+        </div>
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
+        <div class="btn dropdown-toggle" style="position:relative;">
+          <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+          <select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+            <option value="100"> 100 </option>
+            <option value="300"> 300 </option>
+            <option value="500"> 500 </option>
+          </select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
+        </div>
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+        <input type="text" id="topic_keywords" name="topic" value="" placeholder="输入关键词..." type="text" style="margin-top: 11px;margin-left: 62px;">
+        <input type="hidden" name="action" value="run">
+        <input id="topic_window_size" type="hidden" name="window_size" value="7">
+        &nbsp&nbsp&nbsp
+        <input type="submit" class="btn btn-primary" value="识别" onclick="find_search_message()" id="search_topic">
+    </div>
+
+    <div id="show_search_msg"></div>
+    <div id="search_on" class="inline">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>可查看历史任务:</b></font>
+    </div>
+    <div id="show_history_msg" class="well"></div>
+    <div id="search_now" class="inline">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>正在进行中历史任务:</b></font>
+    </div>
+    <div id="show_history_now" class="well"></div>
+
+    <!--
     <form id="topic_identify" action="/identify/topic/" class="form-inline" method="POST">
-      <input id="topic_keywords" name="topic" type="text" class="span2 search-query" placeholder="话题">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
-      <div class="btn-group">
-	<a  id="topic_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	  1周
-	  <span class="caret"></span>
-	</a>
-	<ul id="topic_window_size_dropdown_menu" class="dropdown-menu">
-	  <li><a href="#" onClick="choose_window('topic', 1);" data-toggle="tab">1天</a></li>
-      	  <li><a href="#" onClick="choose_window('topic', 7);" data-toggle="tab">1周</a></li>
-      	  <li><a href="#" onClick="choose_window('topic', 30);" data-toggle="tab">1个月</a></li>
-      	  <li><a href="#" onClick="choose_window('topic', 90);" data-toggle="tab">3个月</a></li>
-	</ul>
-      </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="500" class="span1">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+      
       <input type="hidden" name="action" value="run">
       <input id="topic_window_size" type="hidden" name="window_size" value="7">
       &nbsp&nbsp&nbsp
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
+  -->
+    <!--
     <ul id="TopicTab" class="nav nav-tabs">
       <li><a href="#area_7" data-toggle="tab"><strong>系统定制</strong></a></li>
       
       <li><a href="/sysadmin/" target="_blank"><i class="icon-cog"></i></a></li> 
-    </ul>
-    <div id="TopicTabContent" class="tab-content">
-      <div class="tab-pane fade active in" id="area_7">
-	<ul class="inline">
-      	  <li>
-      	    <input type="checkbox"> 两会
-      	  </li>
-      	  <li>
-      	    <input type="checkbox"> 长春婴儿
-      	  </li>
-      	  <li>
-      	    <input type="checkbox"> 异地高考
-      	  </li>
-	</ul>
-      </div>
-      
-    </div>
+    </ul>-->
   </div>
 
   
@@ -270,6 +271,24 @@
   );
   
 });
+
+    //topic_identify
+    $('#reportrange_topic').daterangepicker({
+        ranges: {
+           '今天': [moment(), moment()],
+           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [moment().subtract('days', 6), moment()],
+           '最近30天': [moment().subtract('days', 29), moment()],
+           '本月内': [moment().startOf('month'), moment().endOf('month')],
+           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+        },
+        startDate: moment().subtract('days', 29),
+        endDate: moment()
+      }, 
+      function(start, end) {
+        $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+      }
+    ); 
 
 </script>
 </body>

@@ -29,6 +29,12 @@ def get_now_datestr():
     return datetime.datetime.now().strftime("%Y%m%d")
 
 
+def get_before_datestr():
+    now_ts = time.time() - 24 * 3600
+    datestr = datetime.date.fromtimestamp(now_ts).isoformat().replace('-', '')
+    return datestr
+
+
 def getUserActive(uid):
     active = global_r0.hget(GLOBAL_ACTIVE_COUNT % now_datestr, str(uid))
     if not active:
@@ -62,24 +68,27 @@ def user2domain(uid):
     return int(domainid)
 
 
-def redis2leveldb():
-    next_cursor, result_dicts = global_r0.hscan(GLOBAL_ACTIVE_COUNT % now_datestr)
+def redis2leveldb(batch_scan_count=10000):
+    next_cursor, result_dicts = global_r0.hscan(GLOBAL_ACTIVE_COUNT % now_datestr, cursor=0, count=batch_scan_count)
     count = 0
     ts = te = time.time()
+    uidset = set()
     while next_cursor != '0':
+        batch = leveldb.WriteBatch()
         for uid, active in result_dicts.iteritems():
             followers_count = getUserFollowerscount(uid)
             important = getUserImportant(uid)
             domain = user2domain(uid)
             key = str(uid)
             value = str(active) + '_' + str(important) + '_' + str(followers_count) + '_' + str(domain)
-            global_leveldb.Put(key, value)
-            global_r0.hdel(GLOBAL_ACTIVE_COUNT % now_datestr, uid)
-            global_r0.hdel(GLOBAL_IMPORTANT_COUNT % now_datestr, uid)
-
-        next_cursor, result_dicts = global_r0.hscan(GLOBAL_ACTIVE_COUNT % now_datestr)
-
-        count += 10
+            batch.Put(key, value)
+            uidset.add(key)
+        global_leveldb.Write(batch, sync=True)
+        print next_cursor
+        print len(uidset)
+        next_cursor, result_dicts = global_r0.hscan(GLOBAL_ACTIVE_COUNT % now_datestr, cursor=next_cursor, count=batch_scan_count)
+        
+        count += batch_scan_count
         if count % 10000 == 0:
             te = time.time()
             print count, '%s sec' % (te - ts)
@@ -87,12 +96,14 @@ def redis2leveldb():
 
 
 def test_read():
+    count = 0
     for k, v in global_leveldb.RangeIter():
-        print k, v
+        count += 1
+    print count
         
 
 if __name__ == '__main__':
-    now_datestr = get_now_datestr()
+    now_datestr = get_before_datestr()
     global_r0 = _default_redis()
     global_leveldb = get_daily_user_count_db_by_date(now_datestr)
 

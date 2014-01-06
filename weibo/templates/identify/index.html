@@ -362,7 +362,137 @@
       function(start, end) {
         $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
       }
-    ); 
+    );
+
+    function get_and_show_history_msg(){
+      $.ajax({
+        url: '/identify/history.json?now=1',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_history_msg').empty();
+          var html = "";
+          for(idx in data){
+            html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&customized=0\">" + data[idx] + "</a></li>";
+          }
+          $('#show_history_msg').append(html);
+        }
+      });
+    }
+
+    function get_and_show_history_now(){
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
+      $.ajax({
+        url: '/identify/history.json?now1=-1&now2=0&timestamp=' + timestamp,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_history_now').empty();
+          var html = "";
+          for(idx in data){
+            html += "<li>" + data[idx] + "</li>";
+          }
+          $('#show_history_now').append(html);
+        }
+      });
+    }
+
+    function max_history_limit(){
+      var max = 0;
+      var time = $("#topic_time").html();
+      var keyword = document.getElementById("keyword").value;
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
+      var search_msg = "请从上方文本框中输入话题"
+      $.ajax({
+        url: '/identify/history.json?now2=0&now1=-1',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          for(idx in data){
+            max += 1;
+          }
+          if (max > 5){
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中历史任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            $('#show_search_msg').empty();
+            $('#show_search_msg').append(search_html);
+            $('#search_topic').val('搜索');
+          }
+          else{
+            if(keyword.length < 2)
+              var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
+            else{
+              $('#search_topic').val('搜索');
+              $('#show_search_msg').empty();
+              $.ajax({
+                url: '/identify/topic/submit?keyword=' + keyword + "&time="+ time + "&timestamp=" + timestamp,
+                dataType: 'json',   
+                type: "GET",   
+                success: function (data) {
+                  check_status();
+                }
+              });
+              get_and_show_history_now();
+            }
+          }
+        }
+      });
+    }
+
+    function find_history(){
+      $('#show_search_msg').empty();
+      var keyword = document.getElementById("keyword").value;
+      $.ajax({
+        url: '/identify/history.json?keyword=' + keyword,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_search_msg').empty();
+          var html = "<div  class=\"inline\"><font color=\"#003366\" face=\"Georgia, Times New Roman, Times, serif\"><b>您的历史记录相关选项:</b></font></div><div  class=\"well\">";
+          if(data.length > 0){
+            for(idx in data){
+              html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&during=" + during + "&customized=0\">" + data[idx] + "</a></li>";
+            }
+            html = html + "</div>";
+          }
+          else{
+            html = html + "无匹配项！</div>";
+          }
+          $('#show_search_msg').append(html);
+        }
+      });
+    }
+  
+    function find_search_message(){
+      var command = $('#search_topic').val();
+      if (command == '搜索'){
+        var keyword = document.getElementById("keyword").value;
+        if(keyword.length < 2){
+          var search_msg = "请从上方文本框中输入话题"
+          var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
+          $('#show_search_msg').empty();
+          $('#show_search_msg').append(search_html);
+        }
+        else{
+          find_history();
+          find_define();
+          $('#search_topic').val('确认提交');
+        }
+      }else if (command == '确认提交'){
+        max_history_limit();
+        
+    }
+  }
+    function check_status(){
+      get_and_show_history_msg();
+      get_and_show_history_now();
+    }  
+    $(document).ready(function() {
+      get_and_show_history_msg();
+      get_and_show_history_now();
+      setInterval("check_status()", 10000);
+    });
 
 </script>
 </body>

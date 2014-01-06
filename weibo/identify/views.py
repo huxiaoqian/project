@@ -37,6 +37,7 @@ from weibo.global_config import xapian_search_domain, fields_id
 from whole_result import whole_caculate
 from area_result import area_caculate
 from brust_result import burst_caculate
+from history import _all_history, _add_history, _search_history
 
 domain={'culture': 0, 'education': 1, 'entertainment': 2, 'fashion': 3, 'finance': 4, 'media': 5, 'sports': 6, 'technology': 7, 'oversea': 8, 'university': 9, 'homeadmin': 10, 'abroadadmin': 11, 'homemedia': 12, 'abroadadmin': 13, 'folkorg': 14, 'lawyer': 15, 'politician': 16, 'mediaworker': 17, 'activer': 18, 'grassroot': 19, 'other': 20}
 
@@ -673,3 +674,115 @@ def add_trash():
     else:
         uids = map(int, uids_str.split(','))
         return json.dumps({'status': 'ok'})
+
+@mod.route('/history.json', methods=['GET','POST'])
+def search_history():
+    if request.method == 'GET':
+        keyword = request.args.get('keyword',None)
+        now1 = request.args.get('now1', None)
+        now2 = request.args.get('now2', None)
+        now = request.args.get('now', None)
+        timestamp_end = request.args.get('timestamp', None)
+        if timestamp_end:
+            timestamp_end = int(timestamp_end)
+        if now1:
+            now1 = int(now1)
+        if now2:
+            now2 = int(now2)
+        if now:
+            now = int(now)
+        histories1 = None
+        histories2 = None
+        histories = None
+        if keyword != None:
+            status, histories = _search_history(keyword)
+        else:
+            if now:
+                status, histories = _all_history(now)
+            if now1:
+                status, histories1 = _all_history(now1)
+            if now2 == 0:
+                status, histories2 = _all_history(now2)
+        histories_names = []
+        if histories1:
+            for history in histories1:
+                start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                datestr  = str(start) + ' - ' + str(end)
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.topic, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.topic, datestr])
+        if histories2:
+            for history in histories2:
+                start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                datestr  = str(start) + ' - ' + str(end)
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.topic, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.topic, datestr])                
+        if histories:
+            for history in histories:
+                start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                datestr  = str(start) + ' - ' + str(end)
+                histories_names.append([history.topic, datestr])
+        return json.dumps(histories_names)
+    else:
+        operator = request.form.get('operator', 'add')
+        keyword = request.form.get('keyword', '')
+        start = request.form.get('start', '')
+        end = request.form.get('end', '')
+        sentiment = request.form.get('sentiment', '')
+        if keyword != '' and start != '' and end != '' and sentiment != '':
+            if operator == 'add':
+                status, item = _add_history('sentiment', sentiment,  keyword, start, end)
+                item = item.topic + '\t' + item.start + '\t' + item.end + '\t' + item.range + '\t' + item.status
+            else:
+                status, item = 'failed', 'Null'
+        else:
+            status, item = 'failed', 'Null'
+        return json.dumps({'status': status, 'item': item})
+
+@mod.route('/topic/submit', methods=['GET','POST'])
+def topic_submit():
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            keyword = request.args.get('keyword', None)
+            time = request.args.get('time', None)
+            timestamp = request.args.get('timestamp', None)
+            timestamp = int(timestamp)
+            time = _utf_encode(time)
+            start_ts, end_ts = _time_zone(time)
+            status , item = _add_history('sentiment', -1 ,  keyword, start_ts, end_ts, timestamp)
+            return render_template('identify/topic_emotion.html', temp_keyword=keyword)
+    else:
+        return redirect('/')
+
+@mod.route('/history/', methods=['GET','POST'])
+def history():
+    if 'logged_in' in session and session['logged_in']:        
+        if session['user'] == 'admin':
+            temp_keyword=request.form.get('keyword', None)
+            temp_start=request.form.get('start',None)
+            temp_end=request.form.get('end',None)
+            if temp_keyword:
+                return render_template('identify/topic_emotion.html', temp_keyword=temp_keyword)
+            else:
+                return render_template('identify/topic_emotion.html')
+            return render_template('identify/topic_emotion.html') 
+    else:
+        return redirect('/')

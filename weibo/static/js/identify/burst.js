@@ -32,14 +32,14 @@ function request_callback(data) {
 }
 
 function create_table(data, rowCount) {
-    var cellCount = 7;
+    var cellCount = 10;
     var table = '<table class="table table-bordered">';
-    var thead = '<thead><tr><th>排名</th><th>博主ID</th><th>博主昵称</th><th>博主地域</th><th>粉丝数</th><th>关注数</th><th>敏感状态</th></tr></thead>';
+    var thead = '<thead><tr><th>排名</th><th style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>活跃度差值</th><th>敏感状态</th></tr></thead>';
     var tbody = '<tbody>';
     for(var i = 0;i < rowCount;i++) {
         var tr = '<tr>';
         for(var j = 0;j < cellCount;j++) {
-	    if (j == 6) {
+	    if (j == 9) {
 		// identify status
 		if (data[i][j])
 		    var td = '<td><i class="icon-ok"></i></td>';
@@ -50,7 +50,10 @@ function create_table(data, rowCount) {
 		// rank status
 		var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
 	    }
-	    else{
+	    else if(j == 1){
+		    var td = '<td style="display:none">'+data[i][j]+'</td>';
+		}
+		else{
 		var td = '<td>'+data[i][j]+'</td>';
 	    }
 	    tr += td;

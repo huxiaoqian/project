@@ -68,8 +68,8 @@ function get_selected_uids() {
 					page: 1,
 					maxVisible: 30
 				    }).on("page", function(event, num){
-					start_row = (num - 1)* page_num + 1;
-					end_row = start_row + page_num - 1;
+					start_row = (num - 1)* page_num;
+					end_row = start_row + page_num;
 					if (end_row > current_data.length)
 					    end_row = current_data.length;
 					create_current_table(current_data, start_row, end_row);

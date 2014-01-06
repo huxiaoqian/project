@@ -34,16 +34,19 @@ function get_selected_uids() {
     return uids_str;
 }
 
-function show_user_statuses(uid) {
-    $.fancybox({
+function show_user_statuses(uid,time_ts) {
+    
+	//window.location.href='/identify/statuses/'+uid+'/1/'+time_ts;
+	 $.fancybox({
 	ajax: {
 	    type: "GET",
 	},
-        'href':'/identify/statuses/'+uid+'/1/',
+        'href':'/identify/statuses/'+uid+'/1/'+time_ts,
         'transitionIn': 'none',
         'transitionOut': 'fade',
         'onClosed': function(){},
     });
+
 }
 (function ($) {
     function request_callback(data) {
@@ -51,6 +54,7 @@ function show_user_statuses(uid) {
 	var current_data = data['data'];
 	var pre_data = data['pre_data'];
 	var method = data['method'];
+	var time_ts = data['time'];
 	if (status == 'current finished') {
 		    $("#current_process_bar").css('width', "100%")
 		    $("#current_process").removeClass("active");
@@ -65,18 +69,18 @@ function show_user_statuses(uid) {
 				if (current_data.length < page_num) {
 				    page_num = current_data.length;
 				    if (method == 'active'){
-				    create_current_table1(current_data, 0, page_num);
+				    create_current_table1(current_data, 0, page_num, time_ts);
 				  	}
 				  	else{
-				  		create_current_table2(current_data, 0, page_num);
+				  		create_current_table2(current_data, 0, page_num, time_ts);
 				  	}
 				}
 				else {
 				    if (method == 'active'){
-				    create_current_table1(current_data, 0, page_num);
+				    create_current_table1(current_data, 0, page_num, time_ts);
 				  	}
 				  	else{
-				  		create_current_table2(current_data, 0, page_num);
+				  		create_current_table2(current_data, 0, page_num, time_ts);
 				  	}
 				    var total_pages = 0;
 				    if (current_data.length % page_num == 0) {
@@ -90,15 +94,15 @@ function show_user_statuses(uid) {
 					page: 1,
 					maxVisible: 30
 				    }).on("page", function(event, num){
-					start_row = (num - 1)* page_num + 1;
-					end_row = start_row + page_num - 1;
+					start_row = (num - 1)* page_num;
+					end_row = start_row + page_num;
 					if (end_row > current_data.length)
 					    end_row = current_data.length;
 					if (method == 'active'){
-					create_current_table1(current_data, start_row, end_row);
+					create_current_table1(current_data, start_row, end_row, time_ts);
 					}
 					else{
-						create_current_table2(current_data, start_row, end_row);
+						create_current_table2(current_data, start_row, end_row, time_ts);
 					}
 				    });
 				}
@@ -111,18 +115,18 @@ function show_user_statuses(uid) {
 				if (previous_data.length < page_num) {
 				    page_num = previous_data.length
 				    if (method == 'active'){
-				    create_previous_table1(previous_data, 0, page_num);
+				    create_previous_table1(previous_data, 0, page_num, time_ts);
 				  }
 				  else{
-				  	create_previous_table2(previous_data, 0, page_num);
+				  	create_previous_table2(previous_data, 0, page_num, time_ts);
 				  }
 				}
 				else {
 				    if (method == 'active'){
-				    create_previous_table1(previous_data, 0, page_num);
+				    create_previous_table1(previous_data, 0, page_num, time_ts);
 				  }
 				  else{
-				  	create_previous_table2(previous_data, 0, page_num);
+				  	create_previous_table2(previous_data, 0, page_num, time_ts);
 				  }
 				    var total_pages = 0;
 				    if (previous_data.length % page_num == 0) {
@@ -141,10 +145,10 @@ function show_user_statuses(uid) {
 					if (end_row > previous_data.length)
 					    end_row = previous_data.length;
 					if (method == 'active'){
-					create_previous_table1(previous_data, start_row, end_row);
+					create_previous_table1(previous_data, start_row, end_row, time_ts);
 					}
 					else{
-						create_previous_table2(previous_data, start_row, end_row);
+						create_previous_table2(previous_data, start_row, end_row, time_ts);
 					}
 				    });
 				}
@@ -157,32 +161,32 @@ function show_user_statuses(uid) {
 		    return
     }
     
-    function create_current_table1(data, start_row, end_row) {
-	var cellCount = 13;
+    function create_current_table1(data, start_row, end_row, time_ts) {
+	var cellCount = 12;
 	var table = '<table class="table table-bordered">';
 	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>活跃度差值</th><th>敏感状态</th><th>环比</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
 	var tbody = '<tbody>';
-	console.log(data);
+	
 	for (var i = start_row;i < end_row;i++) {
         var tr = '<tr>';
-        console.log(data[i]);
+
 	    if (data[i][3].match("海外")) {
-			tr = data[i][3];
+			tr = '<tr class="success">';
 	    }
 	    var uid = data[i][1];
             for(var j = 0;j < cellCount;j++) {
-		if (j == 12) {
+		if (j == 11) {
 		    // checkbox
 		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
 		}
-		else if (j == 10) {
+		else if (j == 9) {
 		    // identify status
 		    if (data[i][j])
 			var td = '<td><i class="icon-ok"></i></td>';
 		    else
 			var td = '<td><i class="icon-remove"></i></td>';
 		}
-		else if(j == 11) {
+		else if(j == 10) {
 		    // comparsion
 		    if (data[i][j] > 0)
 			var td = '<td><i class="icon-arrow-up"></i>'+ data[i][j] + '</td>';
@@ -202,9 +206,9 @@ function show_user_statuses(uid) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 4) {
+		if(j == 3) {
 		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
+		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
 		    var td_show_user = '<td>' + td_a + '</td>';
 		    tr += td_show_user;
 		}
@@ -225,32 +229,32 @@ function show_user_statuses(uid) {
 	    });  
 	});
     }
-    function create_current_table2(data, start_row, end_row) {
-	var cellCount = 13;
+    function create_current_table2(data, start_row, end_row, time_ts) {
+	var cellCount = 12;
 	var table = '<table class="table table-bordered">';
 	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>重要度差值</th><th>敏感状态</th><th>环比</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
 	var tbody = '<tbody>';
 	console.log(data);
 	for (var i = start_row;i < end_row;i++) {
         var tr = '<tr>';
-        console.log(data[i]);
+ 
 	    if (data[i][3].match("海外")) {
-			tr = data[i][3];
+			tr = '<tr class="success">';
 	    }
 	    var uid = data[i][1];
             for(var j = 0;j < cellCount;j++) {
-		if (j == 12) {
+		if (j == 11) {
 		    // checkbox
 		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
 		}
-		else if (j == 10) {
+		else if (j == 9) {
 		    // identify status
 		    if (data[i][j])
 			var td = '<td><i class="icon-ok"></i></td>';
 		    else
 			var td = '<td><i class="icon-remove"></i></td>';
 		}
-		else if(j == 11) {
+		else if(j == 10) {
 		    // comparsion
 		    if (data[i][j] > 0)
 			var td = '<td><i class="icon-arrow-up"></i>'+ data[i][j] + '</td>';
@@ -270,9 +274,9 @@ function show_user_statuses(uid) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 4) {
+		if(j == 3) {
 		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
+		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
 		    var td_show_user = '<td>' + td_a + '</td>';
 		    tr += td_show_user;
 		}
@@ -294,8 +298,8 @@ function show_user_statuses(uid) {
 	});
     }
 
-    function create_previous_table1(data, start_row, end_row) {
-	var cellCount = 11;
+    function create_previous_table1(data, start_row, end_row, time_ts) {
+	var cellCount = 10;
 	var table = '<table class="table table-bordered">';
 	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>活跃度差值</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
@@ -306,7 +310,7 @@ function show_user_statuses(uid) {
 		tr = '<tr class="success">';
 	    }
             for(var j = 0;j < cellCount;j++) {
-		if (j == 10) {
+		if (j == 9) {
 		    // identify status
 		    if (data[i][j])
 			var td = '<td><i class="icon-ok"></i></td>';
@@ -324,9 +328,9 @@ function show_user_statuses(uid) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 4) {
+		if(j == 3) {
 		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
+		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
 		    var td_show_user = '<td>' + td_a + '</td>';
 		    tr += td_show_user;
 		}
@@ -340,8 +344,8 @@ function show_user_statuses(uid) {
 	$("#previous_rank_table").html(table);
     }
     
-    function create_previous_table2(data, start_row, end_row) {
-	var cellCount = 11;
+    function create_previous_table2(data, start_row, end_row, time_ts) {
+	var cellCount = 10;
 	var table = '<table class="table table-bordered">';
 	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>重要度差值</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
@@ -352,7 +356,7 @@ function show_user_statuses(uid) {
 		tr = '<tr class="success">';
 	    }
             for(var j = 0;j < cellCount;j++) {
-		if (j == 10) {
+		if (j == 9) {
 		    // identify status
 		    if (data[i][j])
 			var td = '<td><i class="icon-ok"></i></td>';
@@ -370,9 +374,9 @@ function show_user_statuses(uid) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 4) {
+		if(j == 3) {
 		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ')";>查看微博<i class="icon-list-alt"></i></a>';
+		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
 		    var td_show_user = '<td>' + td_a + '</td>';
 		    tr += td_show_user;
 		}

@@ -37,11 +37,24 @@ from forest import *
 sys.path.append('./weibo/profile')
 from utils import *
 
+path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
 fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
+
+def ts2datetimestr(ts):
+    return time.strftime('%Y%m%d', time.localtime(ts))
+
+def datetime2ts(date):
+    return time.mktime(time.strptime(date, '%Y-%m-%d %H:%M:%S'))
+
+def date2ts(date):
+    return time.mktime(time.strptime(date, '%Y-%m-%d'))
+
+def ts2datetime(ts):
+    return time.strftime('%Y-%m-%d', time.localtime(ts))
 
 def _utf_encode(s):
     if isinstance(s, str):
@@ -99,8 +112,38 @@ def getFieldTopics():
 ##        field_topics.append({'field_name': field_name, 'topics': topic_names, 'len': len(topic_names)})
     return topic_names
 
+def getXapianWeiboByDuration(datestr_list):
+    stub_file_list = []
+
+    for datestr in datestr_list:
+        stub_file = path + datestr
+        print type(stub_file)
+        if os.path.exists(stub_file):
+            stub_file_list.append(stub_file)
+
+    if len(stub_file_list):
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True)
+        return xapian_search_weibo 
+
+    else:
+        return None
+
+def getXapianweiboByTs(start_time, end_time):
+    xapian_date_list =[]
+    Day = 24*3600
+    days = (int(end_time) - int(start_time)) / Day
+
+    for i in range(0, days):
+        _ts = start_time + i * Day
+        xapian_date_list.append(ts2datetimestr(_ts))
+
+    statuses_search = getXapianWeiboByDuration(xapian_date_list)
+    return statuses_search
+
 def getHotStatus(start,end):
-    count,statuses = xapian_search_weibo.search(query={'timestamp': {'$gt': time.mktime(time.strptime(start,'%Y-%m-%d')), '$lt': time.mktime(time.strptime(end,'%Y-%m-%d'))}}, sort_by=['reposts_count'], fields=['_id','text','timestamp','user','reposts_count','comments_count','attitudes_count','retweeted_mid','source'], max_offset=10)
+
+    statuses_search = getXapianweiboByTs(start,end)
+    count,statuses = statuses_search.search(sort_by=['reposts_count'], fields=['_id','text','timestamp','user','reposts_count','comments_count','attitudes_count','retweeted_mid','source'], max_offset=10)
     status_hot = []             
     for status in statuses():
         uid = status['user']
@@ -186,7 +229,7 @@ def showresult_by_topic():
             else:
                 dur_time = _utf_encode(dur_time)
                 beg_time, end_time = _time_zone(dur_time)
-
+            
             keyword = keyword.strip('@\r\n\t')
             keyuser = keyuser.strip('@\r\n\t')
             beg_time = beg_time.strip('@\r\n\t')
@@ -219,8 +262,10 @@ def showresult_by_topic():
                 end_time_month = int(end_time.month)
                 end_time_day = int(end_time.day)
                 end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+            statuses_search = getXapianweiboByTs(beg_time, end_time)
             fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
+            count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
             if count == 0:
                 flash(u'您搜索的话题结果为空')
                 return redirect('/propagate/')
@@ -235,9 +280,9 @@ def showresult_by_topic():
                 blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
                 topic_leader_count = topic_info['topic_index']['leader_index']
                 topic_ori_date = topic_info['topic_post_date']
-
+                
                 return render_template('propagate/showResult.html',
-                                        topic_profile_image_url = topic_img_url[0],
+                                        topic_profile_image_url = '',# topic_img_url[0],
                                         topic_ori_screen_name = topic_ori_screen_name,
                                         blog_rel_count = topic_blog_count,
                                         blog_ori_count = topic_blog_ori_count,
@@ -343,9 +388,9 @@ def topic_ajax_trend():
                 keyuser = request.form.get('keyuser', "")
                 beg_time = int(request.form.get('beg_time', ""))
                 end_time = int(request.form.get('end_time', ""))
-
+                statuses_search = getXapianweiboByTs(beg_time, end_time)
                 fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
+                count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
 
                 topic_info = calculate(get_results())
                 perday_blog_count = topic_info['perday_count_list']
@@ -390,9 +435,9 @@ def topic_ajax_weibos():
                 keyuser = request.args.get('keyuser', "")
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
-    
+                statuses_search = getXapianweiboByTs(beg_time, end_time)
                 fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['reposts_count'], fields=fields_list,max_offset=100)
+                count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=100)
 
                 topic_info = calculate(get_results())
                 blog_rel_list = topic_info['topic_rel_blog'][:5]
@@ -434,9 +479,9 @@ def topic_ajax_spatial():
                 keyuser = request.form.get('keyuser', "")
                 beg_time = int(request.form.get('beg_time', ""))
                 end_time = int(request.form.get('end_time', ""))
-    
+                statuses_search = getXapianweiboByTs(beg_time, end_time)
                 fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
+                count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
 
                 topic_info = calculate(get_results())
                 topic_area_list = topic_info['geo']
@@ -478,9 +523,9 @@ def topic_ajax_stat():
                 keyuser = request.args.get('keyuser', "")
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
-    
+                statuses_search = getXapianweiboByTs(beg_time, end_time)
                 fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
+                count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
 
                 topic_info = calculate(get_results())
 
@@ -596,9 +641,9 @@ def topic_ajax_userfield():
                 keyuser = request.args.get('keyuser', "")
                 beg_time = int(request.args.get('beg_time', ""))
                 end_time = int(request.args.get('end_time', ""))
-    
+                statuses_search = getXapianweiboByTs(beg_time, end_time)
                 fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-                count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
+                count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
 
                 topic_key_user_list = []
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
@@ -705,12 +750,16 @@ def topic_ajax_userfield():
     else:
         return redirect('/')
 
-@mod.route("/showresult_single/<mid>/", methods = ["GET","POST"])
-def single_analysis(mid):
+@mod.route("/showresult_single/<mid>/<timestr>", methods = ["GET","POST"])
+def single_analysis(mid,timestr):
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             mid = int(mid)
-            blog_info = calculate_single(mid)
+            timestr = str(timestr)
+            time_ts = datetime2ts(timestr)
+            time_date = ts2datetime(time_ts)
+            time_ts = date2ts(time_date)
+            blog_info = calculate_single(mid,time_ts)
                                  
             blog_img_url = blog_info['user']['profile_image_url']
             blog_date_list = blog_info['datelist']
@@ -730,6 +779,7 @@ def single_analysis(mid):
                                    tar_attitudes_count = blog_attitudes_count,
                                    tar_post_date = blog_time,
                                    blog_date_list = blog_date_list,
+                                   time_ts=time_ts
                                    )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -773,7 +823,8 @@ def single_ajax_trend():
                 return render_template('propagate/ajax/single_trend.html')
             else:
                 mid = int(request.form.get('mid', ""))
-                blog_info = calculate_single(mid)
+                time_ts = int(request.form.get('time_ts', ""))
+                blog_info = calculate_single(mid,time_ts)
                 perday_repost_count = blog_info['perday_count']
                 blog_date_list = blog_info['datelist']
                 date_list = [int(time.mktime(d.timetuple()))*1000 for d in blog_date_list]
@@ -807,7 +858,8 @@ def single_ajax_weibos():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                blog_info = calculate_single(mid)
+                time_ts = int(request.args.get('time_ts', ""))
+                blog_info = calculate_single(mid,time_ts)
 
                 bloger_name = blog_info['user']['name']
                 blog_reposts_count = blog_info['status']['repostsCount']
@@ -877,7 +929,8 @@ def single_ajax_spatial():
                 return render_template('propagate/ajax/single_spatial.html')
             else:
                 mid = int(request.form.get('mid', ""))
-                blog_info = calculate_single(mid)
+                time_ts = int(request.form.get('time_ts', ""))
+                blog_info = calculate_single(mid,time_ts)
                 area_list = blog_info['geo']
 
                 return json.dumps({'map_data': area_list})
@@ -907,7 +960,8 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
-                blog_info = calculate_single(mid)
+                time_ts = int(request.args.get('time_ts', ""))
+                blog_info = calculate_single(mid,time_ts)
 
                 tar_persistent_count = blog_info['persistent_index']
                 tar_sudden_count = blog_info['sudden_index']
@@ -956,8 +1010,9 @@ def single_ajax_path():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                mid = int(request.args.get('mid', ""))                
-                flag = tree_main(mid)
+                mid = int(request.args.get('mid', ""))
+                time_ts = int(request.args.get('time_ts', ""))
+                flag = tree_main(mid,time_ts)
                 return render_template('propagate/ajax/single_retweetpath.html',mid = mid,flag = flag)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -981,7 +1036,8 @@ def single_ajax_userfield():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                blog_info = calculate_single(mid)
+                time_ts = int(request.args.get('time_ts', ""))
+                blog_info = calculate_single(mid,time_ts)
 
                 repost_bloger = blog_info['repost_users']
                 blog_key_user_list = repost_bloger
@@ -1228,9 +1284,9 @@ def topic_rank():
     keyuser = request.args.get('keyuser', "")
     beg_time = int(request.args.get('beg_time', ""))
     end_time = int(request.args.get('end_time', ""))
-    
+    statuses_search = getXapianweiboByTs(beg_time, end_time)
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-    count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
+    count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
 
     topic_key_user_list = []
     for result in get_results():

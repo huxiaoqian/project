@@ -132,6 +132,7 @@ def whole():
         
                 if top_n > 500:
                     top_n = 500
+
                 page_num = int(form.get('page_num', 20))
                 rank_method = form.get('rank_method', 'followers')
                 during_date = form.get('window_size', '9月 1日,2013 - 9月 5日,2013')

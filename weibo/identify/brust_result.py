@@ -7,7 +7,7 @@ import os
 import leveldb
 try:
     from weibo.extensions import db
-    from weibo.model import BurstIdentification
+    from weibo.model import BurstIdentification, KnowledgeList
 except ImportError:
     print 'Warning: Not in web environment.'
 
@@ -43,7 +43,11 @@ def acquire_user_by_id(uid):
     return user
 
 def user_status(uid):
-    return 1
+    old_items = db.session.query(KnowledgeList).filter(KnowledgeList.kID==uid).all()
+    if len(old_items):
+        return 1
+    else:
+        return 0
 
 def burst_caculate(date, identifyWindow, identifyMethod, top_n):
     current_time = datetime2ts(date)

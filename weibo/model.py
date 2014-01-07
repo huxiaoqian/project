@@ -9,7 +9,7 @@ __all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification'
            'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
-           'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification']
+           'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', 'KnowledgeList']
 
 
 class Field(db.Model):
@@ -271,6 +271,18 @@ class BlackList(db.Model):
 
     def __repr__(self):
         return self.blackName
+
+class KnowledgeList(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    kID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
+    kName = db.Column(db.String(30), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'知识库'
+
+    def __repr__(self):
+        return self.kName
 
 class IMedia(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)

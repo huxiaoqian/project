@@ -2,14 +2,15 @@
 
 from extensions import db
 
-__all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', \
+__all__ = ['Field', 'Topic', \
            'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', \
            'UserWeight', 'BlackList', 'IMedia', 'M_Weibo', 'UserList','Topic_Search', 'SentimentCount', \
            'SentimentKeywords', 'TopWeibos', 'Domain', 'SentimentDomainCount', \
            'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
-           'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification']
+           'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', \
+           'TopicIdentification']
 
 
 class Field(db.Model):
@@ -36,21 +37,6 @@ class Topic(db.Model):
     def __repr__(self):
         return self.topicName
 
-class WholeUserIdentification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    rank = db.Column(db.Integer)
-    userId = db.Column(db.BigInteger(11, unsigned=True))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='followers')
-
-    @classmethod
-    def _name(cls):
-        return u'全网博主识别'
-
-    def __repr__(self):
-        return self.id
-
 class WholeIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rank = db.Column(db.Integer)
@@ -71,23 +57,6 @@ class WholeIdentification(db.Model):
         self.identifyDate = identifyDate
         self.identifyWindow = identifyWindow
         self.identifyMethod = identifyMethod
-
-
-class AreaUserIdentification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    topicId = db.Column(db.Integer)
-    rank = db.Column(db.Integer)
-    userId = db.Column(db.BigInteger(11, unsigned=True))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='pagerank')
-
-    @classmethod
-    def _name(cls):
-        return u'领域博主识别'
-
-    def __repr__(self):
-        return self.id
 
 class AreaIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -111,21 +80,6 @@ class AreaIdentification(db.Model):
         self.identifyDate = identifyDate
         self.identifyWindow = identifyWindow
         self.identifyMethod = identifyMethod
-
-class BurstUserIdentification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    rank = db.Column(db.Integer)
-    userId = db.Column(db.BigInteger(11, unsigned=True))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='followers')
-
-    @classmethod
-    def _name(cls):
-        return u'突发博主识别'
-
-    def __repr__(self):
-        return self.id
 
 class BurstIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -151,6 +105,23 @@ class BurstIdentification(db.Model):
         self.identifyDate = identifyDate
         self.identifyWindow = identifyWindow
         self.identifyMethod = identifyMethod
+
+class TopicIdentification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic = db.Column(db.String(20))
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='pagerank')
+
+    def __init__(self, topic, rank, userId, identifyDate, identifyWindow, identifyMethod):
+        self.topic = topic
+        self.rank = rank
+        self.userId = userId
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod 
 
 class RangeCount(db.Model):
     index = db.Column(db.Integer, primary_key=True)

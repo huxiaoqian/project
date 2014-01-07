@@ -5,17 +5,24 @@ import operator
 
 import networkx as nx
 
-from time_utils import datetime2ts, window2time
+from time_utils import datetime2ts, window2time, ts2datetimestr
 from hadoop_utils import generate_job_id
-#from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_status_by_id, acquire_user_by_id, read_key_users
+from utils import save_rank_results, acquire_topic_name, is_in_trash_list, acquire_user_by_id, read_key_users
 from pagerank_config import PAGERANK_ITER_MAX
 
-from config import xapian_search_weibo as statuses_search, xapian_search_user as user_search
+from config import xapian_search_user as user_search
+from dynamic_xapian_weibo import getXapianWeiboByDuration
 
 from pagerank import pagerank
 
 from gexf import Gexf
 from lxml import etree
+
+Minute = 60
+Fifteenminutes = 15 * Minute
+Hour = 3600
+SixHour = Hour * 6
+Day = Hour * 24
 
 def degree_rank(top_n, date, topic_id, window_size):
     data = []
@@ -33,7 +40,11 @@ def degree_rank(top_n, date, topic_id, window_size):
         sorted_uids.append(uid)
         count += 1
 
-    data = save_rank_results(sorted_uids, 'area', 'degree', date, window_size, topic_id=topic_id)
+    topicname = acquire_topic_name(topic_id)
+    if not topicname:
+        return data
+
+    data = save_rank_results(sorted_uids, 'topic', 'degree', date, window_size, topicname)
 
     return data
 
@@ -47,13 +58,16 @@ def pagerank_rank(top_n, date, topic_id, window_size):
 
     input_tmp_path = tmp_file.name
     
-    
     job_id = generate_job_id(datetime2ts(date), window_size, topic_id)
     iter_count = PAGERANK_ITER_MAX
 
     sorted_uids = pagerank(job_id, iter_count, input_tmp_path, top_n)
-    
-    data = save_rank_results(sorted_uids, 'area', 'pagerank', date, window_size, topic_id=topic_id)
+
+    topicname = acquire_topic_name(topic_id)
+    if not topicname:
+        return data
+
+    data = save_rank_results(sorted_uids, 'topic', 'pagerank', date, window_size, topicname)
 
     return data
 
@@ -120,7 +134,7 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
     if not topic:
         return None
               
-    uid_ts, G = make_network(topic, date, window_size, ts=True)
+    G = make_network(topic, date, window_size)
 
     N = len(G.nodes())
 
@@ -162,7 +176,7 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
         else:
             _node.addAttribute('name', 'Unknown')
             _node.addAttribute('location', 'Unknown')
-        _node.addAttribute('timestamp', str(uid_ts[uid]))
+        #_node.addAttribute('timestamp', str(uid_ts[uid]))
 
     for edge in G.edges():
         start, end = edge
@@ -181,58 +195,41 @@ def cut_network(g, node_degree):
             g.remove_node(node)
     return g
 
-def make_network(topic, date, window_size, max_size=100000, ts=False):
+
+def getXapianweiboByTs(start_time, end_time):
+    xapian_date_list =[]
+    days = (int(end_time) - int(start_time)) / Day
+
+    for i in range(0, days):
+        _ts = start_time + i * Day
+        xapian_date_list.append(ts2datetimestr(_ts))
+
+    statuses_search = getXapianWeiboByDuration(xapian_date_list)
+    return statuses_search
+
+
+def make_network(topic, date, window_size, max_size=100000):
     end_time = datetime2ts(date)
     start_time = end_time - window2time(window_size)
+
+    statuses_search = getXapianweiboByTs(start_time, end_time)
 
     g = nx.DiGraph()
 
     #need repost index
     query_dict = {'text': topic, 'timestamp': {'$gt': start_time, '$lt': end_time}}
 
-    if ts:
-        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'timestamp', 'retweeted_status'], max_offset=max_size)
-    else:
-        count, get_statuses_results = statuses_search.search(query=query_dict, field=['text', 'user', 'retweeted_status'], max_offset=max_size)
+    count, get_statuses_results = statuses_search.search(query=query_dict, field=['user', 'retweeted_uid'], max_offset=max_size)
     print 'topic statuses count %s' % count
 
-    if ts:
-        uid_ts = {}
-        for status in get_statuses_results():
-            try:
-                if status['retweeted_status']:
-                    repost_uid = status['user']
-                    rt_mid = status['retweeted_status']
-                    repost_ts = int(status['timestamp'])
-                    source_status = acquire_status_by_id(rt_mid)
-                    source_uid = source_status['user']
-                    source_ts = int(source_status['timestamp'])
-                    if is_in_trash_list(repost_uid) or is_in_trash_list(source_uid):
-                        continue
-                    if repost_uid not in uid_ts:
-                        uid_ts[repost_uid] = repost_ts
-                    else:
-                        if uid_ts[repost_uid] > repost_ts:
-                            uid_ts[repost_uid] = repost_ts
-                    if source_uid not in uid_ts:
-                        uid_ts[source_uid] = source_ts   
-                    else:
-                        if uid_ts[source_uid] > source_ts:
-                            uid_ts[source_uid] = source_ts
-                    g.add_edge(repost_uid, source_uid)
-            except (TypeError, KeyError):
-                continue
-        return uid_ts, g
-    else:
-        for status in get_statuses_results():
-            try:
-                if status['retweeted_status']:
-                    repost_uid = status['user']
-                    rt_mid = status['retweeted_status']
-                    source_uid = acquire_status_by_id(rt_mid)['user']
-                    if is_in_trash_list(repost_uid) or is_in_trash_list(source_uid):
-                        continue
-                    g.add_edge(repost_uid, source_uid)
-            except (TypeError, KeyError):
-                continue
-        return g
+    for status in get_statuses_results():
+        try:
+            if status['retweeted_uid'] and status['retweeted_uid'] != 0:
+                repost_uid = status['user']
+                source_uid = status['retweeted_uid']
+                if is_in_trash_list(repost_uid) or is_in_trash_list(source_uid):
+                    continue
+                g.add_edge(repost_uid, source_uid)
+        except (TypeError, KeyError):
+            continue
+    return g

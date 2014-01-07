@@ -3,11 +3,11 @@
 import os
 import random
 
-try:
-    from weibo.extensions import db
-    from weibo.model import Topic, WholeUserIdentification, AreaUserIdentification, BurstUserIdentification
-except ImportError:
-    print 'Warning: Not in web environment.'
+#try:
+from weibo.extensions import db
+from weibo.model import TopicIdentification
+#except ImportError:
+#    print 'Warning: Not in web environment.'
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
@@ -161,3 +161,35 @@ def rank_comparison(previous, current):
     else:
         comparison = 1
     return comparison
+
+def read_topic_rank_results(topic, top_n, method, date, window):
+    data = []
+    items = db.session.query(TopicIdentification).filter_by(topic=topic, identifyMethod=method, \
+                                                            identifyWindow=window, identifyDate=date).order_by(TopicIdentification.rank.asc()).limit(top_n)
+    if items.count():
+        for item in items:
+            rank = item.rank
+            uid = item.userId
+            user = acquire_user_by_id_v2(uid)
+            if not user:
+                continue
+            name = user['name']
+            location = user['location']
+            count1 = user['count1']
+            count2 = user['count2']
+            #read from external knowledge database
+            status = user_status(uid)
+            row = (rank, uid, name, location, count1, count2, status)
+            data.append(row)
+    return data
+
+def acquire_user_by_id_v2(uid):
+    result = user_search.search_by_id(int(uid), fields=['name', 'location', 'followers_count', 'friends_count'])
+    user = {}
+    if result:
+        user['name'] = result['name']
+        user['location'] = result['location']
+        user['count1'] = result['followers_count']
+        user['count2'] = result['friends_count']
+            
+    return user

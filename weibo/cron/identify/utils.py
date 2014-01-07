@@ -31,13 +31,13 @@ def acquire_topic_name(tid, module='identify'):
 
 
 def acquire_user_by_id(uid):
-    result = user_search.search_by_id(int(uid), fields=['name', 'location'])
+    result = user_search.search_by_id(int(uid), fields=['name', 'location', 'followers_count', 'friends_count'])
     user = {}
     if result:
         user['name'] = result['name']
         user['location'] = result['location']
-        user['count1'] = r['followers_count']
-        user['count2'] = r['friends_count']
+        user['count1'] = result['followers_count']
+        user['count2'] = result['friends_count']
             
     return user
 

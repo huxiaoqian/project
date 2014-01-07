@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from utils import acquire_topic_name, acquire_topic_id
 from time_utils import ts2datetime
 from area import pagerank_rank, degree_rank
+from utils import acquire_topic_name, acquire_topic_id, save_rank_results
 from topicStatus import _topic_not_calc, _update_topic_status2Computing, _update_topic_status2Completed
 
 TOPK = 1000
@@ -27,9 +27,11 @@ def main():
         date = ts2datetime(end_ts)
 
         if windowsize > 7:
-            print degree_rank(TOPK, date, topic_id, windowsize)
+            degree_rank(TOPK, date, topic_id, windowsize)
         else:
-            print pagerank_rank(TOPK, date, topic_id, windowsize)
+            pagerank_rank(TOPK, date, topic_id, windowsize)
+
+        _update_topic_status2Completed(topicname, start_ts, end_ts, db_date)
 
 
 if __name__ == '__main__':

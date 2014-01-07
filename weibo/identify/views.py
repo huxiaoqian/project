@@ -150,7 +150,7 @@ def whole():
                         for j in range(0,len(previous_data)):
                             if previous_data[j][1] == data[i][1]:
                                 flag = 1
-                                compare = data[i][0] - previous_data[j][0]
+                                compare = previous_data[j][0] - data[i][0]
                                 break
                         if flag == 0:
                             compare = 0
@@ -199,7 +199,7 @@ def whole():
                                     for j in range(0,len(previous_data)):
                                         if previous_data[j][1] == data[i][1]:
                                             flag = 1
-                                            compare = data[i][0] - previous_data[j][0]
+                                            compare = previous_data[j][0] - data[i][0]
                                             break
                                     if flag == 0:
                                         compare = 0
@@ -240,25 +240,25 @@ def burst():
 
                 burst_time = _utf_encode(burst_time)
                 time_ts = burst2ts(burst_time)
-                print rank_method
+
                 if action == 'rank':
                     current_date = ts2datetime(time_ts)
                     data = burst_caculate(current_date, 1, rank_method, top_n)
                     previous_date = ts2datetime(time_ts-24*3600)
                     previous_data = burst_caculate(previous_date, 1, rank_method, top_n)
-                    print rank_method,current_date,previous_date,len(data),len(previous_data)
+
                     for i in range(0,len(data)):#比较上期结果
                         flag = 0
                         for j in range(0,len(previous_data)):
                             if previous_data[j][1] == data[i][1]:
                                 flag = 1
-                                compare = data[i][0] - previous_data[j][0]
+                                compare = previous_data[j][0] - data[i][0]
                                 break
                         if flag == 0:
                             compare = 0
                         data[i].append(compare)
                     
-                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data, 'method':rank_method})
+                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data, 'method':rank_method, 'time': time_ts})
                 elif action == 'run':
                     burst_time = _utf_decode(burst_time)
                     return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num)
@@ -279,43 +279,38 @@ def burst():
                             form = request.form
                             action = form.get('action', 'run')
 
-                            top_n = int(form.get('top_n', 2000))
-        #limit max results count to 2000
-                            if top_n > 2000:
-                                top_n = 2000
-                            page_num = int(form.get('page_num', 20))
-                            rank_method = form.get('rank_method', 'followers')
-                            window_size = int(form.get('window_size', 1))
+                            top_n = int(form.get('top_n', 500))
 
-        # current_time = time.time()
-                            current_time = datetime2ts('2013-3-7')
+                            if top_n > 500:
+                                top_n = 500
+                            page_num = int(form.get('page_num', 20))
+                            rank_method = form.get('rank_method', 'active')
+                            burst_time = form.get('burst_time', '9月 1日,2013')
+
+                            burst_time = _utf_encode(burst_time)
+                            time_ts = burst2ts(burst_time)
+
                             if action == 'rank':
-                                current_date = ts2datetime(current_time)
-                                data = read_rank_results(top_n, 'burst', rank_method, current_date, window_size, compare=True)
-                                previous_date = ts2datetime(current_time-window2time(window_size))
-                                previous_data = read_rank_results(top_n, 'burst', rank_method, previous_date, window_size)
-                                if not data:
-                                    rank_func = getattr(burstModule, '%s_rank' % rank_method, None)
-                                    if rank_func:
-                                        data = rank_func(top_n, current_date, window_size)
-                                if not previous_data and window_size <= 7:
-                                    rank_func = getattr(burstModule, '%s_rank' % rank_method, None)
-                                    if rank_func:
-                                        previous_data = rank_func(top_n, previous_date, window_size)
-                                now_id_list = []
-                                pre_data = []
-                                for user in data:
-                                    now_id_list.append(user[1])
-                                for user in previous_data:
-                                    if user[1] not in now_id_list:
-                                        pre_data.append(user)
-                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
+                                current_date = ts2datetime(time_ts)
+                                data = burst_caculate(current_date, 1, rank_method, top_n)
+                                previous_date = ts2datetime(time_ts-24*3600)
+                                previous_data = burst_caculate(previous_date, 1, rank_method, top_n)
+
+                                for i in range(0,len(data)):#比较上期结果
+                                    flag = 0
+                                    for j in range(0,len(previous_data)):
+                                        if previous_data[j][1] == data[i][1]:
+                                            flag = 1
+                                            compare = previous_data[j][0] - data[i][0]
+                                            break
+                                    if flag == 0:
+                                        compare = 0
+                                    data[i].append(compare)
+                    
+                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data, 'method':rank_method, 'time': time_ts})
                             elif action == 'run':
-                                return render_template('identify/burst.html', rank_method=rank_method, window_size=window_size, top_n=top_n, page_num=page_num)
-                            else:
-                               abort(404)
-                        else:
-                            abort(404)
+                                burst_time = _utf_decode(burst_time)
+                                return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -360,7 +355,7 @@ def area():
                         for j in range(0,len(previous_data)):
                             if previous_data[j][1] == data[i][1]:
                                 flag = 1
-                                compare = data[i][0] - previous_data[j][0]
+                                compare = previous_data[j][0] - data[i][0]
                                 break
                         if flag == 0:
                             compare = 0
@@ -409,7 +404,7 @@ def area():
                                     for j in range(0,len(previous_data)):
                                         if previous_data[j][1] == data[i][1]:
                                             flag = 1
-                                            compare = data[i][0] - previous_data[j][0]
+                                            compare = previous_data[j][0] - data[i][0]
                                             break
                                     if flag == 0:
                                         compare = 0
@@ -629,18 +624,17 @@ def burst_monitor():
     request_method = request.method
     if request_method == 'POST':
         form = request.form
-        top_n = int(form.get('top_n', 10))
-        # current_time = time.time()
-        current_time = datetime2ts('2013-3-7') + 12*60*60
-        data = burstRealtimeModule.realtime_burst_user(top_n, current_time)
+        current_time = time.time()
+        current_date = ts2datetime(current_time)
+        data = burst_caculate(current_date, 1, 'active', 5)
         return json.dumps(data)
     else:
         abort(404)
 
-@mod.route("/statuses/<int:uid>/<int:page>/")
-def show_user_statuses(uid, page):
+@mod.route("/statuses/<int:uid>/<int:page>/<int:time_ts>")
+def show_user_statuses(uid, page, time_ts):
     if 'logged_in' in session and session['logged_in']:
-        statuses = user_statuses(uid, page)
+        statuses = user_statuses(uid, page, time_ts)
         return render_template('identify/user_statuses.html', statuses=statuses)
     else:
         return redirect('/')

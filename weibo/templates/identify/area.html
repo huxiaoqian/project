@@ -102,7 +102,7 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp时间范围:</b></font>
       <div id="area_window_size_choosen" class="btn dropdown-toggle" href="#">
     <i class="icon-calendar icon-large"></i>
-    <span id="area_date">{{during_date}}</span> 
+    <span id="area_date">{% if during_date %}{{during_date}}{% else %}9月 1日,2013 - 9月 5日,2013{% endif %}</span> 
     <b class="caret"></b>
     </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
@@ -183,10 +183,65 @@
     </div>
 {% endblock %}
 {% block script %}
-	<script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
+	  <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
+      <script type="text/javascript">
+       function choose_field(prefix, area){
+    $("#topic_hidden").val(area)
+    cn_area = '';
+    if(area=='finance')
+        cn_area = '财经';
+    else if(area=='media')
+        cn_area = '媒体';
+    else if(area=='sports')
+        cn_area = '体育';
+    else if(area=='fashion')
+        cn_area = '时尚';
+    else if(area=='culture')
+        cn_area = '文化';
+    else if(area=='education')
+        cn_area = '教育';
+    else if(area=='technology')
+        cn_area = '科技';
+    else if(area=='abroad')
+        cn_area = '境外';
+    else if(area=='entertainment')
+        cn_area = '娱乐';
+    else if(area=='university')
+        cn_area = '高校微博';
+    else if(area=='homeadmin')
+        cn_area = '境内机构';
+    else if(area=='abroadadmin')
+        cn_area = '境外机构';
+    else if(area=='homemedia')
+        cn_area = '境内媒体';
+    else if(area=='abroadadmin')
+        cn_area = '境外媒体';
+    else if(area=='folkorg')
+        cn_area = '民间组织';
+    else if(area=='lawyer')
+        cn_area = '律师';
+    else if(area=='politician')
+        cn_area = '政府官员';
+    else if(area=='mediaworker')
+        cn_area = '媒体人士';
+    else if(area=='activer')
+        cn_area = '活跃人士';
+    else if(area=='grassroot')
+        cn_area = '草根';
+    else if(area=='other')
+        cn_area = '其它';
+    $("#area_rank_method_choosen").text(cn_area);
+    $("#area_rank_method_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#area_rank_method_choosen").parent().removeClass('open');
+    $("#area_rank_method_dropdown_menu").children().removeClass('active');
+  }
+      </script>
     <script>
     		function exportTableToCSV($table, filename) {
                 
@@ -279,21 +334,22 @@
                   return $cols.map(function (j, col) {
                       var $col = $(col);
                       if($col.find('i').length == 1){
-                        var pic = $col.find('i');                        
+                        var pic = $col.find('i');
+                        var i_text =  $col.text();                       
                         if(pic.attr('class') == "icon-ok"){
                             var text = '是';
                         }
                         else{
                           if(pic.attr('class') == "icon-arrow-down"){
-                              var text = '下降';
+                              var text = i_text;//'下降';
                           }
                           else{
                             if(pic.attr('class') == "icon-arrow-up"){
-                                var text = '上升';
+                                var text = i_text;//'上升';
                             }
                             else{
                               if(pic.attr('class') == "icon-minus"){
-                                  var text = '持平';
+                                  var text = '0';//'持平';
                               }
                               else{
                                 var text = '否';
@@ -342,7 +398,14 @@
     $(document).ready(function() {
   var area_time = $('#area_date').html();
   document.getElementById('area_window_size').value = area_time;
-  choose_field('area', '{{field}}');
+  var fi = '{{field}}'
+  if(fi){
+    choose_field('area', '{{field}}');
+  }
+  else{
+    choose_field('area', 'finance');
+  }
+  
   
   $('#area_window_size_choosen').daterangepicker({
       ranges: {
@@ -392,60 +455,6 @@
 
       </script>
       <script src="{{ url_for('static', filename='js/identify/area_identify.js') }}"></script>
-      <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
-      <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
-      <script type="text/javascript">
-       function choose_field(prefix, area){
-    $("#topic_hidden").val(area)
-    cn_area = '';
-    if(area=='finance')
-        cn_area = '财经';
-    else if(area=='media')
-        cn_area = '媒体';
-    else if(area=='sports')
-        cn_area = '体育';
-    else if(area=='fashion')
-        cn_area = '时尚';
-    else if(area=='culture')
-        cn_area = '文化';
-    else if(area=='education')
-        cn_area = '教育';
-    else if(area=='technology')
-        cn_area = '科技';
-    else if(area=='abroad')
-        cn_area = '境外';
-    else if(area=='entertainment')
-        cn_area = '娱乐';
-    else if(area=='university')
-        cn_area = '高校微博';
-    else if(area=='homeadmin')
-        cn_area = '境内机构';
-    else if(area=='abroadadmin')
-        cn_area = '境外机构';
-    else if(area=='homemedia')
-        cn_area = '境内媒体';
-    else if(area=='abroadadmin')
-        cn_area = '境外媒体';
-    else if(area=='folkorg')
-        cn_area = '民间组织';
-    else if(area=='lawyer')
-        cn_area = '律师';
-    else if(area=='politician')
-        cn_area = '政府官员';
-    else if(area=='mediaworker')
-        cn_area = '媒体人士';
-    else if(area=='activer')
-        cn_area = '活跃人士';
-    else if(area=='grassroot')
-        cn_area = '草根';
-    else if(area=='other')
-        cn_area = '其它';
-    $("#area_rank_method_choosen").text(cn_area);
-    $("#area_rank_method_choosen").append(' <span class="caret"></span>');
-    //close dropdown
-    $("#area_rank_method_choosen").parent().removeClass('open');
-    $("#area_rank_method_dropdown_menu").children().removeClass('active');
-  }
-      </script>
+      
     {% endif %}
 {% endblock %}

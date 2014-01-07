@@ -38,26 +38,9 @@
 	  </div>
 
       	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
-	  <!--<div class="btn-group">
-	    <a id="whole_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	      {% if window_size == 1 %}1天
-	      {% elif window_size == 7 %}1周
-	      {% elif window_size == 30 %}1个月
-              {% elif window_size == 90 %}3个月
-	      {% else %}1周
-	      {% endif %}
-	      <span class="caret"></span>
-	    </a>
-	    <ul id="whole_window_size_dropdown_menu" class="dropdown-menu">
-	      <li><a href="#" onclick="choose_window('whole', 1);" data-toggle="tab">1天</a></li>
-      	      <li><a href="#" onclick="choose_window('whole', 7);" data-toggle="tab">1周</a></li>
-      	      <li><a href="#" onclick="choose_window('whole', 30);" data-toggle="tab">1个月</a></li>
-      	      <li><a href="#" onclick="choose_window('whole', 90);" data-toggle="tab">3个月</a></li>
-	    </ul>
-	  </div>-->
     <div id="whole_window_size_choosen" class="btn dropdown-toggle" href="#">
     <i class="icon-calendar icon-large"></i>
-    <span id="whole_date">{{during_date}}</span> 
+    <span id="whole_date">{% if during_date %}{{during_date}}{% else %}9月 1日,2013 - 9月 5日,2013{% endif %}</span> 
   <b class="caret"></b>
   </div>
 
@@ -140,6 +123,9 @@
 {% block script %}
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
+    
+    <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
     <script>
     		function exportTableToCSV($table, filename) {
                 
@@ -235,21 +221,22 @@
                   return $cols.map(function (j, col) {
                       var $col = $(col);
                       if($col.find('i').length == 1){
-                        var pic = $col.find('i');                        
+                        var pic = $col.find('i');
+                        var i_text =  $col.text();                        
                         if(pic.attr('class') == "icon-ok"){
                             var text = '是';
                         }
                         else{
                         	if(pic.attr('class') == "icon-arrow-down"){
-                            	var text = '下降';
+                            	var text = i_text;
                         	}
                         	else{
                         		if(pic.attr('class') == "icon-arrow-up"){
-                            		var text = '上升';
+                            		var text = i_text;
                         		}
                         		else{
                         			if(pic.attr('class') == "icon-minus"){
-                            			var text = '持平';
+                            			var text = '0';
                         			}
                         			else{
                         				var text = '否';
@@ -329,7 +316,6 @@
 	var page_num = {{ page_num }};
       </script>
       <script src="{{ url_for('static', filename='js/identify/whole_identify.js') }}"></script>
-      <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
-      <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
+    
     {% endif %}
 {% endblock %}

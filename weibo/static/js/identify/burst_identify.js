@@ -36,8 +36,8 @@ function get_selected_uids() {
 
 function show_user_statuses(uid,time_ts) {
     
-	//window.location.href='/identify/statuses/'+uid+'/1/'+time_ts;
-	 $.fancybox({
+	window.location.href='/identify/statuses/'+uid+'/1/'+time_ts;
+	 /*$.fancybox({
 	ajax: {
 	    type: "GET",
 	},
@@ -45,7 +45,8 @@ function show_user_statuses(uid,time_ts) {
         'transitionIn': 'none',
         'transitionOut': 'fade',
         'onClosed': function(){},
-    });
+    });*/
+
 
 }
 (function ($) {
@@ -164,7 +165,7 @@ function show_user_statuses(uid,time_ts) {
     function create_current_table1(data, start_row, end_row, time_ts) {
 	var cellCount = 12;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>活跃度差值</th><th>敏感状态</th><th>环比</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>活跃度差值</th><th>敏感状态</th><th>环比</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
 	var tbody = '<tbody>';
 	
 	for (var i = start_row;i < end_row;i++) {
@@ -206,12 +207,7 @@ function show_user_statuses(uid,time_ts) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 3) {
-		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
-		    var td_show_user = '<td>' + td_a + '</td>';
-		    tr += td_show_user;
-		}
+	
             }
 	    tr += '</tr>';
 	    tbody += tr;
@@ -232,7 +228,7 @@ function show_user_statuses(uid,time_ts) {
     function create_current_table2(data, start_row, end_row, time_ts) {
 	var cellCount = 12;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>重要度差值</th><th>敏感状态</th><th>环比</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>重要度差值</th><th>敏感状态</th><th>环比</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
 	var tbody = '<tbody>';
 	console.log(data);
 	for (var i = start_row;i < end_row;i++) {
@@ -274,12 +270,6 @@ function show_user_statuses(uid,time_ts) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 3) {
-		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
-		    var td_show_user = '<td>' + td_a + '</td>';
-		    tr += td_show_user;
-		}
             }
 	    tr += '</tr>';
 	    tbody += tr;
@@ -301,7 +291,7 @@ function show_user_statuses(uid,time_ts) {
     function create_previous_table1(data, start_row, end_row, time_ts) {
 	var cellCount = 10;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>活跃度差值</th><th>敏感状态</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>活跃度差值</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -328,12 +318,7 @@ function show_user_statuses(uid,time_ts) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 3) {
-		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
-		    var td_show_user = '<td>' + td_a + '</td>';
-		    tr += td_show_user;
-		}
+		
             }
 	    tr += '</tr>';
 	    tbody += tr;
@@ -347,7 +332,7 @@ function show_user_statuses(uid,time_ts) {
     function create_previous_table2(data, start_row, end_row, time_ts) {
 	var cellCount = 10;
 	var table = '<table class="table table-bordered">';
-	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>博主微博</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>重要度差值</th><th>敏感状态</th></tr></thead>';
+	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>重要度差值</th><th>敏感状态</th></tr></thead>';
 	var tbody = '<tbody>';
 	for (var i = start_row;i < end_row;i++) {
             var tr = '<tr>';
@@ -374,12 +359,7 @@ function show_user_statuses(uid,time_ts) {
 		    var td = '<td>'+data[i][j]+'</td>';
 		}
 		tr += td;
-		if(j == 3) {
-		    // user statuses
-		    var td_a = '<a href="javascript:void(0);" onclick="show_user_statuses(' + uid + ','+ time_ts+')";>查看微博<i class="icon-list-alt"></i></a>';
-		    var td_show_user = '<td>' + td_a + '</td>';
-		    tr += td_show_user;
-		}
+
             }
 	    tr += '</tr>';
 	    tbody += tr;

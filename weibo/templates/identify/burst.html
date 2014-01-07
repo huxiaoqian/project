@@ -41,7 +41,7 @@
 
       	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间:</b></font>
 	  <div class="input-append date" id="burst_window_size_choosen">
-      <input type="text" class="span2" name="burst_time" value="{{burst_time}}" style="width:126px;"><span class="add-on"><i class="icon-th"></i></span>
+      <input type="text" class="span2" name="burst_time" value="{% if burst_time %}{{burst_time}}{% else %}9月 2日,2013{% endif %}" style="width:126px;"><span class="add-on"><i class="icon-th"></i></span>
       </div>
 
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
@@ -226,21 +226,22 @@
                       var $col = $(col);
                       if($col.find('a').length != 1){
                       	if($col.find('i').length == 1){
-                        	var pic = $col.find('i');                        
+                        	var pic = $col.find('i');
+                          var i_text =  $col.text();                        
                         	if(pic.attr('class') == "icon-ok"){
                             	var text = '是';
                         	}
                         	else{
                           		if(pic.attr('class') == "icon-arrow-down"){
-                             		var text = '下降';
+                             		var text = i_text;
                           		}
                           		else{
                             		if(pic.attr('class') == "icon-arrow-up"){
-                                		var text = '上升';
+                                		var text = i_text;
                             		}
                             		else{
                               			if(pic.attr('class') == "icon-minus"){
-                                  			var text = '持平';
+                                  			var text = '0';
                              			}
                               			else{
                                 			var text = '否';

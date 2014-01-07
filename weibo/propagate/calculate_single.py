@@ -4,6 +4,7 @@ from __future__ import division
 import  calendar
 import re
 from datetime import datetime
+import os
 
 import time
 from datetime import date
@@ -17,6 +18,21 @@ from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
 from weibo.global_config import xapian_search_user as s
 from weibo.global_config import xapian_search_weibo as s_weibo
+path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
+
+def ts2datetimestr(ts):
+    return time.strftime('%Y%m%d', time.localtime(ts))
+
+def getXapianWeiboByDate(datestr):
+    # datestr: 20130908
+    
+    stub_file = path + datestr
+    
+    if os.path.exists(stub_file):
+            xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True)
+            return xapian_search_weibo
+    else:
+            return None
 
 def get_user(uid):
     user = {}
@@ -63,12 +79,13 @@ def get_user(uid):
     else:
         return user
 
-def get_ori_status(_id):
+def get_ori_status(_id, time_ts):
     
     status ={}
-    
+    datestr = ts2datetimestr(time_ts)
+    statuses_search = getXapianWeiboByDate(datestr)
     #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count,get_results = s_weibo.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_mid','reposts_count','comments_count','attitudes_count','user','timestamp'])
+    count,get_results = statuses_search.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_mid','reposts_count','comments_count','attitudes_count','user','timestamp'])
     print 'yuan',count
     for r in get_results():
         status['text'] = r['text']
@@ -96,7 +113,7 @@ def get_ori_status(_id):
         break
     return status
     
-def calculate_single(_id):
+def calculate_single(_id, time_ts):
 
     #初始化
     blog_info = {}
@@ -126,11 +143,14 @@ def calculate_single(_id):
     end_ts1 = time.mktime(datetime(now_year, now_month, now_day).timetuple())
     
     #获取原微博信息
-    status_ori = get_ori_status(_id)
+    status_ori = get_ori_status(_id, time_ts)
 
     #获取相关微博
     #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    count,get_results = s_weibo.search(query={'retweeted_mid': _id}, sort_by=['timestamp'])#,'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
+    datestr = ts2datetimestr(time_ts)
+    print time_ts,datestr
+    statuses_search = getXapianWeiboByDate(datestr)
+    count,get_results = statuses_search.search(query={'retweeted_mid': _id}, sort_by=['timestamp'])#,'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
 
     print count
     reposter = []

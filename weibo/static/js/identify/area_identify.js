@@ -8,7 +8,7 @@ var end_ts = null;
 var sigInst = null;
 var animation_timer = null;
 
-$('#add_kd').click(function() {
+/*$('#add_kd').click(function() {
     var uids_str = get_selected_uids();
     if (uids_str)
 	$.post("/identify/add_kd/", {'uids': uids_str}, uids_request_callback, "json");
@@ -39,7 +39,7 @@ function get_selected_uids() {
     });
     var uids_str = arr.join(',');
     return uids_str;
-}
+}*/
 
 
 (function ($) {
@@ -136,7 +136,7 @@ function get_selected_uids() {
             for(var j = 0;j < cellCount;j++) {
 		if (j == 10) {
 		    // checkbox
-		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox"></td>';
+		    var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox" name="now_user"></td>';
 		}
 		else if (j == 8) {
 		    // identify status

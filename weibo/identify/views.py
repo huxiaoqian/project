@@ -32,7 +32,7 @@ from time_utils import ts2datetime, datetime2ts, window2time
 
 from hadoop_utils import monitor
 
-from weibo.global_config import xapian_search_domain, fields_id
+from weibo.global_config import xapian_search_domain, fields_id, xapian_search_user
 
 from whole_result import whole_caculate
 from area_result import area_caculate
@@ -146,18 +146,27 @@ def whole():
                     data = whole_caculate(current_date,window_size,rank_method,top_n)
                     previous_data = whole_caculate(previous_date,window_size,rank_method,top_n)
 
+                    index = dict()
                     for i in range(0,len(data)):#比较上期结果
                         flag = 0
                         for j in range(0,len(previous_data)):
                             if previous_data[j][1] == data[i][1]:
                                 flag = 1
                                 compare = previous_data[j][0] - data[i][0]
+                                index[previous_data[j][1]] = j
                                 break
                         if flag == 0:
                             compare = 0
                         data[i].append(compare)
 
-                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data})
+                    pre_data = []
+                    for i in range(0,len(previous_data)):
+                        if  index.has_key(previous_data[i][1]):
+                            pass
+                        else:
+                            pre_data.append(previous_data[i])
+
+                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
                 elif action == 'run':
                     during_date = _utf_decode(during_date)
                     return render_template('identify/whole.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num)
@@ -195,18 +204,27 @@ def whole():
                                 data = whole_caculate(current_date,window_size,rank_method,top_n)
                                 previous_data = whole_caculate(previous_date,window_size,rank_method,top_n)
 
+                                index = dict()
                                 for i in range(0,len(data)):#比较上期结果
                                     flag = 0
                                     for j in range(0,len(previous_data)):
                                         if previous_data[j][1] == data[i][1]:
                                             flag = 1
                                             compare = previous_data[j][0] - data[i][0]
+                                            index[previous_data[j][1]] = j
                                             break
                                     if flag == 0:
                                         compare = 0
                                     data[i].append(compare)
 
-                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data})
+                                pre_data = []
+                                for i in range(0,len(previous_data)):
+                                    if  index.has_key(previous_data[i][1]):
+                                        pass
+                                    else:
+                                        pre_data.append(previous_data[i])
+
+                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
                             elif action == 'run':
                                 during_date = _utf_decode(during_date)
                                 return render_template('identify/whole.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num)
@@ -248,18 +266,27 @@ def burst():
                     previous_date = ts2datetime(time_ts-24*3600)
                     previous_data = burst_caculate(previous_date, 1, rank_method, top_n)
 
+                    index = dict()
                     for i in range(0,len(data)):#比较上期结果
                         flag = 0
                         for j in range(0,len(previous_data)):
                             if previous_data[j][1] == data[i][1]:
                                 flag = 1
                                 compare = previous_data[j][0] - data[i][0]
+                                index[previous_data[j][1]] = j
                                 break
                         if flag == 0:
                             compare = 0
                         data[i].append(compare)
+
+                    pre_data = []
+                    for i in range(0,len(previous_data)):
+                        if  index.has_key(previous_data[i][1]):
+                            pass
+                        else:
+                            pre_data.append(previous_data[i])
                     
-                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data, 'method':rank_method, 'time': time_ts})
+                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data, 'method':rank_method, 'time': time_ts})
                 elif action == 'run':
                     burst_time = _utf_decode(burst_time)
                     return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num)
@@ -297,18 +324,27 @@ def burst():
                                 previous_date = ts2datetime(time_ts-24*3600)
                                 previous_data = burst_caculate(previous_date, 1, rank_method, top_n)
 
+                                index = dict()
                                 for i in range(0,len(data)):#比较上期结果
                                     flag = 0
                                     for j in range(0,len(previous_data)):
                                         if previous_data[j][1] == data[i][1]:
                                             flag = 1
                                             compare = previous_data[j][0] - data[i][0]
+                                            index[previous_data[j][1]] = j
                                             break
                                     if flag == 0:
                                         compare = 0
                                     data[i].append(compare)
+
+                                pre_data = []
+                                for i in range(0,len(previous_data)):
+                                    if  index.has_key(previous_data[i][1]):
+                                        pass
+                                    else:
+                                        pre_data.append(previous_data[i])
                     
-                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data, 'method':rank_method, 'time': time_ts})
+                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data, 'method':rank_method, 'time': time_ts})
                             elif action == 'run':
                                 burst_time = _utf_decode(burst_time)
                                 return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num)
@@ -351,17 +387,26 @@ def area():
                     data = area_caculate(current_date,window_size,rank_method,top_n,field_id)
                     previous_data = area_caculate(previous_date,window_size,rank_method,top_n,field_id)
 
+                    index = dict()
                     for i in range(0,len(data)):#比较上期结果
                         flag = 0
                         for j in range(0,len(previous_data)):
                             if previous_data[j][1] == data[i][1]:
                                 flag = 1
                                 compare = previous_data[j][0] - data[i][0]
+                                index[previous_data[j][1]] = j
                                 break
                         if flag == 0:
                             compare = 0
                         data[i].append(compare)
-                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data})
+
+                    pre_data = []
+                    for i in range(0,len(previous_data)):
+                        if  index.has_key(previous_data[i][1]):
+                            pass
+                        else:
+                            pre_data.append(previous_data[i])
+                    return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
                 elif action == 'run':
                     during_date = _utf_decode(during_date)
                     return render_template('identify/area.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, field=field)
@@ -400,17 +445,26 @@ def area():
                                 data = area_caculate(current_date,window_size,rank_method,top_n,field_id)
                                 previous_data = area_caculate(previous_date,window_size,rank_method,top_n,field_id)
 
+                                index = dict()
                                 for i in range(0,len(data)):#比较上期结果
                                     flag = 0
                                     for j in range(0,len(previous_data)):
                                         if previous_data[j][1] == data[i][1]:
                                             flag = 1
                                             compare = previous_data[j][0] - data[i][0]
+                                            index[previous_data[j][1]] = j
                                             break
                                     if flag == 0:
                                         compare = 0
                                     data[i].append(compare)
-                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': previous_data})
+
+                                pre_data = []
+                                for i in range(0,len(previous_data)):
+                                    if  index.has_key(previous_data[i][1]):
+                                        pass
+                                    else:
+                                        pre_data.append(previous_data[i])
+                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
                             elif action == 'run':
                                 during_date = _utf_decode(during_date)
                                 return render_template('identify/area.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, field=field)
@@ -640,35 +694,46 @@ def show_user_statuses(uid, page, time_ts):
     else:
         return redirect('/')
 
-@mod.route("/add_kd/", methods=["POST"])
+@mod.route("/add_kd/", methods=['GET','POST'])
 def add_kd():
-    form = request.form
-    uids_str = form.get('uids', None)
-    if not uids_str:
-        return json.dumps({'status': 'empty uids'})
+    result = 'Right'
+    new_field = request.form['f_id']
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = KnowledgeList(kID=get_result['_id'],kName=get_result['name'])
+            db.session.add(new_item)
+            db.session.commit()
     else:
-        uids = map(int, uids_str.split(','))
-        return json.dumps({'status': 'ok'})
+        result = 'Wrong'
+    return json.dumps(result)
 
-@mod.route("/remove_kd/", methods=["POST"])
+@mod.route("/remove_kd/", methods=['GET','POST'])
 def remove_kd():
-    form = request.form
-    uids_str = form.get('uids', None)
-    if not uids_str:
-        return json.dumps({'status': 'empty uids'})
+    result = 'Right'
+    new_id = request.form['f_id']
+    old_items = db.session.query(KnowledgeList).filter(KnowledgeList.kID==new_id).all()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
     else:
-        uids = map(int, uids_str.split(','))
-        return json.dumps({'status': 'ok'})
+        result = 'Wrong'
+    return json.dumps(result)
 
-@mod.route("/add_trash/", methods=["POST"])
+@mod.route("/add_trash/", methods=['GET','POST'])
 def add_trash():
-    form = request.form
-    uids_str = form.get('uids', None)
-    if not uids_str:
-        return json.dumps({'status': 'empty uids'})
+    result = 'Right'
+    new_field = request.form['f_id']
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = BlackList(blackID=get_result['_id'],blackName=get_result['name'])
+            db.session.add(new_item)
+            db.session.commit()
     else:
-        uids = map(int, uids_str.split(','))
-        return json.dumps({'status': 'ok'})
+        result = 'Wrong'
+    return json.dumps(result)
 
 @mod.route('/history.json', methods=['GET','POST'])
 def search_history():

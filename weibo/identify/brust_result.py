@@ -52,7 +52,6 @@ def burst_caculate(date, identifyWindow, identifyMethod, top_n):
     data = []
     if identifyWindow == 1:#时间窗为1，直接从数据库中读取
         items = db.session.query(BurstIdentification).filter((BurstIdentification.identifyMethod==identifyMethod)&(BurstIdentification.identifyWindow==identifyWindow)&(BurstIdentification.identifyDate==current_date)&(BurstIdentification.rank<=top_n)).all()
-        print 'yuan',len(items)
         if len(items):
             for item in items:
                 rank = int(item.rank)

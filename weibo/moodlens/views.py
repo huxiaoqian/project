@@ -450,7 +450,7 @@ def topic_submit():
                 during = MinInterval
             else:
                 during = str2ts(during)
-            status , item = _add_history('sentiment', -1 ,  keyword, start_ts, end_ts, during, timestamp)
+            status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp, during)
             return render_template('moodlens/topic_emotion.html', active='moodlens', temp_keyword=keyword, temp_during=during)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -603,7 +603,7 @@ def search_history():
         sentiment = request.form.get('sentiment', '')
         if keyword != '' and start != '' and end != '' and range != '' and sentiment != '':
             if operator == 'add':
-                status, item = _add_history('sentiment', sentiment,  keyword, start, end, range)
+                status, item = _add_history(-1, keyword, start, end, range)
                 item = item.topic + '\t' + item.start + '\t' + item.end + '\t' + item.range + '\t' + item.status
             else:
                 status, item = 'failed', 'Null'

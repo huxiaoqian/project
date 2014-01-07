@@ -743,7 +743,7 @@ def search_history():
         sentiment = request.form.get('sentiment', '')
         if keyword != '' and start != '' and end != '' and sentiment != '':
             if operator == 'add':
-                status, item = _add_history('sentiment', sentiment,  keyword, start, end)
+                status, item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
                 item = item.topic + '\t' + item.start + '\t' + item.end + '\t' + item.range + '\t' + item.status
             else:
                 status, item = 'failed', 'Null'
@@ -761,8 +761,8 @@ def topic_submit():
             timestamp = int(timestamp)
             time = _utf_encode(time)
             start_ts, end_ts = _time_zone(time)
-            status , item = _add_history('sentiment', -1 ,  keyword, start_ts, end_ts, timestamp)
-            return render_template('identify/topic_emotion.html', temp_keyword=keyword)
+            status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
+            return render_template('identify/topic.html', topic=keyword)
     else:
         return redirect('/')
 

@@ -245,7 +245,7 @@
   <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
-  <script type="text/javascript" charset="gb2312">
+  <script type="text/javascript" charset="utf-8">
   function choose_field(prefix, area){
     $("#topic_hidden").val(area)
     cn_area = '';
@@ -401,7 +401,7 @@
     function max_history_limit(){
       var max = 0;
       var time = $("#topic_time").html();
-      var keyword = document.getElementById("keyword").value;
+      var keyword = document.getElementById("topic_keywords").value;
       var temp_time_in13 = new Date().getTime();
       var timestamp = temp_time_in13.toString().substr(0, 10);
       var search_msg = "请从上方文本框中输入话题"
@@ -417,13 +417,13 @@
             var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中历史任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
             $('#show_search_msg').empty();
             $('#show_search_msg').append(search_html);
-            $('#search_topic').val('搜索');
+            $('#search_topic').val('识别');
           }
           else{
             if(keyword.length < 2)
               var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
             else{
-              $('#search_topic').val('搜索');
+              $('#search_topic').val('识别');
               $('#show_search_msg').empty();
               $.ajax({
                 url: '/identify/topic/submit?keyword=' + keyword + "&time="+ time + "&timestamp=" + timestamp,
@@ -442,7 +442,7 @@
 
     function find_history(){
       $('#show_search_msg').empty();
-      var keyword = document.getElementById("keyword").value;
+      var keyword = document.getElementById("topic_keywords").value;
       $.ajax({
         url: '/identify/history.json?keyword=' + keyword,
         dataType: 'json',   
@@ -466,8 +466,8 @@
   
     function find_search_message(){
       var command = $('#search_topic').val();
-      if (command == '搜索'){
-        var keyword = document.getElementById("keyword").value;
+      if (command == '识别'){
+        var keyword = document.getElementById("topic_keywords").value;
         if(keyword.length < 2){
           var search_msg = "请从上方文本框中输入话题"
           var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
@@ -476,7 +476,6 @@
         }
         else{
           find_history();
-          find_define();
           $('#search_topic').val('确认提交');
         }
       }else if (command == '确认提交'){

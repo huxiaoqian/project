@@ -25,9 +25,12 @@ START_DATE = '2013-1-1'
 #END_DATE = '2012-10-30'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
-
+path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
 ##xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 ##s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+
+def ts2datetimestr(ts):
+    return time.strftime('%Y%m%d', time.localtime(ts))
 
 def date2ts(date):
     return int(time.mktime(time.strptime(date, '%Y-%m-%d')))
@@ -35,10 +38,39 @@ def date2ts(date):
 def unix2local(ts):
     return time.strftime('%Y-%m-%d %H:00', time.localtime(ts))
 
+def getXapianWeiboByDuration(datestr_list):
+    stub_file_list = []
+
+    for datestr in datestr_list:
+        stub_file = path + datestr
+        print type(stub_file)
+        if os.path.exists(stub_file):
+            stub_file_list.append(stub_file)
+
+    if len(stub_file_list):
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True)
+        return xapian_search_weibo 
+
+    else:
+        return None
+
+def getXapianweiboByTs(start_time, end_time):
+    xapian_date_list =[]
+    Day = 24*3600
+    days = (int(end_time) - int(start_time)) / Day
+
+    for i in range(0, days):
+        _ts = start_time + i * Day
+        xapian_date_list.append(ts2datetimestr(_ts))
+
+    statuses_search = getXapianWeiboByDuration(xapian_date_list)
+    return statuses_search
+
 def load_data(keyword,beg_time,end_time):
     dataset = []
+    statuses_search = getXapianweiboByTs(beg_time, end_time)
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count']
-    number, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['reposts_count'], fields=fields_list,max_offset=100)
+    number, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=100)
     topic_info = calculate(get_results())
     blog_rel_list = topic_info['topic_rel_blog'][:5]
 
@@ -47,7 +79,7 @@ def load_data(keyword,beg_time,end_time):
     for status in blog_rel_list:
         print status['status']['_id']
         ts.append(int(time.mktime(time.strptime(str(status['status']['created_at']), '%Y-%m-%d %H:%M:%S'))))
-        number,source_weibo = xapian_search_weibo.search(query={'retweeted_mid': status['status']['_id']})#查找热门微博的转发微博
+        number,source_weibo = statuses_search.search(query={'retweeted_mid': status['status']['_id']})#查找热门微博的转发微博
         print number
         if not number:
             n = n + 1

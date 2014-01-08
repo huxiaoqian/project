@@ -14,7 +14,7 @@ emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
 fields_id = {'culture': 1, 'education': 2, 'entertainment': 3, 'fashion': 4, 'finance': 5, 'media': 6, 'sports': 7, 'technology': 8, 'oversea': 9}
 
-IS_PROD = 0
+IS_PROD = 1
 
 if IS_PROD:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
@@ -25,6 +25,7 @@ if IS_PROD:
     REDIS_HOST = '192.168.2.11'
     REDIS_PORT = 6379
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8&passwd=Bh123456'
+    DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 else:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
@@ -34,6 +35,7 @@ else:
     REDIS_HOST = '219.224.135.60'
     REDIS_PORT = 6379
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
+    DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/mirage/dev/data/stub/master_timeline_weibo_'
 
 READ_FROM_STUB = 1
 READ_FROM_ARTHAS = 0

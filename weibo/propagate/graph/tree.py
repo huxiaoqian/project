@@ -19,7 +19,7 @@ from lxml import etree
 from gexf import Gexf
 from gen import Tree
 from weibo.global_config import xapian_search_user,xapian_search_weibo
-path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
+path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 class Count:
     def __init__(self, count=0):
@@ -31,7 +31,7 @@ def getXapianWeiboByDate(datestr):
     stub_file = path + datestr
     
     if os.path.exists(stub_file):
-            xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True)
+            xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True, schema_version=5)
             return xapian_search_weibo
     else:
             return None

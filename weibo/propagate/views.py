@@ -37,7 +37,7 @@ from forest import *
 sys.path.append('./weibo/profile')
 from utils import *
 
-path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
+path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
 fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
@@ -89,8 +89,6 @@ def _time_zone(stri):
         year = int(year)
         month = int(month)
         day = int(day)
-##        ts = datetime(year, month, day, 0, 0, 0)
-##        ts = time.mktime(ts.timetuple())
         ts = str(year)+'-'+str(month)+'-'+str(day)
         tslist.append(ts)
 
@@ -122,7 +120,7 @@ def getXapianWeiboByDuration(datestr_list):
             stub_file_list.append(stub_file)
 
     if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True)
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
         return xapian_search_weibo 
 
     else:
@@ -214,15 +212,6 @@ def showresult_by_topic():
             keyuser = request.args.get('keyuser', '')
             dur_time = request.args.get('time', '')
 
-##            times = dur_time.split(' - ')
-##            n = 0
-##            for ti in times:
-##                if n==0:
-##                    beg_time = strToDate(ti)
-##                    n = 1
-##                else:
-##                    end_time = strToDate(ti)
-
             dur_time = _utf_encode(dur_time)
             if not dur_time or dur_time == '':
                 beg_time, end_time = _default_time_zone()
@@ -281,8 +270,12 @@ def showresult_by_topic():
                 topic_leader_count = topic_info['topic_index']['leader_index']
                 topic_ori_date = topic_info['topic_post_date']
                 
+                if len(topic_img_url):
+                    topic_profile_image_url = topic_img_url[0]
+                else:
+                    topic_profile_image_url = ''
                 return render_template('propagate/showResult.html',
-                                        topic_profile_image_url = '',# topic_img_url[0],
+                                        topic_profile_image_url = topic_profile_image_url,
                                         topic_ori_screen_name = topic_ori_screen_name,
                                         blog_rel_count = topic_blog_count,
                                         blog_ori_count = topic_blog_ori_count,
@@ -342,8 +335,9 @@ def showresult_by_topic():
                             end_time_day = int(end_time.day)
                             end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
         
+                        statuses_search = getXapianweiboByTs(beg_time, end_time)
                         fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-                        count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
+                        count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
 
                         if count == 0:
                             flash(u'您搜索的话题结果为空')
@@ -360,8 +354,12 @@ def showresult_by_topic():
                             topic_leader_count = topic_info['topic_index']['leader_index']
                             topic_ori_date = topic_info['topic_post_date']
 
+                            if len(topic_img_url):
+                                topic_profile_image_url = topic_img_url[0]
+                            else:
+                                topic_profile_image_url = ''
                             return render_template('propagate/showResult.html',
-                                                    topic_profile_image_url = topic_img_url[0],
+                                                    topic_profile_image_url = topic_profile_image_url,
                                                     topic_ori_screen_name = topic_ori_screen_name,
                                                     blog_rel_count = topic_blog_count,
                                                     blog_ori_count = topic_blog_ori_count,
@@ -823,7 +821,9 @@ def single_ajax_trend():
                 return render_template('propagate/ajax/single_trend.html')
             else:
                 mid = int(request.form.get('mid', ""))
-                time_ts = int(request.form.get('time_ts', ""))
+                time_ts = float(request.form.get('time_ts', ""))
+##                print type(time_ts)
+##                time_ts = float(time_ts)
                 blog_info = calculate_single(mid,time_ts)
                 perday_repost_count = blog_info['perday_count']
                 blog_date_list = blog_info['datelist']
@@ -858,7 +858,7 @@ def single_ajax_weibos():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                time_ts = int(request.args.get('time_ts', ""))
+                time_ts = float(request.args.get('time_ts', ""))
                 blog_info = calculate_single(mid,time_ts)
 
                 bloger_name = blog_info['user']['name']
@@ -929,7 +929,7 @@ def single_ajax_spatial():
                 return render_template('propagate/ajax/single_spatial.html')
             else:
                 mid = int(request.form.get('mid', ""))
-                time_ts = int(request.form.get('time_ts', ""))
+                time_ts = float(request.form.get('time_ts', ""))
                 blog_info = calculate_single(mid,time_ts)
                 area_list = blog_info['geo']
 
@@ -960,7 +960,7 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
-                time_ts = int(request.args.get('time_ts', ""))
+                time_ts = float(request.args.get('time_ts', ""))
                 blog_info = calculate_single(mid,time_ts)
 
                 tar_persistent_count = blog_info['persistent_index']
@@ -1011,7 +1011,7 @@ def single_ajax_path():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                time_ts = int(request.args.get('time_ts', ""))
+                time_ts = float(request.args.get('time_ts', ""))
                 flag = tree_main(mid,time_ts)
                 return render_template('propagate/ajax/single_retweetpath.html',mid = mid,flag = flag)
         else:
@@ -1036,7 +1036,7 @@ def single_ajax_userfield():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                time_ts = int(request.args.get('time_ts', ""))
+                time_ts = float(request.args.get('time_ts', ""))
                 blog_info = calculate_single(mid,time_ts)
 
                 repost_bloger = blog_info['repost_users']
@@ -1076,7 +1076,7 @@ def single_ajax_userfield():
                 if domain['其他'] >= 0:
                     data.append({'unknown':domain['其他']})
                 
-                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data)
+                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data, time_ts=time_ts)
             else:
                 pass
         else:
@@ -1140,7 +1140,9 @@ def add_material():
     result = 'Right'
     mid = request.form['mid']
     mid = int(mid)
-    blog_info = calculate_single(mid)
+    time_date = str(request.form['time_ts'])
+    time_ts = datetime2ts(time_date)
+    blog_info = calculate_single(mid,time_ts)
                                  
     blog_reposts_count = blog_info['status']['repostsCount']
     blog_comments_count = blog_info['status']['commentsCount']
@@ -1207,7 +1209,9 @@ def hot_status():
             else:
                 dur_time = _utf_encode(dur_time)
                 beg_time, end_time = _time_zone(dur_time)
-            
+
+            beg_time = date2ts(beg_time)
+            end_time = date2ts(end_time)
             status_hot = getHotStatus(beg_time,end_time)
             return render_template('propagate/hot_status.html',status_hot = status_hot)
         else:
@@ -1246,7 +1250,9 @@ def single_rank():
         limit = int(request.args.get('limit'))
     if request.args.get('mid'):
         mid = int(request.args.get('mid'))
-    blog_info = calculate_single(mid)
+    if request.args.get('time_ts'):
+        time_ts = float(request.args.get('time_ts'))
+    blog_info = calculate_single(mid,time_ts)
     repost_bloger = blog_info['repost_users']
     blog_key_user_list = repost_bloger
 

@@ -202,7 +202,7 @@ var limit_arg = 1000000;
 function getRankData(countperpage_args, limit_arg){
     var total_page_number;
     $.ajax({
-        url: "/propagate/single_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg + "&mid=" + {{mid}},
+        url: "/propagate/single_rank/?page=1&countperpage=" + countperpage_args + "&limit=" + limit_arg + "&mid=" + {{mid}} + "&time_ts=" + '{{time_ts}}',
         dataType: 'json',   
         type: "GET",
         success: function (data) {
@@ -226,7 +226,7 @@ function getRankData(countperpage_args, limit_arg){
         }).on("page", function(event, /* page number here */ num){
         $("#word_table").empty();
         $.ajax({
-            url: "/propagate/single_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg+ "&mid=" + {{mid}},
+            url: "/propagate/single_rank/?page=" + num + "&countperpage=" + countperpage_args + "&limit=" + limit_arg+ "&mid=" + {{mid}} + "&time_ts=" + '{{time_ts}}',
             dataType: 'json',   
             type: "GET",
             success: function (data) {

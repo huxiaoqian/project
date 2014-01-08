@@ -18,7 +18,7 @@ from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
 from weibo.global_config import xapian_search_user as s
 from weibo.global_config import xapian_search_weibo as s_weibo
-path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
+path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))
@@ -29,7 +29,7 @@ def getXapianWeiboByDate(datestr):
     stub_file = path + datestr
     
     if os.path.exists(stub_file):
-            xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True)
+            xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True, schema_version=5)
             return xapian_search_weibo
     else:
             return None
@@ -148,7 +148,6 @@ def calculate_single(_id, time_ts):
     #获取相关微博
     #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
     datestr = ts2datetimestr(time_ts)
-    print time_ts,datestr
     statuses_search = getXapianWeiboByDate(datestr)
     count,get_results = statuses_search.search(query={'retweeted_mid': _id}, sort_by=['timestamp'])#,'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
 

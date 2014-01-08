@@ -25,7 +25,7 @@ START_DATE = '2013-1-1'
 #END_DATE = '2012-10-30'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
-path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
+path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 ##xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 ##s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
 
@@ -48,7 +48,7 @@ def getXapianWeiboByDuration(datestr_list):
             stub_file_list.append(stub_file)
 
     if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True)
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
         return xapian_search_weibo 
 
     else:

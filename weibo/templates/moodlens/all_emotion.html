@@ -222,6 +222,11 @@
         redraw_tagcanvas();
     })
 
+
+    function refresh_page(){
+        document.location.reload();
+    }
+
     function redraw_tagcanvas() {
         if(!$('#myCanvas').tagcanvas(oopts,'tags_div')) {
             $('#myCanvas').hide();
@@ -374,6 +379,7 @@
             get_peaks(series4, series5, series6, during);
             get_absolute_peaks(series7, series8, series9, during);
             click_flag=true;
+            setInterval("refresh_page()", 60000);
             return;
         }
         

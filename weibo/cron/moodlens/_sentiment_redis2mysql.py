@@ -49,7 +49,7 @@ def get_keywords():
 
 def get_now_save_ts(during=Fifteenminutes):
     now_ts =  time.time()
-    end_ts = now_ts - now_ts % during
+    end_ts = now_ts - now_ts % during + during
     return end_ts
 
 
@@ -97,14 +97,14 @@ def sentiment_kcount_redis2mysql(r, end_ts, during=Fifteenminutes):
     topics = get_keywords()
 
     for k, v in emotions_kv.iteritems():
-        global_emotions_data[v] = [end_ts, r.zrange(TOP_KEYWORDS_RANK % v, 0, 50, withscores=True)]
+        global_emotions_data[v] = [end_ts, r.zrange(TOP_KEYWORDS_RANK % v, 0, 50, desc=True, withscores=True)]
     
         for topic in topics:
             pass
-            #topic_emotions_data[v] = [end_ts, r.zrange(TOP_KEYWORDS_RANK % v, 0, 50, withscores=True)]
+            #topic_emotions_data[v] = [end_ts, r.zrange(TOP_KEYWORDS_RANK % v, 0, 50, desc=True, withscores=True)]
         
         for field, fieldid in fields_id.iteritems():        
-            domain_emotions_data[v] = [end_ts, r.zrange(DOMAIN_TOP_KEYWORDS_RANK % (v, fieldid), 0, 50, withscores=True)]
+            domain_emotions_data[v] = [end_ts, r.zrange(DOMAIN_TOP_KEYWORDS_RANK % (v, fieldid), 0, 50, desc=True, withscores=True)]
 
     print 'global saved: ', global_emotions_data
     save_global_keywords(global_emotions_data, during, TOP_KEYWORDS_LIMIT)
@@ -126,16 +126,16 @@ def sentiment_weibo_redis2mysql(r, end_ts, during=Fifteenminutes):
     topics = get_keywords()
 
     for k, v in emotions_kv.iteritems():
-        weiboids = r.zrange(TOP_WEIBO_REPOSTS_COUNT_RANK % v, 0, 50, withscores=False)
+        weiboids = r.zrange(TOP_WEIBO_REPOSTS_COUNT_RANK % v, 0, 50, desc=True, withscores=False)
         weibos = [pickle.loads(zlib.decompress(r.get(TOP_WEIBO_KEY % mid))) for mid in weiboids]
         global_emotions_data[v] = [end_ts, weibos]
     
         for topic in topics:
             pass
-            #topic_emotions_data[v] = [end_ts, r.zrange(TOP_KEYWORDS_RANK % v, 0, 50, withscores=True)]
+            #topic_emotions_data[v] = [end_ts, r.zrange(TOP_KEYWORDS_RANK % v, 0, 50, desc=True, withscores=True)]
         
         for field, fieldid in fields_id.iteritems():
-            weiboids = r.zrange(DOMAIN_TOP_WEIBO_REPOSTS_COUNT_RANK % (v, fieldid), 0, 50, withscores=False)
+            weiboids = r.zrange(DOMAIN_TOP_WEIBO_REPOSTS_COUNT_RANK % (v, fieldid), 0, 50, desc=True, withscores=False)
             weibos = [pickle.loads(zlib.decompress(r.get(TOP_WEIBO_KEY % mid))) for mid in weiboids]    
             domain_emotions_data[v] = [end_ts, weibos]
 

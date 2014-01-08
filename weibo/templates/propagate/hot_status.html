@@ -33,13 +33,14 @@
                       <script>
                           $("#ma{{ status['status']['_id'] }}").click(function () {
                               var id=this.getAttribute("name");
-                              console.log(id);
+                              var weibo_time=$("#weibo_time"+id).html();
+                              console.log(weibo_time);
                               $.ajax({   
                                   type:"POST",  
                                   url:"/propagate/add_material",
                                   dataType: "json",
                                   async:false,
-                                  data:{mid : id},
+                                  data:{mid : id,time_ts : weibo_time},
                                   success: function(data){
                                       if(data == 'Right') {
                                         alert("导入成功！");
@@ -53,7 +54,7 @@
                       </script>
                     </div>
                     <div class="WB_from">
-                      <a target="_blank" class="S_link2 WB_time" node-type="feed_list_item_date">{{ status['status']['timestamp'] }}</a> 
+                      <a target="_blank" class="S_link2 WB_time" node-type="feed_list_item_date" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['timestamp'] }}</a> 
                       <em class="S_txt2">来自</em>
                       <a class="S_link2" target="_blank">{{ status['status']['source']}}</a>              
                     </div>

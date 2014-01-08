@@ -84,11 +84,11 @@
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
 
-    <div>
+    <!--<div>
       <a href="javascript:void(0);" onClick="show_burst_user();" class="pull-right" title="实时突发用户识别">
 	<i class="icon-exclamation-sign"></i>
       </a>
-    </div>
+    </div>-->
 
     <div id="realtime_burst_user" class="collapse out">
       <div id="burst_user_progress" class="progress progress-striped active">
@@ -360,7 +360,7 @@
         endDate: moment()
       }, 
       function(start, end) {
-        $('#reportrange_topic span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+        $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
       }
     );
 
@@ -452,7 +452,7 @@
           var html = "<div  class=\"inline\"><font color=\"#003366\" face=\"Georgia, Times New Roman, Times, serif\"><b>您的历史记录相关选项:</b></font></div><div  class=\"well\">";
           if(data.length > 0){
             for(idx in data){
-              html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&customized=0\">" + data[idx] + "</a></li>";
+              html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&during=" + during + "&customized=0\">" + data[idx] + "</a></li>";
             }
             html = html + "</div>";
           }

@@ -5,7 +5,7 @@ import random
 
 #try:
 from weibo.extensions import db
-from weibo.model import TopicIdentification
+from weibo.model import TopicIdentification, KnowledgeList
 #except ImportError:
 #    print 'Warning: Not in web environment.'
 
@@ -55,7 +55,11 @@ def acquire_status_by_id(mid):
     return status
 
 def user_status(uid):
-    return 1
+    old_items = db.session.query(KnowledgeList).filter(KnowledgeList.kID==uid).all()
+    if len(old_items):
+        return 1
+    else:
+        return 0
 
 def is_in_trash_list(uid):
     return False

@@ -1,6 +1,7 @@
 {% extends "identify/base.html" %}
 {% block title %}全网博主识别{% endblock %}
 {% block content %}
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datarangepiker.css') }}">
 <div class="container-fluid">
   <div class="row-fluid">
     <div class="span2">
@@ -37,23 +38,11 @@
 	  </div>
 
       	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
-	  <div class="btn-group">
-	    <a id="whole_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	      {% if window_size == 1 %}1天
-	      {% elif window_size == 7 %}1周
-	      {% elif window_size == 30 %}1个月
-              {% elif window_size == 90 %}3个月
-	      {% else %}1周
-	      {% endif %}
-	      <span class="caret"></span>
-	    </a>
-	    <ul id="whole_window_size_dropdown_menu" class="dropdown-menu">
-	      <li><a href="#" onclick="choose_window('whole', 1);" data-toggle="tab">1天</a></li>
-      	      <li><a href="#" onclick="choose_window('whole', 7);" data-toggle="tab">1周</a></li>
-      	      <li><a href="#" onclick="choose_window('whole', 30);" data-toggle="tab">1个月</a></li>
-      	      <li><a href="#" onclick="choose_window('whole', 90);" data-toggle="tab">3个月</a></li>
-	    </ul>
-	  </div>
+    <div id="whole_window_size_choosen" class="btn dropdown-toggle" href="#">
+    <i class="icon-calendar icon-large"></i>
+    <span id="whole_date">{% if during_date %}{{during_date}}{% else %}9月 1日,2013 - 9月 5日,2013{% endif %}</span> 
+  <b class="caret"></b>
+  </div>
 
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
@@ -62,7 +51,7 @@
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 	  <input type="hidden" name="action" value="run">
 	  <input id="whole_rank_method" type="hidden" name="rank_method" value="followers">
-	  <input id="whole_window_size" type="hidden" name="window_size" value="7">
+	  <input id="whole_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
     &nbsp&nbsp&nbsp
 	  <input type="submit" class="btn btn-primary" value="识别">
       	</form>
@@ -86,9 +75,9 @@
 	<div>
 	  <p>
 	    <a class="btn btn-small btn-success" href="#" id="out"><i class="icon-download-alt"></i> 导出</a>
-	    <a id="add_kd" class="btn btn-small btn-info" href="javascript: void(0);" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
-	    <a id="remove_kd" class="btn btn-small btn-info" href="javascript: void(0);" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
-	    <a id="add_trash" class="btn btn-small btn-danger" href="javascript: void(0);" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
+	    <a id="add_kd" class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
+	    <a id="remove_kd" class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+	    <a id="add_trash" class="btn btn-small btn-danger" href="#" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
 	  </p>
 	</div>
 	<div id="rank_table">
@@ -134,6 +123,9 @@
 {% block script %}
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
+    
+    <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
     <script>
     		function exportTableToCSV($table, filename) {
                 
@@ -229,21 +221,22 @@
                   return $cols.map(function (j, col) {
                       var $col = $(col);
                       if($col.find('i').length == 1){
-                        var pic = $col.find('i');                        
+                        var pic = $col.find('i');
+                        var i_text =  $col.text();                        
                         if(pic.attr('class') == "icon-ok"){
                             var text = '是';
                         }
                         else{
                         	if(pic.attr('class') == "icon-arrow-down"){
-                            	var text = '下降';
+                            	var text = i_text;
                         	}
                         	else{
                         		if(pic.attr('class') == "icon-arrow-up"){
-                            		var text = '上升';
+                            		var text = i_text;
                         		}
                         		else{
                         			if(pic.attr('class') == "icon-minus"){
-                            			var text = '持平';
+                            			var text = '0';
                         			}
                         			else{
                         				var text = '否';
@@ -290,15 +283,136 @@
           alert("导出成功！");
         });
 
+    $(document).ready(function() {
+  var whole_time = $('#whole_date').html();
+  document.getElementById('whole_window_size').value = whole_time;
+  
+  $('#whole_window_size_choosen').daterangepicker({
+      ranges: {
+         '1天': [moment(), moment()],
+         '1周': [moment().subtract('days', 6), moment()],
+         '1个月': [moment().startOf('month'), moment().endOf('month')],
+         '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+      },
+      startDate: moment().subtract('days', 29),
+      endDate: moment()
+    }, 
+    
+    function(start, end) {
+  $('#whole_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+    var whole_time = $('#whole_date').html();
+    document.getElementById('whole_window_size').value = whole_time;
+    }
+  );
+  
+});
+    //添加垃圾名单
+    $("#add_trash").click(function() {
+        n = 0;
+        $("[name='now_user']").each(function(){
+                              
+            if(this.checked)
+            {
+                var fa = $(this).parent();
+                var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev().prev();
+                var f_id = $(ne).html();
+                $.ajax({   
+                    type:"POST",  
+                    url:"/identify/add_trash/",
+                    dataType: "json",
+                    async:false,
+                    data:{f_id : f_id},
+                    success: function(data){
+                        if( data =='Right'){
+                            n = n + 1;
+                        }
+                    }           
+                });
+            }   
+        });
+        if(n > 0){
+            alert("添加成功！");
+        }
+    });
+
+    //添加知识库
+    $("#add_kd").click(function() {
+        n = 0;
+        $("[name='now_user']").each(function(){
+                              
+            if(this.checked)
+            {
+                var fa = $(this).parent();
+                var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev().prev();
+                var f_id = $(ne).html();
+                $.ajax({   
+                    type:"POST",  
+                    url:"/identify/add_kd/",
+                    dataType: "json",
+                    async:false,
+                    data:{f_id : f_id},
+                    success: function(data){
+                        if( data =='Right'){
+                            n = n + 1;
+                        }
+                    }           
+                });
+            }   
+        });
+        if(n > 0){
+            alert("添加成功！");
+        }
+      /*$.ajax({   
+          type:"POST",  
+          url:"/identify/add_kd/",
+          dataType: "json",
+          async:false,
+          data:{action: 'run', rank_method: rank_method, window_size: window_size, top_n: top_n}
+           
+      });*/
+      //location.reload();
+      from.submit();
+    });
+
+    //移除知识库
+    $("#remove_kd").click(function() {
+        n = 0;
+        $("[name='now_user']").each(function(){
+                              
+            if(this.checked)
+            {
+                var fa = $(this).parent();
+                var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev().prev();
+                var f_id = $(ne).html();
+                $.ajax({   
+                    type:"POST",  
+                    url:"/identify/remove_kd/",
+                    dataType: "json",
+                    async:false,
+                    data:{f_id : f_id},
+                    success: function(data){
+                        if( data =='Right'){
+                            n = n + 1;
+                        }
+                    }           
+                });
+            }   
+        });
+        if(n > 0){
+            alert("移除成功！");
+        }
+        //location.reload();
+    });
 	  </script>
     {% if not from_external %}
       <script>
 	//load parameters from previous page
 	var rank_method = '{{ rank_method }}';
-        var window_size = {{ window_size }};
+        var window_size = '{{ during_date }}';
 	var top_n = {{ top_n }};
 	var page_num = {{ page_num }};
       </script>
       <script src="{{ url_for('static', filename='js/identify/whole_identify.js') }}"></script>
+    
     {% endif %}
 {% endblock %}

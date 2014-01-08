@@ -19,10 +19,25 @@ from lxml import etree
 from gexf import Gexf
 from gen import Tree
 from weibo.global_config import xapian_search_user,xapian_search_weibo
+path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
 
 class Count:
     def __init__(self, count=0):
         self.count = count
+
+def getXapianWeiboByDate(datestr):
+    # datestr: 20130908
+    
+    stub_file = path + datestr
+    
+    if os.path.exists(stub_file):
+            xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True)
+            return xapian_search_weibo
+    else:
+            return None
+
+def ts2datetimestr(ts):
+    return time.strftime('%Y%m%d', time.localtime(ts))
 
 def reposts2tree(source_weibo, reposts):
     # root
@@ -113,12 +128,14 @@ def tree2graph(tree_nodes):
 
     return etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
 
-def tree_main(mid):
+def tree_main(mid,time_ts):
     mids = [mid]
 
+    datestr = ts2datetimestr(time_ts)
+    search_weibo = getXapianWeiboByDate(datestr)
     for mid in mids:
         users = set()
-        number,source_weibo = xapian_search_weibo.search(query={'retweeted_mid': mid})#读取以mid为原创微博的转发微博
+        number,source_weibo = search_weibo.search(query={'retweeted_mid': mid})#读取以mid为原创微博的转发微博
         assert source_weibo, 'Source Weibo exist ???'
         repost_ids = []
         for sw in source_weibo():
@@ -130,7 +147,7 @@ def tree_main(mid):
         for sid in repost_ids:
             if count % 10 == 0:
                 print '%s tweets loaded...' % count
-            n,ws = xapian_search_weibo.search(query={'_id': sid})#查找转发微博的信息
+            n,ws = search_weibo.search(query={'_id': sid})#查找转发微博的信息
             for w in ws():
                 try:
                     users.add(w['user'])
@@ -139,7 +156,7 @@ def tree_main(mid):
                 reposts.append(w)
                 count += 1
 
-        n,m_weibo = xapian_search_weibo.search(query={'_id': mid})#查找原创微博的信息
+        n,m_weibo = search_weibo.search(query={'_id': mid})#查找原创微博的信息
         for m_w in m_weibo():
             source_weibo = m_w
 

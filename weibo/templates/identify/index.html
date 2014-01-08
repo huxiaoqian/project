@@ -3,6 +3,7 @@
 {% block content %}
 <head>
 <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datarangepiker.css') }}">
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datepicker.css') }}">
 </head>
 <body>
 <div class="container">
@@ -22,31 +23,26 @@
 	</ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
-      <div id="reportrange" class="btn dropdown-toggle">
-    <i class="icon-calendar icon-large"></i>
-    <span>2013年12月11号 - 2013年12月31号</span> 
-	<b class="caret"></b>
-	</div>
-	
-	  
-	  
- 
-	  
+      <div id="whole_window_size_choosen" class="btn dropdown-toggle" href="#">
+        <i class="icon-calendar icon-large"></i>
+        <span id="whole_date">9月 1日,2013 - 9月 5日,2013</span> 
+	      <b class="caret"></b>
+	    </div>	  
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
-	  <div class="btn dropdown-toggle" style="position:relative;">
-<span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
-<select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
-<option value="100"> 100 </option>
-<option value="300"> 300 </option>
-<option value="500"> 500 </option>
-</select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
-</div>
+  	  <div class="btn dropdown-toggle" style="position:relative;">
+        <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+        <select name="top_number" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+          <option value="100"> 100 </option>
+          <option value="300"> 300 </option>
+          <option value="500"> 500 </option>
+        </select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
+      </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <input type="hidden" name="action" value="run">
       <input id="whole_rank_method" type="hidden" name="rank_method" value="followers">
-      <input id="whole_window_size" type="hidden" name="window_size" value="7">
+      <input id="whole_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
       &nbsp&nbsp&nbsp
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
@@ -58,35 +54,32 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>排序标准:</b></font>
       <div class="btn-group">
 	<a id="burst_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-	  粉丝数
+	  活跃度差值
 	  <span class="caret"></span>
 	</a>
 	<ul id="burst_rank_method_dropdown_menu" class="dropdown-menu">
-	  <li><a href="#" onClick="choose_method('burst', 'followers');" data-toggle="tab">粉丝数</a></li>
-      	  <li><a href="#" onClick="choose_method('burst', 'active');" data-toggle="tab">活跃度</a></li>
-      	  <li><a href="#" onClick="choose_method('burst', 'important');" data-toggle="tab">重要度</a></li>
+      	  <li><a href="#" onClick="choose_method2('burst', 'active');" data-toggle="tab">活跃度差值</a></li>
+      	  <li><a href="#" onClick="choose_method2('burst', 'important');" data-toggle="tab">重要度差值</a></li>
 	</ul>
       </div>
-	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
-      <div class="btn-group">
-	<a  id="burst_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	  1周
-	  <span class="caret"></span>
-	</a>
-	<ul id="burst_window_size_dropdown_menu" class="dropdown-menu">
-	  <li><a href="#" onClick="choose_window('burst', 1);" data-toggle="tab">1天</a></li>
-      	  <li><a href="#" onClick="choose_window('burst', 7);" data-toggle="tab">1周</a></li>
-      	  <li><a href="#" onClick="choose_window('burst', 30);" data-toggle="tab">1个月</a></li>
-      	  <li><a href="#" onClick="choose_window('burst', 90);" data-toggle="tab">3个月</a></li>
-	</ul>
+	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间:</b></font>
+      <div class="input-append date" id="burst_window_size_choosen">
+      <input type="text" class="span2" name="burst_time" value="9月 2日,2013"><span class="add-on"><i class="icon-th"></i></span>
       </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="500" class="span1">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
+      <div class="btn dropdown-toggle" style="position:relative;">
+      <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+      <select name="top_number" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+      <option value="100"> 100 </option>
+      <option value="300"> 300 </option>
+      <option value="500"> 500 </option>
+      </select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
+      </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <input type="hidden" name="action" value="run">
-      <input id="burst_rank_method" type="hidden" name="rank_method" value="followers">
-      <input id="burst_window_size" type="hidden" name="window_size" value="7">
+      <input id="burst_rank_method" type="hidden" name="rank_method" value="active">
       &nbsp&nbsp&nbsp
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
@@ -143,10 +136,36 @@
           <li><a href="#" onClick="choose_field('area', 'education');" data-toggle="tab">教育</a></li>
           <li><a href="#" onClick="choose_field('area', 'technology');" data-toggle="tab">科技</a></li>
           <li><a href="#" onClick="choose_field('area', 'abroad');" data-toggle="tab">境外</a></li>
+          <li><a href="#" onClick="choose_field('area', 'university');" data-toggle="tab">高校微博</a></li>
+          <li><a href="#" onClick="choose_field('area', 'homeadmin');" data-toggle="tab">境内机构</a></li>
+          <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外机构</a></li>
+          <li><a href="#" onClick="choose_field('area', 'homemedia');" data-toggle="tab">境内媒体</a></li>
+          <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外媒体</a></li>
+          <li><a href="#" onClick="choose_field('area', 'folkorg');" data-toggle="tab">民间组织</a></li>
+          <li><a href="#" onClick="choose_field('area', 'lawyer');" data-toggle="tab">律师</a></li>
+          <li><a href="#" onClick="choose_field('area', 'politician');" data-toggle="tab">政府官员</a></li>
+          <li><a href="#" onClick="choose_field('area', 'mediaworker');" data-toggle="tab">媒体人士</a></li>
+          <li><a href="#" onClick="choose_field('area', 'activer');" data-toggle="tab">活跃人士</a></li>
+          <li><a href="#" onClick="choose_field('area', 'grassroot');" data-toggle="tab">草根</a></li>
+          <li><a href="#" onClick="choose_field('area', 'other');" data-toggle="tab">其它</a></li>
 
   </ul>
       </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="500" class="span1">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
+      <div id="area_window_size_choosen" class="btn dropdown-toggle" href="#">
+    <i class="icon-calendar icon-large"></i>
+    <span id="area_date">9月 1日,2013 - 9月 5日,2013</span> 
+  <b class="caret"></b>
+  </div>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
+      <div class="btn dropdown-toggle" style="position:relative;">
+      <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+      <select name="top_number" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+      <option value="100"> 100 </option>
+      <option value="300"> 300 </option>
+      <option value="500"> 500 </option>
+      </select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
+      </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
@@ -154,58 +173,65 @@
       <input type="submit" class="btn btn-primary" value="识别">
       <input type="hidden" name="action" value="run">
       <input type="hidden" id="topic_hidden" name="field" value="finance">
-      <input id="area_rank_method" type="hidden" name="rank_method" value="followers">
+      <input id="area1_rank_method" type="hidden" name="rank_method" value="followers">
+      <input id="area_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
     </form>
     
   </div>
   
     <div class="well">
     <legend><strong>话题敏感博主识别</strong></legend>
+    <div id="topic_identify" class="inline">
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
+        <div id="reportrange_topic" class="btn dropdown-toggle">
+          <i class="icon-calendar icon-large"></i>
+          <span id="topic_time">9月 1日,2013 - 9月 5日,2013</span>
+          <b class="caret"></b>
+        </div>
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
+        <div class="btn dropdown-toggle" style="position:relative;">
+          <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
+          <select name="top_n" style="width:110px;margin-left:-100px" onchange="this.parentNode.nextSibling.value=this.value">
+            <option value="100"> 100 </option>
+            <option value="300"> 300 </option>
+            <option value="500"> 500 </option>
+          </select></span><input name="top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="500" class="span1">
+        </div>
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+        <input type="text" id="topic_keywords" name="topic" value="" placeholder="输入关键词..." type="text" style="margin-top: 11px;margin-left: 62px;">
+        <input type="hidden" name="action" value="run">
+        <input id="topic_window_size" type="hidden" name="window_size" value="7">
+        &nbsp&nbsp&nbsp
+        <input type="submit" class="btn btn-primary" value="识别" onclick="find_search_message()" id="search_topic">
+    </div>
+
+    <div id="show_search_msg"></div>
+    <div id="search_on" class="inline">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>可查看历史任务:</b></font>
+    </div>
+    <div id="show_history_msg" class="well"></div>
+    <div id="search_now" class="inline">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>正在进行中历史任务:</b></font>
+    </div>
+    <div id="show_history_now" class="well"></div>
+
+    <!--
     <form id="topic_identify" action="/identify/topic/" class="form-inline" method="POST">
-      <input id="topic_keywords" name="topic" type="text" class="span2 search-query" placeholder="话题">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
-      <div class="btn-group">
-	<a  id="topic_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	  1周
-	  <span class="caret"></span>
-	</a>
-	<ul id="topic_window_size_dropdown_menu" class="dropdown-menu">
-	  <li><a href="#" onClick="choose_window('topic', 1);" data-toggle="tab">1天</a></li>
-      	  <li><a href="#" onClick="choose_window('topic', 7);" data-toggle="tab">1周</a></li>
-      	  <li><a href="#" onClick="choose_window('topic', 30);" data-toggle="tab">1个月</a></li>
-      	  <li><a href="#" onClick="choose_window('topic', 90);" data-toggle="tab">3个月</a></li>
-	</ul>
-      </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="500" class="span1">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="20" class="span1">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+      
       <input type="hidden" name="action" value="run">
       <input id="topic_window_size" type="hidden" name="window_size" value="7">
       &nbsp&nbsp&nbsp
       <input type="submit" class="btn btn-primary" value="识别">
     </form>
+  -->
+    <!--
     <ul id="TopicTab" class="nav nav-tabs">
       <li><a href="#area_7" data-toggle="tab"><strong>系统定制</strong></a></li>
       
       <li><a href="/sysadmin/" target="_blank"><i class="icon-cog"></i></a></li> 
-    </ul>
-    <div id="TopicTabContent" class="tab-content">
-      <div class="tab-pane fade active in" id="area_7">
-	<ul class="inline">
-      	  <li>
-      	    <input type="checkbox"> 两会
-      	  </li>
-      	  <li>
-      	    <input type="checkbox"> 长春婴儿
-      	  </li>
-      	  <li>
-      	    <input type="checkbox"> 异地高考
-      	  </li>
-	</ul>
-      </div>
-      
-    </div>
+    </ul>-->
   </div>
 
   
@@ -218,7 +244,8 @@
   <script src="{{ url_for('static', filename='js/identify/burst.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
-  <script type="text/javascript" charset="gb2312">
+  <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
+  <script type="text/javascript" charset="utf-8">
   function choose_field(prefix, area){
     $("#topic_hidden").val(area)
     cn_area = '';
@@ -240,6 +267,30 @@
         cn_area = '境外';
     else if(area=='entertainment')
         cn_area = '娱乐';
+    else if(area=='university')
+        cn_area = '高校微博';
+    else if(area=='homeadmin')
+        cn_area = '境内机构';
+    else if(area=='abroadadmin')
+        cn_area = '境外机构';
+    else if(area=='homemedia')
+        cn_area = '境内媒体';
+    else if(area=='abroadadmin')
+        cn_area = '境外媒体';
+    else if(area=='folkorg')
+        cn_area = '民间组织';
+    else if(area=='lawyer')
+        cn_area = '律师';
+    else if(area=='politician')
+        cn_area = '政府官员';
+    else if(area=='mediaworker')
+        cn_area = '媒体人士';
+    else if(area=='activer')
+        cn_area = '活跃人士';
+    else if(area=='grassroot')
+        cn_area = '草根';
+    else if(area=='other')
+        cn_area = '其它';
     $("#area_rank_method_choosen").text(cn_area);
     $("#area_rank_method_choosen").append(' <span class="caret"></span>');
     //close dropdown
@@ -248,7 +299,14 @@
   }
 
     $(document).ready(function() {
-  $('#reportrange').daterangepicker({
+  var whole_time = $('#whole_date').html();
+  document.getElementById('whole_window_size').value = whole_time;
+  
+  $('#burst_window_size_choosen').datepicker({
+    format: "m月 d日,yyyy",
+  });
+
+  $('#whole_window_size_choosen').daterangepicker({
       ranges: {
          '1天': [moment(), moment()],
          '1周': [moment().subtract('days', 6), moment()],
@@ -258,11 +316,182 @@
       startDate: moment().subtract('days', 29),
       endDate: moment()
     }, 
+    
     function(start, end) {
-	$('#reportrange span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+	$('#whole_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+    var whole_time = $('#whole_date').html();
+    document.getElementById('whole_window_size').value = whole_time;
+    }
+  );
+  
+  var area_time = $('#area_date').html();
+  document.getElementById('area_window_size').value = area_time;
+  
+  $('#area_window_size_choosen').daterangepicker({
+      ranges: {
+         '1天': [moment(), moment()],
+         '1周': [moment().subtract('days', 6), moment()],
+         '1个月': [moment().startOf('month'), moment().endOf('month')],
+         '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+      },
+      startDate: moment().subtract('days', 29),
+      endDate: moment()
+    }, 
+    
+    function(start, end) {
+  $('#area_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+    var whole_time = $('#area_date').html();
+    document.getElementById('area_window_size').value = whole_time;
     }
   );
 });
+
+    //topic_identify
+    $('#reportrange_topic').daterangepicker({
+        ranges: {
+           '今天': [moment(), moment()],
+           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [moment().subtract('days', 6), moment()],
+           '最近30天': [moment().subtract('days', 29), moment()],
+           '本月内': [moment().startOf('month'), moment().endOf('month')],
+           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+        },
+        startDate: moment().subtract('days', 29),
+        endDate: moment()
+      }, 
+      function(start, end) {
+        $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+      }
+    );
+
+    function get_and_show_history_msg(){
+      $.ajax({
+        url: '/identify/history.json?now=1',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_history_msg').empty();
+          var html = "";
+          for(idx in data){
+            html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&customized=0\">" + data[idx] + "</a></li>";
+          }
+          $('#show_history_msg').append(html);
+        }
+      });
+    }
+
+    function get_and_show_history_now(){
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
+      $.ajax({
+        url: '/identify/history.json?now1=-1&now2=0&timestamp=' + timestamp,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_history_now').empty();
+          var html = "";
+          for(idx in data){
+            html += "<li>" + data[idx] + "</li>";
+          }
+          $('#show_history_now').append(html);
+        }
+      });
+    }
+
+    function max_history_limit(){
+      var max = 0;
+      var time = $("#topic_time").html();
+      var keyword = document.getElementById("topic_keywords").value;
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
+      var search_msg = "请从上方文本框中输入话题"
+      $.ajax({
+        url: '/identify/history.json?now2=0&now1=-1',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          for(idx in data){
+            max += 1;
+          }
+          if (max > 5){
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中历史任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            $('#show_search_msg').empty();
+            $('#show_search_msg').append(search_html);
+            $('#search_topic').val('识别');
+          }
+          else{
+            if(keyword.length < 2)
+              var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
+            else{
+              $('#search_topic').val('识别');
+              $('#show_search_msg').empty();
+              $.ajax({
+                url: '/identify/topic/submit?keyword=' + keyword + "&time="+ time + "&timestamp=" + timestamp,
+                dataType: 'json',   
+                type: "GET",   
+                success: function (data) {
+                  check_status();
+                }
+              });
+              get_and_show_history_now();
+            }
+          }
+        }
+      });
+    }
+
+    function find_history(){
+      $('#show_search_msg').empty();
+      var keyword = document.getElementById("topic_keywords").value;
+      $.ajax({
+        url: '/identify/history.json?keyword=' + keyword,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_search_msg').empty();
+          var html = "<div  class=\"inline\"><font color=\"#003366\" face=\"Georgia, Times New Roman, Times, serif\"><b>您的历史记录相关选项:</b></font></div><div  class=\"well\">";
+          if(data.length > 0){
+            for(idx in data){
+              html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&during=" + during + "&customized=0\">" + data[idx] + "</a></li>";
+            }
+            html = html + "</div>";
+          }
+          else{
+            html = html + "无匹配项！</div>";
+          }
+          $('#show_search_msg').append(html);
+        }
+      });
+    }
+  
+    function find_search_message(){
+      var command = $('#search_topic').val();
+      if (command == '识别'){
+        var keyword = document.getElementById("topic_keywords").value;
+        if(keyword.length < 2){
+          var search_msg = "请从上方文本框中输入话题"
+          var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
+          $('#show_search_msg').empty();
+          $('#show_search_msg').append(search_html);
+        }
+        else{
+          find_history();
+          $('#search_topic').val('确认提交');
+        }
+      }else if (command == '确认提交'){
+        max_history_limit();
+        
+    }
+  }
+    function check_status(){
+      get_and_show_history_msg();
+      get_and_show_history_now();
+    }  
+    $(document).ready(function() {
+      get_and_show_history_msg();
+      get_and_show_history_now();
+      setInterval("check_status()", 10000);
+    });
 
 </script>
 </body>

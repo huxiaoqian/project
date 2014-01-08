@@ -67,6 +67,9 @@ function add_field(){<!-- 添加按钮 -->
           async:false,
           data:{topic : fl,se_weight: f2},
           success: function(data){
+              if(data == 'outindex'){
+                alert("添加失败，定制话题已达上限！");
+              }
               if(data == 'Right') {
                   alert("添加定制话题成功！");
                   location.reload();
@@ -151,7 +154,7 @@ function declear_re(){<!-- 反选 -->
     <div class="tabbable tabs-left" style="float:left;">
         <ul class="nav nav-tabs" style="padding-left:20px;padding-top:20px;float:left;">
           
-          <li> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >领域及话题管理</a></li>
+          <li> <a id="User" href="/sysadmin/paraset/field/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >领域管理</a></li>
           
           <li> <a id="Pass" href="/sysadmin/paraset/new/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >保留词管理</a></li>
 
@@ -166,6 +169,8 @@ function declear_re(){<!-- 反选 -->
           <li> <a id="Bai" href="/sysadmin/paraset/userlist/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >用户权限管理</a></li>
 
           <li  class="active" > <a id="Topic_user" href="/sysadmin/paraset/topic/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >定制话题管理</a></li>
+
+          <li> <a id="Topic_history" href="/sysadmin/paraset/topic_history/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >历史话题管理</a></li>
         </ul>
     </div>
       <div class="tab-content" style="float:left;height:1000px;width:1050px;">
@@ -187,7 +192,6 @@ function declear_re(){<!-- 反选 -->
                     </ul>
                     </div>
                     <div class="fileupload">
-                        <input type="file" id="files" name="files[]" multiple style="display:none" onchange="handleFileSelect(this.files)"/>
                         <button id="mo_new" type="button" class="btn btn-warning">修改</button>
                         <button type="button" class="btn btn-info" onClick="add_field()">添加</button>
                         <button id="de_new" type="button" class="btn btn-danger">删除</button>
@@ -201,6 +205,7 @@ function declear_re(){<!-- 反选 -->
                         <th style="text-align:center;display:none;">序号</th>
                         <th style="text-align:center">定制话题</th>
                         <th style="text-align:center">过期时间</th>
+                        <th style="text-align:center">入库时间</th>
                         <th style="text-align:center">选择</th>
                       </tr>
                     </thead>
@@ -233,6 +238,7 @@ function declear_re(){<!-- 反选 -->
                             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
                             html += "<td style='text-align:center'>" + user['topic'] + "</td>";
                             html += "<td style='text-align:center'>" + user['expire_date'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['enter_data'] + "</td>";
                             html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                         }
                     $("#word_table").empty();
@@ -253,6 +259,7 @@ function declear_re(){<!-- 反选 -->
                             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
                             html += "<td style='text-align:center'>" + user['topic'] + "</td>";
                             html += "<td style='text-align:center'>" + user['expire_date'] + "</td>";
+                            html += "<td style='text-align:center'>" + user['enter_data'] + "</td>";
                             html += "<td style='text-align:center'><input type='checkbox' name='topic_new' style='font-size:12pt;'/></td></tr>";
                           }
                           $("#word_table").append(html);
@@ -273,21 +280,39 @@ function declear_re(){<!-- 反选 -->
                               
                 if(this.checked)
                 {
+
                     var fa = $(this).parent();
-                    var ne = $(fa).prev().prev().prev();                                
-                    var f_id = $(ne).html();
+                    var ne = $(fa).prev().prev().prev();
+                    var f_name = $(ne).html();                               
+                    var f_id = $(ne).prev().html();
+                    if(confirm("您是否要彻底删除"+f_name+"及其数据?")){
                     $.ajax({   
                       type:"POST",  
                       url:"/sysadmin/usertopic_de",
                       dataType: "json",
                       async:false,
-                      data:{f_id : f_id},
+                      data:{f_id : f_id,status:0},
                       success: function(data){
                           if( data =='Right'){
                               n = n+1;
                           }
                       }           
                     });
+                    }
+                    else{
+                    $.ajax({   
+                      type:"POST",  
+                      url:"/sysadmin/usertopic_de",
+                      dataType: "json",
+                      async:false,
+                      data:{f_id : f_id,status:1},
+                      success: function(data){
+                          if( data =='Right'){
+                              n = n+1;
+                          }
+                      }           
+                    });
+                    }
                 }   
             });
             if(n > 0){
@@ -302,7 +327,7 @@ function declear_re(){<!-- 反选 -->
                         if(this.checked)
                         {
                               var fa = $(this).parent();
-                              var ne = $(fa).prev().prev();
+                              var ne = $(fa).prev().prev().prev();
                               var uname = $(ne).html();                  
                               var f_id = $(ne).prev().html();
                               if(confirm("您要修改的是"+uname+"的过期时间？")){

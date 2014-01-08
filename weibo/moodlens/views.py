@@ -442,13 +442,15 @@ def topic_submit():
             keyword = request.args.get('keyword', None)
             during = request.args.get('during', None)
             time = request.args.get('time', None)
+            timestamp = request.args.get('timestamp', None)
+            timestamp = int(timestamp)
             time = _utf_encode(time)
             start_ts, end_ts = _time_zone(time)
             if not during or during == '':
                 during = MinInterval
             else:
                 during = str2ts(during)
-            status , item = _add_history('sentiment', -1 ,  keyword, start_ts, end_ts, during)
+            status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp, during)
             return render_template('moodlens/topic_emotion.html', active='moodlens', temp_keyword=keyword, temp_during=during)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -504,7 +506,10 @@ def topics_customized():
         topics_names = []
         if topics:
             for topic in topics:
-                topics_names.append(topic.topic)
+                db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(topic.db_date))
+                datestr = '     提交时间: ' + db_date
+                # topics_names.append(topic.topic)
+                topics_names.append([topic.topic, datestr])
         return json.dumps(topics_names)
 
     else:
@@ -530,6 +535,9 @@ def search_history():
         now1 = request.args.get('now1', None)
         now2 = request.args.get('now2', None)
         now = request.args.get('now', None)
+        timestamp_end = request.args.get('timestamp', None)
+        if timestamp_end:
+            timestamp_end = int(timestamp_end)
         if now1:
             now1 = int(now1)
         if now2:
@@ -553,20 +561,38 @@ def search_history():
             for history in histories1:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
                 end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
-                datestr = str(start) + ' - ' + str(end)
-                histories_names.append([history.topic, datestr ])
+                datestr  = str(start) + ' - ' + str(end)
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.topic, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.topic, datestr])
         if histories2:
             for history in histories2:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
                 end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
                 datestr  = str(start) + ' - ' + str(end)
-                histories_names.append([history.topic, datestr ])
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.topic, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.topic, datestr])                
         if histories:
             for history in histories:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
                 end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
                 datestr  = str(start) + ' - ' + str(end)
-                histories_names.append([history.topic, datestr ])
+                histories_names.append([history.topic, datestr])
         return json.dumps(histories_names)
     else:
         operator = request.form.get('operator', 'add')
@@ -577,7 +603,7 @@ def search_history():
         sentiment = request.form.get('sentiment', '')
         if keyword != '' and start != '' and end != '' and range != '' and sentiment != '':
             if operator == 'add':
-                status, item = _add_history('sentiment', sentiment,  keyword, start, end, range)
+                status, item = _add_history(-1, keyword, start, end, range)
                 item = item.topic + '\t' + item.start + '\t' + item.end + '\t' + item.range + '\t' + item.status
             else:
                 status, item = 'failed', 'Null'

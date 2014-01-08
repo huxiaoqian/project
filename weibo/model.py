@@ -2,14 +2,15 @@
 
 from extensions import db
 
-__all__ = ['Field', 'Topic', 'WholeUserIdentification', 'AreaUserIdentification', 'BurstUserIdentification', \
+__all__ = ['Field', 'Topic', \
            'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', \
            'UserWeight', 'BlackList', 'IMedia', 'M_Weibo', 'UserList','Topic_Search', 'SentimentCount', \
            'SentimentKeywords', 'TopWeibos', 'Domain', 'SentimentDomainCount', \
            'SentimentDomainKeywords', 'SentimentDomainTopWeibos', 'SentimentTopicCount', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
-           'TopicStatus']
+           'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', \
+           'TopicIdentification', 'KnowledgeList']
 
 
 class Field(db.Model):
@@ -36,51 +37,91 @@ class Topic(db.Model):
     def __repr__(self):
         return self.topicName
 
-class WholeUserIdentification(db.Model):
+class WholeIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rank = db.Column(db.Integer)
     userId = db.Column(db.BigInteger(11, unsigned=True))
+    followersCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeCount = db.Column(db.BigInteger(20, unsigned=True))
+    importantCount = db.Column(db.BigInteger(20, unsigned=True))
     identifyDate = db.Column(db.Date)
     identifyWindow = db.Column(db.Integer, default=1)
     identifyMethod = db.Column(db.String(20), default='followers')
 
-    @classmethod
-    def _name(cls):
-        return u'全网博主识别'
+    def __init__(self, rank, userId, followersCount, activeCount, importantCount, identifyDate, identifyWindow, identifyMethod):
+        self.rank = rank
+        self.userId = userId
+        self.followersCount = followersCount
+        self.activeCount = activeCount
+        self.importantCount = importantCount
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod
 
-    def __repr__(self):
-        return self.id
-
-class AreaUserIdentification(db.Model):
+class AreaIdentification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     topicId = db.Column(db.Integer)
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    followersCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeCount = db.Column(db.BigInteger(20, unsigned=True))
+    importantCount = db.Column(db.BigInteger(20, unsigned=True))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='followers')
+
+    def __init__(self, topicId, rank, userId, followersCount, activeCount, importantCount, identifyDate, identifyWindow, identifyMethod):
+        self.topicId = topicId
+        self.rank = rank
+        self.userId = userId
+        self.followersCount = followersCount
+        self.activeCount = activeCount
+        self.importantCount = importantCount
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod
+
+class BurstIdentification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rank = db.Column(db.Integer)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    followersCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeCount = db.Column(db.BigInteger(20, unsigned=True))
+    importantCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeDiff = db.Column(db.BigInteger(20))
+    importantDiff = db.Column(db.BigInteger(20))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyMethod = db.Column(db.String(20), default='active')
+
+    def __init__(self, rank, userId, followersCount, activeCount, importantCount, activeDiff, importantDiff, identifyDate, identifyWindow, identifyMethod):
+        self.rank = rank
+        self.userId = userId
+        self.followersCount = followersCount
+        self.activeCount = activeCount
+        self.importantCount = importantCount
+        self.activeDiff = activeDiff
+        self.importantDiff = importantDiff
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod
+
+class TopicIdentification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic = db.Column(db.String(20))
     rank = db.Column(db.Integer)
     userId = db.Column(db.BigInteger(11, unsigned=True))
     identifyDate = db.Column(db.Date)
     identifyWindow = db.Column(db.Integer, default=1)
     identifyMethod = db.Column(db.String(20), default='pagerank')
 
-    @classmethod
-    def _name(cls):
-        return u'领域博主识别'
-
-    def __repr__(self):
-        return self.id
-
-class BurstUserIdentification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    rank = db.Column(db.Integer)
-    userId = db.Column(db.BigInteger(11, unsigned=True))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyMethod = db.Column(db.String(20), default='followers')
-
-    @classmethod
-    def _name(cls):
-        return u'突发博主识别'
-
-    def __repr__(self):
-        return self.id
+    def __init__(self, topic, rank, userId, identifyDate, identifyWindow, identifyMethod):
+        self.topic = topic
+        self.rank = rank
+        self.userId = userId
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyMethod = identifyMethod 
 
 class RangeCount(db.Model):
     index = db.Column(db.Integer, primary_key=True)
@@ -201,6 +242,18 @@ class BlackList(db.Model):
 
     def __repr__(self):
         return self.blackName
+
+class KnowledgeList(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    kID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
+    kName = db.Column(db.String(30), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'知识库'
+
+    def __repr__(self):
+        return self.kName
 
 class IMedia(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -415,12 +468,16 @@ class Topics(db.Model):
     topic = db.Column(db.Text)
     iscustom = db.Column(db.Boolean)
     expire_date = db.Column(db.BigInteger(10, unsigned=True))
+    db_date = db.Column(db.BigInteger(10, unsigned=True))#入库时间
+    status = db.Column(db.Integer)#0:完全删除 1:过期不删除 -1:未删除
 
-    def __init__(self, user, topic, iscustom, expire_date):
+    def __init__(self, user, topic, iscustom, expire_date, db_date, status):
         self.user = user
         self.topic = topic
         self.iscustom = iscustom
         self.expire_date = expire_date
+        self.db_date = db_date
+        self.status = status
 
 class DomainUser(db.Model):
     userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -435,19 +492,21 @@ class DomainUser(db.Model):
 class TopicStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     module = db.Column(db.String(10))# 显示是哪个模块
-    status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start
+    status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start -2:删除
     topic = db.Column(db.Text)
     start = db.Column(db.BigInteger(10, unsigned=True))#起始时间
     end = db.Column(db.BigInteger(10, unsigned=True))#终止时间
     range = db.Column(db.BigInteger(10, unsigned=True))#统计单元
+    db_date = db.Column(db.BigInteger(10, unsigned=True))#入库时间
 
-    def __init__(self, module, status, topic, start, end, range):
+    def __init__(self, module, status, topic, start, end, range, db_date):
         self.module = module
         self.status = status
         self.topic = topic
         self.start = start
         self.end = end
         self.range = range
+        self.db_date = db_date
 
 class SentimentRtTopicCount(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

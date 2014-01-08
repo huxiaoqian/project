@@ -69,13 +69,14 @@ def _check_run_notcustomize_topic(during=Fifteenminutes):
         topic = topics[0]
         start_ts = topic.start
         end_ts = topic.end
+        db_date = topic.db_date
         topicname = topic.topic
         
         # update status to 0
-        _update_topic_status2Computing(topicname, start_ts, end_ts)
+        _update_topic_status2Computing(topicname, start_ts, end_ts, db_date)
         
         print topicname.encode('utf-8'),  ' run realtime job from %s to %s ' % (start_ts, end_ts)
         sentimentRealTimeTopic(topicname, start_ts, end_ts)
 
         # update status to 1
-        _update_topic_status2Completed(topicname, start_ts, end_ts)
+        _update_topic_status2Completed(topicname, start_ts, end_ts, db_date)

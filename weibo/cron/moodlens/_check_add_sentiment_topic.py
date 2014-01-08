@@ -18,8 +18,8 @@ def _utf8_encode(s):
         return s.encode('utf-8')
 
 
-def _clear_keywords():
-	pass
+def _clear_keywords(r):
+	r.delete(SENTIMENT_TOPIC_KEYWORDS)
 
 
 def _add_keyword(r, k):
@@ -30,5 +30,6 @@ if __name__ == '__main__':
     r = _default_redis()
     
     topics = _all_topics(True)
+    _clear_keywords(r)
     for topic in topics: 
         _add_keyword(r, topic.topic)

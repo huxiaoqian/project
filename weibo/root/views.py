@@ -16,6 +16,7 @@ def loading():
 def index():    
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
+            print 'ok-here'
             log_in = session['logged_in']
             user = session['user']
             return render_template('root/index.html', active='home',identy='1',moodlens='1',profile='1',propagate='1',

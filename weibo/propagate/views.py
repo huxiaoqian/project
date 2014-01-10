@@ -747,17 +747,43 @@ def topic_ajax_userfield():
             return redirect('/')
     else:
         return redirect('/')
+    
+@mod.route("/yym/", methods = ["GET","POST"])
+def yym():
+    #print mid
+    dur_time = request.args.get('time', '')
+    mid = request.args.get('mid', '')
+    print dur_time
+    print mid
+    dur_time = _utf_encode(dur_time)
+    if not dur_time or dur_time == '':
+        beg_time, end_time = _default_time_zone()
+    else:
+        beg_time, end_time = _time_zone(dur_time)
 
-@mod.route("/showresult_single/<mid>/<timestr>", methods = ["GET","POST"])
-def single_analysis(mid,timestr):
+        beg_time = date2ts(beg_time)
+        end_time = date2ts(end_time)
+    print beg_time,end_time
+    return render_template('propagate/yym.html')
+    
+@mod.route("/showresult_single/", methods = ["GET","POST"])
+def single_analysis():
+    dur_time = request.args.get('time', '')
+    mid = request.args.get('mid', '')
     if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin':
-            mid = int(mid)
-            timestr = str(timestr)
-            time_ts = datetime2ts(timestr)
-            time_date = ts2datetime(time_ts)
-            time_ts = date2ts(time_date)
-            blog_info = calculate_single(mid,time_ts)
+        if session['user'] == 'admin': 
+            print dur_time
+            print mid
+            dur_time = _utf_encode(dur_time)
+            if not dur_time or dur_time == '':
+                beg_time, end_time = _default_time_zone()
+            else:
+                beg_time, end_time = _time_zone(dur_time)
+                beg_time = date2ts(beg_time)
+                end_time = date2ts(end_time)
+            print beg_time,end_time
+                
+            blog_info = calculate_single(mid,beg_time,end_time)
                                  
             blog_img_url = blog_info['user']['profile_image_url']
             blog_date_list = blog_info['datelist']
@@ -777,7 +803,8 @@ def single_analysis(mid,timestr):
                                    tar_attitudes_count = blog_attitudes_count,
                                    tar_post_date = blog_time,
                                    blog_date_list = blog_date_list,
-                                   time_ts=time_ts
+                                   beg_ts=beg_time,
+                                   end_ts=end_time
                                    )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -820,11 +847,14 @@ def single_ajax_trend():
             if request.method == "GET":
                 return render_template('propagate/ajax/single_trend.html')
             else:
+                print "here"
                 mid = int(request.form.get('mid', ""))
-                time_ts = float(request.form.get('time_ts', ""))
+                beg_ts = float(request.form.get('beg_ts', ""))
+                end_ts = float(request.form.get('end_ts', ""))
+                print mid,beg_ts,end_ts
 ##                print type(time_ts)
 ##                time_ts = float(time_ts)
-                blog_info = calculate_single(mid,time_ts)
+                blog_info = calculate_single(mid,beg_ts,end_ts)
                 perday_repost_count = blog_info['perday_count']
                 blog_date_list = blog_info['datelist']
                 date_list = [int(time.mktime(d.timetuple()))*1000 for d in blog_date_list]
@@ -858,8 +888,9 @@ def single_ajax_weibos():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                time_ts = float(request.args.get('time_ts', ""))
-                blog_info = calculate_single(mid,time_ts)
+                beg_ts = float(request.args.get('beg_ts', ""))
+                end_ts = float(request.args.get('end_ts', ""))
+                blog_info = calculate_single(mid,beg_ts,end_ts)
 
                 bloger_name = blog_info['user']['name']
                 blog_reposts_count = blog_info['status']['repostsCount']
@@ -929,8 +960,9 @@ def single_ajax_spatial():
                 return render_template('propagate/ajax/single_spatial.html')
             else:
                 mid = int(request.form.get('mid', ""))
-                time_ts = float(request.form.get('time_ts', ""))
-                blog_info = calculate_single(mid,time_ts)
+                beg_ts = float(request.form.get('beg_ts', ""))
+                end_ts = float(request.form.get('end_ts', ""))
+                blog_info = calculate_single(mid,beg_ts,end_ts)
                 area_list = blog_info['geo']
 
                 return json.dumps({'map_data': area_list})
@@ -960,8 +992,9 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
-                time_ts = float(request.args.get('time_ts', ""))
-                blog_info = calculate_single(mid,time_ts)
+                beg_ts = float(request.args.get('beg_ts', ""))
+                end_ts = float(request.args.get('end_ts', ""))
+                blog_info = calculate_single(mid,beg_ts,end_ts)
 
                 tar_persistent_count = blog_info['persistent_index']
                 tar_sudden_count = blog_info['sudden_index']
@@ -1011,7 +1044,8 @@ def single_ajax_path():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                time_ts = float(request.args.get('time_ts', ""))
+                beg_ts = float(request.args.get('beg_ts', ""))
+                end_ts = float(request.args.get('end_ts', ""))
                 flag = tree_main(mid,time_ts)
                 return render_template('propagate/ajax/single_retweetpath.html',mid = mid,flag = flag)
         else:
@@ -1036,8 +1070,9 @@ def single_ajax_userfield():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = int(request.args.get('mid', ""))
-                time_ts = float(request.args.get('time_ts', ""))
-                blog_info = calculate_single(mid,time_ts)
+                beg_ts = float(request.args.get('beg_ts', ""))
+                end_ts = float(request.args.get('end_ts', ""))
+                blog_info = calculate_single(mid,beg_ts,end_ts)
 
                 repost_bloger = blog_info['repost_users']
                 blog_key_user_list = repost_bloger
@@ -1076,7 +1111,7 @@ def single_ajax_userfield():
                 if domain['其他'] >= 0:
                     data.append({'unknown':domain['其他']})
                 
-                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data, time_ts=time_ts)
+                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data, beg_ts=beg_ts,end_ts=end_ts)
             else:
                 pass
         else:
@@ -1196,7 +1231,7 @@ def topics():
             return redirect('/')
     else:
         return redirect('/')
-
+    
 @mod.route("/hot_status/")
 def hot_status():
     if 'logged_in' in session and session['logged_in']:
@@ -1250,9 +1285,10 @@ def single_rank():
         limit = int(request.args.get('limit'))
     if request.args.get('mid'):
         mid = int(request.args.get('mid'))
-    if request.args.get('time_ts'):
-        time_ts = float(request.args.get('time_ts'))
-    blog_info = calculate_single(mid,time_ts)
+    if request.args.get('beg_ts'):
+        beg_ts = float(request.args.get('beg_ts'))
+        end_ts = float(request.args.get('end_ts'))
+    blog_info = calculate_single(mid,beg_ts,end_ts)
     repost_bloger = blog_info['repost_users']
     blog_key_user_list = repost_bloger
 

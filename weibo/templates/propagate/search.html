@@ -54,6 +54,14 @@
       <legend><strong>微博信息搜索</strong></legend>
       <div class="inline">
         <ul>
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博MID:</b></font>
+          <input type="text" class="span2" placeholder="请输入微博ID" value="" role="textbox" name="weibo_mid" id="weibo_mid" style="margin-bottom: 0px;">
+        </ul>
+        <ul>
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博URL:</b></font>
+          <input type="text" class="span2" placeholder="请输入微博URL" value="" role="textbox" name="weibo_url" id="weibo_url" style="margin-bottom: 0px;">
+        </ul>
+        <ul>
           <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
           <div id="reportrange_single" class="btn dropdown-toggle">
             <i class="icon-calendar icon-large"></i>
@@ -63,6 +71,7 @@
           <input type="hidden" name="r" value="1">
           <input type="submit" class="btn btn-primary" value = "搜索" id="search_weibo">
         </ul>
+        
       </div>
       <hr>
     </div>
@@ -116,7 +125,9 @@ $("#search_topic").click(function() {
 });
 $("#search_weibo").click(function() {
   var time = $("#weibo_time").html();
-  window.location.href="/propagate/hot_status/?time="+time;
+  var mid = document.getElementById("weibo_mid").value;
+  window.location.href="/propagate/showresult_single/?time="+time+"&mid="+mid;
+
 });
 </script>
 {% endblock %}

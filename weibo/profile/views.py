@@ -11,13 +11,13 @@ import time
 import json
 import urllib2
 import operator
-import datetime
 from operator import itemgetter
 from flask.ext import admin
 from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
 from city_color import province_color_map
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
 from datetime import date
+from datetime import datetime
 from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
@@ -34,29 +34,39 @@ mod = Blueprint('profile', __name__, url_prefix='/profile')
 COUNT_PER_PAGE = 20
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
-def strToDate(dur_time):
-    m = '1'
-    d = '1'
-    y = '2013'
-    items = dur_time.split(', ')
-    n = 0
-    for item in items:
-        if n == 0:
-            mds = item.split(' ')
-            t = 0
-            for md in mds:
-                if t==0:
-                    m = month_value[md]
-                    t = 1
-                else:
-                    d = md
-            n = 1
-        else:
-            y = item
+def _utf_encode(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.encode('utf-8')
 
-    time_str = str(y)+'-'+str(m)+'-'+str(d)
+def _utf_decode(s):
+    if isinstance(s, str):
+        return s.decode('utf-8')
+    else:
+        return s
 
-    return time_str
+def _time_zone(stri):
+    '''时间段参数从前台时间控件传来
+    '''
+    dates = stri.split(' - ')
+    tslist = []
+
+    for date in dates:
+        month_day, year = date.split(',')
+        month, day = month_day.split('月 ')
+        year = int(year)
+        month = int(month)
+        day = filter(str.isdigit, day)#只保留数字，去掉“日”
+        day = int(day)
+        ts = datetime(year, month, day, 0, 0, 0)
+        ts = time.mktime(ts.timetuple())
+        tslist.append(ts)
+
+    start_ts = tslist[0]
+    end_ts = tslist[1]
+
+    return int(start_ts), int(end_ts)
 
 def get_bucket(bucket):
     if bucket in buckets:
@@ -155,23 +165,23 @@ def profile_search(model='hotest'):
         if session['user'] == 'admin':
             if request.method == 'GET':
                 statuscount, friendscount, followerscount, province, field = getStaticInfo()
+                province_str = ''
+                province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外'] 
+                for pro in province:
+                    province_str += unicode(pro, 'utf-8') + ','
                 if model == 'person':
                     nickname = urllib2.unquote(request.args.get('nickname'))
                     print nickname.encode('utf-8')
                     return render_template('profile/profile_search.html',statuscount=statuscount,
                                            friendscount=friendscount, followerscount=followerscount,
-                                           location=province, field=field, model=model, result=None, nickname=nickname)
+                                           location=province_str, field=field, model=model, result=None, nickname=nickname)
                 elif model == 'find':
                     statuses_count_upBound = request.args.get('statuses_count_upBound',None)
                     friends_count_upBound = request.args.get('friends_count_upBound',None)
                     followers_count_upBound = request.args.get('followers_count_upBound',None)
-                    top_n = request.args.get('top_n',None)
+                    top_n = request.args.get('search_top_n',None)
                     province_str = request.args.get('province_str',None)
                     rank_str = request.args.get('rankcount',None)
-                    if(province_str):
-                        province = province_str#最后一个元素是空值
-                    else:
-                        province = ['北京','天津','上海','重庆']
                     if(top_n):
                         result_count = int(top_n)
                     else:
@@ -193,11 +203,11 @@ def profile_search(model='hotest'):
 
                     return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up,
                                            friendscount_up = friendscount_up,followerscount_up = followerscount_up,
-                                           location = province, field=field, model = model,rankcount=rank_str)  
+                                           location = province_str, field=field, model = model,rankcount=rank_str)  
                 else:
                     return render_template('profile/profile_search.html',statuscount=statuscount,
                                            friendscount=friendscount, followerscount=followerscount,
-                                           location=province, field=field, model=model, result=None)
+                                           location=province_str, field=field, model=model, result=None)
             if request.method == 'POST' and request.form['page']:
                 if model == 'newest':
                     page = int(request.form['page'])
@@ -207,8 +217,8 @@ def profile_search(model='hotest'):
                         startoffset = (page - 1) * COUNT_PER_PAGE
 
                     total_days = 90
-                    begin_ts = int(time.mktime(datetime.datetime(2013,1, 1, 2, 0).timetuple()))
-                    now_ts = int(time.mktime(datetime.datetime(2014, 1, 1, 2, 0).timetuple()))
+                    begin_ts = int(time.mktime(datetime(2013,1, 1, 2, 0).timetuple()))
+                    now_ts = int(time.mktime(datetime(2014, 1, 1, 2, 0).timetuple()))
                     during = 24 * 3600
                     total_days = (now_ts - begin_ts) / during
                     query_dict = {
@@ -363,22 +373,22 @@ def profile_search(model='hotest'):
                     if identy == 1:
                         if request.method == 'GET':
                             statuscount, friendscount, followerscount, province, field = getStaticInfo()
+                            province_str = ''
+                            province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外'] 
+                            for pro in province:
+                                province_str += unicode(pro, 'utf-8') + ','
                             if model == 'person':
                                 nickname = urllib2.unquote(request.args.get('nickname'))
                                 return render_template('profile/profile_search.html',statuscount=statuscount,
                                                        friendscount=friendscount, followerscount=followerscount,
-                                                       location=province, field=field, model=model, result=None, nickname=nickname)
+                                                       location=province_str, field=field, model=model, result=None, nickname=nickname)
                             elif model == 'find':
                                 statuses_count_upBound = request.args.get('statuses_count_upBound',None)
                                 friends_count_upBound = request.args.get('friends_count_upBound',None)
                                 followers_count_upBound = request.args.get('followers_count_upBound',None)
-                                top_n = request.args.get('top_n',None)
+                                top_n = request.args.get('search_top_n',None)
                                 province_str = request.args.get('province_str',None)
                                 rank_str = request.args.get('rankcount',None)
-                                if(province_str):
-                                    province = province_str#最后一个元素是空值
-                                else:
-                                    province = ['北京','天津','上海','重庆']
                                 if(top_n):
                                     result_count = int(top_n)
                                 else:
@@ -400,11 +410,11 @@ def profile_search(model='hotest'):
 
                                 return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up,
                                                        friendscount_up = friendscount_up,followerscount_up = followerscount_up,
-                                                       location = province, field=field, model = model,rankcount=rank_str)  
+                                                       location = province_str, field=field, model = model,rankcount=rank_str)  
                             else:
                                 return render_template('profile/profile_search.html',statuscount=statuscount,
                                                        friendscount=friendscount, followerscount=followerscount,
-                                                       location=province, field=field, model=model, result=None)
+                                                       location=province_str, field=field, model=model, result=None)
                         if request.method == 'POST' and request.form['page']:
                             if model == 'newest':
                                 page = int(request.form['page'])
@@ -414,8 +424,8 @@ def profile_search(model='hotest'):
                                     startoffset = (page - 1) * COUNT_PER_PAGE
 
                                 total_days = 90
-                                today = datetime.datetime.today()
-                                now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+                                today = datetime.today()
+                                now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
                                 now_ts = int(now_ts)
                                 during = 24 * 3600
                                 begin_ts = now_ts - total_days * during
@@ -545,15 +555,9 @@ def test_profile_group():
             if request.method == 'GET':
                 fieldEnName = request.args.get('fieldEnName',None)
                 during_time = request.args.get('during_time',None)
-                times = during_time.split(' - ')
-                n = 0
-                for ti in times:
-                    if n == 0:
-                        beg_time = strToDate(ti)
-                        n = 1
-                    else:
-                        end_time = strToDate(ti)
-                print during_time
+                during_date = _utf_encode(during_time)
+                start_ts,end_ts = _time_zone(during_date)
+                window_size = (end_ts - start_ts)/(24*3600)
             field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
             return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
         else:
@@ -708,8 +712,8 @@ def getInteractCount(uid, start_ts, end_ts, schema='repost', amongfriends=True, 
 def profile_interact_network(uid):
     if request.method == 'GET':
         total_days = 270
-        today = datetime.datetime.today()
-        now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+        today = datetime.today()
+        now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
         now_ts = int(now_ts)
         during = 24 * 3600
 
@@ -1046,8 +1050,8 @@ def profile_person_topic(uid):
 def profile_network(friendship, uid):
     if request.method == 'GET':
         total_days = 89
-        today = datetime.datetime.today()
-        now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+        today = datetime.today()
+        now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
         now_ts = int(now_ts)
         during = 24 * 3600
 
@@ -1176,8 +1180,8 @@ def personal_weibo_count(uid):
     post_status_kv = {'total': 2, 'repost': 1, 'fipost': 0}
 
     total_days = 89
-    today = datetime.datetime.today()
-    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+    today = datetime.today()
+    now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
     now_ts = int(now_ts)
     during = 24 * 3600
     time_arr = []
@@ -1293,8 +1297,8 @@ def profile_group_topic(fieldEnName):
 @mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
 def profile_group_status_count(fieldEnName):
     total_days = 89
-    today = datetime.datetime.today()
-    now_ts = time.mktime(datetime.datetime(2013, 12, 31, 2, 0).timetuple())
+    today = datetime.today()
+    now_ts = time.mktime(datetime(2013, 12, 31, 2, 0).timetuple())
     now_ts = int(now_ts)
     during = 24 * 3600
 
@@ -1340,8 +1344,8 @@ def profile_group_status_count(fieldEnName):
 @mod.route('/group_active/<fieldEnName>', methods=['GET', 'POST'])
 def group_active_count(fieldEnName):
     total_days = 89
-    today = datetime.datetime.today()
-    now_ts = time.mktime(datetime.datetime(today.year, today.month, today.day, 2, 0).timetuple())
+    today = datetime.today()
+    now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
     now_ts = int(now_ts)
     during = 24 * 3600
 
@@ -1388,8 +1392,8 @@ def group_active_count(fieldEnName):
 @mod.route('/group_emotion/<fieldEnName>')
 def profile_group_emotion(fieldEnName):
     total_days = 30
-    today = datetime.datetime.today()
-    now_ts = time.mktime(datetime.datetime(2013, 10, 1, 2, 0).timetuple())
+    today = datetime.today()
+    now_ts = time.mktime(datetime(2013, 10, 1, 2, 0).timetuple())
     now_ts = int(now_ts)
     during = 24 * 3600
 

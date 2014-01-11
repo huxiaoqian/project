@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from extensions import db
+from config import db
 
 __all__ = ['Field', 'Topic', \
            'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', \
@@ -13,8 +13,7 @@ __all__ = ['Field', 'Topic', \
            'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', \
            'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
            'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
-           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf']
-
+           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount']
 
 
 class Field(db.Model):
@@ -649,19 +648,6 @@ class PropagateWeibo(db.Model):
         self.repostsCount = repostsCount
         self.commentsCount = commentsCount
         self.attitudesCount = attitudesCount
-
-class TopicGexf(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    topic = db.Column(db.String(20))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyGexf = db.Column(db.Text)
-
-    def __init__(self, topic, identifyDate, identifyWindow, identifyGexf):
-        self.topic = topic
-        self.identifyDate = identifyDate
-        self.identifyWindow = identifyWindow
-        self.identifyGexf = identifyGexf
 
 class ProfileDomainTopic(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

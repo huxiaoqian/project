@@ -5,7 +5,7 @@ import time
 import random
 
 from config import db
-from model import TopicStatus, TopicIdentification
+from model import TopicStatus, TopicIdentification, TopicGexf
 
 from time_utils import ts2datetime, datetime2ts, window2time
 
@@ -86,3 +86,8 @@ def read_key_users(date, window, topicname, top_n=10):
             uid = item.userId
             users.append(uid)
     return users
+
+def save_gexf_results(topic, identifyDate, identifyWindow, identifyGexf):
+    item = TopicGexf(topic, identifyDate, identifyWindow, identifyGexf)
+    db.session.add(item)
+    db.session.commit()

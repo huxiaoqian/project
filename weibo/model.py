@@ -10,7 +10,7 @@ __all__ = ['Field', 'Topic', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
            'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', \
-           'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', 'PropagateSpatial', 'PropagateUser', 'PropagateWeibo']
+           'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', 'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'TopicGexf']
 
 
 class Field(db.Model):
@@ -645,5 +645,18 @@ class PropagateWeibo(db.Model):
         self.repostsCount = repostsCount
         self.commentsCount = commentsCount
         self.attitudesCount = attitudesCount
+
+class TopicGexf(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic = db.Column(db.String(20))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyGexf = db.Column(db.Text)
+
+    def __init__(self, topic, identifyDate, identifyWindow, identifyGexf):
+        self.topic = topic
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyGexf = identifyGexf
 
 

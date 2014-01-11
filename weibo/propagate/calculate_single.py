@@ -23,6 +23,22 @@ path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))
 
+def getXapianWeiboByDuration(datestr_list):
+    stub_file_list = []
+
+    for datestr in datestr_list:
+        stub_file = path + datestr
+        print type(stub_file)
+        if os.path.exists(stub_file):
+            stub_file_list.append(stub_file)
+
+    if len(stub_file_list):
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
+        return xapian_search_weibo 
+
+    else:
+        return None
+    
 def getXapianWeiboByDate(datestr):
     # datestr: 20130908
     
@@ -33,6 +49,20 @@ def getXapianWeiboByDate(datestr):
             return xapian_search_weibo
     else:
             return None
+
+def getXapianWeiboByTs(start_time, end_time):
+    xapian_date_list =[]
+    Day = 24*3600
+    days = int((int(end_time) - int(start_time)) / Day)
+    print "days:"+"%d"%days
+
+    for i in range(0, days):
+        _ts = start_time + i * Day
+        xapian_date_list.append(ts2datetimestr(_ts))
+    print "xapian_date_list"
+    print xapian_date_list
+    statuses_search = getXapianWeiboByDuration(xapian_date_list)
+    return statuses_search
 
 def get_user(uid):
     user = {}
@@ -79,11 +109,10 @@ def get_user(uid):
     else:
         return user
 
-def get_ori_status(_id, time_ts):
+def get_ori_status(_id, beg_ts, end_ts):
     
     status ={}
-    datestr = ts2datetimestr(time_ts)
-    statuses_search = getXapianWeiboByDate(datestr)
+    statuses_search = getXapianWeiboByTs(beg_ts,end_ts)
     #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
     count,get_results = statuses_search.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_mid','reposts_count','comments_count','attitudes_count','user','timestamp'])
     print 'yuan',count
@@ -111,9 +140,10 @@ def get_ori_status(_id, time_ts):
         status['timestamp'] =r['timestamp']
         status['postDate'] = datetime.fromtimestamp(r['timestamp'])
         break
+    #print status
     return status
     
-def calculate_single(_id, time_ts):
+def calculate_single(_id, beg_ts,end_ts):
 
     #初始化
     blog_info = {}
@@ -143,12 +173,11 @@ def calculate_single(_id, time_ts):
     end_ts1 = time.mktime(datetime(now_year, now_month, now_day).timetuple())
     
     #获取原微博信息
-    status_ori = get_ori_status(_id, time_ts)
+    status_ori = get_ori_status(_id, beg_ts, end_ts)
 
     #获取相关微博
     #s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
-    datestr = ts2datetimestr(time_ts)
-    statuses_search = getXapianWeiboByDate(datestr)
+    statuses_search = getXapianWeiboByTs(beg_ts,end_ts)
     count,get_results = statuses_search.search(query={'retweeted_mid': _id}, sort_by=['timestamp'])#,'timestamp': {'$gt': begin_ts1, '$lt': end_ts1} }, sort_by=['timestamp'])
 
     print count

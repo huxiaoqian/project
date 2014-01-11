@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from extensions import db
+from config import db
 
 __all__ = ['Field', 'Topic', \
            'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', \

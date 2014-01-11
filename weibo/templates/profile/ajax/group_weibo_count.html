@@ -84,20 +84,6 @@
       });
   }
   </script>
-  <form class="form-inline">
-      时间范围:
-    <select class="span2" name="interval" id="weibo_count_interval">
-      <option value="270">9个月</option>
-      <option value="180">6个月</option>
-      <option value="150">5个月</option>
-      <option value="120">4个月</option>
-      <option value="90">3个月</option>
-      <option value="60">2个月</option>
-      <option value="30">1个月</option>
-      <option value="7">1周</option>
-    </select>
-    <button type="button" class="btn btn-primary" onclick="submit_form();return false;"><i class="icon-search"></i>生成数量走势图</button>
-  </form>
   <div id="chartdiv_week_weibocount" style="width: 930px; height: 400px;"></div>
 {% endblock body %}
 

@@ -1,28 +1,54 @@
-function choose_method(range, method) {
-    $("#"+range+"_rank_method").val(method);
-    cn_method = '';
-    if(method=='finance')
-      cn_method = '财经';
-    else if(method=='media')
-      cn_method = '媒体';
-    else if(method=='culture')
-      cn_method = '文化';
-    else if(method=='technology')
-      cn_method = '科技';
-    else if(method=='entertainment')
-      cn_method = '娱乐';
-    else if(method=='education')
-      cn_method = '教育';
-    else if(method=='fashion')
-      cn_method = '时尚';
-    else if(method=='sports')
-      cn_method = '体育';
-    $("#"+range+"_rank_method_choosen").text(cn_method);
-    $("#"+range+"_rank_method_choosen").append(' <span class="caret"></span>');
+  function choose_field(prefix, area){
+    $("#topic_hidden").val(area)
+    cn_area = '';
+    if(area=='finance')
+        cn_area = '财经';
+    else if(area=='media')
+        cn_area = '媒体';
+    else if(area=='sports')
+        cn_area = '体育';
+    else if(area=='fashion')
+        cn_area = '时尚';
+    else if(area=='culture')
+        cn_area = '文化';
+    else if(area=='education')
+        cn_area = '教育';
+    else if(area=='technology')
+        cn_area = '科技';
+    else if(area=='abroad')
+        cn_area = '境外';
+    else if(area=='entertainment')
+        cn_area = '娱乐';
+    else if(area=='university')
+        cn_area = '高校微博';
+    else if(area=='homeadmin')
+        cn_area = '境内机构';
+    else if(area=='abroadadmin')
+        cn_area = '境外机构';
+    else if(area=='homemedia')
+        cn_area = '境内媒体';
+    else if(area=='abroadadmin')
+        cn_area = '境外媒体';
+    else if(area=='folkorg')
+        cn_area = '民间组织';
+    else if(area=='lawyer')
+        cn_area = '律师';
+    else if(area=='politician')
+        cn_area = '政府官员';
+    else if(area=='mediaworker')
+        cn_area = '媒体人士';
+    else if(area=='activer')
+        cn_area = '活跃人士';
+    else if(area=='grassroot')
+        cn_area = '草根';
+    else if(area=='other')
+        cn_area = '其它';
+    $("#area_rank_method_choosen").text(cn_area);
+    $("#area_rank_method_choosen").append(' <span class="caret"></span>');
     //close dropdown
-    $("#"+range+"_rank_method_choosen").parent().removeClass('open');
-    $("#"+range+"_rank_method_dropdown_menu").children().removeClass('active');
-}
+    $("#area_rank_method_choosen").parent().removeClass('open');
+    $("#area_rank_method_dropdown_menu").children().removeClass('active');
+  }
 
 function choose_window(range, window) {
     $("#"+range+"_window_size").val(window);

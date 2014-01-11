@@ -12,7 +12,7 @@ __all__ = ['Field', 'Topic', \
            'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', \
            'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', \
            'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
-           'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasics', \
+           'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
            'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount']
 
 
@@ -694,7 +694,7 @@ class ProfileDomainWeiboCount(db.Model):
         self.activeCount = activeCount
         self.importantCount = importantCount
 
-class ProfilePersonBasics(db.Model):
+class ProfilePersonBasic(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     userId = db.Column(db.BigInteger(11, unsigned=True))
     province = db.Column(db.Integer)

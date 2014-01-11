@@ -2,7 +2,7 @@
 
 import time
 import datetime
-from model import ProfilePersonBasics
+from model import ProfilePersonBasic
 from config import db, xapian_search_user
 
 xapian_user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
@@ -62,12 +62,12 @@ def iter_userbasic2mysql():
         print userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date
         print '--------'
 
-        item_exist = db.session.query(ProfilePersonBasics).filter(ProfilePersonBasics.userId==userId).first()
+        item_exist = db.session.query(ProfilePersonBasic).filter(ProfilePersonBasic.userId==userId).first()
         if item_exist:
             db.session.delete(item_exist)
         '''
 
-        item = ProfilePersonBasics(userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date)
+        item = ProfilePersonBasic(userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date)
         db.session.add(item)
 
         count += 1

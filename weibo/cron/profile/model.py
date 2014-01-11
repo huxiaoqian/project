@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from extensions import db
+from config import db
 
 __all__ = ['Field', 'Topic', \
            'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', \
@@ -629,7 +629,7 @@ class PropagateWeibo(db.Model):
     image_url = db.Column(db.String(50))
     text = db.Column(db.Text)
     sourcePlatform = db.Column(db.String(20))
-    postDate = db.Column(db.DateTime)
+    postDate = db.Column(db.Date)
     uid = db.Column(db.String(20))
     user_name = db.Column(db.String(20))
     repostsCount = db.Column(db.Integer)

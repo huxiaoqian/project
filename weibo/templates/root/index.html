@@ -116,7 +116,7 @@
           <a class="thumbnail" id="profile1" target="_blank">
             <img src="/static/img/home_thumbnail/3.png" alt="画像" width="260" height="200">
           </a>
-          <h4 style="text-align:center;">网民画像</h4>
+          <h4 style="text-align:center;">网民画像与领域特征</h4>
           <!--<p>该模块主要识别各类热点舆情传播的关键人物，提供其全特征数据，可以为网民的定点监控和干预提供策略建议。</p>
           <p><a class="btn" id="profile2" target="_blank">查看详情 »</a></p>-->
         </li>
@@ -124,10 +124,10 @@
         {% else %}
         <div class="col-md-4">
         <li class="span3" style="display:none;">
-          <a class="thumbnail" href="/profile/search/" target="_blank">
+          <a class="thumbnail" href="/profile/" target="_blank">
             <img src="/static/img/home_thumbnail/3.png" alt="画像" width="260" height="200">
           </a>
-          <h4 style="text-align:center;">网民画像</h4>
+          <h4 style="text-align:center;">网民画像与领域特征</h4>
           <!--<p>该模块主要识别各类热点舆情传播的关键人物，提供其全特征数据，可以为网民的定点监控和干预提供策略建议。</p>
           <p><a class="btn" href="/profile/search/" target="_blank">查看详情 »</a></p>-->
         </li>
@@ -263,7 +263,7 @@
           data:{log_in : log_in,user : user},
           success: function(data){
             if(data == 'Right'){
-              window.open('../profile/search/');
+              window.open('../profile/');
             }
             else{
               window.open('../');
@@ -285,7 +285,7 @@
           data:{log_in : log_in,user : user},
           success: function(data){
             if(data == 'Right'){
-              window.open('../profile/search/');
+              window.open('../profile/');
             }
             else{
               window.open('../');

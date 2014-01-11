@@ -2,22 +2,7 @@
 
 {% block body %}     
 <form class="form-inline">
-    模型<select class="span2" name="topic_type" id="topic_type">
-        <option value="lda">LDA</option>
-        <option value="bst">突发词</option>
-      </select>
-    时间范围:
-    <select class="span2" name="interval" id="tp_interval">
-      <option value="-1">从注册至今</option>
-    </select>
-     以<select class="span2" name="sort" id="sort">
-        <option value="prob">概率</option>
-      </select>
-
-      作为权重显示前<input type="number" name="limit" value="200" min="1" max="1000" class="span2" id="limit">关键词
-      <!--<input type='button' onclick='return false;'>-->
-    <button type="button" class="btn btn-primary" id="generate_cloud" onclick="submit_form();return false;"><i class="icon-search"></i>分析</button>
-    <button2 type="button" class="btn btn-primary" id="editor_save" "><i class="icon-search"></i>下载svg</button2>
+    <button2 type="button" class="btn btn-primary" id="editor_save"><i class="icon-search"></i>下载svg</button2>
 </form>
 <div id='d3_cloud'></div>
 <canvas type="hidden" id="svgtoimg" width="1000px" height="600px"></canvas> 
@@ -123,34 +108,6 @@ function display_d3_cloud(data){
         }
     });
   });
-  function changChild(tid){  
-    $("#tp_interval").empty();//清空
-    $("#sort").empty();
-    if (tid == 'bst'){
-      var html = "<option value='90'>最近3个月</option><option value='60'>最近2个月</option><option value='30'>最近1个月</option><option value='7'>最近1周</option><option value='1'>最近1天</option>";
-      var shtml = "<option value='freq'>词频</option><option value='burst'>突发度</option>";
-    }else{
-      var html = "<option value='-1'>从注册至今</option>";
-      var shtml = "<option value='prob'>概率</option>";
-    }
-    $("#tp_interval").append(html);
-    $("#sort").append(shtml);
-  }
-  function submit_form(){
-    var interval_arg = $("#tp_interval")[0].value;
-    var sort_arg = $("#sort")[0].value;
-    var limit_arg = $("#limit")[0].value;
-    var type_arg = $("#topic_type")[0].value;
-    $.ajax({
-          url: "/profile/group_topic/{{field}}?interval=" + interval_arg + "&sort=" + sort_arg + "&limit=" + limit_arg + "&topic_type=" + type_arg,
-          dataType: 'json',   
-          type: "GET",   
-          success: function (data) {
-            $("#d3_cloud").empty();
-            display_d3_cloud(data);
-          }
-      });
-  }
   </script>
   <script>
   $("#editor_save").click(function() {

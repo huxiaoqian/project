@@ -92,6 +92,33 @@ def fieldsEn2Zh(name):
         return u'时尚'
     if name == 'sports':
         return u'体育'
+    if name == 'oversea':
+        return u'境外'
+    if name == 'university':
+        return u'高校微博'
+    if name == 'homeadmin':
+        return u'境内机构'
+    if name == 'abroadadmin':
+        return u'境外机构'
+    if name == 'homemedia':
+        return u'境内媒体'
+    if name == 'abroadmedia':
+        return u'境外媒体'
+    if name == 'folkorg':
+        return u'民间组织'
+    if name == 'lawyer':
+        return u'律师'
+    if name == 'politician':
+        return u'政府官员'
+    if name == 'mediaworker':
+        return u'媒体人士'
+    if name == 'activer':
+        return u'活跃人士'
+    if name == 'grassroot':
+        return u'草根'
+    if name == 'other':
+        return u'其它'
+
 def getStaticInfo():
     statuscount = [0, 2000000, 4000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000]
     friendscount = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
@@ -101,7 +128,15 @@ def getStaticInfo():
     friendsRange = [{'lowBound': friendscount[i], 'upBound': friendscount[i+1]} for i in range(len(friendscount)-1)]
     followersRange = [{'lowBound': followerscount[i], 'upBound': followerscount[i+1]} for i in range(len(followerscount)-1)]
     province = [{'province': unicode(i, 'utf-8')} for i in province]
-    fields = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
+
+    # 按顺序得到领域名称
+    fields = []
+    for i in range(20):
+        for f in fields_id:
+            if i == f.value:
+                fields.append({'fieldEnName': f.key, 'fieldZhName': fieldsEn2Zh(f.key)})
+
+    # fields = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
     return statusRange, friendsRange, followersRange, province, fields
 
 def yymInfo(uid):

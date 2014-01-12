@@ -27,7 +27,7 @@ import burst_monitor as burstRealtimeModule
 
 from show_user_statuses import user_statuses
 
-from utils import acquire_topic_id, acquire_topic_name, read_rank_results, read_topic_rank_results
+from utils import acquire_topic_id, acquire_topic_name, read_rank_results, read_topic_rank_results, read_topic_gexf_results
 from time_utils import ts2datetime, datetime2ts, window2time
 
 from hadoop_utils import monitor
@@ -38,6 +38,11 @@ from whole_result import whole_caculate
 from area_result import area_caculate
 from brust_result import burst_caculate
 from history import _all_history, _add_history, _search_history
+
+import networkx as nx
+from lxml import etree
+
+#from weibo.cron_check import topic_network
 
 domain={'culture': 0, 'education': 1, 'entertainment': 2, 'fashion': 3, 'finance': 4, 'media': 5, 'sports': 6, 'technology': 7, 'oversea': 8, 'university': 9, 'homeadmin': 10, 'abroadadmin': 11, 'homemedia': 12, 'abroadadmin': 13, 'folkorg': 14, 'lawyer': 15, 'politician': 16, 'mediaworker': 17, 'activer': 18, 'grassroot': 19, 'other': 20}
 
@@ -518,22 +523,30 @@ def topic():
         return redirect('/')
 
 
-@mod.route("/area/network/", methods=["POST"])
+@mod.route("/topic/network/", methods=["POST"])
 def area_network():
     request_method = request.method
     if request_method == 'POST':
+        print 'here o just one'
         # current_time = time.time()
-        current_time = datetime2ts('2013-3-7')
+        current_time = datetime2ts('2013-9-1')
         current_date = ts2datetime(current_time)
         gexf = None
         form = request.form
-        topic_id = int(form.get('topic_id', None))
+        topic = form.get('topic', None)
         window_size = int(form.get('window_size', 1))
-        if not topic_id:
-            gexf = ''
-        else:
-            gexf = areaModule.make_network_graph(current_date, topic_id, window_size)
-        response = make_response(gexf)
+        #if not topic_id:
+        #    gexf = ''
+        #else:
+        #    gexf = areaModule.make_network_graph(current_date, topic_id, window_size)
+        #response = make_response(gexf)
+        idGexf = 3
+        dataGexf = read_topic_gexf_results(idGexf)
+        #print '!!!!!!!!', dataGexf
+
+        #etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
+        response = make_response(dataGexf)
+        print '!!!!!!!!', response
         response.headers['Content-Type'] = 'text/xml'
         return response
     else:

@@ -27,6 +27,7 @@ from weibo.model import *
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
+from person import _search_person_basic, _search_person_important_active
 
 
 buckets = {}
@@ -92,6 +93,33 @@ def fieldsEn2Zh(name):
         return u'时尚'
     if name == 'sports':
         return u'体育'
+    if name == 'oversea':
+        return u'境外'
+    if name == 'university':
+        return u'高校微博'
+    if name == 'homeadmin':
+        return u'境内机构'
+    if name == 'abroadadmin':
+        return u'境外机构'
+    if name == 'homemedia':
+        return u'境内媒体'
+    if name == 'abroadmedia':
+        return u'境外媒体'
+    if name == 'folkorg':
+        return u'民间组织'
+    if name == 'lawyer':
+        return u'律师'
+    if name == 'politician':
+        return u'政府官员'
+    if name == 'mediaworker':
+        return u'媒体人士'
+    if name == 'activer':
+        return u'活跃人士'
+    if name == 'grassroot':
+        return u'草根'
+    if name == 'other':
+        return u'其它'
+
 def getStaticInfo():
     statuscount = [0, 2000000, 4000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000]
     friendscount = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
@@ -616,6 +644,71 @@ def profile_person(uid):
             return redirect('/')
     else:
         return redirect('/')
+# def profile_person(uid):
+#     if 'logged_in' in session and session['logged_in']:
+#         if session['user'] == 'admin':
+#             if uid != None:
+#                 status1, personbasic = _search_person_basic(uid)
+#                 # status2, person_important_active = _search_person_important_active(uid)
+#                 user = {}
+#                 if status1 == 'success':
+#                     verifiedTypenum = personbasic.verifiedType
+#                     friendsCount = personbasic.friendsCount
+#                     followersCount = personbasic.followersCount
+#                     statuseCount = personbasic.statusesCount
+#                     created_at = time.strftime("%m月 %d日, %Y", time.localtime(personbasic.created_at))
+#                     user = {'id': personbasic.userId, 'profile_image_url': personbasic.profileImageUrl, 'userName':  _utf_8_decode(personbasic.name), \
+#                     'friends_count': friendsCount, 'statuses_count': statuseCount, 'followers_count': followersCount, \
+#                     'gender': personbasic.gender, 'verified': personbasic.verified, 'created_at': _utf_8_decode(created_at), \
+#                     'location': _utf_8_decode(personbasic.location), 'date': personbasic.date, \
+#                     'verifiedTypenum': verifiedTypenum, 'description': _utf_8_decode(personbasic.description)}
+#                     user['active_rank'] = 0
+#                     user['important_rank'] = 0
+#                 else:
+#                     return 'no such user'
+#                 # if status2 == 'success':
+#                 #     active = person_important_active.activeSeries.split('_')[-1]
+#                 #     important = person_important_active.importantSeries.split('_')[-1]
+#                 #     user['active_rank'] = active
+#                 #     user['important_rank'] = important
+#             return render_template('profile/profile_person.html', user=user)
+#         else:
+#             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
+#             if pas != []:
+#                 for pa in pas:
+#                     identy = pa.profile
+#                     if identy == 1:
+#                         if userId != None:
+#                             status1, personbasic = _search_person_basic(userId)
+#                             # status2, person_important_active = _search_person_important_active(userId)
+#                             user = {}
+#                             if status1 == 'success':
+#                                 provincenum = personbasic.province
+#                                 citynum = personbasic.city
+#                                 verifiedTypenum = personbasic.verifiedType
+#                                 friendsCount = personbasic.friendsCount
+#                                 followersCount = personbasic.followersCount
+#                                 statuseCount = personbasic.statuseCount
+#                                 created_at = time.strftime("%m月 %d日, %Y", time.localtime(personbasic.created_at))
+#                                 user = {'id': personbasic.userId, 'profile_image_url': personbasic.profileImageUrl, 'userName':  _utf_8_decode(personbasic.name), \
+#                                 'friends_count': friendsCount, 'statuses_count': statuseCount, 'followers_count': followersCount, \
+#                                 'gender': personbasic.gender, 'verified': personbasic.verified, 'created_at': created_at, \
+#                                 'location': _utf_8_decode(personbasic.location), 'provincenum': provincenum, 'citynum': citynum, \
+#                                 'verifiedTypenum': verifiedTypenum, 'description': _utf_8_decode(personbasic.description),\
+#                                 'date': personbasic.date}
+#                             else:
+#                                 return 'no such user'
+#                             # if status2 == 'success':
+#                             #     active = person_important_active.activeSeries.split('_')[-1]
+#                             #     important = person_important_active.importantSeries.split('_')[-1]
+#                             #     user['active_rank'] = active
+#                             #     user['important_rank'] = important
+#                         return render_template('profile/profile_person.html', user=user)
+#                     else:
+#                         return redirect('/')
+#             return redirect('/')
+#     else:
+#         return redirect('/')
 
 
 def getFriendship(uid, schema='friends'):
@@ -1494,3 +1587,4 @@ def profile_group_location(fieldEnName):
             city_count[province] = 1
     results = province_color_map(city_count)
     return json.dumps(results)
+

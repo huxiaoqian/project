@@ -17,26 +17,23 @@
             <img style="width: 150px; height: 140px;" type="image/jpg" src="{{ topic_profile_image_url }}" media="screen" />
           </div>
           <div style="float:left;padding-left:50px;">
-            <h3>话题传播分析</h3>
-            <div style="float:left;padding-top:10px;">
-              <label style="font-size:18px">话题：<span class="badge badge-success" style="font-size:18px"> {{ keyword }} </span> </label>
-              <label class="appendedInput" style="font-size:18px;padding-top:10px;">关键用户：<span class="badge badge-info" style="font-size:18px"> {{ keyuser_str }} </span></label>
-            </div>
+            <h3>话题传播分析:&nbsp&nbsp&nbsp{{ keyword }}</h3>
             <div style="float:left;padding-top:10px;">
               <label style="font-size:18px">开始时间：<span class="badge badge-success" style="font-size:18px"> {{ return_beg_str }} </span> </label>
               <label class="appendedInput" style="font-size:18px;padding-top:10px;">截止时间：<span class="badge badge-success" style="font-size:18px"> {{ return_end_str }} </span></label>
             </div>
-            <div style="float:left;padding-top:10px;">
-              <label style="font-size:18px">发起人：<span class="badge badge-success" style="font-size:18px"> {{ topic_ori_screen_name }} </span> </label>
-              <label class="appendedInput" style="font-size:18px;padding-top:10px;">相关微博条数：<span class="badge badge-info" style="font-size:18px"> {{ blog_rel_count }} </span></label>
-            </div>
             <div style="float:left;padding-top:10px;padding-left:30px;">
+              <label style="font-size:18px">发起人：<span class="badge badge-info" style="font-size:18px"> {{ topic_ori_screen_name }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">发起时间：<span class="badge badge-info" style="font-size:18px">{{ topic_ori_date }} </span></label>
+              
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">                
                 <label class="appendedInput" style="font-size:18px">原创微博条数：<span class="badge badge-warning" style="font-size:18px"> {{ blog_ori_count }} </span></label>
-                <label class="appendedInput" style="font-size:18px;padding-top:10px;">原创微博比例：{{ blog_ori_account }}</label>
+                <label class="appendedInput" style="font-size:18px;padding-top:10px;">相关微博条数：<span class="badge badge-warning" style="font-size:18px"> {{ blog_rel_count }} </span></label>                
             </div>
             <div style="float:left;padding-top:10px;padding-left:30px;">
-              <label class="appendedInput" style="font-size:18px">领袖人数：{{ topic_leader_count }} </label>
-              <label class="appendedInput" style="font-size:18px;padding-top:10px;">发起时间：{{ topic_ori_date }} </label>
+              <label class="appendedInput" style="font-size:18px">原创微博比例：{{ blog_ori_account }}</label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">领袖人数：{{ topic_leader_count }} </label>
             </div>
           </div>
         </div>
@@ -47,11 +44,11 @@
       <div class="span12" id = "index-tabs">
         <ul class="nav nav-tabs">
           <li><a href="/propagate/topic_ajax_trend/" >演变趋势</a></li>
-          <li><a href="/propagate/topic_ajax_weibos/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >相关微博</a></li>
+          <li><a href="/propagate/topic_ajax_weibos/?topic_id={{topic_id}}&beg_time={{beg_time}}&end_time={{end_time}}" >相关微博</a></li>
           <li><a href="/propagate/topic_ajax_spatial/" >地理分布</a></li>
-          <li><a href="/propagate/topic_ajax_stat/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >主要指标</a></li>
-          <li><a href="/propagate/topic_ajax_path/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >传播路径</a></li>
-          <li><a href="/propagate/topic_ajax_userfield/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}&keyuser={{keyuser}}" >人员领域分布</a></li>
+          <li><a href="/propagate/topic_ajax_stat/?topic_id={{topic_id}}" >主要指标</a></li>
+          <li><a href="/propagate/topic_ajax_path/?keyword={{keyword}}&beg_time={{beg_time}}&end_time={{end_time}}" >传播路径</a></li>
+          <li><a href="/propagate/topic_ajax_userfield/?topic_id={{topic_id}}" >人员领域分布</a></li>
         </ul>
       </div>
     </div>
@@ -63,10 +60,10 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script>
     var keywords = '{{keyword}}';
-    var keyuser = '{{keyuser}}';
     var begin_str = '{{beg_time}}';
     var end_str = '{{end_time}}';
-    var request_data_dict = {'keyword': keywords, 'keyuser': keyuser, 'beg_time': begin_str, 'end_time': end_str};
+    var topic_id = '{{topic_id}}'
+    var request_data_dict = {'keyword': keywords, 'topic_id': topic_id, 'beg_time': begin_str, 'end_time': end_str};
     $(document).ready(function(){
       $("#index-tabs" ).tabs({
         beforeLoad: function( event, ui ) {

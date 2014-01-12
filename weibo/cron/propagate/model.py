@@ -10,7 +10,7 @@ __all__ = ['Field', 'Topic', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
            'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', \
-           'TopicIdentification', 'TopicGexf']
+           'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', 'PropagateSpatial', 'PropagateUser', 'PropagateWeibo']
 
 
 class Field(db.Model):
@@ -242,6 +242,18 @@ class BlackList(db.Model):
 
     def __repr__(self):
         return self.blackName
+
+class KnowledgeList(db.Model):
+    id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    kID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
+    kName = db.Column(db.String(30), unique=True)
+
+    @classmethod
+    def _name(cls):
+        return u'知识库'
+
+    def __repr__(self):
+        return self.kName
 
 class IMedia(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
@@ -545,15 +557,93 @@ class SentimentRtTopicTopWeibos(db.Model):
         self.sentiment = sentiment
         self.weibos = weibos
 
-class TopicGexf(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    topic = db.Column(db.String(20))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyGexf = db.Column(db.Text)
+class PropagateTopic(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    topic_name = db.Column(db.String(20))
+    image_url = db.Column(db.String(50))
+    start = db.Column(db.Date)
+    end = db.Column(db.Date)
+    raise_user = db.Column(db.String(20))
+    t_weibo = db.Column(db.BigInteger(10, unsigned=True))
+    o_weibo = db.Column(db.BigInteger(10, unsigned=True))
+    raise_time = db.Column(db.Date)
+    persistent = db.Column(db.Float)
+    sudden = db.Column(db.Float)
+    coverage = db.Column(db.Float)
+    media = db.Column(db.Float)
+    leader = db.Column(db.Float)
 
-    def __init__(self, topic, identifyDate, identifyWindow, identifyGexf):
-        self.topic = topic
-        self.identifyDate = identifyDate
-        self.identifyWindow = identifyWindow
-        self.identifyGexf = identifyGexf
+    def __init__(self, topic_name, image_url, start, end, raise_user, t_weibo, o_weibo, raise_time, persistent, sudden, coverage, media, leader):
+        self.topic_name = topic_name 
+        self.image_url = image_url
+        self.start = start
+        self.end = end
+        self.raise_user = raise_user
+        self.t_weibo = t_weibo
+        self.o_weibo = o_weibo
+        self.raise_time = raise_time
+        self.persistent = persistent
+        self.sudden = sudden
+        self.coverage = coverage
+        self.media = media
+        self.leader = leader
+
+class PropagateTrend(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    topic_id = db.Column(db.Integer)
+    date = db.Column(db.Date)
+    count = db.Column(db.BigInteger(10, unsigned=True))
+
+    def __init__(self, topic_id, date, count):
+        self.topic_id = topic_id 
+        self.date = date
+        self.count = count
+
+class PropagateSpatial(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    topic_id = db.Column(db.Integer)
+    city = db.Column(db.String(20))
+    count = db.Column(db.BigInteger(10, unsigned=True))
+
+    def __init__(self, topic_id, city, count):
+        self.topic_id = topic_id 
+        self.city = city
+        self.count = count
+
+class PropagateUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    topic_id = db.Column(db.Integer)
+    user = db.Column(db.String(20))
+
+    def __init__(self, topic_id, user):
+        self.topic_id = topic_id 
+        self.user = user
+
+class PropagateWeibo(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    topic_id = db.Column(db.Integer)
+    mid = db.Column(db.String(30))
+    image_url = db.Column(db.String(50))
+    text = db.Column(db.Text)
+    sourcePlatform = db.Column(db.String(20))
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.String(20))
+    user_name = db.Column(db.String(20))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    attitudesCount = db.Column(db.Integer)
+
+    def __init__(self, topic_id, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount):
+        self.topic_id = topic_id 
+        self.mid = mid
+        self.image_url = image_url
+        self.text = text
+        self.sourcePlatform = sourcePlatform
+        self.postDate = postDate
+        self.uid = uid
+        self.user_name = user_name
+        self.repostsCount = repostsCount
+        self.commentsCount = commentsCount
+        self.attitudesCount = attitudesCount
+
+

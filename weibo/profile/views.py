@@ -27,6 +27,7 @@ from weibo.model import *
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
+from _leveldb import getPersonData
 from person import _search_person_basic, _search_person_important_active
 
 
@@ -610,15 +611,15 @@ def profile_person(uid):
                 count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
                                                   'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
                 if count > 0:
-                    current_time = '2013-3-7'
-                    from utils import get_person_active,get_person_important
+                    current_time = '20130904'
+                    active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, current_time)
                     for r in get_results():
                         user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  _utf_8_decode(r['name']), 'friends_count': r['friends_count'], \
                                 'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
                                 'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
                         user['created_at'] = ts2HMS(user['created_at']);
-                        user['active_rank'] = get_person_active(user['id'],current_time)
-                        user['important_rank'] = get_person_important(user['id'],current_time)
+                        user['active_rank'] = active
+                        user['important_rank'] = important
                 else:
                     return 'no such user'
             return render_template('profile/profile_person.html', user=user)

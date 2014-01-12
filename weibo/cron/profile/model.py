@@ -723,7 +723,7 @@ class ProfilePersonBasic(db.Model):
         self.verifiedType = verifiedType
         self.friendsCount = friendsCount
         self.followersCount = followersCount
-        self.statusesCount = statusesCount
+        self.statuseCount = statusesCount
         self.location = location
         self.description = description
         self.created_at = created_at
@@ -737,11 +737,11 @@ class ProfilePersonWeiboCount(db.Model):
     windowLen = db.Column(db.Integer, default=30)
     activeSeries = db.Column(db.Text)
     importantSeries = db.Column(db.Text)
-    repostsSeries = db.Column(db.Text)
-    commentsSeries = db.Column(db.Text)
-    emoticonSeries = db.Column(db.Text)
+    repostsSeries = db.Column(db.Text) # 用户转发微博数序列
+    originalSeries = db.Column(db.Text) # 用户原创微博数序列
+    emoticonSeries = db.Column(db.Text) # 用户带情感微博数序列
 
-    def __init__(self, userId, activeSeries, importantSeries, repostsSeries, commentsSeries, emoticonSeries, endDate, windowLen=30, prod=False):
+    def __init__(self, userId, activeSeries, importantSeries, repostsSeries, originalSeries, emoticonSeries, endDate, windowLen=30, prod=False):
         self.userId = userId
         self.prod = prod
         self.endDate = endDate
@@ -749,7 +749,7 @@ class ProfilePersonWeiboCount(db.Model):
         self.activeSeries = activeSeries
         self.importantSeries = importantSeries
         self.repostsSeries = repostsSeries
-        self.commentsSeries = commentsSeries
+        self.originalSeries = originalSeries
         self.emoticonSeries = emoticonSeries
 
 class ProfilePersonTopic(db.Model):
@@ -772,16 +772,18 @@ class ProfilePersonTopic(db.Model):
 class ProfilePersonFriends(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    relation = db.Column(db.String(10), default='friends')
+    relation = db.Column(db.String(10), default='nobody') # 'friends', 'followers', 'nobody'
     prod = db.Column(db.Boolean, default=False)
     endDate = db.Column(db.Date)
     windowLen = db.Column(db.Integer, default=7)
-    interactSeries = db.Column(db.Text)
+    directInteractSeries = db.Column(db.Text)
+    retweetedInteractSeries = db.Column(db.Text)
 
-    def __init__(self, userId, interactSeries, endDate, windowLen=7, prod=False, relation='friends'):
+    def __init__(self, userId, directInteractSeries, retweetedInteractSeries, endDate, windowLen=7, prod=False, relation='nobody'):
         self.userId = userId
         self.relation = relation
         self.prod = prod
         self.endDate = endDate
         self.windowLen = windowLen
-        self.interactSeries = interactSeries
+        self.directInteractSeries = directInteractSeries
+        self.retweetedInteractSeries = retweetedInteractSeries

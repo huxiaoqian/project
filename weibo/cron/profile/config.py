@@ -13,6 +13,11 @@ emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
 fields_id = {'culture': 1, 'education': 2, 'entertainment': 3, 'fashion': 4, 'finance': 5, 'media': 6, 'sports': 7, 'technology': 8, 'oversea': 9}
+labels = ['university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', \
+          'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
+zh_labels = ['高校微博', '境内机构', '境外机构', '媒体', '境外媒体', '民间组织', '律师', \
+             '政府官员', '媒体人士', '活跃人士', '草根', '其它']
+DOMAIN_LIST = fields_value + labels
 
 IS_PROD = 1
 

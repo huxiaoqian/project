@@ -31,9 +31,12 @@ def _add_all_user_domain(r):
     ts = te = time.time()
     for k, v in spieduser_bucket.RangeIter():
         uid, updatetime = k.split('_')
+        print uid, updatetime
+        '''
         uid = int(uid)
         domainid = DOMAIN_LIST.index(v)
         r.hset(USER_DOMAIN, uid, domainid)
+        '''
 
         count += 1
         if count % 10000 == 0:
@@ -79,6 +82,6 @@ def user2domain(r, uid):
 if __name__ == '__main__':
 	r = _default_redis()
 
-	#_add_all_user_domain(r)
-	#_clear_all_user_domain(r)
-	_scan_all_user_domain(r)
+	_add_all_user_domain(r)
+	# _clear_all_user_domain(r)
+	# _scan_all_user_domain(r)

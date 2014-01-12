@@ -72,7 +72,8 @@
           <th style="text-align:center;">博主地域</th>
           <th style="text-align:center;">粉丝数</th>
           <th style="text-align:center;">关注数</th>
-          <th style="text-align:center;">关联级别</th>
+          <th style="text-align:center;">微博数</th>
+          <!--<th style="text-align:center;">关联级别</th>-->
           <th style="text-align:center;">敏感状态</th>
         </tr>
       </thead>
@@ -212,13 +213,19 @@ function getRankData(countperpage_args, limit_arg){
           var html = "";
           for(var i=0;i < data['news'].length;i += 1){
             user = data['news'][i];
+            console.log(user);
             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
             html += "<td style='text-align:center'>" + user['name'] + "</td>";
             html += "<td style='text-align:center'>" + user['location'] + "</td>";
             html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
             html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
-            html += "<td>二级</td>";
-            html += "<td><i class='icon-ok'></i></td></tr>";
+            html += "<td style='text-align:center'>" + user['statuses_count'] + "</td>";
+            if(user['status'] == 1){
+              html += "<td><i class='icon-ok'></i></td></tr>";
+            }
+            else{
+              html += "<td><i class='icon-remove'></i></td></tr>";
+            }
           }
           $("#word_table").empty();
           $("#word_table").append(html);
@@ -241,8 +248,13 @@ function getRankData(countperpage_args, limit_arg){
                   html += "<td style='text-align:center'>" + user['location'] + "</td>";
                   html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
                   html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
-                  html += "<td>二级</td>";
-                  html += "<td><i class='icon-ok'></i></td></tr>";
+                  html += "<td style='text-align:center'>" + user['statuses_count'] + "</td>";
+                  if(user['status'] == 1){
+                    html += "<td><i class='icon-ok'></i></td></tr>";
+                  }
+                  else{
+                    html += "<td><i class='icon-remove'></i></td></tr>";
+                  }
               }
               $("#word_table").append(html);
             }

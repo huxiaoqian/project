@@ -58,6 +58,13 @@ def date2ts(date):
 def ts2datetime(ts):
     return time.strftime('%Y-%m-%d', time.localtime(ts))
 
+def user_status(uid):
+    old_items = db.session.query(KnowledgeList).filter(KnowledgeList.kID==uid).all()
+    if len(old_items):
+        return 1
+    else:
+        return 0
+
 def _utf_encode(s):
     if isinstance(s, str):
         return s
@@ -558,12 +565,11 @@ def topic_ajax_userfield():
                 topic_key_user_list = []
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
                 for i in range(0,len(topic_info)):
-                    number, users = xapian_search_user.search(query={'_id': topic_info[i]}, fields=['_id','name','location','friends_count','followers_count'])
+                    number, users = xapian_search_user.search(query={'_id': topic_info[i]}, fields=['_id','name','statuses_count','friends_count','followers_count','profile_image_url','description'])
                     if not number:
                         continue
-                    for user in users():
-
-                        topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+                    for user in users():                        
+                        topic_key_user_list.append({'id':user['_id'],'name':user['name'],'statuses_count':user['statuses_count'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count'],'profile_image_url':user['profile_image_url'],'description':user['description']})
                     n, domains = xapian_search_domain.search(query={'_id': topic_info[i]}, fields=['domain'])
                     if not n:
                         domain['其他'] = domain['其他'] + 1
@@ -605,34 +611,29 @@ def topic_ajax_userfield():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            keyword = request.args.get('keyword', "")
-                            keyuser = request.args.get('keyuser', "")
-                            beg_time = int(request.args.get('beg_time', ""))
-                            end_time = int(request.args.get('end_time', ""))
-    
-                            fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-                            count, get_results = xapian_search_weibo.search(query={'text': [u'%s'%keyword], 'timestamp': {'$gt': beg_time, '$lt': end_time}}, sort_by=['timestamp'], fields=fields_list,max_offset=1000)
-
+                            keyword = request.args.get('topic_id', "")
+                
+                            topic_info = readPropagateUser(keyword)
                             topic_key_user_list = []
-                            for result in get_results():
-                                number, users = xapian_search_user.search(query={'_id': result['user']}, fields=['_id','name','location','friends_count','followers_count'])
+                            domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
+                            for i in range(0,len(topic_info)):
+                                number, users = xapian_search_user.search(query={'_id': topic_info[i]}, fields=['_id','name','statuses_count','friends_count','followers_count','profile_image_url','description'])
                                 if not number:
                                     continue
-                                for user in users():
-
-                                    topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
-                                    n, domains = xapian_search_domain.search(query={'_id': result['user']}, fields=['domain'])
-                                    if not n:
+                                for user in users():                        
+                                    topic_key_user_list.append({'id':user['_id'],'name':user['name'],'statuses_count':user['statuses_count'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count'],'profile_image_url':user['profile_image_url'],'description':user['description']})
+                                n, domains = xapian_search_domain.search(query={'_id': topic_info[i]}, fields=['domain'])
+                                if not n:
+                                    domain['其他'] = domain['其他'] + 1
+                                    continue
+                                for do in domains():
+                                    if int(do['domain']) <= 7:
+                                        text = fieldsEn2Zh(fields_value[int(do['domain'])])
+                                        domain[text] = domain[text] + 1
+                                    else:
                                         domain['其他'] = domain['其他'] + 1
-                                        continue
-                                    for do in domains():
-                                        if int(do['domain']) <= 7:
-                                            text = fieldsEn2Zh(fields_value[int(do['domain'])])
-                                            domain[text] = domain[text] + 1
-                                        else:
-                                            domain['其他'] = domain['其他'] + 1
                             data=[]
-
+                
                             if domain['财经'] >= 0:
                                 data.append({'finance':domain['财经']})
                             if domain['媒体'] >= 0:
@@ -651,7 +652,8 @@ def topic_ajax_userfield():
                                 data.append({'sports':domain['体育']})
                             if domain['其他'] >= 0:
                                 data.append({'unknown':domain['其他']})
-                            return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
+                    
+                            return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, topic_id=keyword, data=data)
                         else:
                             pass
                     else:
@@ -1160,12 +1162,11 @@ def topic_rank():
 
     topic_key_user_list = []
     for i in range(0,len(topic_info)):
-        number, users = xapian_search_user.search(query={'_id': topic_info[i]}, fields=['_id','name','location','friends_count','followers_count'])
+        number, users = xapian_search_user.search(query={'_id': topic_info[i]}, fields=['_id','name','location','friends_count','followers_count','statuses_count'])
         if not number:
             continue
         for user in users():
-
-            topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count']})
+            topic_key_user_list.append({'id':user['_id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['friends_count'],'statuses_count':user['statuses_count']})
 
     if page == 1:
         startoffset = 0
@@ -1181,7 +1182,8 @@ def topic_rank():
             if n > startoffset:
                 if n > endoffset:
                     break
-                news.append({'id':user['id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['bi_followers_count']})
+                status = user_status(user['id'])
+                news.append({'id':user['id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['bi_followers_count'],'statuses_count':user['statuses_count'],'status':status})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 

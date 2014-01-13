@@ -5,7 +5,7 @@ import random
 
 #try:
 from weibo.extensions import db
-from weibo.model import TopicIdentification, KnowledgeList
+from weibo.model import TopicIdentification, KnowledgeList, TopicGexf
 #except ImportError:
 #    print 'Warning: Not in web environment.'
 
@@ -197,3 +197,9 @@ def acquire_user_by_id_v2(uid):
         user['count2'] = result['friends_count']
             
     return user
+
+#def read_topic_gexf_results(topicname):
+def read_topic_gexf_results(idGexf):
+    item = db.session.query(TopicGexf).filter_by(id=idGexf).first()
+    data = item.identifyGexf
+    return data

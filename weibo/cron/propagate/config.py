@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import os
-import redis
+from flask import Flask
+from flask.ext.sqlalchemy import SQLAlchemy
 from xapian_weibo.xapian_backend import XapianSearch
 
-
 cron_start = '2013-9-1'
-cron_end = '2013-10-2'
+cron_end = '2013-10-1' 
+
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
-fields_value = {'culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea', 'university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', 'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other'}
-fields_id = {'culture': 0, 'education': 1, 'entertainment': 2, 'fashion': 3, 'finance': 4, 'media': 5, 'sports': 6, 'technology': 7, 'oversea': 8, 'university': 9, 'homeadmin': 10, 'abroadadmin': 11, 'homemedia': 12, 'abroadmedia': 13, 'folkorg': 14, 'lawyer': 15, 'politician': 16, 'mediaworker': 17, 'activer': 18, 'grassroot': 19, 'other': 20}
+fields_value = {'culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology'}
+fields_id = {'culture': 1, 'education': 2, 'entertainment': 3, 'fashion': 4, 'finance': 5, 'media': 6, 'sports': 7, 'technology': 8}
 
 IS_PROD = 1
 
@@ -20,23 +21,38 @@ if IS_PROD:
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
-    REDIS_HOST = '192.168.2.11'
-    REDIS_PORT = 6379
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8&passwd=Bh123456'
 else:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
-    REDIS_HOST = '219.224.135.60'
-    REDIS_PORT = 6379
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
 
 READ_FROM_STUB = 1
 
-if READ_FROM_STUB:
-    xapian_search_weibo = XapianSearch(stub=MASTER_TIMELINE_STUB, schema_version=5)
-else:
-    xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo_csv', schema_version=5)
+##if READ_FROM_STUB:
+##    xapian_search_weibo = XapianSearch(stub=MASTER_TIMELINE_STUB)
+##else:
+##	xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo', schema_version=4)
 
 xapian_search_domain  = XapianSearch(path=XAPIAN_DOMAIN_DATA_PATH, name='master_timeline_domain', schema_version=4)
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
+
+FOLLOWERS_MIN_SUPPORT = 500
+
+REPOSTS_MIN_SUPPORT = 500
+
+BURST_MIN_SUPPORT = 100
+
+# Create application
+app = Flask('xxx')
+
+# Create dummy secrey key so we can use sessions
+app.config['SECRET_KEY'] = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
+
+# Create database
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_ECHO'] = False
+db = SQLAlchemy(app)

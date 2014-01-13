@@ -122,17 +122,17 @@ def prepare_data_for_pr(topic_id, date, window_size):
     tmp_file.flush()
     return tmp_file
 
-def make_network_graph(current_date, topic_id, window_size, key_user_labeled=True):
+def make_network_graph(current_date, topic_id, topic, window_size, key_user_labeled=True):
     date = current_date
 
     if key_user_labeled:
-        key_users = read_key_users(current_date, window_size, topic_id, top_n=10)
+        key_users = read_key_users(current_date, window_size, topic, top_n=10)
     else:
         key_users = []
 
-    topic = acquire_topic_name(topic_id)
-    if not topic:
-        return None
+    #topic = acquire_topic_name(topic_id)
+    #if not topic:
+    #    return None
               
     G = make_network(topic, date, window_size)
 
@@ -169,10 +169,10 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
             _node = graph.addNode(node_id[node], str(node), x=str(x), y=str(y), z='0', r='255', g='51', b='51', size=str(degree))
         else:
             _node = graph.addNode(node_id[node], str(node), x=str(x), y=str(y), z='0', r='0', g='204', b='204', size=str(degree))
-        user_info = acquire_user_by_id('area', uid)
+        user_info = acquire_user_by_id(uid)
         if user_info:
-            _node.addAttribute('name', user_info['name'].decode('utf-8'))
-            _node.addAttribute('location', user_info['location'].decode('utf-8'))
+            _node.addAttribute('name', user_info['name'])
+            _node.addAttribute('location', user_info['location'])
         else:
             _node.addAttribute('name', 'Unknown')
             _node.addAttribute('location', 'Unknown')
@@ -186,7 +186,7 @@ def make_network_graph(current_date, topic_id, window_size, key_user_labeled=Tru
         edge_counter += 1
 
     return etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
-    
+
 def cut_network(g, node_degree):
     degree_threshold = 2
     for node in g.nodes():
@@ -233,3 +233,5 @@ def make_network(topic, date, window_size, max_size=100000):
         except (TypeError, KeyError):
             continue
     return g
+
+

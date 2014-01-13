@@ -22,7 +22,6 @@
     	<div class="inline">
         <ul>
     	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>关键字词:</b></font> <input type="text" class="span2" placeholder="请输入关键字" value="" role="textbox" name="keyword" id="topic_keywords" style="margin-bottom: 0px;">
-    	    <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp关键用户: </b></font><input type="text" class="span2" placeholder="请输入用户" value="" role="textbox" name="keyuser" id="topic_keyusers" style="margin-bottom: 0px;">
           <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
           <div id="reportrange_topic" class="btn dropdown-toggle">
             <i class="icon-calendar icon-large"></i>
@@ -30,9 +29,10 @@
             <b class="caret"></b>
           </div>
           <input type="hidden" name="r" value="1">
-          <input type="submit" class="btn btn-primary" value = "搜索" id="search_topic">
+          <input type="submit" class="btn btn-primary" value = "搜索" onclick="find_search_message()" id="search_topic">
         </ul>
     	</div>
+<<<<<<< HEAD
       <hr>
       <div id="TopicTabContent" class="tab-content">
             <div class="tab-pane fade active in" id="area_1">
@@ -43,6 +43,17 @@
               </ul>
             </div>
       </div>
+=======
+    <div id="show_search_msg"></div>
+    <div id="search_on" class="inline">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>可查看历史任务:</b></font>
+    </div>
+    <div id="show_history_msg" class="well"></div>
+    <div id="search_now" class="inline">
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>正在进行中历史任务:</b></font>
+    </div>
+    <div id="show_history_now" class="well"></div>
+>>>>>>> da6a5f86f3fbf7497cb4b49fe5668e99c6aef769
     </div>
 	  <div class="row well">
       <legend><strong>微博信息搜索</strong></legend>
@@ -121,12 +132,6 @@
   );
 });
 
-$("#search_topic").click(function() {
-  var time = $("#topic_time").html();
-  var keyword = document.getElementById("topic_keywords").value;
-  var keyuser = document.getElementById("topic_keyusers").value;
-  window.location.href="/propagate/showresult/?keyword="+keyword+"&keyuser="+keyuser+"&time="+time;
-});
 $("#search_weibo").click(function() {
   var time = $("#weibo_time").html();
   var mid = document.getElementById("weibo_mid").value;
@@ -141,5 +146,133 @@ $("#search_weibo").click(function() {
   }
 
 });
+function get_and_show_history_msg(){
+      $.ajax({
+        url: '/propagate/history.json?now=1',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_history_msg').empty();
+          var html = "";
+          for(idx in data){
+            html += "<li><a target='_blank' href=\"/propagate/showresult/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
+          }
+          $('#show_history_msg').append(html);
+        }
+      });
+    }
+
+    function get_and_show_history_now(){
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
+      $.ajax({
+        url: '/propagate/history.json?now1=-1&now2=0&timestamp=' + timestamp,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_history_now').empty();
+          var html = "";
+          for(idx in data){
+            html += "<li>" + data[idx] + "</li>";
+          }
+          $('#show_history_now').append(html);
+        }
+      });
+    }
+
+    function max_history_limit(){
+      var max = 0;
+      var time = $("#topic_time").html();
+      var keyword = document.getElementById("topic_keywords").value;
+      var temp_time_in13 = new Date().getTime();
+      var timestamp = temp_time_in13.toString().substr(0, 10);
+      var search_msg = "请从上方文本框中输入话题"
+      $.ajax({
+        url: '/propagate/history.json?now2=0&now1=-1',
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          for(idx in data){
+            max += 1;
+          }
+          if (max > 5){
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中历史任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            $('#show_search_msg').empty();
+            $('#show_search_msg').append(search_html);
+            $('#search_topic').val('搜索');
+          }
+          else{
+            if(keyword.length < 2)
+              var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
+            else{
+              $('#search_topic').val('搜索');
+              $('#show_search_msg').empty();
+              $.ajax({
+                url: '/propagate/topic/submit?keyword=' + keyword + "&time="+ time + "&timestamp=" + timestamp,
+                dataType: 'json',   
+                type: "GET",   
+                success: function (data) {
+                  check_status();
+                }
+              });
+              get_and_show_history_now();
+            }
+          }
+        }
+      });
+    }
+
+    function find_history(){
+      $('#show_search_msg').empty();
+      var keyword = document.getElementById("topic_keywords").value;
+      $.ajax({
+        url: '/propagate/history.json?keyword=' + keyword,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#show_search_msg').empty();
+          var html = "<div  class=\"inline\"><font color=\"#003366\" face=\"Georgia, Times New Roman, Times, serif\"><b>您的历史记录相关选项:</b></font></div><div  class=\"well\">";
+          if(data.length > 0){
+            for(idx in data){
+              html += "<li><a target='_blank' href=\"/propagate/showresult/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
+            }
+            html = html + "</div>";
+          }
+          else{
+            html = html + "无匹配项！</div>";
+          }
+          $('#show_search_msg').append(html);
+        }
+      });
+    }
+  
+    function find_search_message(){
+      var command = $('#search_topic').val();
+      if (command == '搜索'){
+        var keyword = document.getElementById("topic_keywords").value;
+        if(keyword.length < 2){
+          var search_msg = "请从上方文本框中输入话题"
+          var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
+          $('#show_search_msg').empty();
+          $('#show_search_msg').append(search_html);
+        }
+        else{
+          find_history();
+          $('#search_topic').val('确认提交');
+        }
+      }else if (command == '确认提交'){
+        max_history_limit();
+        
+    }
+  }
+    function check_status(){
+      get_and_show_history_msg();
+      get_and_show_history_now();
+    }  
+    $(document).ready(function() {
+      get_and_show_history_msg();
+      get_and_show_history_now();
+      setInterval("check_status()", 10000);
+    });
 </script>
 {% endblock %}

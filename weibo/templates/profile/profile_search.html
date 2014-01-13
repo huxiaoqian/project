@@ -1,5 +1,4 @@
-{% extends 'profile/profile_layout.html' %}
-{% block title %}博主特征展示{% endblock %}
+{% extends "profile/base.html" %}
 {% block head %}
 <style>
   body{
@@ -299,12 +298,6 @@
   }
 </style>
 {% endblock head %}
-{% block top_navbar_active %}
-    <!--<li><a href="/profile/person/1813080181">单个用户特征展示</a></li>-->
-    <li><a href="/profile/group/finance">领域特征展示</a></li>
-    <li class="active"><a href="/profile/search">博主特征展示</a></li>
-{% endblock top_navbar_active %}
-
 {% block content %}
     <a name="top"></a>
     <p id="back-to-top"><a href="#top"><span></span>返回顶部</a></p>
@@ -391,8 +384,8 @@
                   <li><a href="#" onclick="choose_rankcount('rankcount', 'created_at');" data-toggle="tab">注册时间</a></li>
           </ul>
         </div>
-        前<input name="top_n" type="text" value="{%if result_count%}{{result_count}}{%else%}100{%endif%}" class="span1">条结果
-        已查询地区<input name="select " type = "text" value = "{%if location%}{{location}}{%else%}全国{%endif%}" class = "span2">
+        前<input name="search_top_n" type="text" value="{%if result_count%}{{result_count}}{%else%}100{%endif%}" class="span1">条结果
+        已查询地区<input name="select " type = "text" value = "{%if location%}{{location}}{%endif%}" class = "span2">
         <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="200">
         <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
         <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">
@@ -409,150 +402,140 @@
       <div id="LocationTabContent" class="tab-content">
         <div class="tab-pane fade active in" id="area_5">
           <ul class="inline">
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box1" value="北京"> 北京
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box2" value="天津"> 天津
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box3" value="河北"> 河北
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box4" value="辽宁"> 辽宁
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box5" value="上海"> 上海
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box6" value="江苏"> 江苏
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box7" value="浙江"> 浙江
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box8" value="福建"> 福建
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box9" value="山东"> 山东
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box10" value="广东"> 广东
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box11" value="广西"> 广西
-                  </li>
-                  <li>
-                    <input type="checkbox" name="provincebox" id="box12" value="海南"> 海南
-                  </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" value="" onclick="if(this.checked==true) {checkAll('eastprovince'); } else {clearAll('eastprovince'); }">全选
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box1" value="北京"> 北京
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box2" value="天津"> 天津
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box3" value="河北"> 河北
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box4" value="辽宁"> 辽宁
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box5" value="上海"> 上海
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box6" value="江苏"> 江苏
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box7" value="浙江"> 浙江
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box8" value="福建"> 福建
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box9" value="山东"> 山东
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box10" value="广东"> 广东
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box11" value="广西"> 广西
+                </li>
+                <li>
+                  <input type="checkbox" name="eastprovince" id="box12" value="海南"> 海南
+                </li>
           </ul>
         </div>
         <div class="tab-pane fade" id="area_6">
           <ul class="inline">
                   <li>
-                    <input type="checkbox" name="provincebox" id="box13" value="山西"> 山西
+                    <input type="checkbox" name="midprovince" value="" onclick="if(this.checked==true) {checkAll('midprovince'); } else {clearAll('midprovince'); }">全选
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box14" value="内蒙古"> 内蒙古
+                    <input type="checkbox" name="midprovince" id="box13" value="山西"> 山西
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box15" value="吉林"> 吉林
+                    <input type="checkbox" name="midprovince" id="box14" value="内蒙古"> 内蒙古
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box16" value="黑龙江"> 黑龙江
+                    <input type="checkbox" name="midprovince" id="box15" value="吉林"> 吉林
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box17" value="安徽"> 安徽
+                    <input type="checkbox" name="midprovince" id="box16" value="黑龙江"> 黑龙江
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box18" value="江西"> 江西
+                    <input type="checkbox" name="midprovince" id="box17" value="安徽"> 安徽
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box19" value="河南"> 河南
+                    <input type="checkbox" name="midprovince" id="box18" value="江西"> 江西
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box20" value="湖北"> 湖北
+                    <input type="checkbox" name="midprovince" id="box19" value="河南"> 河南
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box21" value="湖南"> 湖南
+                    <input type="checkbox" name="midprovince" id="box20" value="湖北"> 湖北
+                  </li>
+                  <li>
+                    <input type="checkbox" name="midprovince" id="box21" value="湖南"> 湖南
                   </li>
           </ul>
         </div>
         <div class="tab-pane fade" id="area_7">
           <ul class="inline">
                   <li>
-                    <input type="checkbox" name="provincebox" id="box22" value="四川"> 四川
+                    <input type="checkbox" name="westprovince" value="" onclick="if(this.checked==true) {checkAll('westprovince'); } else {clearAll('westprovince'); }">全选
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box23" value="贵州"> 贵州
+                    <input type="checkbox" name="westprovince" id="box22" value="四川"> 四川
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box24" value="云南"> 云南
+                    <input type="checkbox" name="westprovince" id="box23" value="贵州"> 贵州
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box25" value="西藏"> 西藏
+                    <input type="checkbox" name="westprovince" id="box24" value="云南"> 云南
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box26" value="陕西"> 陕西
+                    <input type="checkbox" name="westprovince" id="box25" value="西藏"> 西藏
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box27" value="甘肃"> 甘肃
+                    <input type="checkbox" name="westprovince" id="box26" value="陕西"> 陕西
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box28" value="宁夏"> 宁夏
+                    <input type="checkbox" name="westprovince" id="box27" value="甘肃"> 甘肃
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box29" value="青海"> 青海
+                    <input type="checkbox" name="westprovince" id="box28" value="宁夏"> 宁夏
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box30" value="新疆"> 新疆
+                    <input type="checkbox" name="westprovince" id="box29" value="青海"> 青海
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box31" value="重庆"> 重庆
+                    <input type="checkbox" name="westprovince" id="box30" value="新疆"> 新疆
+                  </li>
+                  <li>
+                    <input type="checkbox" name="westprovince" id="box31" value="重庆"> 重庆
                   </li>
           </ul>
         </div> 
         <div class="tab-pane fade" id="area_8">
           <ul class="inline">
                   <li>
-                    <input type="checkbox" name="provincebox" id="box32" value="香港"> 香港
+                    <input type="checkbox" name="otherprovince" value="" onclick="if(this.checked==true) {checkAll('otherprovince'); } else {clearAll('otherprovince'); }">全选
+                  </li>
+                  <li>
+                    <input type="checkbox" name="otherprovince" id="box32" value="香港"> 香港
                   </li>  
                   <li>
-                    <input type="checkbox" name="provincebox" id="box33" value="澳门"> 澳门
+                    <input type="checkbox" name="otherprovince" id="box33" value="澳门"> 澳门
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box34" value="台湾"> 台湾
+                    <input type="checkbox" name="otherprovince" id="box34" value="台湾"> 台湾
                   </li>
                   <li>
-                    <input type="checkbox" name="provincebox" id="box35" value="海外"> 海外
+                    <input type="checkbox" name="otherprovince" id="box35" value="海外"> 海外
                   </li>
           </ul>  
         </div>
-      </div>
-    </div> 
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">***原型系统</a>
-          <div class="nav-collapse">
-            <ul class="nav">
-              <li><a href="/">网民画像首页</a></li>
-              <!--<li><a href="/profile/person/1813080181">单个用户特征展示</a></li>-->
-              <li><a href="/profile/group/finance">领域特征展示</a></li>
-              <li class="active"><a href="/profile/search/">博主特征展示</a></li>   
-            </ul>
-            <form class="navbar-search pull-left" action='/profile/search/person'>
-                <input type="text" name='nickname' class="search-query" placeholder="按博主昵称搜索">
-            </form>
-          </div><!--/.nav-collapse -->
         </div>
       </div>
-    </div>
+    </div> 
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span2 panel">
@@ -806,21 +789,47 @@ function backToTop(){
     });
   });
 }
-function choose_province()
+  function choose_province()
   {
-    var str=document.getElementsByName("provincebox");
-    var objarray=str.length;
+    var el = document.getElementsByTagName("input");
+    var len = el.length;
     var chestr="";
-    for (i=0;i<objarray;i++){
-      if(str[i].checked == true){
-        chestr+=str[i].value+",";
-      }
+    for(var i=0; i<len; i++)
+    {
+        if ((el[i].type=="checkbox") && (el[i].checked==true) && (el[i].value!=""))
+        {
+            chestr+=el[i].value+",";
+        }
     }
     if(chestr == ""){
       $('#topic_keywords').val("北京,天津,河北,辽宁,上海,江苏,浙江,福建,山东,广东,广西,海南,山西,内蒙古,吉林,黑龙江,安徽,江西,河南,湖北,湖南,四川,贵州,云南,西藏,陕西,甘肃,宁夏,青海,新疆,重庆,香港,台湾,澳门");
     }
     else{
       $('#topic_keywords').val(chestr);
+    }
+  }
+  function checkAll(name)
+  {
+    var el = document.getElementsByTagName("input");
+    var len = el.length;
+    for(var i=0; i<len; i++)
+    {
+        if((el[i].type=="checkbox") && (el[i].name==name))
+        {
+            el[i].checked = true;
+        }
+    }
+  }
+  function clearAll(name)
+  {
+    var el = document.getElementsByTagName("input");
+    var len = el.length;
+    for(var i=0; i<len; i++)
+    {
+        if((el[i].type=="checkbox") && (el[i].name==name))
+        {
+            el[i].checked = false;
+        }
     }
   }
 

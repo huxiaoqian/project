@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from extensions import db
+from config import db
 
 __all__ = ['Field', 'Topic', \
            'RangeCount', 'Province', 'PersonalLdaWords', 'HotStatus', 'Media', 'Manager', 'NewWords', \
@@ -13,8 +13,7 @@ __all__ = ['Field', 'Topic', \
            'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', \
            'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
            'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
-           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf']
-
+           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount']
 
 
 class Field(db.Model):
@@ -618,22 +617,10 @@ class PropagateUser(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     topic_id = db.Column(db.Integer)
     user = db.Column(db.String(20))
-    user_name = db.Column(db.String(50))
-    location = db.Column(db.String(50))
-    follower = db.Column(db.Integer)
-    friend = db.Column(db.Integer)
-    status = db.Column(db.Integer)
-    description = db.Column(db.Text)
 
-    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description):
+    def __init__(self, topic_id, user):
         self.topic_id = topic_id 
         self.user = user
-        self.user_name = user_name
-        self.location = location
-        self.follower = follower
-        self.friend = friend
-        self.status = status
-        self.description = description
 
 class PropagateWeibo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -642,7 +629,7 @@ class PropagateWeibo(db.Model):
     image_url = db.Column(db.String(50))
     text = db.Column(db.Text)
     sourcePlatform = db.Column(db.String(20))
-    postDate = db.Column(db.DateTime)
+    postDate = db.Column(db.Date)
     uid = db.Column(db.String(20))
     user_name = db.Column(db.String(20))
     repostsCount = db.Column(db.Integer)
@@ -661,19 +648,6 @@ class PropagateWeibo(db.Model):
         self.repostsCount = repostsCount
         self.commentsCount = commentsCount
         self.attitudesCount = attitudesCount
-
-class TopicGexf(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    topic = db.Column(db.String(20))
-    identifyDate = db.Column(db.Date)
-    identifyWindow = db.Column(db.Integer, default=1)
-    identifyGexf = db.Column(db.Text)
-
-    def __init__(self, topic, identifyDate, identifyWindow, identifyGexf):
-        self.topic = topic
-        self.identifyDate = identifyDate
-        self.identifyWindow = identifyWindow
-        self.identifyGexf = identifyGexf
 
 class ProfileDomainTopic(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

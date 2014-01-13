@@ -5,6 +5,7 @@ import time
 import  calendar
 import re
 import os
+import heapq
 from datetime import datetime
 from datetime import date
 
@@ -13,7 +14,7 @@ from config import db
 
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
-from global_config import xapian_search_user as user_search
+from global_config import xapian_search_user as user_search, xapian_search_domain
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 def ts2datetimestr(ts):
@@ -24,6 +25,22 @@ def date2ts(date):
 
 def ts2datetime(ts):
     return time.strftime('%Y-%m-%d', time.localtime(ts))
+
+class TopkHeap(object):
+    def __init__(self, k):
+        self.k = k
+        self.data = []
+ 
+    def Push(self, elem):
+        if len(self.data) < self.k:
+            heapq.heappush(self.data, elem)
+        else:
+            topk_small = self.data[0][0]
+            if elem[0] > topk_small:
+                heapq.heapreplace(self.data, elem)
+ 
+    def TopK(self):
+        return [x for x in reversed([heapq.heappop(self.data) for x in xrange(len(self.data))])]
 
 def getXapianWeiboByDuration(datestr_list):
     stub_file_list = []
@@ -63,20 +80,30 @@ def get_user(uid):
         user['bi_followers_count'] = 'None'
         user['verified'] = r['verified']
         user['description'] = r['description']
-        user['friends_count'] = r['friends_count']
+        if not r['friends_count']:
+            user['friends_count'] = 0
+        else:
+            user['friends_count'] = r['friends_count']
         user['city'] = r['city']
         user['gender']  = r['gender']
         user['profile_image_url'] = r['profile_image_url']
         user['verified_reason'] = 'None'
-        user['followers_count'] = r['followers_count']
+        if not r['followers_count']:
+            user['followers_count'] = 0
+        else:
+            user['followers_count'] = r['followers_count']
+
         user['location'] = r['location']
-        #user['active'] = r['active']
-        user['statuses_count'] = r['statuses_count']
+        if not r['statuses_count']:
+            user['statuses_count'] = 0
+        else:
+            user['statuses_count'] = r['statuses_count']
+
         if r['name']:
             user['name'] = r['name']
         else:
             user['name'] = u'未知用户'
-        user['userField'] = u'未知领域'
+        #user['userField'] = u'未知领域'
         break
     if user == {}:
         return None
@@ -85,9 +112,6 @@ def get_user(uid):
 
 def calculate(keyword, beg_time, end_time):
     #初始化
-##    beg_ts = date2ts(beg_time)
-##    end_ts = date2ts(end_time)
-##    keyword = keyword.decode('utf-8')
     start_time = time.time()
     topic_info = {}
 
@@ -96,7 +120,7 @@ def calculate(keyword, beg_time, end_time):
     perday_count_list = []
     topic_rel_blog = []
     topic_url = []
-    topic_participents = []
+    topic_participents = ''
     topic_leader = []
     topic_date = []
     blogs_sum = 0
@@ -104,8 +128,9 @@ def calculate(keyword, beg_time, end_time):
     topic_ori_blog = []
 
     topic_leader_uid = set()
-    topic_participents_uid = []
-    
+    topic_user = dict()
+    user_infor = dict()
+
     city_count={}
     province_name=dict()
     html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option>
@@ -125,7 +150,10 @@ def calculate(keyword, beg_time, end_time):
 
     statuses_search = getXapianweiboByTs(beg_time, end_time)
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-    count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
+    count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['timestamp'], fields=fields_list)
+    if count == 0:
+        return 'wrong'
+    n = 0
     for r in get_results():
         # 获取时间与每天微博数量
         if not r['reposts_count']:
@@ -171,10 +199,19 @@ def calculate(keyword, beg_time, end_time):
 	if r['user']:
             uid = int(r['user'])
             user = get_user(uid)
+            
             if user != None:
-                if uid not in topic_participents_uid:
-                    topic_participents_uid.append(uid)
-                    topic_participents.append(user)
+                if n == 0:#判断发起人
+                    topic_participents = user['name']
+                    n = 1
+                if topic_user.has_key(uid):#生成用户对应的排序指标
+                    pass
+                else:
+                    topic_user[uid] = user['friends_count'] + user['followers_count'] + user['statuses_count']
+                if user_infor.has_key(uid):#存储用户信息
+                    pass
+                else:
+                    user_infor[uid] = user
                 if r['retweeted_mid'] == None:
                     temp_ori = {}
                     temp_ori['status'] = r
@@ -262,6 +299,12 @@ def calculate(keyword, beg_time, end_time):
         	else:
         	    m += 1
 
+    user_th = TopkHeap(1000)
+    for d,x in topic_user.items():#排序
+        user_th.Push((x,d))#排序指标、id
+
+    user_data = user_th.TopK()
+    
     leader_index = len(topic_leader)
     
     topic_index['persistent_index'] = persistent_index
@@ -272,10 +315,10 @@ def calculate(keyword, beg_time, end_time):
 
     #map_data = province_color_map(city_count)
 
-    topic_info['topic_poster'] = topic_participents[0]['name']
+    topic_info['topic_poster'] = topic_participents
     topic_info['topic_post_date'] = date_list[0]
     topic_info['topic_leader_count'] = len(topic_leader)
-    topic_info['topic_participents'] = topic_participents_uid
+    topic_info['topic_participents'] = user_data
     topic_info['blogs_sum'] = blogs_sum
     topic_info['topic_ori_blog_count'] = len(topic_ori_blog)
     topic_info['topic_url'] = topic_url
@@ -298,13 +341,14 @@ def calculate(keyword, beg_time, end_time):
         save_map(wordid,d,x)
 
     for i in range(0,len(topic_info['topic_participents'])):
-        save_user(wordid,topic_info['topic_participents'][i])
+        uid = topic_info['topic_participents'][i][1]
+        save_user(wordid,uid,user_infor[uid]['name'],user_infor[uid]['location'],user_infor[uid]['followers_count'],user_infor[uid]['friends_count'],user_infor[uid]['statuses_count'],user_infor[uid]['description'])
 
     weibo = topic_info['topic_rel_blog'][:5]
     for i in range(0,len(weibo)):
         save_weibo(wordid,weibo[i])
   
-    return 'Done'
+    return 'right'
 
 def save_base_infor(keyword,topic_poster,topic_url,blogs_sum,topic_ori_blog_count,topic_index,topic_post_date,beg_ts,end_ts):#话题、发起人、头像url、微博数、原创微博数、4个指标、发起时间、起始时间、终止时间
 
@@ -347,11 +391,11 @@ def save_map(wordid,city,count):#话题id、城市、数量
     db.session.add(new_item)
     db.session.commit()
 
-def save_user(wordid,uid):#话题id、用户id
+def save_user(wordid,uid,name,location,follower,friend,status,description):#话题id、用户id
 
     user = str(uid)    
-    #print user
-    new_item = PropagateUser(wordid,user)
+    #print user,name,location,follower,friend,status,description
+    new_item = PropagateUser(wordid,user,name,location,follower,friend,status,description)
     db.session.add(new_item)
     db.session.commit()
 

@@ -27,7 +27,7 @@ from weibo.model import *
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
-from _leveldb import getPersonData
+from _leveldb import getPersonData, getDomainData
 from person import _search_person_basic, _search_person_important_active
 
 
@@ -35,6 +35,11 @@ buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
 COUNT_PER_PAGE = 20
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
+fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
+labels = ['university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', \
+          'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
+DOMAIN_LIST = fields_value + labels
+
 
 def _utf_encode(s):
     if isinstance(s, str):
@@ -1366,22 +1371,20 @@ def profile_group_topic(fieldEnName):
         interval = None
         sort = None
         topic_type = None
-        limit = 100
+        limit = 50
         window_size = 24*60*60
+        datestr = '20130901'
+        domain = DOMAIN_LIST.index(fieldEnName)
+        active, important, reposts, original, keywords_dict = getDomainData(domain, datestr)
         if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
             interval =  int(request.args.get('interval'))
             sort =  request.args.get('sort')
             limit = int(request.args.get('limit'))
             topic_type = request.args.get('topic_type')
-        if topic_type == 'lda':
-            field_lda_bucket = get_bucket('field_lda_topics')
-            try:
-                topics = json.loads(field_lda_bucket.Get(str(fieldEnName)))
-                sortedtopics = sorted(topics.iteritems(), key=operator.itemgetter(1), reverse=True)
-                for k, v in sortedtopics[:limit]:
-                    result_arr.append({'text': k, 'size': float(v)})
-            except KeyError:
-                result_arr = []
+        if topic_type == 'freq':
+            keywords_sorted = sorted(keywords_dict.iteritems(), key=lambda(k, v): v, reverse=False)
+            top_keywords = keywords_sorted[len(keywords_sorted)-limit:]
+            result_arr = [{'text': k, 'size': float(v)} for k, v in top_keywords]
         return json.dumps(result_arr)
     else:
         return json.dumps([])

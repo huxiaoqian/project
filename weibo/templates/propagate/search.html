@@ -34,12 +34,6 @@
         </ul>
     	</div>
       <hr>
-      <ul id="TopicTab" class="nav nav-tabs">
-            <li class="active"><a href="#area_1" data-toggle="tab"><strong>系统定制</strong></a></li>
-        <li><a href="/sysadmin/" target="_blank"><i class="icon-cog"></i></a></li>
-        <!--<li><a href="/propagate/topics" ><strong>查看更多话题</strong></a></li>-->
-      </ul>
-
       <div id="TopicTabContent" class="tab-content">
             <div class="tab-pane fade active in" id="area_1">
               <ul class="inline">
@@ -53,19 +47,29 @@
 	  <div class="row well">
       <legend><strong>微博信息搜索</strong></legend>
       <div class="inline">
-        <ul>
-          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博MID:</b></font>
-          <input type="text" class="span2" placeholder="请输入微博ID" value="" role="textbox" name="weibo_mid" id="weibo_mid" style="margin-bottom: 0px;">
+        <ul id="TypeTab" class="nav nav-tabs">
+          <li class="active"><a href="#weibomid" data-toggle="tab">微博MID</a></li>
+          <li><a href="#weibourl" data-toggle="tab">微博URL</a></li>
         </ul>
-        <ul>
-          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博URL:</b></font>
-          <input type="text" class="span2" placeholder="请输入微博URL" value="" role="textbox" name="weibo_url" id="weibo_url" style="margin-bottom: 0px;">
-        </ul>
+      </div> 
+      <div id="LocationTabContent" class="tab-content">
+        <div class="tab-pane fade active in" id="weibomid">
+          <ul>
+            <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博MID:</b></font>
+            <input type="text" class="span2" placeholder="请输入微博ID" value="" role="textbox" name="weibo_mid" id="weibo_mid" style="margin-bottom: 0px;">
+          </ul>
+        </div>
+        <div class="tab-pane fade" id="weibourl">
+          <ul>
+            <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博URL:</b></font>
+            <input type="text" class="span2" placeholder="请输入微博URL" value="" role="textbox" name="weibo_url" id="weibo_url" style="margin-bottom: 0px;">
+          </ul>
+        </div>
         <ul>
           <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
           <div id="reportrange_single" class="btn dropdown-toggle">
             <i class="icon-calendar icon-large"></i>
-            <span id="weibo_time">9月 2,2013 - 9月 4,2013</span> 
+            <span id="weibo_time">9月 1,2013 - 9月 3,2013</span> 
             <b class="caret"></b>
           </div>
           <input type="hidden" name="r" value="1">
@@ -126,7 +130,15 @@ $("#search_topic").click(function() {
 $("#search_weibo").click(function() {
   var time = $("#weibo_time").html();
   var mid = document.getElementById("weibo_mid").value;
-  window.location.href="/propagate/showresult_single/?time="+time+"&mid="+mid;
+  var url = document.getElementById("weibo_url").value;
+  if (mid==''&&url==''){
+    alert("请输入微博MID或URL！");}
+  else if(mid!=''){
+    window.location.href="/propagate/showresult_single/?time="+time+"&mid="+mid;
+  }
+  else{
+    window.location.href="/propagate/showresult_single/?time="+time+"&mid="+0+"&url="+url;
+  }
 
 });
 </script>

@@ -33,13 +33,13 @@ from calculatetopic import calculate_topic
 sys.path.append('./weibo/propagate/graph')
 from tree import *
 from forest import *
-
+from url2mid import *
 sys.path.append('./weibo/profile')
 from utils import *
 
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
-fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology']
-fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8}
+fields_value_first = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology','aboard','university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', 'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
+fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8,'aboard':9,'university':10, 'homeadmin':11, 'abroadadmin':12, 'homemedia':13, 'abroadmedia':14, 'folkorg':15, 'lawyer':16, 'politician':17, 'mediaworker':18, 'activer':19, 'grassroot':20}
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
@@ -169,8 +169,32 @@ def fieldsEn2Zh(name):
     if name == 'fashion':
         return '时尚'
     if name == 'sports':
-        return '体育'
-                
+        return '体育'      
+    if name == 'abroad':
+        return '境外'
+    if name == 'university':
+        return '高校微博'
+    if name == 'homeadmin':
+        return '境内机构'
+    if name == 'abroadadmin':
+        return '境外机构'
+    if name == 'homemedia':
+        return '境内媒体'
+    if name == 'abroadmedia':
+        return '境外媒体'
+    if name == 'folkorg':
+        return '民间组织'
+    if name == 'politician':
+        return '政府官员'  
+    if name == 'lawyer':
+        return '律师'
+    if name == 'mediaworker':
+        return '媒体人士'
+    if name == 'activer':
+        return '活跃人士'
+    if name == 'grassroot':
+        return '草根'  
+
 
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
@@ -644,7 +668,7 @@ def topic_ajax_userfield():
                 count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=1000)
 
                 topic_key_user_list = []
-                domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
+                domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'其他':0}
                 for result in get_results():
                     number, users = xapian_search_user.search(query={'_id': result['user']}, fields=['_id','name','location','friends_count','followers_count'])
                     if not number:
@@ -657,11 +681,12 @@ def topic_ajax_userfield():
                         domain['其他'] = domain['其他'] + 1
                         continue
                     for do in domains():
-                        if int(do['domain']) <= 7:
+                        if int(do['domain']) <= 8:
                             text = fieldsEn2Zh(fields_value[int(do['domain'])])
                             domain[text] = domain[text] + 1
                         else:
                             domain['其他'] = domain['其他'] + 1
+                            
                 data=[]
                 
                 if domain['财经'] >= 0:
@@ -680,9 +705,14 @@ def topic_ajax_userfield():
                     data.append({'fashion':domain['时尚']})
                 if domain['体育'] >= 0:
                     data.append({'sports':domain['体育']})
+                if domain['境外'] >= 0:
+                    data.append({'abroad':domain['境外']})
                 if domain['其他'] >= 0:
                     data.append({'unknown':domain['其他']})
                     
+                print "data"
+                print data
+
                 return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, keyword=keyword, keyuser=keyuser, beg_time=beg_time, end_time=end_time, data=data)
             else:
                 pass
@@ -748,32 +778,18 @@ def topic_ajax_userfield():
     else:
         return redirect('/')
     
-@mod.route("/yym/", methods = ["GET","POST"])
-def yym():
-    #print mid
-    dur_time = request.args.get('time', '')
-    mid = request.args.get('mid', '')
-    print dur_time
-    print mid
-    dur_time = _utf_encode(dur_time)
-    if not dur_time or dur_time == '':
-        beg_time, end_time = _default_time_zone()
-    else:
-        beg_time, end_time = _time_zone(dur_time)
-
-        beg_time = date2ts(beg_time)
-        end_time = date2ts(end_time)
-    print beg_time,end_time
-    return render_template('propagate/yym.html')
-    
 @mod.route("/showresult_single/", methods = ["GET","POST"])
 def single_analysis():
     dur_time = request.args.get('time', '')
     mid = request.args.get('mid', '')
+    url=request.args.get('url','')
+    if(mid=='0'):
+        mid=get_mid(url)
+        print mid
+
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin': 
-            print dur_time
-            print mid
+            #print dur_time
             dur_time = _utf_encode(dur_time)
             if not dur_time or dur_time == '':
                 beg_time, end_time = _default_time_zone()
@@ -781,7 +797,7 @@ def single_analysis():
                 beg_time, end_time = _time_zone(dur_time)
                 beg_time = date2ts(beg_time)
                 end_time = date2ts(end_time)
-            print beg_time,end_time
+            #print beg_time,end_time
                 
             blog_info = calculate_single(mid,beg_time,end_time)
                                  
@@ -847,11 +863,11 @@ def single_ajax_trend():
             if request.method == "GET":
                 return render_template('propagate/ajax/single_trend.html')
             else:
-                print "here"
+                #print "here"
                 mid = int(request.form.get('mid', ""))
                 beg_ts = float(request.form.get('beg_ts', ""))
                 end_ts = float(request.form.get('end_ts', ""))
-                print mid,beg_ts,end_ts
+                #print mid,beg_ts,end_ts
 ##                print type(time_ts)
 ##                time_ts = float(time_ts)
                 blog_info = calculate_single(mid,beg_ts,end_ts)
@@ -1046,7 +1062,7 @@ def single_ajax_path():
                 mid = int(request.args.get('mid', ""))
                 beg_ts = float(request.args.get('beg_ts', ""))
                 end_ts = float(request.args.get('end_ts', ""))
-                flag = tree_main(mid,time_ts)
+                flag = tree_main(mid,beg_ts,end_ts)
                 return render_template('propagate/ajax/single_retweetpath.html',mid = mid,flag = flag)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -1077,41 +1093,83 @@ def single_ajax_userfield():
                 repost_bloger = blog_info['repost_users']
                 blog_key_user_list = repost_bloger
 
-                domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'其他':0}
+                domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'其他':0}
                 for result in blog_key_user_list:                    
                     n, domains = xapian_search_domain.search(query={'_id': result['id']}, fields=['domain'])
                     if not n:
                         domain['其他'] = domain['其他'] + 1
                         continue
                     for do in domains():
-                        if int(do['domain']) <= 7:
+                        if int(do['domain']) <= 8:
                             text = fieldsEn2Zh(fields_value[int(do['domain'])])
                             domain[text] = domain[text] + 1
                         else:
                             domain['其他'] = domain['其他'] + 1
 
-                data=[]
+                data1=[]
 
                 if domain['财经'] >= 0:
-                    data.append({'finance':domain['财经']})
+                    data1.append({'finance':domain['财经']})
                 if domain['媒体'] >= 0:
-                    data.append({'media_domain':domain['媒体']})
+                    data1.append({'media_domain':domain['媒体']})
                 if domain['文化'] >= 0:
-                    data.append({'culture':domain['文化']})
+                    data1.append({'culture':domain['文化']})
                 if domain['科技'] >= 0:
-                    data.append({'technology':domain['科技']})
+                    data1.append({'technology':domain['科技']})
                 if domain['娱乐'] >= 0:
-                    data.append({'entertainment':domain['娱乐']})
+                    data1.append({'entertainment':domain['娱乐']})
                 if domain['教育'] >= 0:
-                    data.append({'education':domain['教育']})
+                    data1.append({'education':domain['教育']})
                 if domain['时尚'] >= 0:
-                    data.append({'fashion':domain['时尚']})
+                    data1.append({'fashion':domain['时尚']})
                 if domain['体育'] >= 0:
-                    data.append({'sports':domain['体育']})
+                    data1.append({'sports':domain['体育']})
                 if domain['其他'] >= 0:
-                    data.append({'unknown':domain['其他']})
-                
-                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data=data, beg_ts=beg_ts,end_ts=end_ts)
+                    data1.append({'unknown':domain['其他']})
+
+
+                domainx = {'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0}
+                for result in blog_key_user_list:                    
+                    n, domains = xapian_search_domain.search(query={'_id': result['id']}, fields=['domain'])
+                    #if not n:
+                    #    domain['其他'] = domain['其他'] + 1
+                    #    continue
+                    for do in domains():
+                        if (int(do['domain']) <= 19) and (int(do['domain']) >=8):
+                            text = fieldsEn2Zh(fields_value[int(do['domain'])])
+                            print text
+                            domain[text] = domain[text] + 1
+
+                data2=[]
+
+                if domainx['境外'] >= 0:
+                    data2.append({'abroad':domainx['境外']})
+                if domainx['高校微博'] >= 0:
+                    data2.append({'university':domainx['高校微博']})
+                if domainx['境内机构'] >= 0:
+                    data2.append({'homeadmin':domainx['境内机构']})
+                if domainx['境外机构'] >= 0:
+                    data2.append({'abroadadmin':domainx['境外机构']})
+                if domainx['境内媒体'] >= 0:
+                    data2.append({'homemedia':domainx['境内媒体']})
+                if domainx['境外媒体'] >= 0:
+                    data2.append({'abroadmedia':domainx['境外媒体']})
+                if domainx['民间组织'] >= 0:
+                    data2.append({'folkorg':domainx['民间组织']})
+                if domainx['律师'] >= 0:
+                    data2.append({'lawyer':domainx['律师']})
+                if domainx['政府官员'] >= 0:
+                    data2.append({'politician':domainx['政府官员']})
+                if domainx['媒体人士'] >= 0:
+                    data2.append({'mediaworker':domainx['媒体人士']})
+                if domainx['活跃人士'] >= 0:
+                    data2.append({'activer':domainx['活跃人士']})
+                if domainx['草根'] >= 0:
+                    data2.append({'grassroot':domainx['草根']})  
+
+                print "caogen "
+                print domainx['草根']
+                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data1=data1,data2=data2, beg_ts=beg_ts,end_ts=end_ts)
             else:
                 pass
         else:

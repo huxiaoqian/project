@@ -36,6 +36,34 @@ def getXapianWeiboByDate(datestr):
     else:
             return None
 
+def getXapianWeiboByDuration(datestr_list):
+    stub_file_list = []
+
+    for datestr in datestr_list:
+        stub_file = path + datestr
+        print type(stub_file)
+        if os.path.exists(stub_file):
+            stub_file_list.append(stub_file)
+
+    if len(stub_file_list):
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
+        return xapian_search_weibo 
+
+    else:
+        return None
+    
+def getXapianWeiboByTs(start_time, end_time):
+    xapian_date_list =[]
+    Day = 24*3600
+    days = (int(end_time) - int(start_time)) / Day
+
+    for i in range(0, days):
+        _ts = start_time + i * Day
+        xapian_date_list.append(ts2datetimestr(_ts))
+
+    statuses_search = getXapianWeiboByDuration(xapian_date_list)
+    return statuses_search
+
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))
 
@@ -128,16 +156,16 @@ def tree2graph(tree_nodes):
 
     return etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
 
-def tree_main(mid,time_ts):
+def tree_main(mid,beg_ts,end_ts):
     mids = [mid]
-
-    datestr = ts2datetimestr(time_ts)
-    search_weibo = getXapianWeiboByDate(datestr)
+    search_weibo = getXapianWeiboByTs(beg_ts,end_ts)
     for mid in mids:
         users = set()
         number,source_weibo = search_weibo.search(query={'retweeted_mid': mid})#读取以mid为原创微博的转发微博
         assert source_weibo, 'Source Weibo exist ???'
         repost_ids = []
+        print "search_weibo"
+        print search_weibo
         for sw in source_weibo():
             repost_ids.append(sw['_id']) 
         if not number:

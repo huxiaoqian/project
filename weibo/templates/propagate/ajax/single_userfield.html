@@ -14,6 +14,16 @@
   -moz-transition: -moz-box-shadow 1s;
   -webkit-transition: -webkit-box-shadow 1s;
   }
+  #working_count_first {
+    float:left;
+    height: 500px;
+    width: 49%;
+  }
+  #working_count_second {
+    float:right;
+    height: 500px;
+    width: 49%;
+  }
   #thumbnail{
   position: relative;
   width:1200px;
@@ -55,7 +65,10 @@
   display:block;
   }
 </style>
-<div id="working_count" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+<div id="container">
+  <div id="working_count_first"  >该微博在行业领域内没有转发用户</div>
+  <div id="working_count_second" ><text style="font-family:&quot;Lucida Grande&quot;, &quot;Lucida Sans Unicode&quot;, Verdana, Arial, Helvetica, sans-serif;font-size:16px;color:#274b6d;fill:#274b6d;" text-anchor="middle">该微博在舆情领域内没有转发用户</text></div>
+</div>
 <div class="well">
   <legend>次级传播用户</legend>
   <div>
@@ -110,17 +123,24 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
 <script>
-  display_user_field_dist();
-
-  function display_user_field_dist(){
-    $('#working_count').highcharts({
+  if(( {{data1[0]['finance']}} + {{data1[1]['media_domain']}} + {{data1[2]['culture']}} + {{data1[3]['technology']}} + {{data1[4]['entertainment']}} + {{data1[5]['education']}} + {{data1[6]['fashion']}} + {{data1[7]['sports']}} + {{data1[8]['unknown']}})>0)
+  {  
+    display_user_first_field_dist();
+  }
+  //console.log({{data2[0]['abroad']}} + {{data2[1]['university']}} + {{data2[2]['homeadmin']}} + {{data2[3]['abroadadmin']}} + {{data2[4]['homemedia']}} + {{data2[5]['abroadmedia']}} + {{data2[6]['folkorg']}} + {{data2[7]['politician']}} + {{data2[8]['mediaworker']}} + {{data2[9]['activer']}} + {{data2[10]['mediaworker']}} + {{data2[11]['grassroot']}});
+  if(( {{data2[0]['abroad']}} + {{data2[1]['university']}} + {{data2[2]['homeadmin']}} + {{data2[3]['abroadadmin']}} + {{data2[4]['homemedia']}} + {{data2[5]['abroadmedia']}} + {{data2[6]['folkorg']}} + {{data2[7]['politician']}} + {{data2[8]['mediaworker']}} + {{data2[9]['activer']}} + {{data2[10]['mediaworker']}} + {{data2[11]['grassroot']}})>0)
+  {
+    display_user_second_field_dist();
+  }
+  function display_user_first_field_dist(){
+    $('#working_count_first').highcharts({
       chart: {
           plotBackgroundColor: null,
           plotBorderWidth: null,
           plotShadow: false
       },
       title: {
-          text: '用户领域分布'
+          text: '行业领域分布'
       },
       tooltip: {
         pointFormat: '{series.name}: <b>{point.percentage}%</b>',
@@ -144,15 +164,62 @@
         type: 'pie',
         name: '占比',
         data: [
-            ['财经',   {{data[0]['finance']}}],
-            ['媒体',   {{data[1]['media_domain']}}],
-            ['文化',   {{data[2]['culture']}}],
-            ['科技',   {{data[3]['technology']}}],
-            ['娱乐',   {{data[4]['entertainment']}}],
-            ['教育',   {{data[5]['education']}}],
-            ['时尚',   {{data[6]['fashion']}}],
-            ['体育',   {{data[7]['sports']}}],
-            ['其他',   {{data[8]['unknown']}}]
+            ['财经',   {{data1[0]['finance']}}],
+            ['媒体',   {{data1[1]['media_domain']}}],
+            ['文化',   {{data1[2]['culture']}}],
+            ['科技',   {{data1[3]['technology']}}],
+            ['娱乐',   {{data1[4]['entertainment']}}],
+            ['教育',   {{data1[5]['education']}}],
+            ['时尚',   {{data1[6]['fashion']}}],
+            ['体育',   {{data1[7]['sports']}}],
+            ['其他',   {{data1[8]['unknown']}}]
+        ]
+      }]
+    });
+  }
+  function display_user_second_field_dist(){
+  $('#working_count_second').highcharts({
+      chart: {
+          plotBackgroundColor: null,
+          plotBorderWidth: null,
+          plotShadow: false
+      },
+      title: {
+          text: '舆情领域分布'
+      },
+      tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage}%</b>',
+        percentageDecimals: 1
+      },
+      plotOptions: {
+          pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              dataLabels: {
+                  enabled: true,
+                  color: '#000000',
+                  connectorColor: '#000000',
+                  formatter: function() {
+                      return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(2) +' %';
+                  }
+              }
+          }
+      },
+      series: [{
+        type: 'pie',
+        name: '占比',
+        data: [
+            ['境外',   {{data2[0]['abroad']}}],
+            ['高校微博',   {{data2[1]['university']}}],
+            ['境内机构',   {{data2[2]['homeadmin']}}],
+            ['境外机构',   {{data2[3]['abroadadmin']}}],
+            ['境内媒体',   {{data2[4]['homemedia']}}],
+            ['境外媒体',   {{data2[5]['abroadmedia']}}],
+            ['民间组织',   {{data2[6]['folkorg']}}],
+            ['政府官员',   {{data2[7]['politician']}}],
+            ['媒体人士',   {{data2[8]['mediaworker']}}],
+            ['活跃人士',   {{data2[9]['activer']}}],
+            ['草根',   {{data2[10]['grassroot']}}]
         ]
       }]
     });
@@ -166,7 +233,6 @@
 
   $('#thumbnail').BlocksIt(options);
 
-//window resize
   var currentWidth = 1100;
   $(window).resize(function() {
     var winWidth = $(window).width();

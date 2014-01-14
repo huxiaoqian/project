@@ -5,6 +5,7 @@ import re
 import time
 import json
 import redis
+import heapq
 import leveldb
 import datetime
 from model import ProfilePersonBasic, ProfilePersonWeiboCount, ProfilePersonTopic
@@ -21,6 +22,24 @@ try:
                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 except:
     print 'leveldb not available now'
+
+
+class TopkHeap(object):
+    def __init__(self, k):
+        self.k = k
+        self.data = []
+ 
+    def Push(self, elem):
+        if len(self.data) < self.k:
+            heapq.heappush(self.data, elem)
+        else:
+            topk_small = self.data[0][0]
+            if elem[0] > topk_small:
+                heapq.heapreplace(self.data, elem)
+ 
+    def TopK(self):
+        return [x for x in reversed([heapq.heappop(self.data) for x in xrange(len(self.data))])]
+
 
 def _default_redis(host=REDIS_HOST, port=REDIS_PORT, db=0):
     return redis.StrictRedis(host, port, db)
@@ -89,6 +108,13 @@ def get_daily_domain_keywords_db_by_date(datestr, domain):
 def get_daily_domain_basic_db_by_date(datestr):
     # datestr '20140105'
     daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_basic_%s' % datestr),
+                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    return daily_user_db
+
+
+def get_daily_domain_rtkeywords_db_by_date(datestr):
+    # datestr '20140105'
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_rtkeywords_%s' % (datestr)),
                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     return daily_user_db
 
@@ -434,6 +460,26 @@ def batch_handle_domain_basic():
         count += 1
 
 
+def batch_sort_domain_keywords(topk=50):    
+    for domainid in range(-1, 21):
+        print '-----', domainid
+
+        keywords_th = TopkHeap(topk)
+        db = daily_domain_keywords_db[domainid]
+
+        for k, v in db.RangeIter():
+            v = int(v)
+            keywords_th.Push((v, k))
+
+        top_keywords = keywords_th.TopK()
+        top_keywords_dict = {}
+
+        for count, keywords in top_keywords:
+            top_keywords_dict[keywords] = count
+
+        daily_profile_domain_keywords.Put(str(domainid), json.dumps(top_keywords_dict))
+
+
 def batch_handle_domain():
     weibos = xapian_search_weibo.iter_all_docs(fields=['user', 'text', \
     'retweeted_mid', 'reposts_count', 'comments_count', 'text'])
@@ -501,9 +547,9 @@ if __name__ == '__main__':
     batch_date_1 = '20130901'
     xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
 
-    # daily_domain_keywords_db = {}
-    # for i in range(-1, 21):
-    #     daily_domain_keywords_db[i] = get_daily_domain_keywords_db_by_date(batch_date_1, i)
+    daily_domain_keywords_db = {}
+    for i in range(-1, 21):
+        daily_domain_keywords_db[i] = get_daily_domain_keywords_db_by_date(batch_date_1, i)
 
     # daily_profile_person_count_db = get_daily_user_count_db_by_date(batch_date_1)
     # personWeiboCount2levedb()
@@ -517,8 +563,11 @@ if __name__ == '__main__':
     # daily_profile_person_db = get_daily_user_db_by_date(batch_date_1)
     # batch_handle()
 
+    # daily_profile_domain_basic_db = get_daily_domain_basic_db_by_date(batch_date_1)
+    # batch_handle_domain_basic()
+
     # daily_profile_domain_db = get_daily_domain_db_by_date(batch_date_1)
     # batch_handle_domain()
 
-    daily_profile_domain_basic_db = get_daily_domain_basic_db_by_date(batch_date_1)
-    batch_handle_domain_basic()
+    daily_profile_domain_keywords = get_daily_domain_rtkeywords_db_by_date(batch_date_1)
+    batch_sort_domain_keywords()

@@ -27,7 +27,7 @@ from weibo.model import *
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
-from _leveldb import getPersonData, getDomainKeywordsData
+from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic
 from person import _search_person_basic, _search_person_important_active
 
 
@@ -582,6 +582,7 @@ def profile_group(fieldEnName):
             return redirect('/')
     else:
         return redirect('/')
+
 @mod.route('/group/',methods=['GET','POST'])
 def test_profile_group():
     if 'logged_in' in session and session['logged_in']:
@@ -1437,7 +1438,6 @@ def profile_group_topic(fieldEnName):
         window_size = 24*60*60
         datestr = '20130901'
         domainid = DOMAIN_LIST.index(fieldEnName)
-        domainid = -1
         keywords_dict = getDomainKeywordsData(domainid, datestr)
         if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
             interval =  int(request.args.get('interval'))
@@ -1593,65 +1593,24 @@ def profile_group_emotion(fieldEnName):
 
 @mod.route('/group_verify/<fieldEnName>')
 def profile_group_verify(fieldEnName):
-    startoffset = 0
-    endoffset = 10000
-    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
-    verified_count = 0
-    uverified_count = 0
-    for uid in fields_set:
-        user = xapian_search_user.search_by_id(uid, fields=['verified'])
-        if user and user['verified']:
-            verified_count += 1
-        else:
-            uverified_count += 1
+    datestr = '20130901'
+    domainid = DOMAIN_LIST.index(fieldEnName)
+    verified_count, unverified_count, province_dict = getDomainBasic(domainid, datestr)
+    verified_count = int(verified_count)
+    unverified_count = int(unverified_count)
     result_list = ''
-    if sum([verified_count, uverified_count]) > 0:
-        sumcount = sum([verified_count, uverified_count])
-        result_list = str(verified_count) + ',' + str(uverified_count) + ',' + str(int(verified_count * 100 / sumcount) / 100.00) + ',' +  str(1 - int(verified_count * 100 / sumcount) / 100.00)
+    if verified_count + unverified_count > 0:
+        sumcount = verified_count + unverified_count
+        result_list = str(verified_count) + ',' + str(unverified_count) + ',' + str(int(verified_count * 100 / sumcount) / 100.00) + ',' +  str(1 - int(verified_count * 100 / sumcount) / 100.00)
 
     return json.dumps(result_list)
-
-@mod.route('/group_rank/<fieldEnName>')
-def profile_group_rank(fieldEnName):
-    page = 1
-    countperpage = 8
-    limit = 1000
-    if request.args.get('page'):
-        page = int(request.args.get('page'))
-    if request.args.get('countperpage'):
-        countperpage = int(request.args.get('countperpage'))
-    if request.args.get('limit'):
-        limit = int(request.args.get('limit'))
-    if page == 1:
-        startoffset = 0
-    else:
-        startoffset = (page - 1) * countperpage
-    endoffset = startoffset + countperpage - 1
-    uids = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
-    users = []
-    for uid in uids:
-        user = getUserInfoById(uid)
-        if user:
-            users.append(user)
-    total_pages = limit / countperpage + 1
-    return json.dumps({'users': users, 'pages': total_pages})
 
 @mod.route('/group_location/<fieldEnName>')
 def profile_group_location(fieldEnName):
     city_count = {}
-    startoffset = 0
-    endoffset = 10000
-    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
-    for uid in fields_set:
-        user = xapian_search_user.search_by_id(uid, fields=['location', '_id'])
-        if user and user['location']:
-            province = user['location'].split(' ')[0]
-        else:
-            continue
-        try:
-            city_count[province] += 1
-        except:
-            city_count[province] = 1
+    datestr = '20130901'
+    domainid = DOMAIN_LIST.index(fieldEnName)
+    verified_count, unverified_count, province_dict = getDomainBasic(domainid, datestr)
+    city_count = province_dict
     results = province_color_map(city_count)
     return json.dumps(results)
-

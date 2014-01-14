@@ -24,11 +24,18 @@ def getProfileDomainDbByDate(datestr):
     return daily_domain_db
 
 
-def getProfileDomainKeywordsDb(datestr, domain):
+def get_daily_domain_rtkeywords_db_by_date(datestr):
     # datestr '20140105'
-    daily_domain_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_keywords_%s_%s' % (datestr, domain)), \
-                                      block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    return daily_domain_db
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_rtkeywords_%s' % (datestr)),
+                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    return daily_user_db
+
+
+def get_daily_domain_basic_db_by_date(datestr):
+    # datestr '20140105'
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_basic_%s' % datestr),
+                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    return daily_user_db
 
 
 def getPersonData(uid, datestr):
@@ -72,15 +79,27 @@ def getDomainCountData(domain, datestr):
 
 def getDomainKeywordsData(domain, datestr):
     # domain: -1~20
-    level = getProfileDomainKeywordsDb(datestr, domain)
-
+    level = get_daily_domain_rtkeywords_db_by_date(datestr)
     try:
         results = level.Get(str(domain))
-        keywords_dict = json.loads(keywords_dict)
+        keywords_dict = json.loads(results)
     except KeyError:
         keywords_dict = {}
 
     return keywords_dict
+
+
+def getDomainBasic(domain, datestr):
+    level = get_daily_domain_basic_db_by_date(datestr)
+    try:
+        results = level.Get(str(domain))
+        verified_count, unverified_count, province_dict = results.split('_\/')
+        province_dict = json.loads(province_dict)
+    except KeyError:
+        verified_count = unverified_count = 0 
+        province_dict = {}
+
+    return verified_count, unverified_count, province_dict
 
 
 def main():

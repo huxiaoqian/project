@@ -52,14 +52,13 @@ def getXapianWeiboByDate(datestr):
 
 def getXapianWeiboByTs(start_time, end_time):
     xapian_date_list =[]
+    end_time = end_time + 24*3600
     Day = 24*3600
     days = int((int(end_time) - int(start_time)) / Day)
-    print "days:"+"%d"%days
 
     for i in range(0, days):
         _ts = start_time + i * Day
         xapian_date_list.append(ts2datetimestr(_ts))
-    print "xapian_date_list"
     print xapian_date_list
     statuses_search = getXapianWeiboByDuration(xapian_date_list)
     return statuses_search

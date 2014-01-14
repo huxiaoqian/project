@@ -110,7 +110,16 @@ def readPropagateUser(keyid):
     
     if len(propagateUsers):
         for p in propagateUsers:
-            topic_info.append(p.user)       
+            user = dict()
+            user['id'] = int(p.user)
+            user['name'] = p.user_name
+            user['location'] = p.location
+            user['follower'] = p.follower
+            user['friend'] = p.friend
+            user['status'] = p.status
+            user['description'] = p.description
+            user['image_url'] = p.image_url
+            topic_info.append(user)       
         return topic_info
     else:
         return topic_info

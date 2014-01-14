@@ -10,7 +10,11 @@ __all__ = ['Field', 'Topic', \
            'SentimentTopicKeywords', 'SentimentTopicTopWeibos', 'Topics', 'DomainUser', \
            'SentimentRtTopicCount', 'SentimentRtTopicKeywords', 'SentimentRtTopicTopWeibos', \
            'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', \
-           'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', 'PropagateSpatial', 'PropagateUser', 'PropagateWeibo']
+           'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', \
+           'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
+           'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
+           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf']
+
 
 
 class Field(db.Model):
@@ -614,10 +618,24 @@ class PropagateUser(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     topic_id = db.Column(db.Integer)
     user = db.Column(db.String(20))
+    user_name = db.Column(db.String(50))
+    location = db.Column(db.String(50))
+    follower = db.Column(db.Integer)
+    friend = db.Column(db.Integer)
+    status = db.Column(db.Integer)
+    description = db.Column(db.Text)
+    image_url = db.Column(db.String(50))
 
-    def __init__(self, topic_id, user):
+    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description,image_url):
         self.topic_id = topic_id 
         self.user = user
+        self.user_name = user_name
+        self.location = location
+        self.follower = follower
+        self.friend = friend
+        self.status = status
+        self.description = description
+        self.image_url = image_url
 
 class PropagateWeibo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -646,4 +664,154 @@ class PropagateWeibo(db.Model):
         self.commentsCount = commentsCount
         self.attitudesCount = attitudesCount
 
+class TopicGexf(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic = db.Column(db.String(20))
+    identifyDate = db.Column(db.Date)
+    identifyWindow = db.Column(db.Integer, default=1)
+    identifyGexf = db.Column(db.Text)
 
+    def __init__(self, topic, identifyDate, identifyWindow, identifyGexf):
+        self.topic = topic
+        self.identifyDate = identifyDate
+        self.identifyWindow = identifyWindow
+        self.identifyGexf = identifyGexf
+
+class ProfileDomainTopic(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.Date)
+    domain = db.Column(db.Integer)
+    keywordLen = db.Column(db.Integer, default=50)
+    keyword = db.Column(db.Text)
+
+    def __init__(self, domain, keyword, date='2014-01-11', keywordLen=50):
+        self.date = date
+        self.domain = domain
+        self.keywordLen = keywordLen
+        self.keyword = keyword
+
+class ProfileDomainBasic(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.Date)
+    domain = db.Column(db.Integer)
+    provinceCount = db.Column(db.Text)
+    verifiedCount = db.Column(db.Integer)
+    unverifiedCount = db.Column(db.Integer)
+
+    def __init__(self, domain, provinceCount, verifiedCount, unverifiedCount, date='2014-01-11'):
+        self.date = date
+        self.domain = domain
+        self.provinceCount = provinceCount
+        self.verifiedCount = verifiedCount
+        self.unverifiedCount = unverifiedCount
+
+class ProfileDomainWeiboCount(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.Date)
+    domain = db.Column(db.Integer)
+    repostsCount = db.Column(db.BigInteger(20, unsigned=True))
+    originalCount = db.Column(db.BigInteger(20, unsigned=True))
+    activeCount = db.Column(db.BigInteger(20, unsigned=True))
+    importantCount = db.Column(db.BigInteger(20, unsigned=True))
+
+    def __init__(self, domain, repostsCount, originalCount, activeCount, importantCount, date='2014-01-11'):
+        self.date = date
+        self.domain = domain
+        self.repostsCount = repostsCount
+        self.originalCount = originalCount
+        self.activeCount = activeCount
+        self.importantCount = importantCount
+
+class ProfilePersonBasic(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
+    province = db.Column(db.Integer)
+    city = db.Column(db.Integer)
+    verified = db.Column(db.Boolean)
+    name = db.Column(db.String(20))
+    gender = db.Column(db.String(2))
+    profileImageUrl = db.Column(db.String(100))
+    verifiedType = db.Column(db.Integer)
+    friendsCount = db.Column(db.BigInteger(20, unsigned=True))
+    followersCount = db.Column(db.BigInteger(20, unsigned=True))
+    statuseCount = db.Column(db.BigInteger(20, unsigned=True))    
+    location = db.Column(db.String(20))
+    description = db.Column(db.Text)
+    created_at = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    date = db.Column(db.Date)
+
+    def __init__(self, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date='2014-01-11'):
+        self.userId = userId
+        self.province = province
+        self.city = city
+        self.verified = verified
+        self.name = name
+        self.gender = gender
+        self.profileImageUrl = profileImageUrl
+        self.verifiedType = verifiedType
+        self.friendsCount = friendsCount
+        self.followersCount = followersCount
+        self.statuseCount = statusesCount
+        self.location = location
+        self.description = description
+        self.created_at = created_at
+        self.date = date
+
+class ProfilePersonWeiboCount(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    prod = db.Column(db.Boolean, default=False)
+    endDate = db.Column(db.Date)
+    windowLen = db.Column(db.Integer, default=30)
+    activeSeries = db.Column(db.Text)
+    importantSeries = db.Column(db.Text)
+    repostsSeries = db.Column(db.Text) # 用户转发微博数序列
+    originalSeries = db.Column(db.Text) # 用户原创微博数序列
+    emoticonSeries = db.Column(db.Text) # 用户带情感微博数序列
+
+    def __init__(self, userId, activeSeries, importantSeries, repostsSeries, originalSeries, emoticonSeries, endDate, windowLen=30, prod=False):
+        self.userId = userId
+        self.prod = prod
+        self.endDate = endDate
+        self.windowLen = windowLen
+        self.activeSeries = activeSeries
+        self.importantSeries = importantSeries
+        self.repostsSeries = repostsSeries
+        self.originalSeries = originalSeries
+        self.emoticonSeries = emoticonSeries
+
+class ProfilePersonTopic(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    prod = db.Column(db.Boolean, default=False)
+    endDate = db.Column(db.Date)
+    windowLen = db.Column(db.Integer, default=7)
+    keywordLen = db.Column(db.Integer, default=50)
+    keywordSeries = db.Column(db.Text)
+
+    def __init__(self, userId, keywordSeries, endDate, keywordLen=50, windowLen=7, prod=False):
+        self.userId = userId
+        self.prod = prod
+        self.endDate = endDate
+        self.windowLen = windowLen
+        self.keywordLen = keywordLen
+        self.keywordSeries = keywordSeries
+
+class ProfilePersonFriends(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
+    relation = db.Column(db.String(10), default='nobody') # 'friends', 'followers', 'nobody'
+    prod = db.Column(db.Boolean, default=False)
+    endDate = db.Column(db.Date)
+    windowLen = db.Column(db.Integer, default=7)
+    directInteractSeries = db.Column(db.Text)
+    retweetedInteractSeries = db.Column(db.Text)
+
+    def __init__(self, userId, directInteractSeries, retweetedInteractSeries, endDate, windowLen=7, prod=False, relation='nobody'):
+        self.userId = userId
+        self.relation = relation
+        self.prod = prod
+        self.endDate = endDate
+        self.windowLen = windowLen
+        self.directInteractSeries = directInteractSeries
+        self.retweetedInteractSeries = retweetedInteractSeries

@@ -17,7 +17,7 @@ xapian_user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_co
                      'gender', 'profile_image_url', 'verified_type','followers_count', \
                      'location', 'statuses_count', 'description', 'created_at']
 try:
-    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_20140112'),
+    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_20140112_4'),
                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 except:
     print 'leveldb not available now'
@@ -34,7 +34,7 @@ def user2domain(uid):
     return int(domainid)
 
 
-def userLeveldb2Domain(uid, updatetime='20131221'):
+def userLeveldb2Domain(uid, updatetime='20131220'):
     try:
         v = spieduser_bucket.Get(str(uid) + '_' + str(updatetime))
         domainid = DOMAIN_LIST.index(v)
@@ -75,6 +75,20 @@ def get_daily_user_db_by_date(datestr):
 def get_daily_domain_db_by_date(datestr):
     # datestr '20140105'
     daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr),
+                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    return daily_user_db
+
+
+def get_daily_domain_keywords_db_by_date(datestr, domain):
+    # datestr '20140105'
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_keywords_%s_%s' % (datestr, domain)),
+                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    return daily_user_db
+
+
+def get_daily_domain_basic_db_by_date(datestr):
+    # datestr '20140105'
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_basic_%s' % datestr),
                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     return daily_user_db
 
@@ -380,6 +394,46 @@ def batch_handle():
         count += 1
 
 
+def batch_handle_domain_basic():
+    count = 0
+    ts = te = time.time()
+    users = xapian_search_user.iter_all_docs(fields=['_id', 'verified', 'location']) 
+    for user in users:
+        if count % 10000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts), ' %s daily domain basic' % batch_date_1
+            ts = te
+
+        domainid = userLeveldb2Domain(user['_id'])
+        verified = user['verified']
+        province_str = user['location'].split(' ')[0]
+        
+        try:
+            verified_count, unverified_count, province_dict = daily_profile_domain_basic_db.Get(str(domainid)).split('_\/')
+            verified_count = int(verified_count)
+            unverified_count = int(unverified_count)
+            province_dict = json.loads(province_dict)
+        except KeyError:
+            verified_count = unverified_count = 0
+            province_dict = {}
+
+        if verified:
+            verified_count += 1
+        else:
+            unverified_count += 1
+
+        try:
+            province_dict[province_str] += 1
+        except KeyError:
+            province_dict[province_str] = 1
+
+        key = str(domainid)
+        value = '_\/'.join([str(verified_count), str(unverified_count), json.dumps(province_dict)])
+        daily_profile_domain_basic_db.Put(key, value)
+
+        count += 1
+
+
 def batch_handle_domain():
     weibos = xapian_search_weibo.iter_all_docs(fields=['user', 'text', \
     'retweeted_mid', 'reposts_count', 'comments_count', 'text'])
@@ -405,15 +459,13 @@ def batch_handle_domain():
 
         try:
             results = daily_profile_domain_db.Get(str(domain))
-            active, important, reposts, original, keywords_dict = results.split('_\/')
+            active, important, reposts, original = results.split('_\/')
             active = int(active)
             important = int(important)
             reposts = int(reposts)
             original = int(original)
-            keywords_dict = json.loads(keywords_dict)
         except KeyError:
             active = important = reposts = original = 0
-            keywords_dict = {}
 
         active += 1
         important += reposts_count + comments_count
@@ -423,16 +475,19 @@ def batch_handle_domain():
         else:
             original += 1
 
+        key = str(domain)
+        value = '_\/'.join([str(active), str(important), str(reposts), str(original)])
+        batch.Put(key, value)
+
+        daily_profile_domain_keywords_db = daily_domain_keywords_db[int(domain)]
         terms = cut(scws, _utf_encode(text), f='n')
         for term in terms:
             try:
-                keywords_dict[term] += 1
+                kcount = int(daily_profile_domain_keywords_db.Get(str(term)))
+                daily_profile_domain_keywords_db.Put(str(term), str(kcount + 1))
             except KeyError:
-                keywords_dict[term] = 1
+                daily_profile_domain_keywords_db.Put(str(term), str(1))
 
-        key = str(domain)
-        value = '_\/'.join([str(active), str(important), str(reposts), str(original), json.dumps(keywords_dict)])
-        batch.Put(key, value)
         count += 1
 
 
@@ -446,6 +501,10 @@ if __name__ == '__main__':
     batch_date_1 = '20130901'
     xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
 
+    # daily_domain_keywords_db = {}
+    # for i in range(-1, 21):
+    #     daily_domain_keywords_db[i] = get_daily_domain_keywords_db_by_date(batch_date_1, i)
+
     # daily_profile_person_count_db = get_daily_user_count_db_by_date(batch_date_1)
     # personWeiboCount2levedb()
     
@@ -458,5 +517,8 @@ if __name__ == '__main__':
     # daily_profile_person_db = get_daily_user_db_by_date(batch_date_1)
     # batch_handle()
 
-    daily_profile_domain_db = get_daily_domain_db_by_date(batch_date_1)
-    batch_handle_domain()
+    # daily_profile_domain_db = get_daily_domain_db_by_date(batch_date_1)
+    # batch_handle_domain()
+
+    daily_profile_domain_basic_db = get_daily_domain_basic_db_by_date(batch_date_1)
+    batch_handle_domain_basic()

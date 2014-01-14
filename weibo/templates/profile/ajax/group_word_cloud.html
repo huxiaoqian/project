@@ -100,7 +100,7 @@ function display_d3_cloud(data){
       changChild($(this).val());  
     });
     $.ajax({
-        url: "/profile/group_topic/{{field}}?interval=90&sort=prob&limit=200&topic_type=lda",
+        url: "/profile/group_topic/{{field}}?interval=90&sort=prob&limit=200&topic_type=freq",
         dataType: 'json',   
         type: "GET",   
         success: function (data) {

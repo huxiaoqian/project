@@ -27,7 +27,7 @@ from weibo.model import *
 from flask.ext.sqlalchemy import Pagination
 import leveldb
 from utils import last_day
-from _leveldb import getPersonData, getDomainData
+from _leveldb import getPersonData, getDomainKeywordsData
 from person import _search_person_basic, _search_person_important_active
 
 
@@ -1374,8 +1374,9 @@ def profile_group_topic(fieldEnName):
         limit = 50
         window_size = 24*60*60
         datestr = '20130901'
-        domain = DOMAIN_LIST.index(fieldEnName)
-        active, important, reposts, original, keywords_dict = getDomainData(domain, datestr)
+        domainid = DOMAIN_LIST.index(fieldEnName)
+        domainid = -1
+        keywords_dict = getDomainKeywordsData(domainid, datestr)
         if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
             interval =  int(request.args.get('interval'))
             sort =  request.args.get('sort')

@@ -21,8 +21,8 @@ def main():
         db_date = topic.db_date
         topicname = topic.topic
 
-        calculate(topicname,start_ts,end_ts)
-
+        result  = calculate(topicname,start_ts,end_ts)
+        print result
         _update_topic_status2Completed(topicname, start_ts, end_ts, db_date)
 
 

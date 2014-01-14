@@ -50,9 +50,8 @@ def getXapianWeiboByDuration(datestr_list):
         print type(stub_file)
         if os.path.exists(stub_file):
             stub_file_list.append(stub_file)
-
     if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True)
         return xapian_search_weibo 
 
     else:
@@ -112,6 +111,9 @@ def get_user(uid):
 
 def calculate(keyword, beg_time, end_time):
     #初始化
+##    beg_time = date2ts(beg_time)
+##    end_time = date2ts(end_time)
+##    keyword = keyword.decode('utf-8')
     start_time = time.time()
     topic_info = {}
 
@@ -150,10 +152,13 @@ def calculate(keyword, beg_time, end_time):
 
     statuses_search = getXapianweiboByTs(beg_time, end_time)
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-    count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['timestamp'], fields=fields_list)
+    count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list, max_offset=10000)
+
     if count == 0:
         return 'wrong'
     n = 0
+    count = 0
+    topic_post_time = end_time
     for r in get_results():
         # 获取时间与每天微博数量
         if not r['reposts_count']:
@@ -162,6 +167,14 @@ def calculate(keyword, beg_time, end_time):
             r['comments_count'] = 0
         if not r['attitudes_count']:
             r['attitudes_count'] = 0
+        count = count + 1
+        if count % 100 == 0:
+            print count
+        if r['timestamp'] < topic_post_time:
+            topic_post_time = r['timestamp']
+            n = 1
+        else:
+            n = 0
 	temp_date = date.fromtimestamp(r['timestamp'])
         if len(date_list) == 0:
             date_list.append(temp_date)
@@ -201,9 +214,9 @@ def calculate(keyword, beg_time, end_time):
             user = get_user(uid)
             
             if user != None:
-                if n == 0:#判断发起人
+                if n == 1:#判断发起人
                     topic_participents = user['name']
-                    n = 1
+                    n = 0
                 if topic_user.has_key(uid):#生成用户对应的排序指标
                     pass
                 else:
@@ -342,7 +355,7 @@ def calculate(keyword, beg_time, end_time):
 
     for i in range(0,len(topic_info['topic_participents'])):
         uid = topic_info['topic_participents'][i][1]
-        save_user(wordid,uid,user_infor[uid]['name'],user_infor[uid]['location'],user_infor[uid]['followers_count'],user_infor[uid]['friends_count'],user_infor[uid]['statuses_count'],user_infor[uid]['description'])
+        save_user(wordid,uid,user_infor[uid]['name'],user_infor[uid]['location'],user_infor[uid]['followers_count'],user_infor[uid]['friends_count'],user_infor[uid]['statuses_count'],user_infor[uid]['description'],user_infor[uid]['profile_image_url'])
 
     weibo = topic_info['topic_rel_blog'][:5]
     for i in range(0,len(weibo)):
@@ -365,7 +378,7 @@ def save_base_infor(keyword,topic_poster,topic_url,blogs_sum,topic_ori_blog_coun
 
     if not topic_url:
         topic_url = 'None'
-    #print keyword,topic_url,beg_date,end_date,topic_poster,blogs_sum,topic_ori_blog_count,topic_post_date,persistent,sudden,coverage,media,leader
+    #print topic_poster
     new_item = PropagateTopic(keyword,topic_url,beg_date,end_date,topic_poster,blogs_sum,topic_ori_blog_count,topic_post_date,persistent,sudden,coverage,media,leader)
     db.session.add(new_item)
     db.session.commit()
@@ -391,11 +404,16 @@ def save_map(wordid,city,count):#话题id、城市、数量
     db.session.add(new_item)
     db.session.commit()
 
-def save_user(wordid,uid,name,location,follower,friend,status,description):#话题id、用户id
+def save_user(wordid,uid,name,location,follower,friend,status,description,profile_image_url):#话题id、用户id、用户昵称、地址、粉丝数、关注数、微博数、个人描述
 
-    user = str(uid)    
-    #print user,name,location,follower,friend,status,description
-    new_item = PropagateUser(wordid,user,name,location,follower,friend,status,description)
+    user = str(uid)
+    follower = int(follower)
+    friend = int(friend)
+    status = int(status)
+    if not description:
+        description = 'None'
+    #print description
+    new_item = PropagateUser(wordid,user,name,location,follower,friend,status,description,profile_image_url)
     db.session.add(new_item)
     db.session.commit()
 
@@ -411,7 +429,8 @@ def save_weibo(wordid,weibo):#话题id、微博
     repostsCount = int(weibo['status']['reposts_count'])
     commentsCount = int(weibo['status']['comments_count'])
     attitudesCount = int(weibo['status']['attitudes_count'])
-    
+
+    #print wordid,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
     new_item = PropagateWeibo(wordid,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount)
     db.session.add(new_item)
     db.session.commit()

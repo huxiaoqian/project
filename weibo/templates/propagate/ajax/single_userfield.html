@@ -66,8 +66,8 @@
   }
 </style>
 <div id="container">
-  <div id="working_count_first"  >该微博在行业领域内没有转发用户</div>
-  <div id="working_count_second" ><text style="font-family:&quot;Lucida Grande&quot;, &quot;Lucida Sans Unicode&quot;, Verdana, Arial, Helvetica, sans-serif;font-size:16px;color:#274b6d;fill:#274b6d;" text-anchor="middle">该微博在舆情领域内没有转发用户</text></div>
+  <div id="working_count_first"></div>
+  <div id="working_count_second"></div>
 </div>
 <div class="well">
   <legend>次级传播用户</legend>
@@ -85,7 +85,8 @@
           <th style="text-align:center;">博主地域</th>
           <th style="text-align:center;">粉丝数</th>
           <th style="text-align:center;">关注数</th>
-          <th style="text-align:center;">关联级别</th>
+          <th style="text-align:center;">微博数</th>
+          <!--<th style="text-align:center;">关联级别</th>-->
           <th style="text-align:center;">敏感状态</th>
         </tr>
       </thead>
@@ -123,16 +124,23 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
 <script>
-  if(( {{data1[0]['finance']}} + {{data1[1]['media_domain']}} + {{data1[2]['culture']}} + {{data1[3]['technology']}} + {{data1[4]['entertainment']}} + {{data1[5]['education']}} + {{data1[6]['fashion']}} + {{data1[7]['sports']}} + {{data1[8]['unknown']}})>0)
-  {  
-    display_user_first_field_dist();
+  if(( {{data1[0]['finance']}} + {{data1[1]['media_domain']}} + {{data1[2]['culture']}} + {{data1[3]['technology']}} + {{data1[4]['entertainment']}} + {{data1[5]['education']}} + {{data1[6]['fashion']}} + {{data1[7]['sports']}} + {{data1[8]['abroad']}})>0){
+    
+    display_user_field_dist();
   }
-  //console.log({{data2[0]['abroad']}} + {{data2[1]['university']}} + {{data2[2]['homeadmin']}} + {{data2[3]['abroadadmin']}} + {{data2[4]['homemedia']}} + {{data2[5]['abroadmedia']}} + {{data2[6]['folkorg']}} + {{data2[7]['politician']}} + {{data2[8]['mediaworker']}} + {{data2[9]['activer']}} + {{data2[10]['mediaworker']}} + {{data2[11]['grassroot']}});
-  if(( {{data2[0]['abroad']}} + {{data2[1]['university']}} + {{data2[2]['homeadmin']}} + {{data2[3]['abroadadmin']}} + {{data2[4]['homemedia']}} + {{data2[5]['abroadmedia']}} + {{data2[6]['folkorg']}} + {{data2[7]['politician']}} + {{data2[8]['mediaworker']}} + {{data2[9]['activer']}} + {{data2[10]['mediaworker']}} + {{data2[11]['grassroot']}})>0)
-  {
+  else{
+    $("#working_count_first").append("行业领域计算为空");
+  }
+  
+  if(( {{data2[0]['university']}} + {{data2[1]['homeadmin']}} + {{data2[2]['abroadadmin']}} + {{data2[3]['homemedia']}} + {{data2[4]['abroadmedia']}} + {{data2[5]['folkorg']}} + {{data2[6]['politician']}} + {{data2[7]['mediaworker']}} + {{data2[8]['activer']}} + {{data2[9]['mediaworker']}} + {{data2[10]['grassroot']}} + {{data2[11]['unknown']}})>0){
+    
     display_user_second_field_dist();
   }
-  function display_user_first_field_dist(){
+  else{
+    $("#working_count_second").append("舆情领域计算为空");
+  }
+  
+  function display_user_field_dist(){
     $('#working_count_first').highcharts({
       chart: {
           plotBackgroundColor: null,
@@ -172,12 +180,13 @@
             ['教育',   {{data1[5]['education']}}],
             ['时尚',   {{data1[6]['fashion']}}],
             ['体育',   {{data1[7]['sports']}}],
-            ['其他',   {{data1[8]['unknown']}}]
+            ['境外',   {{data1[8]['abroad']}}]
         ]
       }]
     });
   }
-  function display_user_second_field_dist(){
+
+   function display_user_second_field_dist(){
   $('#working_count_second').highcharts({
       chart: {
           plotBackgroundColor: null,
@@ -209,17 +218,18 @@
         type: 'pie',
         name: '占比',
         data: [
-            ['境外',   {{data2[0]['abroad']}}],
-            ['高校微博',   {{data2[1]['university']}}],
-            ['境内机构',   {{data2[2]['homeadmin']}}],
-            ['境外机构',   {{data2[3]['abroadadmin']}}],
-            ['境内媒体',   {{data2[4]['homemedia']}}],
-            ['境外媒体',   {{data2[5]['abroadmedia']}}],
-            ['民间组织',   {{data2[6]['folkorg']}}],
+            ['高校微博',   {{data2[0]['university']}}],
+            ['境内机构',   {{data2[1]['homeadmin']}}],
+            ['境外机构',   {{data2[2]['abroadadmin']}}],
+            ['境内媒体',   {{data2[3]['homemedia']}}],
+            ['境外媒体',   {{data2[4]['abroadmedia']}}],
+            ['民间组织',   {{data2[5]['folkorg']}}],
+            ['律师',   {{data2[6]['lawyer']}}],
             ['政府官员',   {{data2[7]['politician']}}],
             ['媒体人士',   {{data2[8]['mediaworker']}}],
             ['活跃人士',   {{data2[9]['activer']}}],
-            ['草根',   {{data2[10]['grassroot']}}]
+            ['草根',   {{data2[10]['grassroot']}}],
+            ['其他',   {{data2[11]['unknown']}}]
         ]
       }]
     });
@@ -281,8 +291,13 @@ function getRankData(countperpage_args, limit_arg){
             html += "<td style='text-align:center'>" + user['location'] + "</td>";
             html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
             html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
-            html += "<td>二级</td>";
-            html += "<td><i class='icon-ok'></i></td>";
+            html += "<td style='text-align:center'>" + user['statuses_count'] + "</td>";
+            if(user['status'] == 1){
+              html += "<td><i class='icon-ok'></i></td></tr>";
+            }
+            else{
+              html += "<td><i class='icon-remove'></i></td></tr>";
+            }
         }
         $("#word_table").empty();
         $("#word_table").append(html);
@@ -305,8 +320,13 @@ function getRankData(countperpage_args, limit_arg){
                 html += "<td style='text-align:center'>" + user['location'] + "</td>";
                 html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
                 html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
-                html += "<td>二级</td>";
-                html += "<td><i class='icon-ok'></i></td>";
+                html += "<td style='text-align:center'>" + user['statuses_count'] + "</td>";
+                if(user['status'] == 1){
+                  html += "<td><i class='icon-ok'></i></td></tr>";
+                }
+                else{
+                  html += "<td><i class='icon-remove'></i></td></tr>";
+                }
             }
             $("#word_table").append(html);
             }

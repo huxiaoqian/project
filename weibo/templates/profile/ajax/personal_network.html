@@ -37,18 +37,18 @@
   <div id="page-selection" class="pagination pagination-centered"></div>
   <script src="/static/js/jquery.bootpag.js"></script>
 <script>
-  function submit_form(){
-    var nt_interval = $('#nt_interval').val();
-    $.ajax({
-        url: "/profile/person_network/friends/{{uid}}?interval=" + nt_interval,
-        dataType: 'json',   
-        type: "GET",   
-        success: function (data) {
-          $('#interact_count_container').empty();
-          display_interact_chart(data);
-        }
-    });
-  }
+  // function submit_form(){
+  //   var nt_interval = $('#nt_interval').val();
+  //   $.ajax({
+  //       url: "/profile/person_network/friends/{{uid}}?interval=" + nt_interval,
+  //       dataType: 'json',   
+  //       type: "GET",   
+  //       success: function (data) {
+  //         $('#interact_count_container').empty();
+  //         display_interact_chart(data);
+  //       }
+  //   });
+  // }
 	function display_interact_chart(data){
 		var data_list = [];
 		for(var i in data){
@@ -122,9 +122,8 @@
     });
 	}
 	$(document).ready(function(){
-    var nt_interval = $('#nt_interval').val();
 		$.ajax({
-        url: "/profile/person_network/friends/{{uid}}?interval=" + nt_interval,
+        url: "/profile/person_network/friends/{{uid}}",
         dataType: 'json',   
         type: "GET",   
         success: function (data) {

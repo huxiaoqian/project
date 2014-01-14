@@ -624,8 +624,9 @@ class PropagateUser(db.Model):
     friend = db.Column(db.Integer)
     status = db.Column(db.Integer)
     description = db.Column(db.Text)
+    image_url = db.Column(db.String(50))
 
-    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description):
+    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description,image_url):
         self.topic_id = topic_id 
         self.user = user
         self.user_name = user_name
@@ -634,6 +635,7 @@ class PropagateUser(db.Model):
         self.friend = friend
         self.status = status
         self.description = description
+        self.image_url = image_url
 
 class PropagateWeibo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -21,20 +21,20 @@
         <a><em class="W_ico20 icon_praised_b"></em>赞:{{ tar_attitudes_count }}</a><i class="S_txt3">|</i>
         <a>转发:{{ tar_repost_count }}</a><i class="S_txt3">|</i>
         <a>评论:{{ tar_comments_count }}</a><i class="S_txt3">|</i>
-        <a href="/propagate/showResult_single/{{ tar_id }}/" style="color:#FF8000;">分析</a><i class="S_txt3">|</i>
-        <!--<a href="/propagate/add_material/{{ tar_id }}/" style="color:red;">导入素材库</a>-->
+        <a href="/propagate/showResult_single/?time={{ tar_post_date }}&mid={{ tar_id }}&flag=1" style="color:#FF8000;">分析</a><i class="S_txt3">|</i>
         <a id="ma{{ tar_id }}" name ="{{ tar_id }}" style="color:red;">导入素材库</a>
         <script>
                           $("#ma{{ tar_id }}").click(function () {
                               var id=this.getAttribute("name");
                               var weibo_time=$("#weibo_time"+id).html();
+                              var end_time = '{{end_time}}';
                               console.log(weibo_time);
                               $.ajax({   
                                   type:"POST",  
                                   url:"/propagate/add_material",
                                   dataType: "json",
                                   async:false,
-                                  data:{mid : id,time_ts : weibo_time},
+                                  data:{mid : id,time_ts : weibo_time,end_time: end_time},
                                   success: function(data){
                                       if(data == 'Right') {
                                         alert("导入成功！");

@@ -1,7 +1,24 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
-{% block body %}     
+{% block body %}
   <script>
+  var len = $('script').filter(function () {
+    return ($(this).attr('src') == '/static/js/profile/highcharts.js');
+  }).length;
+
+  if(len == 0){
+    loadScript('/static/js/profile/highcharts.js');
+    loadScript('/static/js/profile/exporting.js');
+  }
+
+  function loadScript(scriptLocationAndName) {
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = scriptLocationAndName;
+    head.appendChild(script);
+  }
+
   function display_ori_repost_count(data){
     var chart = new Highcharts.Chart({
       chart: {
@@ -60,7 +77,8 @@
 }
 
   function init_post_count(){
-    var interval_arg = $("#weibo_count_interval")[0].value;
+    //var interval_arg = $("#weibo_count_interval")[0].value;
+    var interval_arg = 7;
     $.ajax({
         url: "/profile/group_count/{{field}}?interval=" + interval_arg,
         dataType: 'json',   
@@ -71,8 +89,10 @@
     });
   }
   init_post_count()
+
   function submit_form(){
-    var interval_arg = $("#weibo_count_interval")[0].value;
+    //var interval_arg = $("#weibo_count_interval")[0].value;
+    var interval_arg = 7;
     $.ajax({
           url: "/profile/group_count/{{field}}?interval=" + interval_arg,
           dataType: 'json',   

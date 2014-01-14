@@ -1,0 +1,91 @@
+{% extends 'profile/ajax/ajax_layout.html' %}
+{% block body %}
+    <script>
+    var len = $('script').filter(function () {
+      return ($(this).attr('src') == '/static/js/profile/highcharts.js');
+    }).length;
+
+    if(len == 0){
+      loadScript('/static/js/profile/highcharts.js');
+      loadScript('/static/js/profile/exporting.js');
+    }
+
+    function loadScript(scriptLocationAndName) {
+      var head = document.getElementsByTagName('head')[0];
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = scriptLocationAndName;
+      head.appendChild(script);
+    }
+
+    function display_important_count(data){
+      var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chartdiv_week_important',
+            type: 'spline',
+            marginRight: 100,
+            marginBottom: 25
+        },
+        title: {
+            text: '重要度走势',
+            x: -20 //center
+        },
+        xAxis: {
+            categories: data['time'],
+            labels:{
+              step:10,//3就是x轴显示的间隔
+            }
+        },
+        yAxis: {
+            title: {
+                text: '重要度数值'
+            },
+            min: 0,
+            lineWidth: 2,
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }]
+        },
+        tooltip: {
+            formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+
+                    this.x +': '+ this.y;
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'top',
+            x: -10,
+            y: 100,
+            borderWidth: 0
+        },
+        series: [{
+            name: '重要度',
+            data: data['important'],
+        }]
+    });
+  }
+
+    function init_important_count(){
+      //var interval_arg = $("#weibo_count_interval")[0].value;
+      var interval_arg = 7;
+      $.ajax({
+          url: "/profile/group_important/{{field}}?interval=" + interval_arg,
+          dataType: 'json',   
+          type: "GET",   
+          success: function (data) {
+            display_important_count(data);
+          }
+      });
+    }
+
+    init_important_count()
+  
+  </script>
+  <div id="chartdiv_week_important" style="width: 930px; height: 400px;"></div>
+
+{% endblock body %}
+

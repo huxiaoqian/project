@@ -7,12 +7,6 @@
       margin-left: 1%;
       color: #D14836;
     }
-    .pf_item {
-      font-size: 12px;
-      line-height: 30px;
-      margin-bottom: 5px;
-      position: relative;
-    }
     .clearfix {
       display: block;
     }
@@ -23,20 +17,25 @@
       clear: both;
       visibility: hidden;
     }
-    .pf_item .label {
-      float: left;
-      width: 596px;
-      padding: 10px 4px;
-      text-align: right;
-      white-space: nowrap;
-    }
-    .pf_item .con {
-      margin-left: 640px;
-      padding: 0 10px;
-      word-wrap: break-word;
-    }
 </style>
 <script>
+    var len = $('script').filter(function () {
+      return ($(this).attr('src') == '/static/js/profile/highcharts.js');
+    }).length;
+
+    if(len == 0){
+      loadScript('/static/js/profile/highcharts.js');
+      loadScript('/static/js/profile/exporting.js');
+    }
+
+    function loadScript(scriptLocationAndName) {
+      var head = document.getElementsByTagName('head')[0];
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = scriptLocationAndName;
+      head.appendChild(script);
+    }
+
   function display_ori_repost_count(data){
     var chart = new Highcharts.Chart({
       chart: {
@@ -46,7 +45,7 @@
           marginBottom: 25
       },
       title: {
-          text: '最近一周微博统计',
+          text: '最近一周微博数量走势',
           x: -20 //center
       },
       xAxis: {
@@ -96,7 +95,7 @@
   function display_week_weibocount(){
     // 时间间隔为7天 即一周
     $.ajax({
-        url: "/profile/person_count/{{uid}}",
+        url: "/profile/person_count/{{uid}}?interval=7",
         dataType: 'json',   
         type: "GET",   
         success: function (data) {
@@ -120,7 +119,7 @@
           marginBottom: 25
       },
       title: {
-          text: '最近一周重要度',
+          text: '最近一周重要度走势',
           x: -20 //center
       },
       xAxis: {
@@ -131,7 +130,7 @@
       },
       yAxis: {
           title: {
-              text: '重要度'
+              text: '重要度数值'
           },
           plotLines: [{
               value: 0,
@@ -143,7 +142,7 @@
       tooltip: {
           formatter: function() {
                   return '<b>'+ this.series.name +'</b><br/>'+
-                  this.x +': '+ this.y +'条';
+                  this.x +': '+ this.y;
           }
       },
       legend: {
@@ -160,90 +159,21 @@
       }]
   });
   }
-
-  // function display_hourly_pattern(datahalf, dataone, datatwo){
-  //   var x_xais = [];
-  //   var y_half_xais = [];
-  //   var y_one_xais = [];
-  //   var y_two_xais = [];
-  //   for(var i in datatwo){
-  //     x_xais.push(datatwo[i][0]);
-  //     y_half_xais.push(datahalf[i][1]);
-  //     y_one_xais.push(dataone[i][1]);
-  //     y_two_xais.push(datatwo[i][1]);
-  //   }
-  //   var chart = new Highcharts.Chart({
-  //     chart: {
-  //         renderTo: 'chartdiv_hourly_pattern',
-  //         type: 'line',
-  //         marginRight: 100,
-  //         marginBottom: 25
-  //     },
-  //     title: {
-  //         text: '小时模式',
-  //         x: -20 //center
-  //     },
-  //     xAxis: {
-  //         categories: x_xais,
-  //     },
-  //     yAxis: {
-  //         title: {
-  //             text: '每小时微博总数'
-  //         },
-  //         plotLines: [{
-  //             value: 0,
-  //             width: 1,
-  //             color: '#808080',
-  //             min: 0
-  //         }]
-  //     },
-  //     tooltip: {
-  //         formatter: function() {
-  //                 return '<b>'+ this.series.name +'</b><br/>'+
-  //                 this.x +': '+ this.y;
-  //         }
-  //     },
-  //     legend: {
-  //         layout: 'vertical',
-  //         align: 'right',
-  //         verticalAlign: 'top',
-  //         x: -10,
-  //         y: 100,
-  //         borderWidth: 0
-  //     },
-  //     series: [{
-  //         name: '半年',
-  //         data: y_half_xais
-  //     },{
-  //         name: '一年',
-  //         data: y_one_xais
-  //     },{
-  //         name: '两年',
-  //         data: y_two_xais
-  //     }]
-  //   });
-  // }
   display_week_weibocount();
 </script>
   <div id="behavior_stat">
-    <h5 style="margin-bottom: 10px;margin-left: 400px;">行为统计</h5>
     <div node-type="base_view">
-      <div class="pf_item clearfix">
-        <div class="label S_txt2">用户发布微博总数</div>
-        <div class="con" id='total_posts'></div>
-      </div>  
-      <div class="pf_item clearfix">
-        <div class="label S_txt2">用户发布微博被转比例</div>
-        <div class="con" id='reposts_ratio'></div>
-      </div>
-      <div class="pf_item clearfix">
-        <div class="label S_txt2">用户发布微博使用情感图标的比例</div>
-        <div class="con" id='emoticons_ratio'></div>
-      </div>
+      <button type="button" class="btn btn-danger">微博总数</button>
+      <button type="button" class="btn btn-default" id='total_posts'></button>
+      <button type="button" class="btn btn-warning">转发微博比例</button>
+      <button type="button" class="btn btn-default" id='reposts_ratio'></button>
+      <button type="button" class="btn btn-info">含情感图标微博比例</button>
+      <button type="button" class="btn btn-default" id='emoticons_ratio'></button>
     </div>
   </div>
+  <br>
   <div id="chartdiv_week_weibocount" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
+  <br>
   <div id="chartdiv_weekly_pattern" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
-<!--   <div id="chartdiv_hourly_pattern" style="min-width: 936px; height: 450px; margin: 0 auto"></div> -->
 {% endblock body %}
 

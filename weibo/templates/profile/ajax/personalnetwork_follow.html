@@ -156,102 +156,6 @@
         <div class="label S_txt2">用户微博被评论比例</div>
         <div class="con" id='avg_comments'></div>
       </div>
-      <div class="hot_feed_top_tit">
-        <h1 class="hot_tit_top"> <span class="txt_top">按照转发数排序：结果1</span></h1>
-      </div>
-      <div class="WB_feed_type SW_fun type_intimate feed_list">
-        <div class="WB_feed_datail S_line2 clearfix">
-          <div class="WB_detail">
-            <div class="WB_text" node-type="feed_list_content" id="wb_text_repost_0"></div>
-            <div class="WB_func clearfix">
-              <div class="WB_handle" id="wb_handle_repost_0">
-              </div>
-              <div class="WB_from S_txt3" id="wb_from_repost_0">
-              </div>
-            </div>  
-          </div>
-        </div>
-      </div>
-      <div class="hot_feed_top_tit">
-        <h1 class="hot_tit_top"> <span class="txt_top">按照转发数排序：结果2</span></h1>
-      </div>
-      <div class="WB_feed_type SW_fun type_intimate feed_list">
-        <div class="WB_feed_datail S_line2 clearfix">
-          <div class="WB_detail">
-            <div class="WB_text" node-type="feed_list_content" id="wb_text_repost_1"></div>
-            <div class="WB_func clearfix">
-              <div class="WB_handle" id="wb_handle_repost_1">
-              </div>
-              <div class="WB_from S_txt3" id="wb_from_repost_1">
-              </div>
-            </div>  
-          </div>
-        </div>
-      </div>
-      <div class="hot_feed_top_tit">
-        <h1 class="hot_tit_top"> <span class="txt_top">按照转发数排序：结果3</span></h1>
-      </div>
-      <div class="WB_feed_type SW_fun type_intimate feed_list">
-        <div class="WB_feed_datail S_line2 clearfix">
-          <div class="WB_detail">
-            <div class="WB_text" node-type="feed_list_content" id="wb_text_repost_2"></div>
-            <div class="WB_func clearfix">
-              <div class="WB_handle" id="wb_handle_repost_2">
-              </div>
-              <div class="WB_from S_txt3" id="wb_from_repost_2">
-              </div>
-            </div>  
-          </div>
-        </div>
-      </div>
-      <div class="hot_feed_top_tit">
-        <h1 class="hot_tit_top"> <span class="txt_top">按照评论数排序：结果1</span></h1>
-      </div>
-      <div class="WB_feed_type SW_fun type_intimate feed_list">
-        <div class="WB_feed_datail S_line2 clearfix">
-          <div class="WB_detail">
-            <div class="WB_text" node-type="feed_list_content" id="wb_text_comment_0"></div>
-            <div class="WB_func clearfix">
-              <div class="WB_handle" id="wb_handle_comment_0">
-              </div>
-              <div class="WB_from S_txt3" id="wb_from_comment_0">
-              </div>
-            </div>  
-          </div>
-        </div>
-      </div>
-      <div class="hot_feed_top_tit">
-        <h1 class="hot_tit_top"> <span class="txt_top">按照评论数排序：结果2</span></h1>
-      </div>
-      <div class="WB_feed_type SW_fun type_intimate feed_list">
-        <div class="WB_feed_datail S_line2 clearfix">
-          <div class="WB_detail">
-            <div class="WB_text" node-type="feed_list_content" id="wb_text_comment_1"></div>
-            <div class="WB_func clearfix">
-              <div class="WB_handle" id="wb_handle_comment_1">
-              </div>
-              <div class="WB_from S_txt3" id="wb_from_comment_1">
-              </div>
-            </div>  
-          </div>
-        </div>
-      </div>
-      <div class="hot_feed_top_tit">
-        <h1 class="hot_tit_top"> <span class="txt_top">按照评论数排序：结果3</span></h1>
-      </div>
-      <div class="WB_feed_type SW_fun type_intimate feed_list">
-        <div class="WB_feed_datail S_line2 clearfix">
-          <div class="WB_detail">
-            <div class="WB_text" node-type="feed_list_content" id="wb_text_comment_2"></div>
-            <div class="WB_func clearfix">
-              <div class="WB_handle" id="wb_handle_comment_2">
-              </div>
-              <div class="WB_from S_txt3" id="wb_from_comment_2">
-              </div>
-            </div>  
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 <div id="fol_fields_dist_container" style="width: 450px; height: 250px; margin: 0 auto;"></div>
@@ -273,7 +177,7 @@
   <script src="/static/js/jquery.bootpag.js"></script>
 <script>
   function submit_form(){
-    var interval_arg = $("#nt_fol_interval").val();
+    var interval_arg = 7;
     $.ajax({
         url: "/profile/person_count/{{uid}}?interval=" + interval_arg,
         dataType: 'json',   

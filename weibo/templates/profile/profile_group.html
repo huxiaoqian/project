@@ -1,22 +1,24 @@
 {% extends "profile/base.html" %}
 {% block head %}
-  <link rel="stylesheet" href="/static/css/jquery-ui.css" />
   <style>
     body{
       padding-top: 60px;
     }
   </style>
 {% endblock head%}
-{% block content %} 
-  <script src="/static/js/profile/highcharts.js"></script>
-  <script src="/static/js/profile/exporting.js"></script>
+{% block content %}
   <script src="/static/js/profile/raphael.js"></script>
   <script src="/static/js/profile/chinamap.js"></script>
   <script src="/static/js/profile/RGraph.common.core.js"></script>
-  <script src="/static/js/profile/RGraph.bar.js"></script>
   <script src="/static/js/profile/RGraph.pie.js"></script>
   <script src="/static/js/profile/RGraph.common.dynamic.js"></script>
-  <script src="/static/js/profile/RGraph.common.tooltips.js"></script>
+
+  <script src="/static/js/profile/d3.v3.min.js"></script>
+  <script src="/static/js/profile/d3.layout.cloud.js"></script>
+  <script src="/static/js/profile/rgbcolor.js"></script> 
+  <script src="/static/js/profile/StackBlur.js"></script>
+  <script src="/static/js/profile/canvg.js"></script>
+
   <div class="container-fluid">
     <div class="row-fluid">
       <div class="span2 well" style="padding: 8px 0;">
@@ -52,31 +54,40 @@
         </ul>
       </div>
 
-      <div class="span9" id="index-tabs">
+      <div class="span9">
         <legend>{{atfield}}领域</legend>
-        <ul class="nav nav-tabs">
-          <li><a href="/profile/person_tab_ajax/grouptopic/{{model}}" >领域话题兴趣</a></li>
-          <li><a href="/profile/person_tab_ajax/grouplocation/{{model}}" >领域认证及地理分布</a></li>
-          <li><a href="/profile/person_tab_ajax/groupweibocount/{{model}}" >领域微博数量走势</a></li>
-          <li><a href="/profile/person_tab_ajax/groupactive/{{model}}" >人群活跃度走势</a></li>
+        <ul class="nav nav-pills tab_container">
+          <li class="btn span2 btn-primary" id="tab1">话题兴趣</li>
+          <li class="btn span2" id="tab2">认证及地理分布</li>
+          <li class="btn span2" id="tab3">微博数量走势</li>
+          <li class="btn span2" id="tab4">重要度走势</li>
         </ul>
+        <div id="content_container" class="well"></div>
       </div>
+
     </div><!--row-fluid-->
   </div><!--container-fluid-->
 {% endblock content %}
 {% block script %}
-  <script src="/static/js/jquery-ui.js"></script>
-  <script src="/static/js/profile/highcharts.js"></script>
-  <script src="/static/js/profile/exporting.js"></script>
   <script>
-  $(document).ready(function(){
-    $( "#index-tabs" ).tabs({
-      beforeLoad: function( event, ui ) {
-        ui.jqXHR.error(function() {
-          ui.panel.html("无法显示此页，我们将尽快解决该问题. ");
-        });
+    $('#content_container').empty();
+    $('#content_container').load("/profile/person_tab_ajax/grouptopic/{{model}}", function() {});
+
+    tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4'];
+    tabUrlArr = ["/profile/person_tab_ajax/grouptopic/{{model}}", "/profile/person_tab_ajax/grouplocation/{{model}}", "/profile/person_tab_ajax/groupweibocount/{{model}}", "/profile/person_tab_ajax/groupimportant/{{model}}"];
+    for (var i = 0, len = tabIdArr.length; i < len; i++) {
+      document.getElementById(tabIdArr[i]).onclick = function(data) {
+        var tabId = data.srcElement.id;
+        var tabIdx = parseInt(tabId.substring(3, 4));
+        $('#content_container').empty();
+        for (var j = 0, len = tabIdArr.length; j < len; j++){
+          if(j != tabIdx - 1){
+            $("#" + tabIdArr[j]).removeClass('btn-primary');
+          }
+        }
+        $("#" + tabId).addClass('btn-primary');
+        $('#content_container').load(tabUrlArr[tabIdx - 1], function() {});
       }
-    });
-  })
+    }
   </script>
 {% endblock script %}

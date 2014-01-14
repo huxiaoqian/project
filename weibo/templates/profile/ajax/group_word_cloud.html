@@ -1,65 +1,73 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
-{% block body %}     
-<form class="form-inline">
-    <button2 type="button" class="btn btn-primary" id="editor_save"><i class="icon-search"></i>下载svg</button2>
-</form>
+{% block body %}
 <div id='d3_cloud'></div>
-<canvas type="hidden" id="svgtoimg" width="1000px" height="600px"></canvas> 
+<canvas type="hidden" id="svgtoimg" width="100px" height="100px" style="display: none"></canvas>
+<!--
+<div class="span12">
+  <h2>导出关键词云</h2>
+  <br>
+  <button class="btn btn-success" id="save_as_svg" value="">导出SVG</button>
+  <button class="btn btn-success" id="save_as_pdf" value="">导出PDF</button>
+  <button class="btn btn-success" id="save_as_png" value="">导出PNG</button>
+  <br>  
+</div>
+-->
+<!-- Hidden <FORM> to submit the SVG data to the server, which will convert it to SVG/PDF/PNG downloadable file.
+     The form is populated and submitted by the JavaScript below. -->
+<!--<form id="svgform" method="post" action="http://d3export.cancan.cshl.edu/download.pl">
+ <input type="hidden" id="output_format" name="output_format" value="">
+ <input type="hidden" id="data" name="data" value="">
+</form>
+-->
+<div class="span3" style="float:right;">
+  <button class="btn btn-success" id="editor_save">导出图片</button>
+</div>
 
-
-<script src="/static/js/profile/d3.v3.min.js"></script>
-<script src="/static/js/profile/d3.layout.cloud.js"></script>
-<script src="/static/js/profile/rgbcolor.js"></script> 
-<script src="/static/js/profile/StackBlur.js"></script>
-<script src="/static/js/profile/canvg.js"></script> 
-
-
-  <script>
-function defscale(count, mincount, maxcount, minsize, maxsize){
-  if(maxcount == mincount){
-    return (maxsize + minsize) / 2.0
-  }else{
-    return minsize + (maxsize - minsize) * Math.pow((count * 1.0 / (maxcount - mincount)), 3)
+<script>
+  function defscale(count, mincount, maxcount, minsize, maxsize){
+    if(maxcount == mincount){
+      return (maxsize + minsize) / 2.0
+    }else{
+      return minsize + (maxsize - minsize) * Math.pow((count * 1.0 / (maxcount - mincount)), 3)
+    }
   }
-}
 
-function defrotate(count, mincount, maxcount){
-  if(count < (maxcount + mincount) / 2){
-      return 0;
-  }else{
-      return 0;
+  function defrotate(count, mincount, maxcount){
+    if(count < (maxcount + mincount) / 2){
+        return 0;
+    }else{
+        return 0;
+    }
   }
-}
 
-function deffillcolor(text){
-  //console.log(new RegExp("#.*?#", "g").test(text));
-  //if())
-}
+  function deffillcolor(text){
+    //console.log(new RegExp("#.*?#", "g").test(text));
+  }
 
-function display_d3_cloud(data){
-  var widthpixel = 936;
-  var heightpixel = 400;
-  var fill = d3.scale.category20();
-  var FONT_STYLE = "SimHei";//Microsoft YaHei,SimSun,SimHei,STHeiti//Boopee";//"IMPACT"、"Lucida Sans"、"Loved by the King"
-  var wordcounts = data;
-  var counts = new Array();
-  for(var wordcount in wordcounts){
-    counts.push(parseFloat(wordcounts[wordcount]["size"]));
-  }
-  var maxcount = Math.max.apply(Math, counts);
-  var mincount = Math.min.apply(Math, counts);
-  var maxsize = 100;
-  var minsize = 15;
-  var wordsize = [];
-  for(var wordcount in wordcounts){
-    var count = parseFloat(wordcounts[wordcount]["size"]);
-    var word = wordcounts[wordcount]["text"];
-    var size = defscale(count, mincount, maxcount, minsize, maxsize);
-    var rotate = defrotate(count, mincount, maxcount);
-    //deffillcolor(word);
-    wordsize.push({"text": word, "size": size});
-  }
+  function display_d3_cloud(data){
+    var widthpixel = 936;
+    var heightpixel = 400;
+    var fill = d3.scale.category20();
+    var FONT_STYLE = "SimHei";//Microsoft YaHei,SimSun,SimHei,STHeiti//Boopee";//"IMPACT"、"Lucida Sans"、"Loved by the King"
+    var wordcounts = data;
+    var counts = new Array();
+    for(var wordcount in wordcounts){
+      counts.push(parseFloat(wordcounts[wordcount]["size"]));
+    }
+    var maxcount = Math.max.apply(Math, counts);
+    var mincount = Math.min.apply(Math, counts);
+    var maxsize = 100;
+    var minsize = 15;
+    var wordsize = [];
+    for(var wordcount in wordcounts){
+      var count = parseFloat(wordcounts[wordcount]["size"]);
+      var word = wordcounts[wordcount]["text"];
+      var size = defscale(count, mincount, maxcount, minsize, maxsize);
+      var rotate = defrotate(count, mincount, maxcount);
+      //deffillcolor(word);
+      wordsize.push({"text": word, "size": size});
+    }
 
 
   d3.layout.cloud().size([widthpixel, heightpixel])
@@ -92,8 +100,8 @@ function display_d3_cloud(data){
 
         })
         .text(function(d) { return d.text; });
+    }
   }
-}
 
   $(document).ready(function(){
     $("#topic_type").change(function(){  
@@ -108,27 +116,48 @@ function display_d3_cloud(data){
         }
     });
   });
-  </script>
-  <script>
+
   $("#editor_save").click(function() {
-   // Get the d3js SVG element
-	 var tmp = document.getElementById("d3_cloud");
-	 var svg = tmp.getElementsByTagName("svg")[0];
-	 // Extract the data as SVG text string
-	 var svg_xml = (new XMLSerializer).serializeToString(svg);
+     // Get the d3js SVG element
+  	 var tmp = document.getElementById("d3_cloud");
+  	 var svg = tmp.getElementsByTagName("svg")[0];
 
-   // the canvg call that takes the svg xml and converts it to a canvas
-   canvg('svgtoimg', svg_xml);
- 
-   // the canvas calls to output a png
-   var canvas = document.getElementById("svgtoimg");
-   //var img = canvas.toDataURL("image/png");
-   var dataURL=canvas.toDataURL();
-   window.open('', '_blank').location.href=dataURL;
-   // do what you want with the base64, write to screen, post to server, etc...
-    });
-  </script>
+  	 // Extract the data as SVG text string
+  	 var svg_xml = (new XMLSerializer).serializeToString(svg);
+
+     // the canvg call that takes the svg xml and converts it to a canvas
+     canvg('svgtoimg', svg_xml);
    
+     // the canvas calls to output a png
+     var canvas = document.getElementById("svgtoimg");
+     var img = canvas.toDataURL("image/png");
+     window.open('', '_blank').location.href=img;
+  });
 
+  $("#save_as_svg").click(function() { submit_download_form("svg"); });
+
+  $("#save_as_pdf").click(function() { submit_download_form("pdf"); });
+
+  $("#save_as_png").click(function() { submit_download_form("png"); });
+
+  /*
+   Utility function: populates the <FORM> with the SVG data
+   and the requested output format, and submits the form.
+  */
+  function submit_download_form(output_format)
+  {
+    // Get the d3js SVG element
+    var tmp = document.getElementById("d3_cloud");
+    var svg = tmp.getElementsByTagName("svg")[0];
+    // Extract the data as SVG text string
+    var svg_xml = (new XMLSerializer).serializeToString(svg);
+
+    // Submit the <FORM> to the server.
+    // The result will be an attachment file to download.
+    var form = document.getElementById("svgform");
+    form['output_format'].value = output_format;
+    form['data'].value = svg_xml ;
+    form.submit();
+  }
+  </script>
 {% endblock body %}
-

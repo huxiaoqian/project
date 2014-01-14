@@ -1,6 +1,5 @@
 {% extends "profile/base.html" %}
 {% block head %}
-  <link rel="stylesheet" href="/static/css/jquery-ui.css" />
   <style>
     body{
       padding-top: 40px;
@@ -8,7 +7,6 @@
   </style>
 {% endblock head%}
 {% block content %}
- 
   <div class="container-fluid">
     <legend>{{ user['userName'] }}</legend>
       <div class="row-fluid">
@@ -39,60 +37,43 @@
                 <li class="nav-header">微博地址</li>
                 <li class=""><a href="http://weibo.com/u/{{ user.id }}" target="_blank">weibo.com/u/{{ user['id'] }}</a></li>
               </ul>
-              <!-- <ul class="nav nav-list">
-                <li><img style="width: 50px; height: 50px;" src="{{ user['profile_image_url'] }}"></li>
-                <li class="nav-header">基本信息</li>
-                <li>关注：<span class="badge badge-success">{{ user['friends_count'] }}</span> </li>
-                <li class="">粉丝：<span class="badge badge-info">{{ user['followers_count'] }}</span></li>
-                <li class="">微博：<span class="badge badge-warning">{{ user['statuses_count'] }}</span></li>
-                <li class="">重要度：{{ user['important_rank'] }}</li>
-                <li class="">活跃度：{{ user['active_rank'] }}</li>
-                {% if user['gender'] == 'f' %}
-                  <li class="">性别：女</li>
-                {% else %}
-                  <li class="">性别：男</li>
-                {% endif %}
-                {% if user['verified'] == False %}
-                  <li class="">是否认证用户：否</li>
-                {% else %}
-                  <li class="">是否认证用户：是</li>
-                {% endif %}
-                <li class="">个人描述：{{ user['description'] }}</li>
-                <li class="nav-header">注册信息</li>
-                <li class="">注册地：{{ user['location'] }}</li>
-                <li class="">注册时间：{{ user['created_at'] }}</li>
-                <li class="nav-header">微博地址</li>
-                <li class=""><a href="http://weibo.com/u/{{ user.id }}" target="_blank">weibo.com/u/{{ user['id'] }}</a></li>
-              </ul> -->
             </div>
           </div>
         </div>
         <div class="span9" id="index-tabs">
-          <ul class="nav nav-tabs">
-            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">行为信息</a></li>
-            <li><a href="/profile/person_tab_ajax/personaltopic/{{user.id}}" >兴趣偏好</a></li>
-            <li><a href="/profile/person_tab_ajax/personalnetwork/{{user.id}}">关注结构</a></li>
-            <li><a href="/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}">粉丝结构</a></li>
-            <li><a href="/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}">交互结构</a></li>
-            <li><a href="/profile/person_tab_ajax/personalweibocount/{{user.id}}">传播结构</a></li>
+          <ul class="nav nav-pills tab_container">
+            <li class="btn span2 btn-primary" id="tab1">行为信息</li>
+            <li class="btn span2" id="tab2">兴趣偏好</li>
+            <li class="btn span2" id="tab3">关注结构</li>
+            <li class="btn span2" id="tab4">粉丝结构</li>
+            <li class="btn span2" id="tab5">交互结构</li>
+            <li class="btn span2" id="tab6">传播结构</li>
           </ul>
+          <div id="content_container" class="well"></div>
         </div>
       </div><!--.row-fluid end--> 
   </div><!--.container-fluid end--> 
 {% endblock content %}
 {% block script %}
-  <script src="/static/js/jquery-ui.js"></script>
-  <script src="/static/js/profile/highcharts.js"></script>
-  <script src="/static/js/profile/exporting.js"></script>
   <script>
-  $(document).ready(function(){
-    $( "#index-tabs" ).tabs({
-      beforeLoad: function( event, ui ) {
-        ui.jqXHR.error(function() {
-          ui.panel.html("无法显示此页，我们将尽快解决该问题. ");
-        });
+    $('#content_container').empty();
+    $('#content_container').load("/profile/person_tab_ajax/personalweibocount/{{user.id}}", function() {});
+
+    tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5', 'tab6'];
+    tabUrlArr = ["/profile/person_tab_ajax/personalweibocount/{{user.id}}", "/profile/person_tab_ajax/personaltopic/{{user.id}}", "/profile/person_tab_ajax/personalnetwork/{{user.id}}", "/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}", "/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}", "/profile/person_tab_ajax/personalweibocount/{{user.id}}"];
+    for (var i = 0, len = tabIdArr.length; i < len; i++) {
+      document.getElementById(tabIdArr[i]).onclick = function(data) {
+        var tabId = data.srcElement.id;
+        var tabIdx = parseInt(tabId.substring(3, 4));
+        $('#content_container').empty();
+        for (var j = 0, len = tabIdArr.length; j < len; j++){
+          if(j != tabIdx - 1){
+            $("#" + tabIdArr[j]).removeClass('btn-primary');
+          }
+        }
+        $("#" + tabId).addClass('btn-primary');
+        $('#content_container').load(tabUrlArr[tabIdx - 1], function() {});
       }
-    });
-  })
+    }
   </script>
 {% endblock script %}

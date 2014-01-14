@@ -9,27 +9,26 @@ import re
 import sys
 import time
 import json
+import leveldb
 import urllib2
 import operator
+from utils import last_day
+from weibo.model import *
+from weibo.extensions import db
+from datetime import date, datetime
+from city_color import province_color_map
+from ldamodel import lda_topic
 from operator import itemgetter
 from flask.ext import admin
+from person import _search_person_basic, _search_person_important_active
+from flask.ext.sqlalchemy import Pagination
+from time_utils import datetimestr2ts
 from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
-from city_color import province_color_map
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
-from datetime import date
-from datetime import datetime
-from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS
+from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS, last_week_to_date
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
-from ldamodel import lda_topic
-from weibo.extensions import db
-from weibo.model import *
-from flask.ext.sqlalchemy import Pagination
-import leveldb
-from utils import last_day
-from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic
-from person import _search_person_basic, _search_person_important_active
-
+from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
 
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
@@ -1009,14 +1008,10 @@ def profile_person_tab_ajax(model, uid):
                 return render_template('profile/ajax/group_word_cloud.html', field=uid)
             elif model == 'groupweibocount':
                 return render_template('profile/ajax/group_weibo_count.html', field=uid)
-            elif model == 'grouprank':
-                return render_template('profile/ajax/group_rank_bloggers.html', field=uid)
             elif model == 'grouplocation':
                 return render_template('profile/ajax/group_location.html', field=uid)
-            elif model == 'groupactive':
-                return render_template('profile/ajax/group_active.html', field=uid)
-            elif model == 'groupemotion':
-                return render_template('profile/ajax/group_emotion.html', field=uid)
+            elif model == 'groupimportant':
+                return render_template('profile/ajax/group_important.html', field=uid)
         else:
             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
@@ -1311,102 +1306,46 @@ def getTopWbs(uid, mid):
 
 @mod.route('/person_count/<uid>', methods=['GET', 'POST'])
 def personal_weibo_count(uid):
+    if request.args.get('interval'):
+        interval =  int(request.args.get('interval'))
+
+    interval = 7
+    datestr = '20130907'
+
+    date_list = last_week_to_date(datestr, interval)
     post_status_kv = {'total': 2, 'repost': 1, 'fipost': 0}
 
-    total_days = 7
-    today = datetime.today()
-    now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
-    now_ts = int(now_ts)
-    during = 24 * 3600
-    time_stamp = []
     time_arr = []
     post_arr = []
     repost_arr = []
     fipost_arr = []
     im_arr = []
     emot_arr = []
-    for i in range(7):
-        time_stamp.append(now_ts - (6 - i) * during)
 
-
-    # time_str = [time.strftime('%Y%m%d',time.localtime(i)) for i in time_stamp]
-    time_str = ['20130901','20130902','20130903','20130904','20130905','20130906','20130907']
-
-
-    time_arr = time_str
-    for i in time_str:
-        active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid,i)
+    for datestr in date_list:
+        active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, datestr)
         post_arr.append(active)
         repost_arr.append(reposts)
         fipost_arr.append(original)
         im_arr.append(important)
         emot_arr.append(emoticon)
+        time_arr.append(datestr)
 
-    # 找到一周现有数据中最新的非零数据显示在汇总信息中
-    for i in range(7):
-        if post_arr[i] != 0:
-            total_post_count = post_arr[i]
-            retweets_count = repost_arr[i]
-            emoticons_count = fipost_arr[i]
-    return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr, 'important': im_arr\
-        ,'total_tweets': total_post_count, 'retweets_ratio': int(retweets_count * 100 / total_post_count) / 100.0, \
-        'emoticons_ratio': int(emoticons_count * 100 / total_post_count) / 100.0})
+    for idx in range(0, len(date_list)):
+        if post_arr[idx] != 0:
+            total_post_count = post_arr[idx]
+            retweets_count = repost_arr[idx]
+            emoticons_count = fipost_arr[idx]
+            emoticons_ratio = int(emoticons_count * 100 / total_post_count) / 100.0
+            retweetes_ratio = int(retweets_count * 100 / total_post_count) / 100.0
+        else:
+            emoticons_ratio = 0.0
+            retweetes_ratio = 0.0
 
-    # begin_ts = now_ts + during * (-total_days + 1)
-    # end_ts = now_ts
-    # 时间戳格式
-    # query_dict = {
-    #     'user': uid,
-    #     'timestamp': {'$gt': begin_ts, '$lt': end_ts}
-    # }
-    # count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp', 'retweeted_mid', '_id', 'reposts_count', 'comments_count', 'text'])
-  
-    # daily_count_dict = {}
-    # comments_count_dict = {}
-    # reposts_count_dict = {}
-    # total_post_count = count
-    # retweets_count = 0
-    # emoticons_count = 0
-    # for r in get_results():
-    #     emoticons = emoticon_find(r['text'])
-    #     if emoticons and len(emoticons):
-    #         emoticons_count += 1
-    #     datestr = date.fromtimestamp(r['timestamp']).isoformat()
-    #     try:
-    #         daily_count_arr = daily_count_dict[datestr]
-    #     except KeyError:
-    #         daily_count_dict[datestr] = [0, 0, 0, r['timestamp']]#原创，转发，总数，时间戳
-    #     if r['retweeted_mid']:
-    #         daily_count_dict[datestr][1] += 1
-    #         retweets_count += 1
-    #     else:
-    #         daily_count_dict[datestr][0] += 1
-    #     daily_count_dict[datestr][2] += 1
-    #     comments_count_dict[r['_id']] = r['comments_count']
-    #     reposts_count_dict[r['_id']] = r['reposts_count']
-    # sorted_daily_count = sorted(daily_count_dict.iteritems(), key=lambda(k, v): v[3])
-    # sorted_reposts_count = sorted(reposts_count_dict.iteritems(), key=itemgetter(1), reverse=True)
-    # sorted_comments_count = sorted(comments_count_dict.iteritems(), key=itemgetter(1), reverse=True)
-    # for k, v in sorted_daily_count:
-    #     time_arr.append(k)
-    #     fipost_arr.append(v[0])
-    #     repost_arr.append(v[1])
-    #     post_arr.append(v[2])
-    # total_reposts_count = sum(reposts_count_dict.values())
-    # avg_reposts_count = total_reposts_count / count
-    # total_comments_count = sum(comments_count_dict.values())
-    # avg_comments_count = total_comments_count / count
-    # top_3_reposts = sorted_reposts_count[:3]
-    # top_3_comments = sorted_comments_count[:3]
-    # top_3_reposts_wbs = [getTopWbs(uid, mid) for mid, count in top_3_reposts]
-    # top_3_comments_wbs = [getTopWbs(uid, mid) for mid, count in top_3_comments]
+    return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr, \
+                       'important': im_arr, 'total_tweets': total_post_count, \
+                       'retweets_ratio': retweetes_ratio, 'emoticons_ratio': emoticons_ratio})
 
-    # return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr, \
-    #     'total_reposts_count': total_reposts_count, 'total_comments_count': total_comments_count, \
-    #     'avg_reposts_count': avg_reposts_count, 'avg_comments_count': avg_comments_count, \
-    #     'top_3_reposts_wbs': top_3_reposts_wbs, 'top_3_comments_wbs': top_3_comments_wbs, \
-    #     'total_tweets': total_post_count, 'retweets_ratio': int(retweets_count * 100 / total_post_count) / 100.0, \
-    #     'emoticons_ratio': int(emoticons_count * 100 / total_post_count) / 100.0})
 
 def _utf_8_decode(stri):
     if isinstance(stri, str):
@@ -1456,98 +1395,52 @@ def profile_group_topic(fieldEnName):
 
 @mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
 def profile_group_status_count(fieldEnName):
-    total_days = 89
-    today = datetime.today()
-    now_ts = time.mktime(datetime(2013, 12, 31, 2, 0).timetuple())
-    now_ts = int(now_ts)
-    during = 24 * 3600
+    if request.args.get('interval'):
+        interval =  int(request.args.get('interval'))
+
+    interval = 7
+    datestr = '20130907'
+
+    date_list = last_week_to_date(datestr, interval)
+    domainid = DOMAIN_LIST.index(fieldEnName)
 
     time_arr = []
     total_arr = []
     repost_arr = []
     fipost_arr = []
 
-    interval = None
-    if request.args.get('interval'):
-        interval =  int(request.args.get('interval'))
-        total_days = interval - 180
-
-    total_days = 240
-
-    startoffset = 0
-    endoffset = 10000
-    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
-    for i in xrange(-total_days + 1, 1, 7):
-        lt = now_ts + during * i
-        post_count = {}
-        fipost_count = 0
-        repost_count = 0
-        for uid in fields_set:
-            query_dict = {
-                'timestamp': {'$gt': lt, '$lt': lt + during},
-                'user': uid
-            }
-            count, retweeted_mid = xapian_search_weibo.search(query=query_dict, fields=['retweeted_mid'])
-            for i in retweeted_mid():
-                if i['retweeted_mid'] == None:
-                    fipost_count += 1
-                else:
-                    repost_count += 1
-        sumcount = fipost_count + repost_count
+    for datestr in date_list:
+        active, important, reposts, original = getDomainCountData(domainid, datestr)
+        sumcount = reposts + original
         if sumcount > 0:
-            time_arr.append(ts2date(lt).isoformat())
+            time_arr.append(ts2date(datetimestr2ts(datestr)).isoformat())
             total_arr.append(sumcount)
-            repost_arr.append(repost_count)
-            fipost_arr.append(fipost_count)
+            repost_arr.append(reposts)
+            fipost_arr.append(original)
+
     return json.dumps({'time': time_arr, 'count': total_arr, 'repost': repost_arr, 'fipost': fipost_arr})
 
-@mod.route('/group_active/<fieldEnName>', methods=['GET', 'POST'])
+@mod.route('/group_important/<fieldEnName>', methods=['GET', 'POST'])
 def group_active_count(fieldEnName):
-    total_days = 89
-    today = datetime.today()
-    now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
-    now_ts = int(now_ts)
-    during = 24 * 3600
-
-    interval = 6
     if request.args.get('interval'):
         interval =  int(request.args.get('interval'))
-    total_days = interval
-    startoffset = 0
-    endoffset = 10000
-    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
-    user_count = {}
-    for uid in fields_set:
-        query_dict = {
-            'timestamp': {'$gt': now_ts - during * total_days, '$lt': now_ts},
-            'user': uid
-        }
-        count = xapian_search_weibo.search(query=query_dict, count_only=True)
-        user_count[uid] = count
-    post_list = [count for user, count in user_count.items()]
-    freq = [post_list.count(u) for u in post_list]
-    count_dict = dict(zip(post_list,freq))
-    result = sorted(count_dict.iteritems(), key=operator.itemgetter(0), reverse=False)
 
-    trunc_n = 20
-    x_list = []
-    y_list = []
+    interval = 7
+    datestr = '20130907'
 
-    if len(result) > trunc_n:
-        trunc_after_sum = sum([v[1] for i, v in enumerate(result) if i >= trunc_n])
-        for n in xrange(0, trunc_n):
-            if n == trunc_n - 1:
-                x_list.append(str(result[n][0]) + '+')
-                y_list.append(trunc_after_sum)
-            else:
-                x_list.append(result[n][0])
-                y_list.append(result[n][1])
-    else:    
-        for count, freq in result:
-            x_list.append(count)
-            y_list.append(freq)
-    return json.dumps({'x': x_list, 'y': y_list})
+    date_list = last_week_to_date(datestr, interval)
+    domainid = DOMAIN_LIST.index(fieldEnName)
 
+    time_arr = []
+    important_arr = []
+
+    for datestr in date_list:
+        active, important, reposts, original = getDomainCountData(domainid, datestr)
+        if important > 0:
+            time_arr.append(ts2date(datetimestr2ts(datestr)).isoformat())
+            important_arr.append(important)
+
+    return json.dumps({'time': time_arr, 'important': important_arr})
 
 @mod.route('/group_emotion/<fieldEnName>')
 def profile_group_emotion(fieldEnName):

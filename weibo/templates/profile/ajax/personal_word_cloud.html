@@ -13,211 +13,25 @@
     min-height: 34px;
   }
 </style>
-<legend>领域兴趣</legend>
-<span class="badge badge-success">{{ fields }}</span>
-<legend>话题兴趣</legend>
-<form class="form-inline">
-    <button2 type="button" class="btn btn-primary" id="editor_save"><i class="icon-search"></i>下载svg</button2>
-</form>
+<button type="button" class="btn btn-danger">兴趣领域</button>
+{% for domain in fields.split(',') %}
+    <button type="button" class="btn btn-default">{{ domain }}</button>
+{% endfor %}
+<br>
+<br>
+<br>
+<button type="button" class="btn btn-warning">话题兴趣</button>
 <div id='d3_cloud'></div>
-<canvas type="hidden" id="svgtoimg" width="1000px" height="600px"></canvas> 
-<!-- <div id="topic_container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
-<div>
-  <div id="tag_cloud_div">
-    <canvas width="400px" height="400px" id="myCanvas">
-      <p>Anything in here will be replaced on browsers that support the canvas element</p>
-    </canvas>
-    <div id="tags_div">
-      <ul id="tag_cloud"><li><a style="font-size:1ex">词云</a></li></ul>
-    </div>
-   </div>
-   <button type="button" class="btn btn-primary" id="generate_cloud" onclick="download();"><i class="icon-search"></i>下载词云</button>
-</div> -->
-
-<!-- <script src="/static/js/jquery.tagcanvas.min.js" type="text/javascript"></script> -->
+<div class="span3" style="float:right;">
+  <button class="btn btn-success" id="editor_save">导出图片</button>
+</div>
+<canvas type="hidden" id="svgtoimg" width="100px" height="100px" style="display: none"></canvas>
 <script src="/static/js/profile/d3.v3.min.js"></script>
 <script src="/static/js/profile/d3.layout.cloud.js"></script>
 <script src="/static/js/profile/rgbcolor.js"></script> 
 <script src="/static/js/profile/StackBlur.js"></script>
 <script src="/static/js/profile/canvg.js"></script>
 <script>
-// var topic_keywords_dict = {};
-// var oopts = {textHeight: 25,maxSpeed: 0.03,decel: 0.98,depth: 0.92,outlineColour: '#f6f',outlineThickness: 3,pulsateTo: 0.2,pulsateTime: 0.5,wheelZoom: false,textColour:'#00f',shadow:'#ccf',minBrightness:0.2,shadowBlur:3,weight:true,weightMode:'both'};
-// function display_column_topic_chart(data){
-//   var topics_prob = data['topics'];
-//   var keywords_30_topics = data['keywords'];
-//   var categories_list = [];
-//   var data_list = [];
-//   var colors = Highcharts.getOptions().colors;
-
-//   for(var i in topics_prob){
-//     categories_list.push(parseInt(i) + 1); 
-//     var sub_cate = [];
-//     var sub_data = [];
-//     topic_keywords_dict[i] = keywords_30_topics[i];
-//     for(var j in keywords_30_topics[i]){
-//       sub_cate.push(keywords_30_topics[i][j][1]);
-//       sub_data.push(keywords_30_topics[i][j][0]);
-      
-//     }
-//     var color_i = i;
-//     if(i >= 10 && i <20){
-//       color_i -= 10;
-//     }
-//     if(i >= 20){
-//       color_i -= 20;
-//     }
-//     var data_element = {
-//       y: topics_prob[i][1],
-//       color: colors[color_i],
-//       drilldown: {
-//         name: 'topic' + (parseInt(i) + 1),
-//         categories: sub_cate,
-//         data: sub_data,
-//         color: colors[color_i]
-//       }
-//     }
-//     data_list.push(data_element);
-//   }
-//   var categories = categories_list,
-//       name = '话题索引',
-//       data = data_list;
-
-//   function setChart(name, categories, data, color) {
-//     chart.xAxis[0].setCategories(categories, false);
-//     chart.series[0].remove(false);
-//     chart.addSeries({
-//     name: name,
-//     data: data,
-//     color: color || 'white'
-//     }, false);
-//     chart.redraw();
-//   }
-
-//   var chart = $('#topic_container').highcharts({
-//       chart: {
-//           type: 'column'
-//       },
-//       title: {
-//           text: '话题分类（30个话题，每个话题10个关键词）'
-//       },
-//       /*
-//       subtitle: {
-//           text: '点击查看话题的关键词分布，再次点击查看话题分布'
-//       },*/
-//       xAxis: {
-//           categories: categories
-//       },
-//       yAxis: {
-//           title: {
-//               text: '概率'
-//           }
-//       },
-//       plotOptions: {
-//           column: {
-//               cursor: 'pointer',
-//               point: {
-//                   events: {
-//                       click: function() {
-//                           var drilldown = this.drilldown;
-//                           if (drilldown) { // drill down
-//                               setChart(drilldown.name, drilldown.categories, drilldown.data, drilldown.color);
-//                               var topic_idx = parseInt(drilldown.name.substring(5,6)) - 1;
-//                               var params = topic_keywords_dict[topic_idx].join(",");
-//                               chg_cloud(topic_keywords_dict[topic_idx]);
-                              
-//                           } else { // restore
-//                               setChart(name, categories, data);
-//                               $('#tag_cloud').empty();
-//                               $('#tag_cloud').append("<li><a style=\"font-size:1ex\">Tag Cloud</a>");
-//                               redraw_tagcanvas();
-//                           }
-//                       }
-//                   }
-//               },
-//               /*
-//               dataLabels: {
-//                   enabled: true,
-//                   color: colors[0],
-//                   style: {
-//                       fontWeight: 'bold'
-//                   },
-//                   formatter: function() {
-//                       return this.y +'';
-//                   }
-//               }*/
-//           }
-//       },
-//       tooltip: {
-//           formatter: function() {
-//               var point = this.point;
-//               var s;
-//               if (point.drilldown) {
-//                   s = '话题 ' + this.x +':<b>'+ this.y +'</b><br/>';
-//                   s += '点击查看该话题关键词 '+ point.category;
-//               } else {
-//                   s = '关键词 ' + this.x +':<b>'+ this.y +'</b><br/>';
-//                   s += '点击返回话题分类';
-//               }
-//               return s;
-//           }
-//       },
-//       series: [{
-//           name: name,
-//           data: data,
-//           color: 'white'
-//       }],
-//       exporting: {
-//           enabled: true
-//       }
-//   })
-//   .highcharts(); // return chart
-// }
-  // function redraw_tagcanvas() {
-  //   if(!$('#myCanvas').tagcanvas(oopts,'tags_div')) {
-  //     $('#myCanvas').hide();
-  //   }
-  // }
-  // function chg_cloud(data) {
-  //   $("#tag_cloud").empty();
-  //   for (var i=0;i<data.length;i++) {
-  //     $("#tag_cloud").append("<li><a style=\"font-size:"+(data[i][0]/1000.)+"ex\">"+data[i][1]+"</a></li>");
-  //   }
-  //   redraw_tagcanvas();
-  // }
-  // $(document).ready(function(){
-  //   redraw_tagcanvas();
-  //   var interval_arg = $("#tp_interval")[0].value;
-  //   $.ajax({
-  //       url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&topic_limit=10&keyword_limit=10&action=nonupdate",
-  //       dataType: 'json', 
-  //       type: "GET",   
-  //       success: function (data) {
-  //         display_column_topic_chart(data);
-  //       }
-  //   });
-  // })
-  // function submit_form(){
-  //   var interval_arg = $("#tp_interval").val();
-  //   $.ajax({
-  //         url: "/profile/person_topic/{{uid}}?interval=" + interval_arg + "&topic_limit=10&keyword_limit=10&action=nonupdate",
-  //         dataType: 'json',   
-  //         type: "GET",   
-  //         success: function (data) {
-  //           $("#topic_container").empty();
-  //           display_column_topic_chart(data);
-  //         }
-  //     });
-  // }
-    //download the word-cloud 
-  // function download(){
-  //   var canvas=document.getElementById('myCanvas');
-  //   //var ctx=canvas.getContext("2d");
-  //   //var c=document.getElementById('sigma_nodes_1');
-  //   //ctx.drawImage(c,0,0);
-  //   var dataURL=canvas.toDataURL();
-  //   window.open('', '_blank').location.href=dataURL;
-  // }; 
   function defscale(count, mincount, maxcount, minsize, maxsize){
   if(maxcount == mincount){
     return (maxsize + minsize) / 2.0
@@ -314,6 +128,7 @@
         dataType: 'json',   
         type: "GET",   
         success: function (data) {
+          $('#d3_cloud').empty();
           display_d3_cloud(data);
         }
     });

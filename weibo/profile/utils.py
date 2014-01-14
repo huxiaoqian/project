@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import os
+import re
 import time
-from datetime import datetime, timedelta, date
-from flask import request
-from weibo.extensions import db
-from weibo.model import *
-from sqlalchemy import func
 import json
 import leveldb
-import os
 import operator
-import re
+from flask import request
+from sqlalchemy import func
+from datetime import datetime, timedelta, date
+from weibo.model import *
+from weibo.extensions import db
+from time_utils import datetimestr2ts, ts2datetimestr
 from weibo.global_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH
 
 
@@ -234,6 +235,7 @@ def pagerank_rank(top_n, date, topic_id, window_size):
     sorted_uids = pagerank(job_id, iter_count, input_tmp_path, top_n)
     data = save_rank_results(sorted_uids, 'area', 'pagerank', date, window_size, topic_id=topic_id)
     return data
+
 def is_in_black_list(uid):
     return False
 
@@ -376,8 +378,6 @@ def local2datetime(time_str):
 def ts2datetime(ts):
     return time.strftime('%Y-%m-%d', time.localtime(ts))
 
-
-
 def ts2date(ts):
     return date.fromtimestamp(int(float(ts)))
 
@@ -421,6 +421,19 @@ def last_day(day_num=1):
     last_date = now_date - timedelta(days=day_num)
     return last_date.isoformat(), now_date.isoformat()
 
+
+def last_week_to_date(datestr, interval):
+    # datestr: 20130907
+    datelist = []
+    end_ts = datetimestr2ts(datestr)
+    for i in range(0, interval):
+        now_ts = end_ts - i * 24 * 3600
+        now_date = ts2datetimestr(now_ts)
+        datelist.append(now_date)
+
+    return datelist[::-1]
+
+
 def emoticon_find(text):
     seed_set = get_official_seed_set()
     emotion_pattern = r'\[(\S+?)\]'
@@ -442,7 +455,6 @@ def get_official_seed_set():
     return seed_set
 
 def main():
-    #last_week()
     getFieldUsersByScores('finance', 0, 19)
     pass
     

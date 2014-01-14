@@ -1164,9 +1164,9 @@ def add_material():
     mid = request.form['mid']
     mid = int(mid)
     time_date = str(request.form['time_ts'])
-    end_time = int(request.form['end_time'])
+    end_time = float(request.form['end_time'])
     time_ts = datetime2ts(time_date)
-    print time_ts,end_time
+
     blog_info = calculate_single(mid,time_ts,end_time)
                                  
     blog_reposts_count = blog_info['status']['repostsCount']

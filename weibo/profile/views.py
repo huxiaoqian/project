@@ -1113,33 +1113,7 @@ def profile_weekly_pattern(uid):
 
 @mod.route('/person_topic/<uid>', methods=['GET', 'POST'])
 def profile_person_topic(uid):
-    # if request.method == 'GET' and uid:
-    #     result_arr = []
-    #     interval = None
-    #     topic_limit = None
-    #     keyword_limit = 100
-    #     action = 'nonupdate'
-    #     window_size = 24*60*60
-    #     current_date = date.today().isoformat()
-    #     start_timestamp = 1356969600#2013-01-01
-    #     if request.args.get('interval') and request.args.get('topic_limit') and request.args.get('keyword_limit') and request.args.get('action'):
-    #         interval =  int(request.args.get('interval'))
-    #         topic_limit =  int(request.args.get('topic_limit'))
-    #         keyword_limit = int(request.args.get('keyword_limit'))
-    #         action = request.args.get('action')
-    #     result = db.session.query(PersonalLdaWords).filter((PersonalLdaWords.windowTimestamp==interval*window_size) & (PersonalLdaWords.startTimestamp==start_timestamp)).first()
-    #     if result:
-    #         lda_results = result.word
-    #         return lda_results
-    #     startstr = date.fromtimestamp(start_timestamp).isoformat()
-    #     endstr = date.fromtimestamp(start_timestamp + interval*window_size).isoformat()
-    #     lda_results = lda_topic(uid, startstr, endstr)
-    #     lda_word = PersonalLdaWords(uid=uid, windowTimestamp=interval*window_size, startTimestamp=start_timestamp, word=json.dumps(lda_results))
-    #     db.session.add(lda_word)
-    #     db.session.commit()
-    #     return json.dumps(lda_results)
-    # else:
-    #     return json.dumps([])
+
     if request.method == 'GET' and uid:
         result_arr = []
         limit = 50
@@ -1152,7 +1126,8 @@ def profile_person_topic(uid):
             sortedkeywords = sorted(keywords_dict.iteritems(), key=operator.itemgetter(1), reverse=True)
             for k, v in sortedkeywords[:limit]:
                 result_arr.append({'text': k, 'size': float(v)})
-        return json.dumps(result_arr)
+        
+        return json.dumps({'status': 'current finished', 'data': result_arr})
     else:
         return json.dumps([])
     return json.dumps(result_arr)
@@ -1160,74 +1135,32 @@ def profile_person_topic(uid):
 @mod.route('/person_network/<friendship>/<uid>', methods=['GET', 'POST'])
 def profile_network(friendship, uid):
     if request.method == 'GET':
-        # total_days = 89
-        # today = datetime.today()
-        # now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
-        # now_ts = int(now_ts)
-        # during = 24 * 3600
-        # if request.args.get('interval'):
-        #     total_days = int(request.args.get('interval')) - 1
-        # fri_fol = []
-        # if friendship == 'friends':
-        #     user = xapian_search_user.search_by_id(int(uid), fields=['friends'])
-        #     friends = user['friends']
-        #     fri_fol = friends
-        # if friendship == 'followers':
-        #     user = xapian_search_user.search_by_id(int(uid), fields=['followers'])
-        #     followers = user['followers']
-        #     fri_fol = followers
-        # uid_interact_count = {}
-        # for i in xrange(-total_days + 1, 1):
-        #     lt = now_ts + during * i
-        #     query_dict = {'user':int(uid),'timestamp': {'$gt': now_ts, '$lt': lt}}
-        #     count,mid_result = xapian_search_weibo.search(query=query_dict,fields=['retweeted_mid'])
-        #     mid_list = []
-        #     for i in mid_result():
-        #         if i['retweeted_mid'] == None:
-        #             pass
-        #         else:
-        #             mid_list.append(i['retweeted_mid'])
-        #     for mid in mid_list:
-        #         count,get_results = xapian_search_weibo.search(query={'mid':mid,'retweeted_mid':None},fields=['user'])
-        #         for i in get_results():
-        #             f_uid = i['user']
-        #         if f_uid in fri_fol  and count > 0:
-        #             try:
-        #                 uid_interact_count[str(f_uid)] += count
-        #             except KeyError:
-        #                 uid_interact_count[str(f_uid)] = count
-        if friendship == 'friends':
-            user = xapian_search_user.search_by_id(int(uid), fields=['friends'])
-            friends = user['friends']
-            fri_fol = friends
-        if friendship == 'followers':
-            user = xapian_search_user.search_by_id(int(uid), fields=['followers'])
-            followers = user['followers']
-            fri_fol = followers
+        limit = 10
+        interval = 7
+
+        fri_fol = []
+        user = xapian_search_user.search_by_id(int(uid), fields=[friendship])
+        if user:
+            fri_fol = user[friendship]
+
         uid_interact_count = {}
-        time_str = ['20130901','20130902','20130903','20130904','20130905','20130906','20130907']
-        for i in time_str:
-            active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, i)
-            for k,v in retweeted_interact.items():
-                # if uid_interact_count.has_key(k) and k in fri_fol:
-                if uid_interact_count.has_key(k):
-                    uid_interact_count[k] += v
-                # elif k in fri_fol:
-                else:
-                    uid_interact_count[k] = v
-        sorted_counts = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=True)
-        try:
-            results = sorted_counts[:10]
-        except:
-            results = sorted_counts[:(sorted_counts.length-1)]
-        result = []
-        for uid, count in results:
-            user = getUserInfoById(uid)
-            label = uid
-            if user:
-                label = user['userName']
-            result.append([label, count])
-        return json.dumps(result)
+
+        datestr = '20130907'
+        date_list = last_week_to_date(datestr, interval)
+    
+        for datestr in date_list:
+            active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, datestr)
+            for k, v in retweeted_interact.iteritems():
+                v = int(v)
+                if k in set(fri_fol):
+                    try:
+                        uid_interact_count[k] += v
+                    except KeyError:
+                        uid_interact_count[k] = v
+
+        sorted_counts = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
+        data = sorted_counts[len(sorted_counts)-limit:]
+        return json.dumps({'status': 'finished', 'data': data})
 
 @mod.route('/person_fri_fol/<friendship>/<uid>', methods=['GET', 'POST'])
 def profile_person_fri_fol(friendship, uid):
@@ -1387,7 +1320,7 @@ def profile_group_topic(fieldEnName):
             keywords_sorted = sorted(keywords_dict.iteritems(), key=lambda(k, v): v, reverse=False)
             top_keywords = keywords_sorted[len(keywords_sorted)-limit:]
             result_arr = [{'text': k, 'size': float(v)} for k, v in top_keywords]
-        return json.dumps(result_arr)
+            return json.dumps({'status': 'current finished', 'data': result_arr})
     else:
         return json.dumps([])
 

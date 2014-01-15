@@ -7,6 +7,12 @@
   </style>
 {% endblock head%}
 {% block content %}
+  <script src="/static/js/profile/d3.v3.min.js"></script>
+  <script src="/static/js/profile/d3.layout.cloud.js"></script>
+  <script src="/static/js/profile/rgbcolor.js"></script> 
+  <script src="/static/js/profile/StackBlur.js"></script>
+  <script src="/static/js/profile/canvg.js"></script>
+  
   <div class="container-fluid">
     <legend>{{ user['userName'] }}</legend>
       <div class="row-fluid">
@@ -49,7 +55,7 @@
             <li class="btn span2" id="tab5">交互结构</li>
             <li class="btn span2" id="tab6">传播结构</li>
           </ul>
-          <div id="content_container" class="well"></div>
+          <div id="content_container"></div>
         </div>
       </div><!--.row-fluid end--> 
   </div><!--.container-fluid end--> 

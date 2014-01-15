@@ -161,19 +161,26 @@
   }
   display_week_weibocount();
 </script>
-  <div id="behavior_stat">
-    <div node-type="base_view">
-      <button type="button" class="btn btn-danger">微博总数</button>
-      <button type="button" class="btn btn-default" id='total_posts'></button>
-      <button type="button" class="btn btn-warning">转发微博比例</button>
-      <button type="button" class="btn btn-default" id='reposts_ratio'></button>
-      <button type="button" class="btn btn-info">含情感图标微博比例</button>
-      <button type="button" class="btn btn-default" id='emoticons_ratio'></button>
+  <div class="well">
+    <legend><strong>微博发布行为统计</strong></legend>
+    <div id="behavior_stat">
+      <div node-type="base_view">
+        <button type="button" class="btn btn-danger">微博总数</button>
+        <button type="button" class="btn btn-default" id='total_posts'></button>
+        <button type="button" class="btn btn-warning">转发微博比例</button>
+        <button type="button" class="btn btn-default" id='reposts_ratio'></button>
+        <button type="button" class="btn btn-info">含情感图标微博比例</button>
+        <button type="button" class="btn btn-default" id='emoticons_ratio'></button>
+      </div>
     </div>
   </div>
-  <br>
-  <div id="chartdiv_week_weibocount" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
-  <br>
-  <div id="chartdiv_weekly_pattern" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
+  <div class="well">
+    <legend><strong>周微博数量走势</strong></legend>
+    <div id="chartdiv_week_weibocount" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
+  </div>
+  <div class="well">
+    <legend><strong>周重要度走势</strong></legend>
+    <div id="chartdiv_weekly_pattern" style="min-width: 936px; height: 450px; margin: 0 auto"></div>
+  </div>
 {% endblock body %}
 

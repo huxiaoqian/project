@@ -20,61 +20,61 @@
   }
 
   function display_ori_repost_count(data){
-    var chart = new Highcharts.Chart({
-      chart: {
-          renderTo: 'chartdiv_week_weibocount',
-          type: 'spline',
-          marginRight: 100,
-          marginBottom: 25
-      },
-      title: {
-          text: '微博数量走势',
-          x: -20 //center
-      },
-      xAxis: {
-          categories: data['time'],
-          labels:{
-            step:10,//3就是x轴显示的间隔
-          }
-      },
-      yAxis: {
-          title: {
-              text: '微博条数（条）'
-          },
-          min: 0,
-          lineWidth: 2,
-          plotLines: [{
-              value: 0,
-              width: 1,
-              color: '#808080'
-          }]
-      },
-      tooltip: {
-          formatter: function() {
-                  return '<b>'+ this.series.name +'</b><br/>'+
-                  this.x +': '+ this.y +'条';
-          }
-      },
-      legend: {
-          layout: 'vertical',
-          align: 'right',
-          verticalAlign: 'top',
-          x: -10,
-          y: 100,
-          borderWidth: 0
-      },
-      series: [{
-          name: '总微博数',
-          data: data['count'],
-      }, {
-          name: '转发微博数',
-          data: data['repost'],
-      },{
-          name: '原创微博数',
-          data: data['fipost'],
-      }]
-  });
-}
+      var chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chartdiv_week_weibocount',
+            type: 'spline',
+            marginRight: 100,
+            marginBottom: 25
+        },
+        title: {
+            text: '微博数量走势',
+            x: -20 //center
+        },
+        xAxis: {
+            categories: data['time'],
+            labels:{
+              step:10,//3就是x轴显示的间隔
+            }
+        },
+        yAxis: {
+            title: {
+                text: '微博条数（条）'
+            },
+            min: 0,
+            lineWidth: 2,
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }]
+        },
+        tooltip: {
+            formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+
+                    this.x +': '+ this.y +'条';
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'top',
+            x: -10,
+            y: 100,
+            borderWidth: 0
+        },
+        series: [{
+            name: '总微博数',
+            data: data['count'],
+        }, {
+            name: '转发微博数',
+            data: data['repost'],
+        },{
+            name: '原创微博数',
+            data: data['fipost'],
+        }]
+    });
+  }
 
   function init_post_count(){
     //var interval_arg = $("#weibo_count_interval")[0].value;
@@ -88,21 +88,9 @@
         }
     });
   }
+
   init_post_count()
 
-  function submit_form(){
-    //var interval_arg = $("#weibo_count_interval")[0].value;
-    var interval_arg = 7;
-    $.ajax({
-          url: "/profile/group_count/{{field}}?interval=" + interval_arg,
-          dataType: 'json',   
-          type: "GET",   
-          success: function (data) {
-            $("#chartdiv_week_weibocount").empty();
-            display_ori_repost_count(data);
-          }
-      });
-  }
   </script>
   <div id="chartdiv_week_weibocount" style="width: 930px; height: 400px;"></div>
 {% endblock body %}

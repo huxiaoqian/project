@@ -14,12 +14,21 @@
           </div>
         </label>
     </div>
-    <div id="direct_interact_count_container" style="width: 400px; height: 250px; margin: 0 auto;"></div>
-    <div id="retweet_interact_count_container" style="width: 400px; height: 250px; margin: 0 auto;"></div>
-    <div id="fields_dist_container" style="width: 400px; height: 250px; margin: 0 auto;"></div>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div id="direct_interact_count_container" class="span5" style="width: 400px; height: 250px; margin: 0 5px 0 auto; display: none;"></div>
+        <div id="retweet_interact_count_container" class="span5" style="width: 400px; height: 250px; margin: 0 5px 0 auto; display: none;"></div>
+      </div>
+      <br>
+      <div class="row-fluid">
+        <div id="retweet_friends_interact_count_container" class="span5" style="width: 400px; height: 250px; margin: 0 5px 0 auto; display: none;"></div>
+        <div id="fields_dist_container" class="span5" style="width: 400px; height: 250px; margin: 0 auto; display: none;"></div>
+      </div>
+    </div>
+
 </div>
 <div class="well">
-    <legend><strong>关注者信息</strong></legend>
+    <legend><strong>关注者交互排序</strong></legend>
     <table class="table table-hover">
       <thead>
         <tr>
@@ -58,11 +67,20 @@
       head.appendChild(script);
     }
 
-	function display_interact_chart(data){
-		var data_list = [];
-		for(var i in data){
-			data_list.push([data[i][0], data[i][1]]);
+	function display_interact_chart(retweeted_uid_data, retweeted_friends_data, direct_uid_data) {
+		var direct_uid_list = [];
+    var retweeted_uid_list = [];
+    var retweeted_friends_list = [];
+
+		for(var i in retweeted_uid_data){
+			retweeted_uid_list.push([retweeted_uid_data[i][0].toString(), retweeted_uid_data[i][1]]);
 		}
+    for(var i in retweeted_friends_data){
+      retweeted_friends_list.push([retweeted_friends_data[i][0].toString(), retweeted_friends_data[i][1]]);
+    }
+    for(var i in direct_uid_data){
+      direct_uid_list.push([direct_uid_data[i][0], direct_uid_data[i][1]]);
+    }
     var chart = new Highcharts.Chart({
         chart: {
             renderTo: 'direct_interact_count_container',
@@ -71,7 +89,7 @@
             plotShadow: false
         },
         title: {
-            text: '关注者交互统计'
+            text: '直接交互统计'
         },
         tooltip: {
     	    pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
@@ -91,7 +109,69 @@
         series: [{
             type: 'pie',
             name: '交互占比',
-            data: data_list
+            data: direct_uid_list
+        }]
+    });
+    var chart2 = new Highcharts.Chart({
+        chart: {
+            renderTo: 'retweet_interact_count_container',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: '原创交互统计'
+        },
+        tooltip: {
+          pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    connectorColor: '#000000',
+                    format: '<b>{point.name}</b>: {point.y}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: '交互占比',
+            data: retweeted_uid_list
+        }]
+    });
+    var chart2 = new Highcharts.Chart({
+        chart: {
+            renderTo: 'retweet_friends_interact_count_container',
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: '原创交互统计（关注者）'
+        },
+        tooltip: {
+          pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    connectorColor: '#000000',
+                    format: '<b>{point.name}</b>: {point.y}'
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: '交互占比',
+            data: retweeted_friends_list
         }]
     });
 	}
@@ -140,9 +220,34 @@
         success: function (data) {
           status = data['status'];
           data = data['data'];
-          console.log(status);
-          console.log(data);
-          display_interact_chart(data);
+          if (status == 'finished') {
+              $("#interact_bar").css('width', "100%")
+              $("#interact_process").removeClass("active");
+              $("#interact_process").removeClass("progress-striped");
+
+              if (data['retweeted_uid'] && data['retweeted_friends'] && data['direct_uid']) {
+                  var retweeted_uid_data = data['retweeted_uid'];
+                  var retweeted_friends_data = data['retweeted_friends'];
+                  var direct_uid_data = data['direct_uid'];
+                  //$("#fields_dist_container").css("display", "block");
+                  if(retweeted_uid_data.length){
+                      $("#retweet_interact_count_container").css("display", "block");
+                  }
+                  if(retweeted_friends_data.length){
+                      $("#retweet_friends_interact_count_container").css("display", "block");
+                  }
+                  if(direct_uid_data.length){
+                      $("#direct_interact_count_container").css("display", "block");
+                  }
+                  $("#loading_interact_statistics").text("计算完成!");
+                  display_interact_chart(retweeted_uid_data, retweeted_friends_data, direct_uid_data);
+              }else{
+                  $("#loading_interact_statistics").text("很抱歉，计算结果为空!");
+              }
+          }
+          else
+              return
+          
         }
     });
     $.ajax({

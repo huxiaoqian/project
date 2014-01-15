@@ -1128,6 +1128,7 @@ def profile_person_topic(uid):
                 result_arr.append({'text': k, 'size': float(v)})
         
         return json.dumps({'status': 'current finished', 'data': result_arr})
+
     else:
         return json.dumps([])
     return json.dumps(result_arr)
@@ -1143,7 +1144,9 @@ def profile_network(friendship, uid):
         if user:
             fri_fol = user[friendship]
 
-        uid_interact_count = {}
+        direct_uid_interact_count = {}
+        retweeted_uid_interact_count = {}
+        retweeted_friends_interact_count = {}
 
         datestr = '20130907'
         date_list = last_week_to_date(datestr, interval)
@@ -1151,16 +1154,37 @@ def profile_network(friendship, uid):
         for datestr in date_list:
             active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, datestr)
             for k, v in retweeted_interact.iteritems():
+                k = int(k)
                 v = int(v)
                 if k in set(fri_fol):
                     try:
-                        uid_interact_count[k] += v
+                        retweeted_friends_interact_count[k] += v
                     except KeyError:
-                        uid_interact_count[k] = v
+                        retweeted_friends_interact_count[k] = v
 
-        sorted_counts = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
-        data = sorted_counts[len(sorted_counts)-limit:]
-        return json.dumps({'status': 'finished', 'data': data})
+                try:
+                    retweeted_uid_interact_count[k] += v
+                except KeyError:
+                    retweeted_uid_interact_count[k] = v
+
+            for k, v in direct_interact.iteritems():
+                v = int(v)
+                try:
+                    direct_uid_interact_count[k] += v
+                except KeyError:
+                    direct_uid_interact_count[k] = v
+
+        direct_uid_sorted = sorted(direct_uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
+        retweeted_uid_sorted = sorted(retweeted_uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
+        retweeted_friends_sorted = sorted(retweeted_friends_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
+        
+        direct_uid_sorted = direct_uid_sorted[len(direct_uid_sorted)-limit:]
+        retweeted_uid_sorted = retweeted_uid_sorted[len(retweeted_uid_sorted)-limit:]
+        retweeted_friends_sorted = retweeted_friends_sorted[len(retweeted_friends_sorted)-limit:]
+        
+        return json.dumps({'status': 'finished', 'data': {'direct_uid': direct_uid_sorted, \
+                           'retweeted_friends': retweeted_friends_sorted, \
+                           'retweeted_uid': retweeted_uid_sorted}})
 
 @mod.route('/person_fri_fol/<friendship>/<uid>', methods=['GET', 'POST'])
 def profile_person_fri_fol(friendship, uid):

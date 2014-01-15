@@ -2,14 +2,16 @@
 
 import os
 import re
+import sys
 import time
 import json
 import redis
 import heapq
 import leveldb
+import MySQLdb
 import datetime
 from model import ProfilePersonBasic, ProfilePersonWeiboCount, ProfilePersonTopic
-from config import db, xapian_search_user, LEVELDBPATH, REDIS_HOST, REDIS_PORT, DOMAIN_LIST
+from config import db, xapian_search_user, LEVELDBPATH, REDIS_HOST, REDIS_PORT, DOMAIN_LIST, COBAR_HOST, COBAR_PORT, COBAR_USER
 from dynamic_xapian_weibo import getXapianWeiboByDate
 from xapian_weibo.utils import load_scws, cut
 
@@ -124,15 +126,15 @@ def get_now_datestr():
 
 
 def _utf_decode(s):
-    if isinstance(s, str):
-        return s.decode('utf-8')
-    else:
+    if isinstance(s, unicode):
         return s
+    else:
+        return s.decode('utf-8', 'ignore')
 
 
 def _utf_encode(s):
     if isinstance(s, unicode):
-        return s.encode('utf-8')
+        return s.encode('utf-8', 'ignore')
     else:
         return s
 
@@ -158,7 +160,8 @@ def emoticon_find(text):
     return emoticons
 
 
-def iter_userbasic2mysql():
+def iter_userbasic2mysql(sharding=False):
+    cursor = cobar_conn.cursor()
     users = xapian_search_user.iter_all_docs(fields=xapian_user_fields)
 
     count = 0
@@ -166,7 +169,14 @@ def iter_userbasic2mysql():
     for user in users:
         if count % 10000 == 0:
             te = time.time()
-            db.session.commit()
+            if sharding:
+                # Commit your changes in the database
+                cobar_conn.commit()
+                #except:
+                # Rollback in case there is any error
+                #cobar_conn.rollback()
+            else:
+                db.session.commit()
             print count, '%s sec' % (te - ts)
             ts = te
 
@@ -186,26 +196,47 @@ def iter_userbasic2mysql():
         followersCount = user['followers_count']
         location = user['location']
         statusesCount = user['statuses_count']
-        description = _utf_decode(user['description'])
-
+        description = user['description']
+        description = _utf_decode(description)
+        
         try:
             created_at = int(user['created_at'])
         except:
             count += 1
             continue
+
         date = now_datetimestr
 
-        '''
-        print userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date
-        print '--------'
+        if sharding:
+            sql = """insert into profile_person_basic(userId, province, city, verified, name, gender, \
+                     profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, \
+                     description, created_at, date) values ('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', 
+                     '%s', '%s', '%s', '%s', '%s', '%s', '%s')""" % (userId, province, city, verified, name, gender, \
+                     profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, \
+                     description, created_at, date)
+            try:
+                cursor.execute(sql)
+            except Exception, e:
+                description = ''
+                sql = """insert into profile_person_basic(userId, province, city, verified, name, gender, \
+                     profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, \
+                     description, created_at, date) values ('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', 
+                     '%s', '%s', '%s', '%s', '%s', '%s', '%s')""" % (userId, province, city, verified, name, gender, \
+                     profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, \
+                     description, created_at, date)
 
-        item_exist = db.session.query(ProfilePersonBasic).filter(ProfilePersonBasic.userId==userId).first()
-        if item_exist:
-            db.session.delete(item_exist)
-        '''
-
-        item = ProfilePersonBasic(userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date)
-        db.session.add(item)
+                cursor.execute(sql)
+                
+        else:
+            '''
+            item_exist = db.session.query(ProfilePersonBasic).filter(ProfilePersonBasic.userId==userId).first()
+            if item_exist:
+                db.session.delete(item_exist)
+            '''
+            item = ProfilePersonBasic(userId, province, city, verified, name, gender, profileImageUrl, \
+                                      verifiedType, friendsCount, followersCount, statusesCount, location, \
+                                      description, created_at, date)
+            db.session.add(item)
 
         count += 1
 
@@ -538,9 +569,24 @@ def batch_handle_domain():
 
 
 if __name__ == '__main__':
-    # now_datetimestr = get_now_datestr()
-    # iter_userbasic2mysql()
+    sharding = True
 
+    if sharding:
+        # 连接数据库　
+        try:
+            cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
+            print 'connection success'
+        except Exception, e:
+            print e
+            sys.exit()
+
+    now_datetimestr = get_now_datestr()
+    iter_userbasic2mysql(sharding)
+
+    if cobar_conn:
+        cobar_conn.close()
+
+    '''
     seed_set = get_official_seed_set()
     scws = load_scws()
 
@@ -571,3 +617,4 @@ if __name__ == '__main__':
 
     daily_profile_domain_keywords = get_daily_domain_rtkeywords_db_by_date(batch_date_1)
     batch_sort_domain_keywords()
+    '''

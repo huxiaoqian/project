@@ -12,7 +12,7 @@ import json
 import leveldb
 import urllib2
 import operator
-from utils import last_day
+from utils import last_day, merge, getUsersInfoByUidInteract
 from weibo.model import *
 from weibo.extensions import db
 from datetime import date, datetime
@@ -25,7 +25,7 @@ from flask.ext.sqlalchemy import Pagination
 from time_utils import datetimestr2ts
 from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
 from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
-from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS, last_week_to_date
+from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS, last_week_to_date, getUserNameById, getUserIdByName
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
 from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
@@ -1147,6 +1147,7 @@ def profile_network(friendship, uid):
         direct_uid_interact_count = {}
         retweeted_uid_interact_count = {}
         retweeted_friends_interact_count = {}
+        uid_interact_count = {}
 
         datestr = '20130907'
         date_list = last_week_to_date(datestr, interval)
@@ -1177,14 +1178,29 @@ def profile_network(friendship, uid):
         direct_uid_sorted = sorted(direct_uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
         retweeted_uid_sorted = sorted(retweeted_uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
         retweeted_friends_sorted = sorted(retweeted_friends_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
-        
-        direct_uid_sorted = direct_uid_sorted[len(direct_uid_sorted)-limit:]
-        retweeted_uid_sorted = retweeted_uid_sorted[len(retweeted_uid_sorted)-limit:]
-        retweeted_friends_sorted = retweeted_friends_sorted[len(retweeted_friends_sorted)-limit:]
-        
+        retweeted_uid2name_dict = {}
+        for k, v in retweeted_uid_interact_count.iteritems():
+            retweeted_uid2name_dict[getUserNameById(k)] = v
+        uid_interact_count = merge(direct_uid_interact_count, retweeted_uid2name_dict, lambda x, y: x+y)
+        uid_sorted = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=True)
+
+        direct_uid_sorted = direct_uid_sorted[-limit:]
+        retweeted_uid_sorted = retweeted_uid_sorted[-limit:]
+        retweeted_friends_sorted = retweeted_friends_sorted[-limit:]
+
+        retweeted_name_sorted = []
+        for uid, count in retweeted_uid_sorted:
+            retweeted_name_sorted.append((getUserNameById(uid), count))
+
+        retweeted_friends_name_sorted = []
+        for uid, count in retweeted_friends_sorted:
+            retweeted_friends_name_sorted.append((getUserNameById(uid), count))
+
+        users = getUsersInfoByUidInteract(uid_sorted)
+
         return json.dumps({'status': 'finished', 'data': {'direct_uid': direct_uid_sorted, \
-                           'retweeted_friends': retweeted_friends_sorted, \
-                           'retweeted_uid': retweeted_uid_sorted}})
+                           'retweeted_friends': retweeted_friends_name_sorted, \
+                           'retweeted_uid': retweeted_name_sorted, 'users': users}})
 
 @mod.route('/person_fri_fol/<friendship>/<uid>', methods=['GET', 'POST'])
 def profile_person_fri_fol(friendship, uid):

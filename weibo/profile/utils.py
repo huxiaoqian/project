@@ -4,6 +4,7 @@ import os
 import re
 import time
 import json
+import redis
 import leveldb
 import operator
 from flask import request
@@ -12,8 +13,107 @@ from datetime import datetime, timedelta, date
 from weibo.model import *
 from weibo.extensions import db
 from time_utils import datetimestr2ts, ts2datetimestr
-from weibo.global_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH
+from weibo.global_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH, \
+                                REDIS_HOST, REDIS_PORT, DOMAIN_ZH_LIST, USER_DOMAIN
 
+
+def _default_redis(host=REDIS_HOST, port=REDIS_PORT, db=0):
+    return redis.StrictRedis(host, port, db)
+
+global_r0 = _default_redis()
+
+def username2uid(name):
+    uid = global_r0.hget(USER_NAME_UID, str(name))
+    if not uid:
+        return None
+
+    return int(uid)
+
+
+def merge(d1, d2, merge=lambda x,y:y):
+    """
+    Merges two dictionaries, non-destructively, combining 
+    values on duplicate keys as defined by the optional merge
+    function.  The default behavior replaces the values in d1
+    with corresponding values in d2.  (There is no other generally
+    applicable merge strategy, but often you'll have homogeneous 
+    types in your dicts, so specifying a merge technique can be 
+    valuable.)
+
+    Examples:
+
+    >>> d1
+    {'a': 1, 'c': 3, 'b': 2}
+    >>> merge(d1, d1)
+    {'a': 1, 'c': 3, 'b': 2}
+    >>> merge(d1, d1, lambda x,y: x+y)
+    {'a': 2, 'c': 6, 'b': 4}
+
+    """
+    result = dict(d1)
+    for k,v in d2.iteritems():
+        if k in result:
+            result[k] = merge(result[k], v)
+        else:
+            result[k] = v
+    return result
+
+
+def user2domain(uid):
+    domainid = int(global_r0.hget(USER_DOMAIN, str(uid)))
+    if not domainid:
+        domainid = -1 # not taged label
+    
+    if domainid != -1:
+        domain_zh_name = DOMAIN_ZH_LIST[domainid]
+    else:
+        domain_zh_name = '其它'
+
+    return domain_zh_name
+
+
+def getUserNameById(uid):
+    user = xapian_search_user.search_by_id(int(uid), fields=['name'])
+    if user:
+        return user['name']
+    return uid
+
+def getUserIdByName(name):
+    count, get_results = xapian_search_user.search(query={'name': name}, fields=['_id'])
+    uid = name
+    for r in get_results():
+        uid = user['_id']
+    return uid
+
+def getUsersInfoByUidInteract(ui):
+    users_rank = []
+    rank = 1
+    for k, v in ui:
+        count, get_results = xapian_search_user.search(query={'name': k}, \
+                             fields=['_id', 'name', 'followers_count', \
+                             'friends_count', 'location'])
+        if count == 0:
+            try:
+                count, get_results = xapian_search_user.search(query={'_id': int(k)}, \
+                             fields=['_id', 'name', 'followers_count', \
+                             'friends_count', 'location'])
+            except:
+                pass
+
+        if count:
+            for r in get_results():
+                uid = r['_id']
+                name = r['name']
+                followers_count = r['followers_count']
+                friends_count = r['friends_count']
+                location = r['location']
+                domain = user2domain(uid)
+            interact = v
+            row = (rank, interact, uid, name, followers_count, friends_count, location, domain)
+            users_rank.append(row)
+            rank += 1
+
+    return users_rank
 
 def datetime2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))

@@ -126,10 +126,12 @@ $("#search_weibo").click(function() {
   if (mid==''&&url==''){
     alert("请输入微博MID或URL！");}
   else if(mid!=''){
-    window.location.href="/propagate/showresult_single/?time="+time+"&mid="+mid+"&flag=0";
+    window.open("/propagate/showresult_single/?time="+time+"&mid="+mid+"&flag=0");
+    //window.location.href="/propagate/showresult_single/?time="+time+"&mid="+mid+"&flag=0";
   }
   else{
-    window.location.href="/propagate/showresult_single/?time="+time+"&mid="+0+"&url="+url+"&flag=0";
+    window.open("/propagate/showresult_single/?time="+time+"&mid="+0+"&url="+url+"&flag=0");
+    //window.location.href="/propagate/showresult_single/?time="+time+"&mid="+0+"&url="+url+"&flag=0";
   }
 
 });

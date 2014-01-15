@@ -12,7 +12,7 @@ field_daily_active_count_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yua
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 USER_DOMAIN = "user_domain"
-REDIS_HOST = '219.224.135.60'
+REDIS_HOST = '192.168.2.11'
 REDIS_PORT = 6379
 
 def getXapianWeiboByDate(datestr):
@@ -52,6 +52,7 @@ def read_xapian(date):#读入数据
     follower = dict()
     domain = dict()
     n = 0
+    yuan = 0
     for result in get_results:
         if not result['user']:
             continue
@@ -74,6 +75,8 @@ def read_xapian(date):#读入数据
         n = n + 1
         if n%10000 == 0:
             print n
+        if result['reposts_count'] == 0 and result['comments_count'] == 0:
+            yuan = yuan + 1
         if  active.has_key(result['user']):
             active[result['user']] = active[result['user']] + 1
         else:
@@ -90,8 +93,8 @@ def read_xapian(date):#读入数据
             area = user2domain(result['user'])
             domain[result['user']] = area
         
-    save2leveldb(active,important,follower,domain,datestr)
-    
+    #save2leveldb(active,important,follower,domain,datestr)
+    print yuan
     return 'Done'
 
 def save2leveldb(active,important,follower,domain,date):
@@ -109,7 +112,5 @@ def save2leveldb(active,important,follower,domain,date):
 
 if __name__ == "__main__":
 
-    answer = read_xapian('2013-09-04')
-    print answer
-    answer = read_xapian('2013-09-05')
+    answer = read_xapian('2013-09-01')
     print answer

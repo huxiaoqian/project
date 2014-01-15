@@ -616,26 +616,26 @@ def topic_ajax_userfield():
                     text = fieldsEn2Zh(fields_value[area])
                     domain[text] = domain[text] + 1
                             
-                data1=[]
-                
-                if domain['财经'] >= 0:
-                    data1.append({'finance':domain['财经']})
-                if domain['媒体'] >= 0:
-                    data1.append({'media_domain':domain['媒体']})
-                if domain['文化'] >= 0:
-                    data1.append({'culture':domain['文化']})
-                if domain['科技'] >= 0:
-                    data1.append({'technology':domain['科技']})
-                if domain['娱乐'] >= 0:
-                    data1.append({'entertainment':domain['娱乐']})
-                if domain['教育'] >= 0:
-                    data1.append({'education':domain['教育']})
-                if domain['时尚'] >= 0:
-                    data1.append({'fashion':domain['时尚']})
-                if domain['体育'] >= 0:
-                    data1.append({'sports':domain['体育']})
-                if domain['境外'] >= 0:
-                    data1.append({'abroad':domain['境外']})
+##                data1=[]
+##                
+##                if domain['财经'] >= 0:
+##                    data1.append({'finance':domain['财经']})
+##                if domain['媒体'] >= 0:
+##                    data1.append({'media_domain':domain['媒体']})
+##                if domain['文化'] >= 0:
+##                    data1.append({'culture':domain['文化']})
+##                if domain['科技'] >= 0:
+##                    data1.append({'technology':domain['科技']})
+##                if domain['娱乐'] >= 0:
+##                    data1.append({'entertainment':domain['娱乐']})
+##                if domain['教育'] >= 0:
+##                    data1.append({'education':domain['教育']})
+##                if domain['时尚'] >= 0:
+##                    data1.append({'fashion':domain['时尚']})
+##                if domain['体育'] >= 0:
+##                    data1.append({'sports':domain['体育']})
+##                if domain['境外'] >= 0:
+##                    data1.append({'abroad':domain['境外']})
 
                 data2=[]
                 if domain['高校微博'] >= 0:
@@ -664,7 +664,7 @@ def topic_ajax_userfield():
                     data2.append({'unknown':domain['其他']})
 
                 topic_key_user_list = topic_key_user_list[:100]
-                return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, topic_id=keyword, data1=data1, data2=data2)
+                return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, topic_id=keyword, data2=data2)
 
             else:
                 pass
@@ -1247,10 +1247,55 @@ def topic_rank():
     for i in range(0,len(topic_info)):
         if i>=startoffset and i<endoffset:
             status = user_status(topic_info[i]['id'])
-            news.append({'id':topic_info[i]['id'],'name':topic_info[i]['name'],'location':topic_info[i]['location'],'followers_count':topic_info[i]['follower'],'bi_followers_count':topic_info[i]['friend'],'statuses_count':topic_info[i]['status'],'status':status})
+            area = user2domain(topic_info[i]['id'])
+            if area == -1:
+                area = 20
+            text = fieldsEn2Zh(fields_value[area])
+            news.append({'id':topic_info[i]['id'],'name':topic_info[i]['name'],'location':topic_info[i]['location'],'followers_count':topic_info[i]['follower'],'bi_followers_count':topic_info[i]['friend'],'statuses_count':topic_info[i]['status'],'status':status,'domain':text})
        
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route("/add_kd/", methods=['GET','POST'])
+def add_kd():
+    result = 'Right'
+    new_field = request.form['f_id']
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = KnowledgeList(kID=get_result['_id'],kName=get_result['name'])
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
+
+@mod.route("/remove_kd/", methods=['GET','POST'])
+def remove_kd():
+    result = 'Right'
+    new_id = request.form['f_id']
+    old_items = db.session.query(KnowledgeList).filter(KnowledgeList.kID==new_id).all()
+    if len(old_items):
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
+
+@mod.route("/add_trash/", methods=['GET','POST'])
+def add_trash():
+    result = 'Right'
+    new_field = request.form['f_id']
+    count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
+    if count > 0:
+        for get_result in get_results():
+            new_item = BlackList(blackID=get_result['_id'],blackName=get_result['name'])
+            db.session.add(new_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
+    return json.dumps(result)
 
 @mod.route('/history.json', methods=['GET','POST'])
 def search_history():

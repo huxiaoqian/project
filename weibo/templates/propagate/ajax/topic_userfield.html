@@ -37,7 +37,7 @@
   -o-transition: top 1s ease, left 1s ease;
   -ms-transition: top 1s ease, left 1s ease;
   }
-  #working_count_first {
+  /*#working_count_first {
     float:left;
     height: 500px;
     width: 49%;
@@ -46,7 +46,7 @@
     float:right;
     height: 500px;
     width: 49%;
-  }
+  }*/
   .yuan {
   border-bottom:1px solid #ccc;
   margin:10px 0;
@@ -66,7 +66,7 @@
   }
 </style>
 <div id="container">
-  <div id="working_count_first"></div>
+  <!--<div id="working_count_first"></div>-->
   <div id="working_count_second"></div>
 </div>
 <div class="well">
@@ -74,6 +74,9 @@
   <div>
     <p>
       <a class="btn btn-small btn-success" href="#" id="out"><i class="icon-download-alt"></i> 导出</a>
+      <a id="add_kd" class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
+      <a id="remove_kd" class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+      <a id="add_trash" class="btn btn-small btn-danger" href="#" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
     </p>
   </div>
   <div>
@@ -86,8 +89,9 @@
           <th style="text-align:center;">粉丝数</th>
           <th style="text-align:center;">关注数</th>
           <th style="text-align:center;">微博数</th>
-          <!--<th style="text-align:center;">关联级别</th>-->
+          <th style="text-align:center;">所属领域</th>
           <th style="text-align:center;">敏感状态</th>
+          <th><input id="select_all" type="checkbox" />全选</th>
         </tr>
       </thead>
       <div id="users_area">
@@ -124,14 +128,14 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
 <script>
-  if(( {{data1[0]['finance']}} + {{data1[1]['media_domain']}} + {{data1[2]['culture']}} + {{data1[3]['technology']}} + {{data1[4]['entertainment']}} + {{data1[5]['education']}} + {{data1[6]['fashion']}} + {{data1[7]['sports']}} + {{data1[8]['abroad']}})>0){
-    
-    display_user_field_dist();
-  }
-  else{
-    $("#working_count_first").append("行业领域计算为空");
-  }
-  
+  $('#select_all').click(function(){
+      var $this = $(this);
+      this.checked = !this.checked;
+      $.each($('#topic_table :checkbox'), function(i, val) {
+    if ($(this) != $this)
+        this.checked = !this.checked;
+      });  
+  });
   if(( {{data2[0]['university']}} + {{data2[1]['homeadmin']}} + {{data2[2]['abroadadmin']}} + {{data2[3]['homemedia']}} + {{data2[4]['abroadmedia']}} + {{data2[5]['folkorg']}} + {{data2[6]['politician']}} + {{data2[7]['mediaworker']}} + {{data2[8]['activer']}} + {{data2[9]['mediaworker']}} + {{data2[10]['grassroot']}} + {{data2[11]['unknown']}})>0){
     
     display_user_second_field_dist();
@@ -140,51 +144,6 @@
     $("#working_count_second").append("舆情领域计算为空");
   }
   
-  function display_user_field_dist(){
-    $('#working_count_first').highcharts({
-      chart: {
-          plotBackgroundColor: null,
-          plotBorderWidth: null,
-          plotShadow: false
-      },
-      title: {
-          text: '行业领域分布'
-      },
-      tooltip: {
-        pointFormat: '{series.name}: <b>{point.percentage}%</b>',
-        percentageDecimals: 1
-      },
-      plotOptions: {
-          pie: {
-              allowPointSelect: true,
-              cursor: 'pointer',
-              dataLabels: {
-                  enabled: true,
-                  color: '#000000',
-                  connectorColor: '#000000',
-                  formatter: function() {
-                      return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(2) +' %';
-                  }
-              }
-          }
-      },
-      series: [{
-        type: 'pie',
-        name: '占比',
-        data: [
-            ['财经',   {{data1[0]['finance']}}],
-            ['媒体',   {{data1[1]['media_domain']}}],
-            ['文化',   {{data1[2]['culture']}}],
-            ['科技',   {{data1[3]['technology']}}],
-            ['娱乐',   {{data1[4]['entertainment']}}],
-            ['教育',   {{data1[5]['education']}}],
-            ['时尚',   {{data1[6]['fashion']}}],
-            ['体育',   {{data1[7]['sports']}}],
-            ['境外',   {{data1[8]['abroad']}}]
-        ]
-      }]
-    });
-  }
 
    function display_user_second_field_dist(){
   $('#working_count_second').highcharts({
@@ -296,12 +255,14 @@ function getRankData(countperpage_args, limit_arg){
             html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
             html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
             html += "<td style='text-align:center'>" + user['statuses_count'] + "</td>";
+            html += "<td style='text-align:center'>" + user['domain'] + "</td>";
             if(user['status'] == 1){
-              html += "<td><i class='icon-ok'></i></td></tr>";
+              html += "<td><i class='icon-ok'></i></td>";
             }
             else{
-              html += "<td><i class='icon-remove'></i></td></tr>";
+              html += "<td><i class='icon-remove'></i></td>";
             }
+            html += '<td><input id="uid_'+ user['id'] + '" type="checkbox" name="now_user"></td></tr>';
           }
           $("#word_table").empty();
           $("#word_table").append(html);
@@ -325,12 +286,14 @@ function getRankData(countperpage_args, limit_arg){
                   html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
                   html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
                   html += "<td style='text-align:center'>" + user['statuses_count'] + "</td>";
+                  html += "<td style='text-align:center'>" + user['domain'] + "</td>";
                   if(user['status'] == 1){
                     html += "<td><i class='icon-ok'></i></td></tr>";
                   }
                   else{
                     html += "<td><i class='icon-remove'></i></td></tr>";
                   }
+                  html += '<td><input id="uid_'+ user['id'] + '" type="checkbox" name="now_user"></td></tr>';
               }
               $("#word_table").append(html);
             }
@@ -413,4 +376,95 @@ function exportTableToCSV($table, filename) {
           exportTableToCSV.apply(this, [$('#dvData>table'), 'Topic_Bloggers.csv']);
           alert("导出成功！");
         });
+
+//添加垃圾名单
+    $("#add_trash").click(function() {
+        n = 0;
+        $("[name='now_user']").each(function(){
+                              
+            if(this.checked)
+            {
+                var fa = $(this).parent();
+                var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
+                var f_id = $(ne).html();
+                /*$.ajax({   
+                    type:"POST",  
+                    url:"/propagate/add_trash/",
+                    dataType: "json",
+                    async:false,
+                    data:{f_id : f_id},
+                    success: function(data){
+                        if( data =='Right'){
+                            n = n + 1;
+                        }
+                    }           
+                });*/
+            }   
+        });
+        if(n > 0){
+            alert("添加成功！");
+        }
+    });
+
+    //添加知识库
+    $("#add_kd").click(function() {
+        n = 0;
+        $("[name='now_user']").each(function(){
+                              
+            if(this.checked)
+            {
+                var fa = $(this).parent();
+                var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
+                var f_id = $(ne).html();
+                console.log(f_id);
+                /*$.ajax({   
+                    type:"POST",  
+                    url:"/propagate/add_kd/",
+                    dataType: "json",
+                    async:false,
+                    data:{f_id : f_id},
+                    success: function(data){
+                        if( data =='Right'){
+                            n = n + 1;
+                        }
+                    }           
+                });*/
+            }   
+        });
+        if(n > 0){
+            alert("添加成功！");
+        }
+
+      //location.reload();
+    });
+
+    //移除知识库
+    $("#remove_kd").click(function() {
+        n = 0;
+        $("[name='now_user']").each(function(){
+                              
+            if(this.checked)
+            {
+                var fa = $(this).parent();
+                var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
+                var f_id = $(ne).html();
+                /*$.ajax({   
+                    type:"POST",  
+                    url:"/propagate/remove_kd/",
+                    dataType: "json",
+                    async:false,
+                    data:{f_id : f_id},
+                    success: function(data){
+                        if( data =='Right'){
+                            n = n + 1;
+                        }
+                    }           
+                });*/
+            }   
+        });
+        if(n > 0){
+            alert("移除成功！");
+        }
+        //location.reload();
+    });
 </script>

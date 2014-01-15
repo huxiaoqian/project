@@ -9,7 +9,7 @@ import heapq
 from datetime import datetime
 from datetime import date
 
-from model import *#PropagateTopic, PropagateTrend, PropagateSpatial, PropagateUser, PropagateWeibo
+from model import *
 from config import db
 
 from xapian_weibo.xapian_backend import XapianSearch
@@ -102,7 +102,6 @@ def get_user(uid):
             user['name'] = r['name']
         else:
             user['name'] = u'未知用户'
-        #user['userField'] = u'未知领域'
         break
     if user == {}:
         return None
@@ -152,12 +151,12 @@ def calculate(keyword, beg_time, end_time):
 
     statuses_search = getXapianweiboByTs(beg_time, end_time)
     fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count'] 
-    count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list, max_offset=10000)
+    count, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list)
 
     if count == 0:
         return 'wrong'
+
     n = 0
-    count = 0
     topic_post_time = end_time
     for r in get_results():
         # 获取时间与每天微博数量
@@ -167,9 +166,7 @@ def calculate(keyword, beg_time, end_time):
             r['comments_count'] = 0
         if not r['attitudes_count']:
             r['attitudes_count'] = 0
-        count = count + 1
-        if count % 100 == 0:
-            print count
+        
         if r['timestamp'] < topic_post_time:
             topic_post_time = r['timestamp']
             n = 1
@@ -254,14 +251,20 @@ def calculate(keyword, beg_time, end_time):
                         city_count[p] += 1
                 else:
                     pass
+            else:
+                n = 0
         else:
-            pass
+            n = 0
 
         if r['comments_count'] != None:
             comments_sum = comments_sum + r['comments_count']
         else:
             comments_sum = comments_sum + 0
         blogs_sum += 1
+        if blogs_sum % 100 == 0:
+            print blogs_sum
+##        if blogs_sum >= 10000:
+##            break
 
     print 'loop is done in %s seconds' % (time.time() - start_time)
 
@@ -330,10 +333,10 @@ def calculate(keyword, beg_time, end_time):
 
     topic_info['topic_poster'] = topic_participents
     topic_info['topic_post_date'] = date_list[0]
-    topic_info['topic_leader_count'] = len(topic_leader)
+    topic_info['topic_leader_count'] = len(topic_leader)#int(len(topic_leader)*(total_number/10000.0))
     topic_info['topic_participents'] = user_data
     topic_info['blogs_sum'] = blogs_sum
-    topic_info['topic_ori_blog_count'] = len(topic_ori_blog)
+    topic_info['topic_ori_blog_count'] = len(topic_ori_blog)#int(len(topic_ori_blog)*(total_number/10000.0))
     topic_info['topic_url'] = topic_url
     topic_info['perday_count_list'] = perday_count_list
     topic_info['date_list'] = date_list
@@ -437,7 +440,7 @@ def save_weibo(wordid,weibo):#话题id、微博
 
 if __name__ == "__main__":
 
-    topic_info = calculate('日本', '2013-09-01', '2013-09-05')
+    topic_info = calculate('日本', '2013-09-01', '2013-09-04')
     print topic_info
 ##    print 'weibo:'
 ##    weibo = topic_info['topic_rel_blog'][:5]

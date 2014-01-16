@@ -159,7 +159,26 @@ def getFriendship(uid, schema='friends'):
             return []
     else:
         return []
-        
+
+
+def _utf_8_decode(stri):
+    if isinstance(stri, str):
+        return unicode(stri,'utf-8')
+    return stri
+
+
+def getUserInfoById(uid):
+    count, get_results = xapian_search_user.search(query={'_id': uid}, fields=['profile_image_url', 'name', 'friends_count', \
+                                          'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location', 'description'])
+    if count:
+        for r in get_results():
+            user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  r['name'], 'friendsCount': r['friends_count'], \
+                    'statusesCount': r['statuses_count'], 'followersCount': r['followers_count'], 'gender': r['gender'], \
+                    'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location']), 'description': r['description']}
+            return user
+    else:
+        return None
+
 
 def datetime2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))

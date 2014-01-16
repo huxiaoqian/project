@@ -12,23 +12,21 @@ import json
 import leveldb
 import urllib2
 import operator
-from utils import last_day, merge, getUsersInfoByUidInteract, user2domain, getFriendship, yymInfo
 from weibo.model import *
 from weibo.extensions import db
 from datetime import date, datetime
 from city_color import province_color_map
-from ldamodel import lda_topic
 from operator import itemgetter
 from flask.ext import admin
-from _mysql import _search_person_basic, _search_person_important_active
-from flask.ext.sqlalchemy import Pagination
 from time_utils import datetimestr2ts
 from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
-from utils import acquire_topic_id, read_rank_results, pagerank_rank, degree_rank, make_network_graph, get_above100_weibos, weiboinfo2url, emoticon_find, ts2hour
-from utils import ts2date, getFieldUsersByScores, datetime2ts, last_day, ts2datetime, ts2HMS, last_week_to_date, getUserNameById, getUserIdByName
+from utils import acquire_topic_id, weiboinfo2url, ts2hour, ts2date, getFieldUsersByScores, datetime2ts, \
+                  last_day, ts2datetime, ts2HMS, last_week_to_date, getUserNameById, getUserIdByName, \
+                  merge, getUsersInfoByUidInteract, user2domain, getFriendship, yymInfo, _utf_8_decode, getUserInfoById
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
 from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+from _mysql import _search_person_basic, _search_person_important_active
 
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
@@ -37,6 +35,7 @@ month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
 labels = ['university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', \
           'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
+
 DOMAIN_LIST = fields_value + labels
 
 
@@ -691,8 +690,13 @@ def profile_interact_network(uid):
         uid_interact_count = merge(direct_uid_interact_count, retweeted_uid2name_dict, lambda x, y: x+y)
         uid_sorted = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
 
-        top_8_fri = uid_sorted[-8:]
-        top_36_fri = uid_sorted[-45:-9]
+        second_circle_limit = 8
+        third_circle_limit = 36
+
+        second_circle_uid_counts = uid_sorted[-second_circle_limit:]
+        third_circle_uid_counts = uid_sorted[-second_circle_limit-third_circle_limit-1:-second_circle_limit-1]
+
+        third_circle_limit = len(third_circle_uid_counts) if len(third_circle_uid_counts) < third_circle_limit else third_circle_limit
 
         def node(friendsCount, followersCount, statusesCount, gender, verified, profileImageUrl, count, uid, name):
             return {
@@ -736,56 +740,54 @@ def profile_interact_network(uid):
         
         # first circle
         first_cicle = source_data_structure(center_uid, getUserNameById(center_uid))
-        print first_cicle
         second_circle = []
         third_circle = []
         
-        sum_counts = 0
-        for uid, count in top_8_fri:
-            sum_counts += count
+        # calcuate weight list
+        second_circle_sum_counts = 0
+        for uid, count in second_circle_uid_counts:
+            second_circle_sum_counts += count
 
-        flag = 0
-        order_list = [8, 6, 5, 4, 4, 3, 3, 3]
-        for uid, count in top_8_fri:
-            order_list[flag] = int(count * 36 / sum_counts) if int(count * 36 / sum_counts) >= 1 else 1
-            flag += 1
+        # adjust residual weight to index 0 of list
+        if second_circle_sum_counts:
+            weight_list = [int(count * third_circle_limit / second_circle_sum_counts) if int(count * third_circle_limit / second_circle_sum_counts) >= 1 else 1 for uid, count in second_circle_uid_counts]
+            weight_list[0] += third_circle_limit - sum(weight_list)
 
-        sum_order = sum(order_list)
-        order_list[0] += 36 - sum_order
+            # second circle
+            for uid, count in second_circle_uid_counts:
+                info = yymInfo(uid)
+                if not info: 
+                    second_circle.append(unode(uid, uid, count))
+                else:
+                    second_circle.append(node(info['friendsCount'], info['followersCount'], \
+                                              info['statusesCount'], info['gender'], \
+                                              info['verified'], info['profileImageUrl'], \
+                                              count, info['id'], info['userName']))
 
-        # second circle
-        for uid, count in top_8_fri:
-            info = yymInfo(uid)
-            if not info: 
-                second_circle.append(unode(uid, uid, count))
-            else:
-                second_circle.append(node(info['friendsCount'], info['followersCount'], \
-                                   info['statusesCount'], info['gender'], \
-                                   info['verified'], info['profileImageUrl'], \
-                                   count, info['id'], info['userName']))
-
-        for i, ele in enumerate(second_circle):
-            second_circle[i]['data']['$color']="#B2ABF4"            
+            # set second circle color
+            for i in range(0, len(second_circle)):
+                second_circle[i]['data']['$color']="#B2ABF4"            
         
-        # third circle   
-        for uid, count in top_36_fri:
-            info = yymInfo(uid)
-            if not uid:
-                third_circle.append(unode(uid, uid, count))
-            else:
-                third_circle.append(node(info['friendsCount'], info['followersCount'], \
-                                         info['statusesCount'], info['gender'], \
-                                         info['verified'], info['profileImageUrl'], \
-                                         count, info['id'], info['userName']))
-        '''
-        count = 0
-        for i in range(0, len(second_circle)):
-            for k in range(0, len(third_circle)):
-                (second_circle[i]['children']).append(third_circle[count + k])
-            count += order_list[i]
-        '''
+            # third circle   
+            for uid, count in third_circle_uid_counts:
+                info = yymInfo(uid)
+                if not info:
+                    third_circle.append(unode(uid, uid, count))
+                else:
+                    third_circle.append(node(info['friendsCount'], info['followersCount'], \
+                                             info['statusesCount'], info['gender'], \
+                                             info['verified'], info['profileImageUrl'], \
+                                             count, info['id'], info['userName']))
             
-        first_cicle['children'] = second_circle
+            # assign third circle to second circle, then second circle to first circle
+            start_idx = 0
+            if len(third_circle):
+                for i in range(0, len(second_circle)):
+                    for k in range(0, weight_list[i]):
+                        second_circle[i]['children'].append(third_circle[start_idx + k])
+                    start_idx += weight_list[i]
+            
+            first_cicle['children'] = second_circle
 
         return json.dumps({'status': 'finished', 'data': first_cicle})
 
@@ -1140,23 +1142,6 @@ def profile_person_fri_fol(friendship, uid):
         sorted_field_count = sorted(field_user_count.items(), key=lambda d: d[1], reverse=True)
         return json.dumps({'users': users, 'pages': total_pages, 'fields': sorted_field_count})
 
-def getTopWbs(uid, mid):
-    url = weiboinfo2url(uid, mid)
-    query_dict = {
-        '_id': int(mid),
-    }
-    count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp', 'reposts_count', 'comments_count', 'attitudes_count', 'text', 'source'])
-    
-    for r in get_results():
-        created_at = ts2HMS(r['timestamp'])
-        reposts_count = r['reposts_count']
-        comments_count = r['comments_count']
-        attitudes_count = r['attitudes_count']
-        text = r['text']
-        source = r['source']
-        return [created_at, url, reposts_count, comments_count, attitudes_count, text, source]
-
-
 @mod.route('/person_count/<uid>', methods=['GET', 'POST'])
 def personal_weibo_count(uid):
     if request.args.get('interval'):
@@ -1197,25 +1182,6 @@ def personal_weibo_count(uid):
     return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr, \
                        'important': im_arr, 'total_tweets': total_post_count, \
                        'retweets_ratio': retweetes_ratio, 'emoticons_ratio': emoticons_ratio})
-
-
-def _utf_8_decode(stri):
-    if isinstance(stri, str):
-        return unicode(stri,'utf-8')
-    return stri
-
-
-def getUserInfoById(uid):
-    count, get_results = xapian_search_user.search(query={'_id': uid}, fields=['profile_image_url', 'name', 'friends_count', \
-                                          'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location', 'description'])
-    if count:
-        for r in get_results():
-            user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  r['name'], 'friendsCount': r['friends_count'], \
-                    'statusesCount': r['statuses_count'], 'followersCount': r['followers_count'], 'gender': r['gender'], \
-                    'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location']), 'description': r['description']}
-            return user
-    else:
-        return None
 
 
 @mod.route('/group_topic/<fieldEnName>')

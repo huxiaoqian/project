@@ -14,7 +14,7 @@ from config import db
 
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
-from global_config import xapian_search_user as user_search, xapian_search_domain
+from global_config import xapian_search_user as user_search
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 def ts2datetimestr(ts):

@@ -288,10 +288,10 @@ function getRankData(countperpage_args, limit_arg){
                   html += "<td style='text-align:center'>" + user['statuses_count'] + "</td>";
                   html += "<td style='text-align:center'>" + user['domain'] + "</td>";
                   if(user['status'] == 1){
-                    html += "<td><i class='icon-ok'></i></td></tr>";
+                    html += "<td><i class='icon-ok'></i></td>";
                   }
                   else{
-                    html += "<td><i class='icon-remove'></i></td></tr>";
+                    html += "<td><i class='icon-remove'></i></td>";
                   }
                   html += '<td><input id="uid_'+ user['id'] + '" type="checkbox" name="now_user"></td></tr>';
               }
@@ -325,8 +325,8 @@ function exportTableToCSV($table, filename) {
               // Grab text from table into CSV formatted string
                   var c_head = $r_head.find("th");
                   var csv_head = '';
-                  for(var count=0;count<c_head.length;count++){ 
-                      if(count == (c_head.length-1)){
+                  for(var count=0;count<(c_head.length-1);count++){ 
+                      if(count == (c_head.length-2)){
                           csv_head = csv_head + c_head[count].innerHTML + rowDelim;
                         }
                         else{
@@ -387,7 +387,7 @@ function exportTableToCSV($table, filename) {
                 var fa = $(this).parent();
                 var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
                 var f_id = $(ne).html();
-                /*$.ajax({   
+                $.ajax({   
                     type:"POST",  
                     url:"/propagate/add_trash/",
                     dataType: "json",
@@ -398,12 +398,13 @@ function exportTableToCSV($table, filename) {
                             n = n + 1;
                         }
                     }           
-                });*/
+                });
             }   
         });
         if(n > 0){
             alert("添加成功！");
         }
+        //location.reload();
     });
 
     //添加知识库
@@ -417,7 +418,7 @@ function exportTableToCSV($table, filename) {
                 var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
                 var f_id = $(ne).html();
                 console.log(f_id);
-                /*$.ajax({   
+                $.ajax({   
                     type:"POST",  
                     url:"/propagate/add_kd/",
                     dataType: "json",
@@ -428,14 +429,14 @@ function exportTableToCSV($table, filename) {
                             n = n + 1;
                         }
                     }           
-                });*/
+                });
             }   
         });
         if(n > 0){
             alert("添加成功！");
         }
 
-      //location.reload();
+      location.reload();
     });
 
     //移除知识库
@@ -448,7 +449,7 @@ function exportTableToCSV($table, filename) {
                 var fa = $(this).parent();
                 var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
                 var f_id = $(ne).html();
-                /*$.ajax({   
+                $.ajax({   
                     type:"POST",  
                     url:"/propagate/remove_kd/",
                     dataType: "json",
@@ -459,12 +460,12 @@ function exportTableToCSV($table, filename) {
                             n = n + 1;
                         }
                     }           
-                });*/
+                });
             }   
         });
         if(n > 0){
             alert("移除成功！");
         }
-        //location.reload();
+        location.reload();
     });
 </script>

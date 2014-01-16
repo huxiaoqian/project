@@ -1,26 +1,33 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
 {% block body %}
-<form class="form-inline">
-    <!-- 时间范围:
-    <select class="span2" name="interval_network" id="nt_interval">
-      <option value="90">最近3个月</option>
-      <option value="7">最近1周</option>
-      <option value="30">最近1个月</option>
-      <option value="60">最近2个月</option>
-    </select>
-    <button type="button" class="btn btn-primary" id="generate_network" onclick="init_vis();"><i class="icon-search"></i>生成网络结构图</button> -->
-    <a2 href="javascript:void(0);" onclick="download();" class="btn btn-danger" ><i class="icon-picture"></i>下载图片</a2>
-</form>
-<div id="community" >
-<div id="center-container">
-    <div id="infovis"></div>
-    <div id="inner-details" ></div>
+<div class="well">
+    <legend><strong>粉丝统计</strong></legend>
+    <div>
+        <div id="loading_interact_statistics" class="alert alert-info">
+            系统繁忙计算中，请稍后...
+        </div>
+        <label>
+          <div id="interact_process" class="progress progress-striped active">
+            <div id="interact_bar" class="bar" style="width: 100%;"></div>
+          </div>
+        </label>
+    </div>
+
+    <div>
+        <p><a class="btn btn-small btn-danger" href="javascript:void(0);" onclick="download();" id="out"><i class="icon-picture"></i>导出</a></p>
+    </div>
+
+    <div id="community" >
+      <div id="center-container">
+          <div id="infovis"></div>
+          <div id="inner-details" ></div>
+      </div>
+    </div>
 </div>
-</div>
+
 <link type="text/css" href="/static/css/base.css" rel="stylesheet" />
 <link type="text/css" href="/static/css/Sunburst.css" rel="stylesheet" />
-<script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
 <script>
 function download(){
 var canvas=document.getElementById('infovis-canvas');

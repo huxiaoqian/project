@@ -999,11 +999,11 @@ def profile_person_tab_ajax(model, uid):
             elif model == 'personalweibocount':
                 return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
             elif model == 'personalnetwork':
-                return render_template('profile/ajax/personal_network.html', uid=uid)
+                return render_template('profile/ajax/personal_friends.html', uid=uid)
             elif model == 'personalnetwork_follow':       
-                return render_template('profile/ajax/personalnetwork_follow.html', uid=uid)
+                return render_template('profile/ajax/personal_followers.html', uid=uid)
             elif model == 'personalinteractnetwork':
-                return render_template('profile/ajax/personal_friends_followers.html', uid=uid)
+                return render_template('profile/ajax/personal_interact.html', uid=uid)
             elif model == 'grouptopic':
                 return render_template('profile/ajax/group_word_cloud.html', field=uid)
             elif model == 'groupweibocount':
@@ -1038,11 +1038,11 @@ def profile_person_tab_ajax(model, uid):
                         elif model == 'personalweibocount':
                             return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
                         elif model == 'personalnetwork':
-                            return render_template('profile/ajax/personal_network.html', uid=uid)
+                            return render_template('profile/ajax/personal_friends.html', uid=uid)
                         elif model == 'personalnetwork_follow':       
-                            return render_template('profile/ajax/personalnetwork_follow.html', uid=uid)
+                            return render_template('profile/ajax/personal_followers.html', uid=uid)
                         elif model == 'personalinteractnetwork':
-                            return render_template('profile/ajax/personal_friends_followers.html', uid=uid)
+                            return render_template('profile/ajax/personal_interact.html', uid=uid)
                         elif model == 'grouptopic':
                             return render_template('profile/ajax/group_word_cloud.html', field=uid)
                         elif model == 'groupweibocount':

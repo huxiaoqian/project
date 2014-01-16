@@ -12,7 +12,7 @@ import json
 import leveldb
 import urllib2
 import operator
-from utils import last_day, merge, getUsersInfoByUidInteract
+from utils import last_day, merge, getUsersInfoByUidInteract, user2domain
 from weibo.model import *
 from weibo.extensions import db
 from datetime import date, datetime
@@ -1148,6 +1148,16 @@ def profile_network(friendship, uid):
         retweeted_uid_interact_count = {}
         retweeted_friends_interact_count = {}
         uid_interact_count = {}
+        domain_count = {}
+
+        for uid in fri_fol:
+            domain = user2domain(uid)
+            try:
+                domain_count[domain] += 1
+            except KeyError:
+                domain_count[domain] = 1
+
+        domain_count = [(k, v) for k, v in domain_count.iteritems()]
 
         datestr = '20130907'
         date_list = last_week_to_date(datestr, interval)
@@ -1179,6 +1189,7 @@ def profile_network(friendship, uid):
         retweeted_uid_sorted = sorted(retweeted_uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
         retweeted_friends_sorted = sorted(retweeted_friends_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
         retweeted_uid2name_dict = {}
+
         for k, v in retweeted_uid_interact_count.iteritems():
             retweeted_uid2name_dict[getUserNameById(k)] = v
         uid_interact_count = merge(direct_uid_interact_count, retweeted_uid2name_dict, lambda x, y: x+y)
@@ -1200,7 +1211,7 @@ def profile_network(friendship, uid):
 
         return json.dumps({'status': 'finished', 'data': {'direct_uid': direct_uid_sorted, \
                            'retweeted_friends': retweeted_friends_name_sorted, \
-                           'retweeted_uid': retweeted_name_sorted, 'users': users}})
+                           'retweeted_uid': retweeted_name_sorted, 'users': users, 'domains': domain_count}})
 
 @mod.route('/person_fri_fol/<friendship>/<uid>', methods=['GET', 'POST'])
 def profile_person_fri_fol(friendship, uid):
@@ -1312,6 +1323,7 @@ def personal_weibo_count(uid):
             emoticons_ratio = int(emoticons_count * 100 / total_post_count) / 100.0
             retweetes_ratio = int(retweets_count * 100 / total_post_count) / 100.0
         else:
+            total_post_count = retweets_count = emoticons_count = 0
             emoticons_ratio = 0.0
             retweetes_ratio = 0.0
 

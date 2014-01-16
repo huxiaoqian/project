@@ -53,6 +53,8 @@
 <script src="/static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
 <script src="/static/js/jquery.bootpag.js"></script>
 <script>
+    var page_num = 20;
+
     var len = $('script').filter(function () {
       return ($(this).attr('src') == '/static/js/profile/highcharts.js');
     }).length;
@@ -181,9 +183,11 @@
 
 	function display_fields_chart(data){
 		var data_list = [];
-		for(var i in data){
-			data_list.push([data[i][0], data[i][1]]);
-		}
+    if( data.length ){
+  		for(var i in data){
+  			data_list.push([data[i][0], data[i][1]]);
+  		}
+    }
     var chart = new Highcharts.Chart({
         chart: {
             renderTo: 'fields_dist_container',
@@ -239,26 +243,64 @@
                   var retweeted_friends_data = data['retweeted_friends'];
                   var direct_uid_data = data['direct_uid'];
                   var users = data['users'];
-                  //$("#fields_dist_container").css("display", "block");
+                  var domains = data['domains'];
+                  var statistics_info = '';
+
                   if(retweeted_uid_data.length){
                       $("#retweet_interact_count_container").css("display", "block");
+                  }else{
+                      statistics_info += '原创交互统计数据为空! ';
                   }
                   if(retweeted_friends_data.length){
                       $("#retweet_friends_interact_count_container").css("display", "block");
+                  }else{
+                      statistics_info += '原创交互统计（关注者）数据为空! ';
                   }
                   if(direct_uid_data.length){
                       $("#direct_interact_count_container").css("display", "block");
+                  }else{
+                      statistics_info += '直接交互统计数据为空! ';
+                  }
+                  if( domains.length ){
+                      $("#fields_dist_container").css("display", "block");
+                  }
+                  else{
+                      statistics_info += '关注者领域统计数据为空! ';
                   }
                   if(users.length){
                       $("#loading_interact_rank").text("计算完成!");
-                      create_current_table(users, 0, users.length);
+                      if( users.length < page_num){
+                          page_num = users.length;
+                          create_current_table(users, 0, page_num);
+                      }
+                      else{
+                          create_current_table(users, 0, page_num);
+                          var total_pages = 0;
+                          if (users.length % page_num == 0) {
+                              total_pages = users.length / page_num;
+                          }
+                          else {
+                              total_pages = users.length / page_num + 1;
+                          }
+                          $('#friends_rank_page_selection').bootpag({
+                              total: total_pages,
+                              page: 1,
+                              maxVisible: 30
+                          }).on("page", function(event, num){
+                              start_row = (num - 1)* page_num;
+                              end_row = start_row + page_num;
+                              if (end_row > users.length)
+                                  end_row = users.length;
+                              create_current_table(users, start_row, end_row);
+                          });
+                      }
                   }
                   else{
                       $("#loading_interact_rank").text("很抱歉，计算结果为空!");
                   }
-                  $("#loading_interact_statistics").text("计算完成!");
+                  $("#loading_interact_statistics").text("计算完成! " + statistics_info);
                   display_interact_chart(retweeted_uid_data, retweeted_friends_data, direct_uid_data);
-
+                  display_fields_chart(domains);
               }else{
                   $("#loading_interact_statistics").text("很抱歉，计算结果为空!");
                   $("#loading_interact_rank").text("很抱歉，计算结果为空!");
@@ -269,22 +311,12 @@
           
         }
     });
-    $.ajax({
-        url: "/profile/person_fri_fol/friends/{{uid}}?page=1",
-        dataType: 'json',   
-        type: "GET",   
-        success: function (data) {
-        	var fields_result = data['fields'];
-          display_fields_chart(fields_result);
-          //display_fri_fol_table(data);
-        }
-    });
 	});
 
   function create_current_table(data, start_row, end_row) {
       var cellCount = 8;
       var table = '<table class="table table-bordered">';
-      var thead = '<thead><tr><th>排名</th><th>交互次数</th><th style="display:none">博主ID</th><th>博主昵称</th><th>粉丝数</th><th>关注数</th><th>博主地域</th><th>领域</th></tr></thead>';
+      var thead = '<thead><tr><th>排名</th><th>交互次数</th><th style="display:none">博主ID</th><th>博主昵称</th><th>粉丝数</th><th>关注数</th><th>注册地</th><th>领域</th></tr></thead>';
       //rank, interact, uid, name, followers_count, friends_count, location, domain
       var tbody = '<tbody>';
       for (var i = start_row;i < end_row;i++) {
@@ -293,18 +325,6 @@
               tr = '<tr class="success">';
           }
           for(var j = 0;j < cellCount;j++) {
-              /*
-              if (j == 7) {
-                  // checkbox
-                  var td = '<td><input id="uid_'+ data[i][1] + '" type="checkbox" name="now_user"></td>';
-              }
-              else if (j == 6) {
-                  // identify status
-                  if (data[i][j])
-                      var td = '<td><i class="icon-ok"></i></td>';
-                  else
-                      var td = '<td><i class="icon-remove"></i></td>';
-              }*/
               if(j == 0) {
                   // rank status
                   var td = '<td><span class="label label-important">'+data[i][j]+'</span></td>';
@@ -324,15 +344,87 @@
       table += thead + tbody;
       table += '</table>'
       $("#friends_rank_table").html(table);
-      /*
-      $('#select_all').click(function(){
-          var $this = $(this);
-          this.checked = !this.checked;
-          $.each($('#rank_table :checkbox'), function(i, val) {
-              if ($(this) != $this)
-                  this.checked = !this.checked;
-          });  
-      });*/
     }
+
+    function exportTableToCSV($table, filename) {
+      var ta=$("#friends_rank_table");
+      var $table = ta.find("table"); 
+      var $head = ta.find("thead");
+      var $body = ta.find("tbody");
+      var $r_head = $head.find("tr");
+      var $rows = $body.find("tr");
+      var tmpColDelim = String.fromCharCode(11); // vertical tab character
+      var tmpRowDelim = String.fromCharCode(0); // null character
+
+      // actual delimiter characters for CSV format
+      var colDelim = ",";
+      var rowDelim = "\r\n";
+
+      // Grab text from table into CSV formatted string
+      var c_head = $r_head.find("th");
+      var csv_head = '';
+      for(var count=0;count < c_head.length;count++){ 
+          if(count == (c_head.length-1)){
+            csv_head = csv_head + c_head[count].innerHTML + rowDelim;
+          }
+          else{
+            csv_head = csv_head + c_head[count].innerHTML + colDelim;
+          }
+      }
+
+      csv = $rows.map(function (i, row) {
+        var $row = $(row),
+          $cols = $row.find('td');
+
+        return $cols.map(function (j, col) {
+            var $col = $(col);
+            if($col.find('i').length == 1){
+              var pic = $col.find('i');                        
+              if(pic.attr('class') == "icon-ok"){
+                  var text = '是';
+              }
+              else{
+                if(pic.attr('class') == "icon-arrow-down"){
+                    var text = '下降';
+                }
+                else{
+                  if(pic.attr('class') == "icon-arrow-up"){
+                      var text = '上升';
+                  }
+                  else{
+                    if(pic.attr('class') == "icon-minus"){
+                        var text = '持平';
+                    }
+                    else{
+                      var text = '否';
+                    }
+                  }
+                }                            
+              }
+            }
+          else{
+             var text = $col.text();
+          }
+            return text.replace('"', '"'); // escape double quotes
+
+        }).get().join(tmpColDelim);
+
+      }).get().join(tmpRowDelim).split(tmpRowDelim).join(rowDelim).split(tmpColDelim).join(colDelim);
+
+      csv = csv_head + csv;
+
+      // Data URI
+      csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+      $(this).attr({
+          'download': filename,
+          'href': csvData,
+          'target': '_blank'
+      });
+    }
+  
+    $("a[id='out']").on('click', function (event) {
+      exportTableToCSV.apply(this, [$('#dvData>table'), 'Friends_Interact_Rank_Result.csv']);
+      alert("导出成功！");
+    });
 </script>
 {% endblock body %}

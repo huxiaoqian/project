@@ -60,9 +60,11 @@ def merge(d1, d2, merge=lambda x,y:y):
 
 
 def user2domain(uid):
-    domainid = int(global_r0.hget(USER_DOMAIN, str(uid)))
+    domainid = global_r0.hget(USER_DOMAIN, str(uid))
     if not domainid:
         domainid = -1 # not taged label
+    else:
+        domainid = int(domainid)
     
     if domainid != -1:
         domain_zh_name = DOMAIN_ZH_LIST[domainid]

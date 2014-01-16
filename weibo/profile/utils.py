@@ -117,6 +117,18 @@ def getUsersInfoByUidInteract(ui):
 
     return users_rank
 
+
+def getFriendship(uid, schema='friends'):
+    if uid:
+        user = xapian_search_user.search_by_id(int(uid), fields=[schema])
+        if user:
+            return user[schema]
+        else:
+            return []
+    else:
+        return []
+        
+
 def datetime2ts(date):
     return time.mktime(time.strptime(date, '%Y-%m-%d'))
 

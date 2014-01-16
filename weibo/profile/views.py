@@ -12,7 +12,7 @@ import json
 import leveldb
 import urllib2
 import operator
-from utils import last_day, merge, getUsersInfoByUidInteract, user2domain
+from utils import last_day, merge, getUsersInfoByUidInteract, user2domain, getFriendship
 from weibo.model import *
 from weibo.extensions import db
 from datetime import date, datetime
@@ -20,7 +20,7 @@ from city_color import province_color_map
 from ldamodel import lda_topic
 from operator import itemgetter
 from flask.ext import admin
-from person import _search_person_basic, _search_person_important_active
+from _mysql import _search_person_basic, _search_person_important_active
 from flask.ext.sqlalchemy import Pagination
 from time_utils import datetimestr2ts
 from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
@@ -610,130 +610,59 @@ def test_profile_group():
 
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):
+    read_from_xapian = 0
+    sharding = True
+
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if uid:
-                count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
-                                                  'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
-                if count > 0:
-                    current_time = '20130904'
-                    active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, current_time)
-                    for r in get_results():
-                        user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  _utf_8_decode(r['name']), 'friends_count': r['friends_count'], \
-                                'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
-                                'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
-                        user['created_at'] = ts2HMS(user['created_at']);
-                        user['active_rank'] = active
-                        user['important_rank'] = important
-                else:
-                    return 'no such user'
-            return render_template('profile/profile_person.html', user=user)
-        else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.profile
-                    if identy == 1:
-                        if uid:
-                            count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
-                                                              'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
-                            if count > 0:
-                                for r in get_results():
-                                    user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  unicode(r['name'], 'utf-8'), 'friends_count': r['friends_count'], \
-                                            'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
-                                            'verified': r['verified'], 'created_at': r['created_at'], 'location': unicode(r['location'], "utf-8")}
-                            else:
-                                return 'no such user'
-                        return render_template('profile/profile_person.html', user=user)
+                if read_from_xapian:
+                    count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
+                                                      'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
+                    if count > 0:
+                        current_time = '20130904'
+                        active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, current_time)
+                        for r in get_results():
+                            user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  _utf_8_decode(r['name']), 'friends_count': r['friends_count'], \
+                                    'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
+                                    'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
+                            user['created_at'] = ts2HMS(user['created_at']);
+                            user['active_rank'] = active
+                            user['important_rank'] = important
                     else:
-                        return redirect('/')
-            return redirect('/')
+                        return 'no such user'
+
+                else:
+                    status1, personbasic = _search_person_basic(uid, sharding)
+                    # status2, person_important_active = _search_person_important_active(uid, sharding)
+                    user = {}
+                    if status1 == 'success':
+                        verifiedTypenum = personbasic.verifiedType
+                        friendsCount = personbasic.friendsCount
+                        followersCount = personbasic.followersCount
+                        statuseCount = personbasic.statuseCount
+                        created_at = time.strftime("%m月 %d日, %Y", time.localtime(personbasic.created_at))
+                        user = {'id': personbasic.userId, 'profile_image_url': personbasic.profileImageUrl, 'userName':  _utf_8_decode(personbasic.name), \
+                                'friends_count': friendsCount, 'statuses_count': statuseCount, 'followers_count': followersCount, \
+                                'gender': personbasic.gender, 'verified': personbasic.verified, 'created_at': _utf_8_decode(created_at), \
+                                'location': _utf_8_decode(personbasic.location), 'date': personbasic.date, \
+                                'verifiedTypenum': verifiedTypenum, 'description': _utf_8_decode(personbasic.description)}
+                        user['active_rank'] = 0
+                        user['important_rank'] = 0
+                    else:
+                        return 'no such user'
+                    # if status2 == 'success':
+                    #     active = person_important_active.activeSeries.split('_')[-1]
+                    #     important = person_important_active.importantSeries.split('_')[-1]
+                    #     user['active_rank'] = active
+                    #     user['important_rank'] = important
+
+                return render_template('profile/profile_person.html', user=user)
+            else:
+                return redirect('/')
     else:
         return redirect('/')
-# def profile_person(uid):
-#     if 'logged_in' in session and session['logged_in']:
-#         if session['user'] == 'admin':
-#             if uid != None:
-#                 status1, personbasic = _search_person_basic(uid)
-#                 # status2, person_important_active = _search_person_important_active(uid)
-#                 user = {}
-#                 if status1 == 'success':
-#                     verifiedTypenum = personbasic.verifiedType
-#                     friendsCount = personbasic.friendsCount
-#                     followersCount = personbasic.followersCount
-#                     statuseCount = personbasic.statusesCount
-#                     created_at = time.strftime("%m月 %d日, %Y", time.localtime(personbasic.created_at))
-#                     user = {'id': personbasic.userId, 'profile_image_url': personbasic.profileImageUrl, 'userName':  _utf_8_decode(personbasic.name), \
-#                     'friends_count': friendsCount, 'statuses_count': statuseCount, 'followers_count': followersCount, \
-#                     'gender': personbasic.gender, 'verified': personbasic.verified, 'created_at': _utf_8_decode(created_at), \
-#                     'location': _utf_8_decode(personbasic.location), 'date': personbasic.date, \
-#                     'verifiedTypenum': verifiedTypenum, 'description': _utf_8_decode(personbasic.description)}
-#                     user['active_rank'] = 0
-#                     user['important_rank'] = 0
-#                 else:
-#                     return 'no such user'
-#                 # if status2 == 'success':
-#                 #     active = person_important_active.activeSeries.split('_')[-1]
-#                 #     important = person_important_active.importantSeries.split('_')[-1]
-#                 #     user['active_rank'] = active
-#                 #     user['important_rank'] = important
-#             return render_template('profile/profile_person.html', user=user)
-#         else:
-#             pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-#             if pas != []:
-#                 for pa in pas:
-#                     identy = pa.profile
-#                     if identy == 1:
-#                         if userId != None:
-#                             status1, personbasic = _search_person_basic(userId)
-#                             # status2, person_important_active = _search_person_important_active(userId)
-#                             user = {}
-#                             if status1 == 'success':
-#                                 provincenum = personbasic.province
-#                                 citynum = personbasic.city
-#                                 verifiedTypenum = personbasic.verifiedType
-#                                 friendsCount = personbasic.friendsCount
-#                                 followersCount = personbasic.followersCount
-#                                 statuseCount = personbasic.statuseCount
-#                                 created_at = time.strftime("%m月 %d日, %Y", time.localtime(personbasic.created_at))
-#                                 user = {'id': personbasic.userId, 'profile_image_url': personbasic.profileImageUrl, 'userName':  _utf_8_decode(personbasic.name), \
-#                                 'friends_count': friendsCount, 'statuses_count': statuseCount, 'followers_count': followersCount, \
-#                                 'gender': personbasic.gender, 'verified': personbasic.verified, 'created_at': created_at, \
-#                                 'location': _utf_8_decode(personbasic.location), 'provincenum': provincenum, 'citynum': citynum, \
-#                                 'verifiedTypenum': verifiedTypenum, 'description': _utf_8_decode(personbasic.description),\
-#                                 'date': personbasic.date}
-#                             else:
-#                                 return 'no such user'
-#                             # if status2 == 'success':
-#                             #     active = person_important_active.activeSeries.split('_')[-1]
-#                             #     important = person_important_active.importantSeries.split('_')[-1]
-#                             #     user['active_rank'] = active
-#                             #     user['important_rank'] = important
-#                         return render_template('profile/profile_person.html', user=user)
-#                     else:
-#                         return redirect('/')
-#             return redirect('/')
-#     else:
-#         return redirect('/')
 
-
-def getFriendship(uid, schema='friends'):
-    if uid:
-        user = xapian_search_user.search_by_id(int(uid), fields=[schema])
-        if user:
-            return user[schema]
-        else:
-            return []
-    else:
-        return []
-
-
-def getUidByMid(mid):
-    weibo = xapian_search_weibo.search_by_id(int(mid), fields=['user'])
-    if weibo:
-        return weibo['user']
-    else:
-        return None
 
 def getUidByName(name):
     count, users = xapian_search_user.search(query={'name': name}, fields=['_id'])
@@ -744,123 +673,66 @@ def getUidByName(name):
         return None
 
 
-def getInteractCount(uid, start_ts, end_ts, schema='repost', amongfriends=True, amongfollowers=True):
-    fri_fol = []
-    if amongfriends:
-        friends = getFriendship(uid, 'friends')
-        fri_fol.extend(friends)
-    if amongfollowers:
-        followers = getFriendship(uid, 'followers')
-        fri_fol.extend(followers)
-
-    interact_dict = {}
-    if uid:
-        count, results = xapian_search_weibo.search(query={'user': int(uid), 'timestamp': {'$gt': start_ts, '$lt': end_ts}}, fields=['text', 'retweeted_mid'])
-        
-        if schema == 'repost':
-            for r in results():
-                text = r['text']
-                repost_users = re.findall(u'//@([a-zA-Z-_\u0391-\uFFE5]+)', text)
-                for name in repost_users:
-                    repost_uid = getUidByName(name)
-                    if repost_uid:
-                        try:
-                            interact_dict[repost_uid] += 1
-                        except KeyError:
-                            interact_dict[repost_uid] = 1
-                retweeted_mid = r['retweeted_mid']
-                retweeted_uid = getUidByMid(retweeted_mid)
-                if retweeted_uid:
-                    try:
-                        interact_dict[retweeted_uid] += 1
-                    except KeyError:
-                        interact_dict[retweeted_uid] = 1
-
-        elif schema == 'at':
-            for r in results():
-                text = r['text']
-                at_users = re.findall(u'@([a-zA-Z-_\u0391-\uFFE5]+)', text)
-                for name in at_users:
-                    at_uid = getUidByName(name)
-                    if at_uid:
-                        try:
-                            interact_dict[at_uid] += 1
-                        except KeyError:
-                            interact_dict[at_uid] = 1
-                retweeted_mid = r['retweeted_mid']
-                retweeted_uid = getUidByMid(retweeted_mid)
-                if retweeted_uid:
-                    try:
-                        interact_dict[retweeted_uid] += 1
-                    except KeyError:
-                        interact_dict[retweeted_uid] = 1
-    
-    results = {}
-
-    if fri_fol != []:
-        for k, v in interact_dict.iteritems():
-            if k in fri_fol:
-                results[k] = v
-    else:
-        results = interact_dict
-    
-    return results
-
-
 @mod.route('/person_interact_network/<uid>', methods=['GET', 'POST'])
 def profile_interact_network(uid):
     if request.method == 'GET':
-        total_days = 270
-        today = datetime.today()
-        now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
-        now_ts = int(now_ts)
-        during = 24 * 3600
-
-        if request.args.get('interval'):
-            total_days =  int(request.args.get('interval')) - 1   
-        
         center_uid = uid
+
+        direct_uid_interact_count = {}
+        retweeted_uid_interact_count = {}
+        uid_interact_count = {}
+
         fri_fol = []
-        friends = getFriendship('friends')
-        followers = getFriendship('followers')
+        friends = getFriendship(uid, 'friends')
+        followers = getFriendship(uid, 'followers')
         fri_fol.extend(friends)
         fri_fol.extend(followers)
 
+        datestr = '20130907'
+        interval = 7
+        date_list = last_week_to_date(datestr, interval)
     
-        uid_interact_count = {} 
-        for i in xrange(-total_days + 1, 1):
-            lt = now_ts + during * i
-            for f_uid in fri_fol:
-                count = 0
+        for datestr in date_list:
+            active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, datestr)
+            for k, v in retweeted_interact.iteritems():
+                k = int(k)
+                v = int(v)
                 try:
-                    count += int(interact_bucket.Get(str(uid) + '_' + str(f_uid) + '_' + str(lt)))
+                    retweeted_uid_interact_count[k] += v
                 except KeyError:
-                    pass
-                try:
-                    count += int(interact_bucket.Get(str(f_uid) + '_' + str(uid) + '_' + str(lt)))
-                except KeyError:
-                    pass
-                if count:
-                    try:
-                        uid_interact_count[str(f_uid)] += count
-                    except KeyError:
-                        uid_interact_count[str(f_uid)] = count
+                    retweeted_uid_interact_count[k] = v
 
-        sorted_counts = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=True)
+            for k, v in direct_interact.iteritems():
+                v = int(v)
+                try:
+                    direct_uid_interact_count[k] += v
+                except KeyError:
+                    direct_uid_interact_count[k] = v
+
+        direct_uid_sorted = sorted(direct_uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
+        retweeted_uid_sorted = sorted(retweeted_uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
+        retweeted_uid2name_dict = {}
+
+        for k, v in retweeted_uid_interact_count.iteritems():
+            retweeted_uid2name_dict[getUserNameById(k)] = v
+
+        uid_interact_count = merge(direct_uid_interact_count, retweeted_uid2name_dict, lambda x, y: x+y)
+        uid_sorted = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=True)
      
         top_8_fri = {}
         top_36_fri = {}
-        for uid, count in sorted_counts:
-            
+        for uid, count in uid_sorted:
             if len(top_8_fri) <8:
                top_8_fri[uid] = count
-               uid_interact_count.pop(uid, None)
+               uid_sorted.pop(uid, None)
                continue 
+
             elif len(top_36_fri)<36:
                top_36_fri[uid] = count
-               uid_interact_count.pop(uid, None)
+               uid_sorted.pop(uid, None)
                if len(top_36_fri) == 36:
                    break
+
         def node(friendsCount,followersCount,statusesCount,gender,verified,profileImageUrl,count,id,name):
             return {"children":[],"data":{"friendsCount":friendsCount,"followersCount":followersCount,"statusesCount":statusesCount,"gender":gender,"verified":verified,"profileImageUrl":profileImageUrl,"$color":"#AEA9F8","$angularWidth":1000,"count":count},"id": id,"name": name}
         def unode(uid,name,count):
@@ -1139,10 +1011,7 @@ def profile_network(friendship, uid):
         limit = 10
         interval = 7
 
-        fri_fol = []
-        user = xapian_search_user.search_by_id(int(uid), fields=[friendship])
-        if user:
-            fri_fol = user[friendship]
+        fri_fol = getFriendship(uid, friendship)
 
         direct_uid_interact_count = {}
         retweeted_uid_interact_count = {}

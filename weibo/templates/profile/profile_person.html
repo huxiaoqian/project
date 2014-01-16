@@ -53,7 +53,6 @@
             <li class="btn span2" id="tab3">关注结构</li>
             <li class="btn span2" id="tab4">粉丝结构</li>
             <li class="btn span2" id="tab5">交互结构</li>
-            <li class="btn span2" id="tab6">传播结构</li>
           </ul>
           <div id="content_container"></div>
         </div>
@@ -65,8 +64,8 @@
     $('#content_container').empty();
     $('#content_container').load("/profile/person_tab_ajax/personalweibocount/{{user.id}}", function() {});
 
-    tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5', 'tab6'];
-    tabUrlArr = ["/profile/person_tab_ajax/personalweibocount/{{user.id}}", "/profile/person_tab_ajax/personaltopic/{{user.id}}", "/profile/person_tab_ajax/personalnetwork/{{user.id}}", "/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}", "/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}", "/profile/person_tab_ajax/personalweibocount/{{user.id}}"];
+    tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5'];
+    tabUrlArr = ["/profile/person_tab_ajax/personalweibocount/{{user.id}}", "/profile/person_tab_ajax/personaltopic/{{user.id}}", "/profile/person_tab_ajax/personalnetwork/{{user.id}}", "/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}", "/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}"];
     for (var i = 0, len = tabIdArr.length; i < len; i++) {
       document.getElementById(tabIdArr[i]).onclick = function(data) {
         var tabId = data.srcElement.id;

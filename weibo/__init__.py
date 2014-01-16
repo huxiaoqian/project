@@ -25,7 +25,17 @@ def create_app():
     app.register_blueprint(propagateModule)
     app.register_blueprint(adminModule)
     
-    #toolbar = DebugToolbarExtension(app)
+    
+    # Enable the toolbar?
+    app.config['DEBUG_TB_ENABLED'] = app.debug
+    # Should intercept redirects?
+    app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+    # Enable the profiler on all requests, default to false
+    app.config['DEBUG_TB_PROFILER_ENABLED'] = True
+    # Enable the template editor, default to false
+    app.config['DEBUG_TB_TEMPLATE_EDITOR_ENABLED'] = True
+    # debug toolbar
+    toolbar = DebugToolbarExtension(app)
 
     # Create database
     db.init_app(app)

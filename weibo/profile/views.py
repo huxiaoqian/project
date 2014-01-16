@@ -12,7 +12,7 @@ import json
 import leveldb
 import urllib2
 import operator
-from utils import last_day, merge, getUsersInfoByUidInteract, user2domain, getFriendship
+from utils import last_day, merge, getUsersInfoByUidInteract, user2domain, getFriendship, yymInfo
 from weibo.model import *
 from weibo.extensions import db
 from datetime import date, datetime
@@ -137,30 +137,6 @@ def getStaticInfo():
     fields = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
     return statusRange, friendsRange, followersRange, province, fields
 
-def yymInfo(uid):
-    query_dict = {
-        '_id': int(uid)
-    }
-    user = xapian_search_user.search_by_id(int(uid), fields=['created_at', '_id', 'name', \
-        'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url', 'verified', 'gender'])
-    if user:
-        r = user
-        statusesCount = r['statuses_count']
-        followersCount = r['followers_count']
-        friendsCount = r['friends_count']
-        userName = r['name']
-        description = r['description']
-        uid = r['_id']
-        profileImageUrl = r['profile_image_url']
-        verified = r['verified']
-        gender = r['gender']
-        user = {'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': \
-        followersCount, 'friendsCount': friendsCount, 'description': description, 'profileImageUrl': profileImageUrl,
-        'verified': verified, 'gender': gender}
-        return user
-    else:
-        return None 
-
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
     session['logged_in'] = request.form['log_in']
@@ -204,7 +180,6 @@ def profile_search(model='hotest'):
                     province_str += unicode(pro, 'utf-8') + ','
                 if model == 'person':
                     nickname = urllib2.unquote(request.args.get('nickname'))
-                    print nickname.encode('utf-8')
                     return render_template('profile/profile_search.html',statuscount=statuscount,
                                            friendscount=friendscount, followerscount=followerscount,
                                            location=province_str, field=field, model=model, result=None, nickname=nickname)
@@ -264,7 +239,7 @@ def profile_search(model='hotest'):
                                                                    fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
                                                                    sort_by=['created_at'])
                     users = []
-                    print count
+
                     for r in get_results():
                         statusesCount = r['statuses_count']
                         followersCount = r['followers_count']
@@ -611,51 +586,47 @@ def test_profile_group():
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):
     read_from_xapian = 0
-    sharding = True
+    sharding = False
 
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if uid:
+                user = {}
+                current_time = '20130904'
+                active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, current_time)
+                user['active_rank'] = active
+                user['important_rank'] = important
                 if read_from_xapian:
                     count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
                                                       'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
                     if count > 0:
-                        current_time = '20130904'
-                        active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, current_time)
                         for r in get_results():
-                            user = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  _utf_8_decode(r['name']), 'friends_count': r['friends_count'], \
+                            user_character = {'id': uid, 'profile_image_url': r['profile_image_url'], 'userName':  _utf_8_decode(r['name']), 'friends_count': r['friends_count'], \
                                     'statuses_count': r['statuses_count'], 'followers_count': r['followers_count'], 'gender': r['gender'], \
                                     'verified': r['verified'], 'created_at': r['created_at'], 'location': _utf_8_decode(r['location'])}
+                            user.update(user_character)
                             user['created_at'] = ts2HMS(user['created_at']);
-                            user['active_rank'] = active
-                            user['important_rank'] = important
+                            
                     else:
                         return 'no such user'
 
                 else:
                     status1, personbasic = _search_person_basic(uid, sharding)
-                    # status2, person_important_active = _search_person_important_active(uid, sharding)
-                    user = {}
+
                     if status1 == 'success':
                         verifiedTypenum = personbasic.verifiedType
                         friendsCount = personbasic.friendsCount
                         followersCount = personbasic.followersCount
                         statuseCount = personbasic.statuseCount
                         created_at = time.strftime("%m月 %d日, %Y", time.localtime(personbasic.created_at))
-                        user = {'id': personbasic.userId, 'profile_image_url': personbasic.profileImageUrl, 'userName':  _utf_8_decode(personbasic.name), \
+                        user_character = {'id': personbasic.userId, 'profile_image_url': personbasic.profileImageUrl, 'userName':  _utf_8_decode(personbasic.name), \
                                 'friends_count': friendsCount, 'statuses_count': statuseCount, 'followers_count': followersCount, \
                                 'gender': personbasic.gender, 'verified': personbasic.verified, 'created_at': _utf_8_decode(created_at), \
                                 'location': _utf_8_decode(personbasic.location), 'date': personbasic.date, \
                                 'verifiedTypenum': verifiedTypenum, 'description': _utf_8_decode(personbasic.description)}
-                        user['active_rank'] = 0
-                        user['important_rank'] = 0
+                        user.update(user_character)
                     else:
                         return 'no such user'
-                    # if status2 == 'success':
-                    #     active = person_important_active.activeSeries.split('_')[-1]
-                    #     important = person_important_active.importantSeries.split('_')[-1]
-                    #     user['active_rank'] = active
-                    #     user['important_rank'] = important
 
                 return render_template('profile/profile_person.html', user=user)
             else:
@@ -676,6 +647,7 @@ def getUidByName(name):
 @mod.route('/person_interact_network/<uid>', methods=['GET', 'POST'])
 def profile_interact_network(uid):
     if request.method == 'GET':
+        uid = int(uid)
         center_uid = uid
 
         direct_uid_interact_count = {}
@@ -717,77 +689,105 @@ def profile_interact_network(uid):
             retweeted_uid2name_dict[getUserNameById(k)] = v
 
         uid_interact_count = merge(direct_uid_interact_count, retweeted_uid2name_dict, lambda x, y: x+y)
-        uid_sorted = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=True)
-     
-        top_8_fri = {}
-        top_36_fri = {}
-        for uid, count in uid_sorted:
-            if len(top_8_fri) <8:
-               top_8_fri[uid] = count
-               uid_sorted.pop(uid, None)
-               continue 
+        uid_sorted = sorted(uid_interact_count.iteritems(), key=operator.itemgetter(1), reverse=False)
 
-            elif len(top_36_fri)<36:
-               top_36_fri[uid] = count
-               uid_sorted.pop(uid, None)
-               if len(top_36_fri) == 36:
-                   break
+        top_8_fri = uid_sorted[-8:]
+        top_36_fri = uid_sorted[-45:-9]
 
-        def node(friendsCount,followersCount,statusesCount,gender,verified,profileImageUrl,count,id,name):
-            return {"children":[],"data":{"friendsCount":friendsCount,"followersCount":followersCount,"statusesCount":statusesCount,"gender":gender,"verified":verified,"profileImageUrl":profileImageUrl,"$color":"#AEA9F8","$angularWidth":1000,"count":count},"id": id,"name": name}
-        def unode(uid,name,count):
-            return {"children":[],"data":{"$color":"#AEA9F8","$angularWidth":1000,"count":count},"id": uid,"name": name}
-            #FCD9A1 AEA9F8 B0AAF6 B2ABF4 B6AEEF E0C7C0 D2BFD0 ECCFB3 D4C0CE 
-        def source(uid,name):
-            return {"children":[],"data":{"type":"none"},"id": uid,"name": name}
+        def node(friendsCount, followersCount, statusesCount, gender, verified, profileImageUrl, count, uid, name):
+            return {
+                "children": [],
+                "data": {
+                    "friendsCount": friendsCount,
+                    "followersCount": followersCount,
+                    "statusesCount": statusesCount,
+                    "gender": gender,
+                    "verified": verified,
+                    "profileImageUrl": profileImageUrl,
+                    "$color": "#AEA9F8",
+                    "$angularWidth": 1000,
+                    "count": count
+                },
+                "id": uid,
+                "name": name
+            }
         
-        first=source(center_uid ,yymInfo(center_uid)['userName'] )
-        second=[]
-        third=[]
-        order=[8,6,5,4,4,3,3,3]
-        allcounts=0
-        allorder=0
-        flag=0
-        for i in top_8_fri:
-            allcounts+=top_8_fri[i]
+        def unode(uid, name, count):
+            return {
+                "children": [],
+                "data": {
+                    "$color": "#AEA9F8", #FCD9A1 AEA9F8 B0AAF6 B2ABF4 B6AEEF E0C7C0 D2BFD0 ECCFB3 D4C0CE
+                    "$angularWidth": 1000, 
+                    "count":count
+                },
+                "id": uid,
+                "name": name
+            }
 
-        for i in top_8_fri:
-            if(int(top_8_fri[i]*36/allcounts)>=1 ):
-                order[flag]=int(top_8_fri[i]*36/allcounts) 
+        def source_data_structure(uid, name):
+            return {
+                "children": [],
+                "data":{
+                    "type": "none"
+                },
+                "id": uid,
+                "name": name
+            }
+        
+        # first circle
+        first_cicle = source_data_structure(center_uid, getUserNameById(center_uid))
+        print first_cicle
+        second_circle = []
+        third_circle = []
+        
+        sum_counts = 0
+        for uid, count in top_8_fri:
+            sum_counts += count
+
+        flag = 0
+        order_list = [8, 6, 5, 4, 4, 3, 3, 3]
+        for uid, count in top_8_fri:
+            order_list[flag] = int(count * 36 / sum_counts) if int(count * 36 / sum_counts) >= 1 else 1
+            flag += 1
+
+        sum_order = sum(order_list)
+        order_list[0] += 36 - sum_order
+
+        # second circle
+        for uid, count in top_8_fri:
+            info = yymInfo(uid)
+            if not info: 
+                second_circle.append(unode(uid, uid, count))
             else:
-                order[flag]=1
-            flag+=1
+                second_circle.append(node(info['friendsCount'], info['followersCount'], \
+                                   info['statusesCount'], info['gender'], \
+                                   info['verified'], info['profileImageUrl'], \
+                                   count, info['id'], info['userName']))
 
-        for i in range(0,8):
-            allorder+=order[i]
-
-        order[0]+=(36-allorder)
-
-        for i in top_8_fri:
-            info=yymInfo(i)
-            if(info==None):
-                second.append(unode(i,i,top_8_fri[i]))
+        for i, ele in enumerate(second_circle):
+            second_circle[i]['data']['$color']="#B2ABF4"            
+        
+        # third circle   
+        for uid, count in top_36_fri:
+            info = yymInfo(uid)
+            if not uid:
+                third_circle.append(unode(uid, uid, count))
             else:
-                second.append(node(info['friendsCount'],info['followersCount'],info['statusesCount'],info['gender'],info['verified'],info['profileImageUrl'],top_8_fri[i],info['id'],info['userName']))
-
-        for i in range(0,8):
-            second[i]['data']['$color']="#B2ABF4"
-             
-        for i in top_36_fri:
-            info=yymInfo(i)
-            if(info==None):
-                third.append(unode(i,i,top_36_fri[i]))
-            else:
-                third.append(node(info['friendsCount'],info['followersCount'],info['statusesCount'],info['gender'],info['verified'],info['profileImageUrl'],top_36_fri[i],info['id'],info['userName']))
-
-        sum=0
-        for i in range(0,8):
-            for k in range(0,order[i]):
-                (second[i]['children']).append(third[sum+k])
-            sum=sum+order[i]
+                third_circle.append(node(info['friendsCount'], info['followersCount'], \
+                                         info['statusesCount'], info['gender'], \
+                                         info['verified'], info['profileImageUrl'], \
+                                         count, info['id'], info['userName']))
+        '''
+        count = 0
+        for i in range(0, len(second_circle)):
+            for k in range(0, len(third_circle)):
+                (second_circle[i]['children']).append(third_circle[count + k])
+            count += order_list[i]
+        '''
             
-        first['children'] = second
-        return json.dumps(first)
+        first_cicle['children'] = second_circle
+
+        return json.dumps({'status': 'finished', 'data': first_cicle})
 
 @mod.route('/topic/', methods=['POST', 'GET'])
 def index():
@@ -1166,7 +1166,6 @@ def personal_weibo_count(uid):
     datestr = '20130907'
 
     date_list = last_week_to_date(datestr, interval)
-    post_status_kv = {'total': 2, 'repost': 1, 'fipost': 0}
 
     time_arr = []
     post_arr = []
@@ -1184,17 +1183,16 @@ def personal_weibo_count(uid):
         emot_arr.append(emoticon)
         time_arr.append(datestr)
 
-    for idx in range(0, len(date_list)):
-        if post_arr[idx] != 0:
-            total_post_count = post_arr[idx]
-            retweets_count = repost_arr[idx]
-            emoticons_count = fipost_arr[idx]
-            emoticons_ratio = int(emoticons_count * 100 / total_post_count) / 100.0
-            retweetes_ratio = int(retweets_count * 100 / total_post_count) / 100.0
-        else:
-            total_post_count = retweets_count = emoticons_count = 0
-            emoticons_ratio = 0.0
-            retweetes_ratio = 0.0
+    total_post_count = sum(post_arr)
+    retweets_count = sum(repost_arr)
+    emoticons_count = sum(emot_arr)
+
+    if total_post_count != 0:
+        emoticons_ratio = int(emoticons_count * 100 / total_post_count) / 100.0
+        retweetes_ratio = int(retweets_count * 100 / total_post_count) / 100.0
+    else:
+        emoticons_ratio = 0.0
+        retweetes_ratio = 0.0
 
     return json.dumps({'time': time_arr, 'count': post_arr, 'repost': repost_arr, 'fipost': fipost_arr, \
                        'important': im_arr, 'total_tweets': total_post_count, \

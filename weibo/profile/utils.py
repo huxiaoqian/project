@@ -118,6 +118,38 @@ def getUsersInfoByUidInteract(ui):
     return users_rank
 
 
+def yymInfo(uid):
+    try:
+        query_dict = {
+            '_id': int(uid)
+        }
+    except:
+        query_dict = {
+            'name': uid
+        }
+
+    count, get_results = xapian_search_user.search(query=query_dict, fields=['created_at', '_id', 'name', \
+        'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url', 'verified', 'gender'])
+    
+    if count:
+        for r in get_results():
+            statusesCount = r['statuses_count']
+            followersCount = r['followers_count']
+            friendsCount = r['friends_count']
+            userName = r['name']
+            description = r['description']
+            uid = r['_id']
+            profileImageUrl = r['profile_image_url']
+            verified = r['verified']
+            gender = r['gender']
+            user = {'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': \
+            followersCount, 'friendsCount': friendsCount, 'description': description, 'profileImageUrl': profileImageUrl,
+            'verified': verified, 'gender': gender}
+            return user
+    else:
+        return None 
+
+
 def getFriendship(uid, schema='friends'):
     if uid:
         user = xapian_search_user.search_by_id(int(uid), fields=[schema])

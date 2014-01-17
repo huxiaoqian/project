@@ -36,12 +36,12 @@
     <div class="row-fluid" style="padding-top:20px;">
       <div class="span12" id = "index-tabs">
         <ul id = "myTab" class="nav nav-tabs">
-          <li><a href="/propagate/single_ajax_trend/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >演变趋势</a></li>
-          <li><a href="/propagate/single_ajax_weibos/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >相关微博</a></li>
+          <li><a href="/propagate/single_ajax_trend/?mid={{mid}}" >演变趋势</a></li>
+          <li><a href="/propagate/single_ajax_weibos/?mid={{mid}}" >相关微博</a></li>
           <li><a href="/propagate/single_ajax_spatial/">地理分布</a></li>
-          <li><a href="/propagate/single_ajax_stat/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >主要指标</a></li>
+          <li><a href="/propagate/single_ajax_stat/?mid={{mid}}" >主要指标</a></li>
           <li><a href="/propagate/single_ajax_path/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >传播路径</a></li>
-          <li><a href="/propagate/single_ajax_userfield/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >关键人员及领域分布</a></li>
+          <li><a href="/propagate/single_ajax_userfield/?mid={{mid}}" >关键人员及领域分布</a></li>
         </ul>
       </div>
     </div>
@@ -53,9 +53,8 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script>
     var mid = '{{mid}}';
-    var beg_ts = '{{beg_ts}}';
-    var end_ts = '{{end_ts}}';
-    var request_data_dict = {'mid': mid,'beg_ts': beg_ts,'end_ts': end_ts};
+    var post_time = '{{post_time}}';
+    var request_data_dict = {'mid': mid,'post_time': post_time};
     $(document).ready(function(){
       $("#index-tabs" ).tabs({
         beforeLoad: function( event, ui ) {

@@ -31,6 +31,7 @@ from autocalculate import calculate
 from calculate_single import calculate_single,get_user
 from calculatetopic import calculate_topic
 from history import _all_history, _add_history, _search_history
+from history_weibo import _all_history_weibo, _add_history_weibo, _search_history_weibo
 from get_result import *
 
 sys.path.append('./weibo/propagate/graph')
@@ -728,38 +729,20 @@ def topic_ajax_userfield():
     
 @mod.route("/showresult_single/", methods = ["GET","POST"])
 def single_analysis():
-    dur_time = request.args.get('time', '')
+    post_time = request.args.get('time', '')
     mid = request.args.get('mid', '')
-    url=request.args.get('url','')
-    flag=request.args.get('flag','0')
-    if mid=='0':
-        mid=get_mid(url)
-        print mid
 
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin': 
-            if flag == '0':
-                dur_time = _utf_encode(dur_time)
-                if not dur_time or dur_time == '':
-                    beg_time, end_time = _default_time_zone()
-                else:
-                    beg_time, end_time = _time_zone(dur_time)
-                    beg_time = date2ts(beg_time)
-                    end_time = date2ts(end_time)
-            else:
-                beg_time = datetime2ts(dur_time)
-                end_time = beg_time + 24*3600
                 
-            blog_info = calculate_single(mid,beg_time,end_time)
+            blog_info = readPropagateSingle(mid)#返回整个树的统计
                                  
-            blog_img_url = blog_info['user']['profile_image_url']
-            blog_date_list = blog_info['datelist']
-
-            bloger_name = blog_info['user']['name']
-            blog_reposts_count = blog_info['status']['repostsCount']
-            blog_comments_count = blog_info['status']['commentsCount']
-            blog_attitudes_count = blog_info['status']['attitudesCount']
-            blog_time = blog_info['status']['postDate']
+            blog_img_url = blog_info['profile_image_url']
+            bloger_name = blog_info['name']
+            blog_reposts_count = blog_info['repostsCount']
+            blog_comments_count = blog_info['commentsCount']
+            blog_attitudes_count = blog_info['attitudesCount']
+            blog_time = blog_info['postDate']
 
             return render_template('propagate/showResult_single.html', 
                                    mid=mid,
@@ -769,9 +752,7 @@ def single_analysis():
                                    tar_comments_count = blog_comments_count,
                                    tar_attitudes_count = blog_attitudes_count,
                                    tar_post_date = blog_time,
-                                   blog_date_list = blog_date_list,
-                                   beg_ts=beg_time,
-                                   end_ts=end_time
+                                   post_time = post_time
                                    )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -815,16 +796,19 @@ def single_ajax_trend():
                 return render_template('propagate/ajax/single_trend.html')
             else:
 
-                mid = int(request.form.get('mid', ""))
-                beg_ts = float(request.form.get('beg_ts', ""))
-                end_ts = float(request.form.get('end_ts', ""))
+                mid = str(request.form.get('mid', ""))
 
-                blog_info = calculate_single(mid,beg_ts,end_ts)
+                blog_info = readPropagateTrendSingle(mid)
                 perday_repost_count = blog_info['perday_count']
                 blog_date_list = blog_info['datelist']
                 date_list = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list]
 
-                return json.dumps({'perday_blog_count': zip(date_list, perday_repost_count)})
+                blog_info_part = readPropagateTrendSinglePart(mid)
+                perday_repost_count_part = blog_info_part['perday_count']
+                blog_date_list_part = blog_info_part['datelist']
+                date_list_part = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list_part]
+                
+                return json.dumps({'perday_blog_count': zip(date_list, perday_repost_count),'perday_blog_count_part': zip(date_list_part, perday_repost_count_part)})
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -852,34 +836,13 @@ def single_ajax_weibos():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                mid = int(request.args.get('mid', ""))
-                beg_ts = float(request.args.get('beg_ts', ""))
-                end_ts = float(request.args.get('end_ts', ""))
-                blog_info = calculate_single(mid,beg_ts,end_ts)
+                mid = str(request.args.get('mid', ""))
 
-                bloger_name = blog_info['user']['name']
-                blog_reposts_count = blog_info['status']['repostsCount']
-                blog_comments_count = blog_info['status']['commentsCount']
-                blog_attitudes_count = blog_info['status']['attitudesCount']
-                blog_img_url = blog_info['user']['profile_image_url']
-    
-                blog_time = blog_info['status']['postDate']
-                blog_text = blog_info['status']['text']
-                blog_source = blog_info['status']['sourcePlatform']
-                blog_id = blog_info['status']['id']
-
+                blog_info = readPropagateWeiboSingle(mid)
+                blog_info_part = readPropagateWeiboSinglePart(mid)
                 return render_template('propagate/ajax/single_weibos.html', 
-                                       tar_profile_image_url = blog_img_url,
-                                       tar_screen_name = bloger_name,
-                                       tar_repost_count = blog_reposts_count,
-                                       tar_comments_count = blog_comments_count,
-                                       tar_attitudes_count = blog_attitudes_count,
-                                       tar_post_date = blog_time,
-                                       tar_text = blog_text,
-                                       tar_source = blog_source,
-                                       tar_id = blog_id,
-                                       beg_time=beg_ts,
-                                       end_time=end_ts
+                                       blog_info = blog_info,
+                                       blog_info_part = blog_info_part,
                                       )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -926,13 +889,10 @@ def single_ajax_spatial():
             if request.method == "GET":
                 return render_template('propagate/ajax/single_spatial.html')
             else:
-                mid = int(request.form.get('mid', ""))
-                beg_ts = float(request.form.get('beg_ts', ""))
-                end_ts = float(request.form.get('end_ts', ""))
-                blog_info = calculate_single(mid,beg_ts,end_ts)
-                area_list = blog_info['geo']
-
-                return json.dumps({'map_data': area_list})
+                mid = str(request.form.get('mid', ""))
+                area_list = readPropagateSpatialSingle(mid)
+                area_list_part = readPropagateSpatialSinglePart(mid)
+                return json.dumps({'map_data': area_list,'map_data_part': area_list_part})
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -959,22 +919,33 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
-                beg_ts = float(request.args.get('beg_ts', ""))
-                end_ts = float(request.args.get('end_ts', ""))
-                blog_info = calculate_single(mid,beg_ts,end_ts)
+                blog_info = readIndexSingle(mid)
 
                 tar_persistent_count = blog_info['persistent_index']
                 tar_sudden_count = blog_info['sudden_index']
                 tar_coverage_count = blog_info['coverage_index']
                 tar_media_count = blog_info['media_index']
                 tar_leader_count = blog_info['leader_index']
+
+                blog_info_part = readIndexSinglePart(mid)
+
+                tar_persistent_count_part = blog_info_part['persistent_index']
+                tar_sudden_count_part = blog_info_part['sudden_index']
+                tar_coverage_count_part = blog_info_part['coverage_index']
+                tar_media_count_part = blog_info_part['media_index']
+                tar_leader_count_part = blog_info_part['leader_index']
     
                 return render_template('propagate/ajax/single_stat.html',
                                         tar_persistent_count = tar_persistent_count,
                                         tar_sudden_count = tar_sudden_count,
                                         tar_coverage_count = tar_coverage_count,
                                         tar_media_count = tar_media_count,
-                                        tar_leader_count = tar_leader_count
+                                        tar_leader_count = tar_leader_count,
+                                        tar_persistent_count_part = tar_persistent_count_part,
+                                        tar_sudden_count_part = tar_sudden_count_part,
+                                        tar_coverage_count_part = tar_coverage_count_part,
+                                        tar_media_count_part = tar_media_count_part,
+                                        tar_leader_count_part = tar_leader_count_part
                 )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -1036,13 +1007,8 @@ def single_ajax_userfield():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                mid = int(request.args.get('mid', ""))
-                beg_ts = float(request.args.get('beg_ts', ""))
-                end_ts = float(request.args.get('end_ts', ""))
-                blog_info = calculate_single(mid,beg_ts,end_ts)
-
-                repost_bloger = blog_info['repost_users']
-                blog_key_user_list = repost_bloger
+                mid = str(request.args.get('mid', ""))
+                blog_key_user_list = readPropagateUserSingle(mid)
 
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
                 for result in blog_key_user_list:                    
@@ -1051,27 +1017,6 @@ def single_ajax_userfield():
                         area = 20
                     text = fieldsEn2Zh(fields_value[area])
                     domain[text] = domain[text] + 1
-
-                data1=[]
-                
-                if domain['财经'] >= 0:
-                    data1.append({'finance':domain['财经']})
-                if domain['媒体'] >= 0:
-                    data1.append({'media_domain':domain['媒体']})
-                if domain['文化'] >= 0:
-                    data1.append({'culture':domain['文化']})
-                if domain['科技'] >= 0:
-                    data1.append({'technology':domain['科技']})
-                if domain['娱乐'] >= 0:
-                    data1.append({'entertainment':domain['娱乐']})
-                if domain['教育'] >= 0:
-                    data1.append({'education':domain['教育']})
-                if domain['时尚'] >= 0:
-                    data1.append({'fashion':domain['时尚']})
-                if domain['体育'] >= 0:
-                    data1.append({'sports':domain['体育']})
-                if domain['境外'] >= 0:
-                    data1.append({'abroad':domain['境外']})
 
                 data2=[]
                 if domain['高校微博'] >= 0:
@@ -1100,7 +1045,45 @@ def single_ajax_userfield():
                     data2.append({'unknown':domain['其他']})
 
                 blog_key_user_list = blog_key_user_list[:100]
-                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data1=data1,data2=data2, beg_ts=beg_ts,end_ts=end_ts)
+
+                blog_key_user_list_part = readPropagateUserSinglePart(mid)
+
+                domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
+                for result in blog_key_user_list_part:                    
+                    area = user2domain(result['id'])
+                    if area == -1:
+                        area = 20
+                    text = fieldsEn2Zh(fields_value[area])
+                    domain[text] = domain[text] + 1
+
+                data_part=[]
+                if domain['高校微博'] >= 0:
+                    data_part.append({'university':domain['高校微博']})
+                if domain['境内机构'] >= 0:
+                    data_part.append({'homeadmin':domain['境内机构']})
+                if domain['境外机构'] >= 0:
+                    data_part.append({'abroadadmin':domain['境外机构']})
+                if domain['境内媒体'] >= 0:
+                    data_part.append({'homemedia':domain['境内媒体']})
+                if domain['境外媒体'] >= 0:
+                    data_part.append({'abroadmedia':domain['境外媒体']})
+                if domain['民间组织'] >= 0:
+                    data_part.append({'folkorg':domain['民间组织']})
+                if domain['律师'] >= 0:
+                    data_part.append({'lawyer':domain['律师']})
+                if domain['政府官员'] >= 0:
+                    data_part.append({'politician':domain['政府官员']})
+                if domain['媒体人士'] >= 0:
+                    data_part.append({'mediaworker':domain['媒体人士']})
+                if domain['活跃人士'] >= 0:
+                    data_part.append({'activer':domain['活跃人士']})
+                if domain['草根'] >= 0:
+                    data_part.append({'grassroot':domain['草根']})
+                if domain['其他'] >= 0:
+                    data_part.append({'unknown':domain['其他']})
+
+                blog_key_user_list_part = blog_key_user_list_part[:100]
+                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data2=data2, blog_key_user_list_part=blog_key_user_list_part, data_part=data_part)
             else:
                 pass
         else:
@@ -1164,9 +1147,8 @@ def add_material():
     mid = request.form['mid']
     mid = int(mid)
     time_date = str(request.form['time_ts'])
-    end_time = float(request.form['end_time'])
     time_ts = datetime2ts(time_date)
-
+    end_time = time_ts + 24*3600
     blog_info = calculate_single(mid,time_ts,end_time)
                                  
     blog_reposts_count = blog_info['status']['repostsCount']
@@ -1195,13 +1177,8 @@ def single_rank():
     if request.args.get('limit'):
         limit = int(request.args.get('limit'))
     if request.args.get('mid'):
-        mid = int(request.args.get('mid'))
-    if request.args.get('beg_ts'):
-        beg_ts = float(request.args.get('beg_ts'))
-        end_ts = float(request.args.get('end_ts'))
-    blog_info = calculate_single(mid,beg_ts,end_ts)
-    repost_bloger = blog_info['repost_users']
-    blog_key_user_list = repost_bloger
+        mid = str(request.args.get('mid'))
+    blog_key_user_list = readPropagateUserSingle(mid)
 
     if page == 1:
         startoffset = 0
@@ -1210,15 +1187,49 @@ def single_rank():
     endoffset = startoffset + countperpage
 
     news=[]
-    n = 0
-    for user in blog_key_user_list:
-        if user:
-            n = n + 1
-            if n >= startoffset:
-                if n >= endoffset:
-                    break
-                status = user_status(user['id'])
-                news.append({'id':user['id'],'name':user['name'],'location':user['location'],'followers_count':user['followers_count'],'bi_followers_count':user['bi_followers_count'],'statuses_count':user['statuses_count'],'status':status})
+    for i in range(0,len(blog_key_user_list)):
+        if i>=startoffset and i<endoffset:
+            status = user_status(blog_key_user_list[i]['id'])
+            area = user2domain(blog_key_user_list[i]['id'])
+            if area == -1:
+                area = 20
+            text = fieldsEn2Zh(fields_value[area])
+            news.append({'id':blog_key_user_list[i]['id'],'name':blog_key_user_list[i]['name'],'location':blog_key_user_list[i]['location'],'followers_count':blog_key_user_list[i]['follower'],'bi_followers_count':blog_key_user_list[i]['friend'],'statuses_count':blog_key_user_list[i]['status'],'status':status,'domain':text})
+    
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/single_rank_part/')
+def single_rank_part():
+    page = 1
+    countperpage = 10
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if request.args.get('mid'):
+        mid = str(request.args.get('mid'))
+    blog_key_user_list = readPropagateUserSinglePart(mid)
+
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+
+    news=[]
+    for i in range(0,len(blog_key_user_list)):
+        if i>=startoffset and i<endoffset:
+            status = user_status(blog_key_user_list[i]['id'])
+            area = user2domain(blog_key_user_list[i]['id'])
+            if area == -1:
+                area = 20
+            text = fieldsEn2Zh(fields_value[area])
+            news.append({'id':blog_key_user_list[i]['id'],'name':blog_key_user_list[i]['name'],'location':blog_key_user_list[i]['location'],'followers_count':blog_key_user_list[i]['follower'],'bi_followers_count':blog_key_user_list[i]['friend'],'statuses_count':blog_key_user_list[i]['status'],'status':status,'domain':text})
+    
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
@@ -1381,17 +1392,116 @@ def search_history():
 
 @mod.route('/topic/submit', methods=['GET','POST'])
 def topic_submit():
-    if 'logged_in' in session and session['logged_in']:        
-        if session['user'] == 'admin':
-            keyword = request.args.get('keyword', None)
-            time = request.args.get('time', None)
-            timestamp = request.args.get('timestamp', None)
-            timestamp = int(timestamp)
-            time = _utf_encode(time)
-            start_ts, end_ts = _time_zone(time)
-            start_ts = date2ts(start_ts)
-            end_ts = date2ts(end_ts)
-            status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
-            return 'success'#render_template('identify/topic.html', topic=keyword)
+
+    keyword = request.args.get('keyword', None)
+    time = request.args.get('time', None)
+    timestamp = request.args.get('timestamp', None)
+    timestamp = int(timestamp)
+    time = _utf_encode(time)
+    start_ts, end_ts = _time_zone(time)
+    start_ts = date2ts(start_ts)
+    end_ts = date2ts(end_ts)
+    status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
+    return 'success'
+
+@mod.route('/history_id.json', methods=['GET','POST'])
+def search_history_id():
+    if request.method == 'GET':
+        mid = request.args.get('mid',None)
+        now1 = request.args.get('now1', None)
+        now2 = request.args.get('now2', None)
+        now = request.args.get('now', None)
+        timestamp_end = request.args.get('timestamp', None)
+        if timestamp_end:
+            timestamp_end = int(timestamp_end)
+        if now1:
+            now1 = int(now1)
+        if now2:
+            now2 = int(now2)
+        if now:
+            now = int(now)
+        histories1 = None
+        histories2 = None
+        histories = None
+        if mid != None:
+            mid = str(mid)
+            status, histories = _search_history_weibo(mid)
+        else:
+            if now:
+                status, histories = _all_history_weibo(now)
+            if now1:
+                status, histories1 = _all_history_weibo(now1)
+            if now2 == 0:
+                status, histories2 = _all_history_weibo(now2)
+        histories_names = []
+        if histories1:
+            for history in histories1:
+                datestr  = str(history.postDate)
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.mid, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.mid, datestr])
+        if histories2:
+            for history in histories2:
+                datestr  = str(history.postDate)
+                if(timestamp_end):
+                    timestamp_start = int(history.db_date)
+                    time_pass = timestamp_end - timestamp_start
+                    time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = '       已计算时长： ' + str(time_pass)
+                    db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
+                    db_date = '     提交时间： ' + str(db_date)
+                    histories_names.append([history.mid, datestr, db_date, time_pass ])
+                else:
+                    histories_names.append([history.mid, datestr])                
+        if histories:
+            for history in histories:
+                datestr  = str(history.postDate)
+                histories_names.append([history.mid, datestr])
+        return json.dumps(histories_names)
     else:
-        return redirect('/')
+        operator = request.form.get('operator', 'add')
+        mid = request.form.get('mid', '')
+        postDate = request.form.get('postDate', '')
+        sentiment = request.form.get('sentiment', '')
+        if keyword != '' and postDate != '' and sentiment != '':
+            if operator == 'add':
+                status, item = _add_history_weibo(-1, mid, postDate, timestamp)
+                item = item.mid + '\t' + item.postDate + '\t' + item.status
+            else:
+                status, item = 'failed', 'Null'
+        else:
+            status, item = 'failed', 'Null'
+        return json.dumps({'status': status, 'item': item})
+
+@mod.route('/weibo/submit', methods=['GET','POST'])
+def weibo_submit():
+    mid = request.args.get('mid', None)
+    time = request.args.get('time', None)
+    timestamp = request.args.get('timestamp', None)
+    timestamp = int(timestamp)
+    time = _utf_encode(time)
+    start_ts, end_ts = _time_zone(time)
+    start_ts = date2ts(start_ts)
+    end_ts = date2ts(end_ts)
+    statuses_search = getXapianweiboByTs(start_ts, end_ts)
+    count,get_results = statuses_search.search(query={'_id': mid},fields=['timestamp'])
+    for r in get_results():
+        postDate = datetime.fromtimestamp(r['timestamp'])
+    status , item = _add_history_weibo(-1, mid, postDate, timestamp)
+    return 'success'
+
+@mod.route('/url2mid', methods=['GET','POST'])
+def url_mid():
+    url = request.args.get('url', None)
+    if url:
+        mid = get_mid(url)
+    else:
+        return 'Wrong'
+    return str(mid)

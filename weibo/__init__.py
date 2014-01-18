@@ -35,7 +35,7 @@ def create_app():
     # Enable the template editor, default to false
     app.config['DEBUG_TB_TEMPLATE_EDITOR_ENABLED'] = True
     # debug toolbar
-    toolbar = DebugToolbarExtension(app)
+    #toolbar = DebugToolbarExtension(app)
 
     # Create database
     db.init_app(app)

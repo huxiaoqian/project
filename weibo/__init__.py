@@ -10,6 +10,7 @@ from weibo.moodlens.views import mod as moodlensModule
 from weibo.profile.views import mod as profileModule
 from weibo.propagate.views import mod as propagateModule
 from weibo.sysadmin.views import mod as adminModule
+from weibo.graph.views import mod as graphModule
 
 import model
 
@@ -24,6 +25,7 @@ def create_app():
     app.register_blueprint(profileModule)
     app.register_blueprint(propagateModule)
     app.register_blueprint(adminModule)
+    app.register_blueprint(graphModule)
     
     
     # Enable the toolbar?

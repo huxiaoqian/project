@@ -1,13 +1,29 @@
 <link href="{{ url_for('static', filename='css/propagate/microblog.css') }}" rel="stylesheet">
 <style>
   .WB_feed_datail, .WB_feed_type {
-    width: 1000px;
+    width: 500px;
   }
   .WB_info, .WB_text, .WB_detail {
-    width: 950px;
+    width: 450px;
+  }
+  .WB_detail {
+    margin-left: 50px;
+  }
+  #count_chart_first {
+    float:left;
+    width: 49%;
+  }
+  #count_chart_second {
+    float:right;
+    width: 49%;
   }
 </style>
-<div class="well">
+<div class="well" style="height:1000px">
+<div id="count_chart_first">
+  <legend style="text-align:center;">整个转发树的相关微博</legend>
+  {% if not blog_info %}
+  <p>计算结果为空</p>
+  {% endif %}
 {% for status in blog_info %}
   <div class="WB_feed_type SW_fun  S_line2">
     <div class="WB_feed_datail S_line2 clearfix">
@@ -23,33 +39,41 @@
         <a><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
         <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
         <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
-        <a href="/propagate/showResult_single/?time={{ status['status']['created_at'] }}&mid={{ status['status']['_id'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
-        <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
-        <script>
-                          $("#ma{{ status['status']['_id'] }}").click(function () {
-                              var id=this.getAttribute("name");
-                              var weibo_time=$("#weibo_time"+id).html();
-                              $.ajax({   
-                                  type:"POST",  
-                                  url:"/propagate/add_material",
-                                  dataType: "json",
-                                  async:false,
-                                  data:{mid : id,time_ts : weibo_time},
-                                  success: function(data){
-                                      if(data == 'Right') {
-                                        alert("导入成功！");
-                                      }
-                                      else{
-                                        alert("该微博已在素材库中！");
-                                      } 
-                                  }              
-                              });
-                          });
-                      </script>
+        <em class="S_txt2">来自</em><a class="S_link2" >{{ status['status']['source'] }}</a>  
       </div>
       <div class="WB_from">
-        <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a> 
-        <em class="S_txt2">来自</em><a class="S_link2" >{{ status['status']['source'] }}</a>                           
+        <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a>                                  
+      </div>
+      <div class="WB_handle">
+        <a href="/propagate/?mid={{ status['status']['_id'] }}&time={{ status['status']['created_at'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
+        <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
+        <script>
+
+            $("#ma{{ status['status']['_id'] }}").click(function () {
+              var id=this.getAttribute("name");
+              var ori_mid='{{mid}}';
+              $.ajax({   
+                  type:"POST",  
+                  url:"/propagate/add_material",
+                  dataType: "json",
+                  async:false,
+                  data:{mid : id, ori_mid : ori_mid, flag: 0},
+                  success: function(data){
+                      if(data == 'Right') {
+                          alert("导入成功！");
+                      }
+                      else{
+                          if(data == 'Wrong'){
+                            alert("该微博已在素材库中！");
+                          }
+                          else{
+                            alert("未找到该微博！");
+                          }
+                      } 
+                  }              
+              });
+            });
+        </script>
       </div>
     </div>
     <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
@@ -57,4 +81,67 @@
     </div>
   </div>
 {% endfor %}
+</div>
+<div id="count_chart_second">
+  <legend style="text-align:center;">以该微博为顶点的转发树的相关微博</legend>
+  {% if not blog_info_part %}
+  <p>计算结果为空</p>
+  {% endif %}
+{% for status in blog_info_part %}
+  <div class="WB_feed_type SW_fun  S_line2">
+    <div class="WB_feed_datail S_line2 clearfix">
+      <div class="WB_face">
+      <a class="W_face_radius"><img alt="" width="50" height="50" src="{{ status['user']['profile_image_url'] }}"></a>
+      </div>
+    <div class="WB_detail">
+      <div class="WB_info"><a class="WB_name S_func1"> {{ status['user']['name'] }} </a>
+      </div>
+      <div class="WB_text" node-type="feed_list_content">{{ status['status']['text'] }}</div>
+    <div class="WB_func clearfix">
+      <div class="WB_handle">
+        <a><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
+        <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
+        <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
+        <em class="S_txt2">来自</em><a class="S_link2" >{{ status['status']['source'] }}</a> 
+      </div>
+      <div class="WB_from">
+        <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a>                                   
+      </div>
+      <div class="WB_handle">
+        <a href="/propagate/?mid={{ status['status']['_id'] }}&time={{ status['status']['created_at'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
+        <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
+        <script>
+            $("#ma{{ status['status']['_id'] }}").click(function () {
+                var id=this.getAttribute("name");
+                var ori_mid='{{mid}}';
+                $.ajax({   
+                    type:"POST",  
+                    url:"/propagate/add_material",
+                    dataType: "json",
+                    async:false,
+                    data:{mid : id, ori_mid : ori_mid, flag: 1},
+                    success: function(data){
+                        if(data == 'Right') {
+                            alert("导入成功！");
+                        }
+                        else{
+                          if(data == 'Wrong'){
+                            alert("该微博已在素材库中！");
+                          }
+                          else{
+                            alert("未找到该微博！");
+                          }
+                        } 
+                    }              
+                });
+            });
+        </script>
+      </div>
+    </div>
+    <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
+    </div>
+    </div>
+  </div>
+{% endfor %}
+</div>
 </div>

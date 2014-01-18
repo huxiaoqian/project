@@ -1,6 +1,6 @@
 <style>
   .sub_item{
-    width:350px;
+    width:250px;
     height:24px;   
     padding: 5px;
     margin:5px;
@@ -11,29 +11,42 @@
     display:block;
   }
   .itemlabel{
-    width:200px;
+    width:120px;
     min-height:5px;   
     padding: 5px;
     margin:5px;
     float:left;
-    font-size:20px;
+    font-size:14px;
     color:#0080FF;
     text-align:center;
     display:block;
   }
   .itemtext{
-    width:100px;
+    width:70px;
     min-height:5px;   
     padding: 5px;
     margin:5px;
     float:left;
-    font-size:20px;
+    font-size:14px;
     color:black;
     text-align:left;
     display:block;
   }
+  #main_first {
+    float:left;
+    width: 49%;
+  }
+  #main_second {
+    float:right;
+    width: 49%;
+  }
 </style>
 <div>
+  <div id="main_first">
+  <legend style="text-align:center;">整个转发树的传播指标</legend>
+  {% if (tar_persistent_count==0)and(tar_sudden_count==0)and(tar_coverage_count==0)and(tar_media_count==0)and(tar_leader_count==0) %}
+  <p>计算结果为空</p>
+  {% else %}
   <div class="sub_item">
 	<div class="itemlabel">持续性：</div>
 	<div class="itemtext">{{ tar_persistent_count }}</div>
@@ -52,11 +65,40 @@
   </div>
   <div class="sub_item">
     <div class="itemlabel">舆论领袖渗透度：</div>
-    <div class="itemtext">{{ topic_leader_count }}</div>
+    <div class="itemtext">{{ tar_leader_count }}</div>
+  </div>
+  {% endif %}
+  </div>
+  <div id="main_second">
+  <legend style="text-align:center;">以该微博为顶点的转发树的传播指标</legend>
+  {% if (tar_persistent_count_part==0)and(tar_sudden_count_part==0)and(tar_coverage_count_part==0)and(tar_media_count_part==0)and(tar_leader_count_part==0) %}
+  <p>计算结果为空</p>
+  {% else %}
+  <div class="sub_item">
+  <div class="itemlabel">持续性：</div>
+  <div class="itemtext">{{ tar_persistent_count_part }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">爆发力：</div>
+    <div class="itemtext">{{ tar_sudden_count_part }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">覆盖度：</div>
+    <div class="itemtext">{{ tar_coverage_count_part }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">重要媒体渗透度：</div>
+    <div class="itemtext">{{ tar_media_count_part }}</div>
+  </div>
+  <div class="sub_item">
+    <div class="itemlabel">舆论领袖渗透度：</div>
+    <div class="itemtext">{{ tar_leader_count_part }}</div>
+  </div>
+  {% endif %}
   </div>
 </div>
 
-<div style="float:left">
+<div style="float:left;padding-top:20px;">
 	<h3>指标释意</h3>
 	<p>持续性：截止目前（第i天），原创微博数和转发微博数之和超出i日均线的天数</p>
 	<p>爆发力：截止目前（第i天），超出i日均线的原创微博数和转发微博数之和与截止目前的所有原创微博数和转发微博数之和的比例</p>

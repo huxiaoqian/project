@@ -551,19 +551,19 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
     blog_info['key_reposter'] = user_data
     blog_info['weibo'] = weibo_data
 
-    save_base_infor(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['sourcePlatform'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
+    save_base_infor_part(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['sourcePlatform'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
 
     perday_blog_count = blog_info['perday_count']
     date_list = blog_info['datelist']   
     for i in range(0,len(date_list)):
-        save_daily_count(blog_info['status']['id'],date_list[i],perday_blog_count[i])
+        save_daily_count_part(blog_info['status']['id'],date_list[i],perday_blog_count[i])
 
     for d,x in blog_info['geo'].items():
-        save_map(blog_info['status']['id'],d,x)
+        save_map_part(blog_info['status']['id'],d,x)
 
     for i in range(0,len(blog_info['key_reposter'])):
         uid = blog_info['key_reposter'][i][1]
-        save_user(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
+        save_user_part(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
 
     if len(blog_info['weibo'])>=5:
         top_weibo = blog_info['weibo'][:5]
@@ -571,7 +571,7 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
         top_weibo = blog_info['weibo']
     for i in range(0,len(top_weibo)):
         mid = top_weibo[i][1]
-        save_weibo(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['text'],topic_rel_blog[mid]['sourcePlatform'],topic_rel_blog[mid]['postDate'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['repostsCount'],topic_rel_blog[mid]['commentsCount'],topic_rel_blog[mid]['attitudesCount'])
+        save_weibo_part(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['text'],topic_rel_blog[mid]['sourcePlatform'],topic_rel_blog[mid]['postDate'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['repostsCount'],topic_rel_blog[mid]['commentsCount'],topic_rel_blog[mid]['attitudesCount'])
   
     return 'Done'
 
@@ -589,29 +589,28 @@ def save_base_infor_part(mid, image_url, text, sourcePlatform, postDate, uid, us
     media = float(media)
     leader = float(leader)
 
-    print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
-##    new_item = PropagateSinglePart(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
-##    db.session.add(new_item)
-##    db.session.commit()
-##    db.session.refresh(new_item)
+    #print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
+    new_item = PropagateSinglePart(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_daily_count_part(mid,date,perday_blog_count):#mid、日期、微博数
 
     date = ts2datetime(time.mktime(date.timetuple()))
     perday_blog_count = int(perday_blog_count)
 
-    print mid,date,perday_blog_count
-##    new_item = PropagateTrendSinglePart(mid,date,perday_blog_count)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print mid,date,perday_blog_count
+    new_item = PropagateTrendSinglePart(mid,date,perday_blog_count)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_map_part(mid,city,count):#mid、城市、数量
 
     count = int(count)
-    print mid,city,count
-##    new_item = PropagateSpatialSinglePart(mid,city,count)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print mid,city,count
+    new_item = PropagateSpatialSinglePart(mid,city,count)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_user_part(mid,uid,name,location,follower,friend,status,description,profile_image_url):#mid、用户id、用户昵称、地址、粉丝数、关注数、微博数、个人描述
 
@@ -621,10 +620,10 @@ def save_user_part(mid,uid,name,location,follower,friend,status,description,prof
     status = int(status)
     if not description:
         description = 'None'
-    print mid,user,name,location,follower,friend,status,description,profile_image_url
-##    new_item = PropagateUserSinglePart(mid,user,name,location,follower,friend,status,description,profile_image_url)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print mid,user,name,location,follower,friend,status,description,profile_image_url
+    new_item = PropagateUserSinglePart(mid,user,name,location,follower,friend,status,description,profile_image_url)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_weibo_part(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount):#mid、微博
 
@@ -635,10 +634,10 @@ def save_weibo_part(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_n
     commentsCount = int(commentsCount)
     attitudesCount = int(attitudesCount)
 
-    print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
-##    new_item = PropagateWeiboSinglePart(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
+    new_item = PropagateWeiboSinglePart(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_base_infor(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader):#微博id、头像url、内容、来源、发布时间、用户id、用户昵称、转发数、评论数、赞数、4个指标
 
@@ -654,29 +653,28 @@ def save_base_infor(mid, image_url, text, sourcePlatform, postDate, uid, user_na
     media = float(media)
     leader = float(leader)
 
-    print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
-##    new_item = PropagateSingle(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
-##    db.session.add(new_item)
-##    db.session.commit()
-##    db.session.refresh(new_item)
+    #print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
+    new_item = PropagateSingle(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_daily_count(mid,date,perday_blog_count):#mid、日期、微博数
 
     date = ts2datetime(time.mktime(date.timetuple()))
     perday_blog_count = int(perday_blog_count)
 
-    print mid,date,perday_blog_count
-##    new_item = PropagateTrendSingle(mid,date,perday_blog_count)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print mid,date,perday_blog_count
+    new_item = PropagateTrendSingle(mid,date,perday_blog_count)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_map(mid,city,count):#mid、城市、数量
 
     count = int(count)
-    print mid,city,count
-##    new_item = PropagateSpatialSingle(mid,city,count)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print mid,city,count
+    new_item = PropagateSpatialSingle(mid,city,count)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_user(mid,uid,name,location,follower,friend,status,description,profile_image_url):#mid、用户id、用户昵称、地址、粉丝数、关注数、微博数、个人描述
 
@@ -686,10 +684,10 @@ def save_user(mid,uid,name,location,follower,friend,status,description,profile_i
     status = int(status)
     if not description:
         description = 'None'
-    print mid,user,name,location,follower,friend,status,description,profile_image_url
-##    new_item = PropagateUserSingle(mid,user,name,location,follower,friend,status,description,profile_image_url)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print mid,user,name,location,follower,friend,status,description,profile_image_url
+    new_item = PropagateUserSingle(mid,user,name,location,follower,friend,status,description,profile_image_url)
+    db.session.add(new_item)
+    db.session.commit()
 
 def save_weibo(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount):#mid、微博
 
@@ -700,10 +698,10 @@ def save_weibo(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,r
     commentsCount = int(commentsCount)
     attitudesCount = int(attitudesCount)
 
-    print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
-##    new_item = PropagateWeiboSingle(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount)
-##    db.session.add(new_item)
-##    db.session.commit()
+    #print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
+    new_item = PropagateWeiboSingle(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount)
+    db.session.add(new_item)
+    db.session.commit()
 
 if __name__ == "__main__":
 

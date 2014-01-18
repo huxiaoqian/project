@@ -6,6 +6,9 @@
   .WB_info, .WB_text, .WB_detail {
     width: 950px;
   }
+  .WB_detail {
+    margin-left: 50px;
+  }
 </style>
 <div class="well">
 {% for status in topic_info %}
@@ -23,29 +26,34 @@
         <a><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
         <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
         <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
-        <a href="/propagate/showresult_single/?time={{ status['status']['created_at'] }}&mid={{ status['status']['_id'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
+        <a href="/propagate/?mid={{ status['status']['_id'] }}&time={{ status['status']['created_at'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
         <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
-                      <script>
-                          $("#ma{{ status['status']['_id'] }}").click(function () {
-                              var id=this.getAttribute("name");
-                              var weibo_time=$("#weibo_time"+id).html();
-                              $.ajax({   
-                                  type:"POST",  
-                                  url:"/propagate/add_material",
-                                  dataType: "json",
-                                  async:false,
-                                  data:{mid : id,time_ts : weibo_time},
-                                  success: function(data){
-                                      if(data == 'Right') {
-                                        alert("导入成功！");
-                                      }
-                                      else{
-                                        alert("该微博已在素材库中！");
-                                      } 
-                                  }              
-                              });
-                          });
-                      </script>
+        <script>
+            $("#ma{{ status['status']['_id'] }}").click(function () {
+                var id=this.getAttribute("name");
+                var topic_id='{{topic_id}}';
+                $.ajax({   
+                    type:"POST",  
+                    url:"/propagate/add_material_topic",
+                    dataType: "json",
+                    async:false,
+                    data:{mid : id, topic_id : topic_id},
+                    success: function(data){
+                        if(data == 'Right') {
+                            alert("导入成功！");
+                        }
+                        else{
+                          if(data == 'Wrong'){
+                            alert("该微博已在素材库中！");
+                          }
+                          else{
+                            alert("未找到该微博！");
+                          }
+                        } 
+                    }              
+                });
+            });
+        </script>
       </div>
       <div class="WB_from">
         <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a> 

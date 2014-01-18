@@ -13,9 +13,9 @@ __all__ = ['Field', 'Topic', \
            'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', \
            'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
            'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
-           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf']
-
-
+           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf', \
+           'WeiboStatus', 'PropagateSingle', 'PropagateTrendSingle', 'PropagateSpatialSingle', 'PropagateUserSingle', 'PropagateWeiboSingle',\
+           'PropagateSinglePart', 'PropagateTrendSinglePart', 'PropagateSpatialSinglePart', 'PropagateUserSinglePart', 'PropagateWeiboSinglePart']
 
 class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -651,6 +651,220 @@ class PropagateWeibo(db.Model):
 
     def __init__(self, topic_id, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount):
         self.topic_id = topic_id 
+        self.mid = mid
+        self.image_url = image_url
+        self.text = text
+        self.sourcePlatform = sourcePlatform
+        self.postDate = postDate
+        self.uid = uid
+        self.user_name = user_name
+        self.repostsCount = repostsCount
+        self.commentsCount = commentsCount
+        self.attitudesCount = attitudesCount
+
+class PropagateSingle(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    image_url = db.Column(db.String(50))
+    text = db.Column(db.Text)
+    sourcePlatform = db.Column(db.String(20))
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.String(20))
+    user_name = db.Column(db.String(20))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    attitudesCount = db.Column(db.Integer)
+    persistent = db.Column(db.Float)
+    sudden = db.Column(db.Float)
+    coverage = db.Column(db.Float)
+    media = db.Column(db.Float)
+    leader = db.Column(db.Float)
+
+    def __init__(self, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader):
+        self.mid = mid
+        self.image_url = image_url
+        self.text = text
+        self.sourcePlatform = sourcePlatform
+        self.postDate = postDate
+        self.uid = uid
+        self.user_name = user_name
+        self.repostsCount = repostsCount
+        self.commentsCount = commentsCount
+        self.attitudesCount = attitudesCount
+        self.persistent = persistent
+        self.sudden = sudden
+        self.coverage = coverage
+        self.media = media
+        self.leader = leader
+
+class PropagateTrendSingle(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    date = db.Column(db.Date)
+    count = db.Column(db.BigInteger(10, unsigned=True))
+
+    def __init__(self, mid, date, count):
+        self.mid = mid 
+        self.date = date
+        self.count = count
+
+class PropagateSpatialSingle(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    city = db.Column(db.String(20))
+    count = db.Column(db.BigInteger(10, unsigned=True))
+
+    def __init__(self, mid, city, count):
+        self.mid = mid 
+        self.city = city
+        self.count = count
+
+class PropagateUserSingle(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    user = db.Column(db.String(20))
+    user_name = db.Column(db.String(50))
+    location = db.Column(db.String(50))
+    follower = db.Column(db.Integer)
+    friend = db.Column(db.Integer)
+    status = db.Column(db.Integer)
+    description = db.Column(db.Text)
+    image_url = db.Column(db.String(50))
+
+    def __init__(self, mid, user, user_name, location, follower, friend, status, description,image_url):
+        self.mid = mid 
+        self.user = user
+        self.user_name = user_name
+        self.location = location
+        self.follower = follower
+        self.friend = friend
+        self.status = status
+        self.description = description
+        self.image_url = image_url
+
+class PropagateWeiboSingle(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    ori_mid = db.Column(db.String(30))
+    mid = db.Column(db.String(30))
+    image_url = db.Column(db.String(50))
+    text = db.Column(db.Text)
+    sourcePlatform = db.Column(db.String(20))
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.String(20))
+    user_name = db.Column(db.String(20))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    attitudesCount = db.Column(db.Integer)
+
+    def __init__(self, ori_mid, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount):
+        self.ori_mid = ori_mid 
+        self.mid = mid
+        self.image_url = image_url
+        self.text = text
+        self.sourcePlatform = sourcePlatform
+        self.postDate = postDate
+        self.uid = uid
+        self.user_name = user_name
+        self.repostsCount = repostsCount
+        self.commentsCount = commentsCount
+        self.attitudesCount = attitudesCount
+
+class PropagateSinglePart(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    image_url = db.Column(db.String(50))
+    text = db.Column(db.Text)
+    sourcePlatform = db.Column(db.String(20))
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.String(20))
+    user_name = db.Column(db.String(20))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    attitudesCount = db.Column(db.Integer)
+    persistent = db.Column(db.Float)
+    sudden = db.Column(db.Float)
+    coverage = db.Column(db.Float)
+    media = db.Column(db.Float)
+    leader = db.Column(db.Float)
+
+    def __init__(self, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader):
+        self.mid = mid
+        self.image_url = image_url
+        self.text = text
+        self.sourcePlatform = sourcePlatform
+        self.postDate = postDate
+        self.uid = uid
+        self.user_name = user_name
+        self.repostsCount = repostsCount
+        self.commentsCount = commentsCount
+        self.attitudesCount = attitudesCount
+        self.persistent = persistent
+        self.sudden = sudden
+        self.coverage = coverage
+        self.media = media
+        self.leader = leader
+
+class PropagateTrendSinglePart(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    date = db.Column(db.Date)
+    count = db.Column(db.BigInteger(10, unsigned=True))
+
+    def __init__(self, mid, date, count):
+        self.mid = mid 
+        self.date = date
+        self.count = count
+
+class PropagateSpatialSinglePart(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    city = db.Column(db.String(20))
+    count = db.Column(db.BigInteger(10, unsigned=True))
+
+    def __init__(self, mid, city, count):
+        self.mid = mid 
+        self.city = city
+        self.count = count
+
+class PropagateUserSinglePart(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    mid = db.Column(db.String(30))
+    user = db.Column(db.String(20))
+    user_name = db.Column(db.String(50))
+    location = db.Column(db.String(50))
+    follower = db.Column(db.Integer)
+    friend = db.Column(db.Integer)
+    status = db.Column(db.Integer)
+    description = db.Column(db.Text)
+    image_url = db.Column(db.String(50))
+
+    def __init__(self, mid, user, user_name, location, follower, friend, status, description,image_url):
+        self.mid = mid 
+        self.user = user
+        self.user_name = user_name
+        self.location = location
+        self.follower = follower
+        self.friend = friend
+        self.status = status
+        self.description = description
+        self.image_url = image_url
+
+class PropagateWeiboSinglePart(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    ori_mid = db.Column(db.String(30))
+    mid = db.Column(db.String(30))
+    image_url = db.Column(db.String(50))
+    text = db.Column(db.Text)
+    sourcePlatform = db.Column(db.String(20))
+    postDate = db.Column(db.DateTime)
+    uid = db.Column(db.String(20))
+    user_name = db.Column(db.String(20))
+    repostsCount = db.Column(db.Integer)
+    commentsCount = db.Column(db.Integer)
+    attitudesCount = db.Column(db.Integer)
+
+    def __init__(self, ori_mid, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount):
+        self.ori_mid = ori_mid 
         self.mid = mid
         self.image_url = image_url
         self.text = text

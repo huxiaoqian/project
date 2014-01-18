@@ -7,34 +7,34 @@
     width: 950px;
   }
 </style>
+<div class="well">
+{% for status in blog_info %}
   <div class="WB_feed_type SW_fun  S_line2">
     <div class="WB_feed_datail S_line2 clearfix">
       <div class="WB_face">
-      <a class="W_face_radius"><img alt="" width="50" height="50" src="{{ tar_profile_image_url }}"></a>
+      <a class="W_face_radius"><img alt="" width="50" height="50" src="{{ status['user']['profile_image_url'] }}"></a>
       </div>
     <div class="WB_detail">
-      <div class="WB_info"><a class="WB_name S_func1"> {{ tar_screen_name }} </a>
+      <div class="WB_info"><a class="WB_name S_func1"> {{ status['user']['name'] }} </a>
       </div>
-      <div class="WB_text" node-type="feed_list_content">{{ tar_text }}</div>
+      <div class="WB_text" node-type="feed_list_content">{{ status['status']['text'] }}</div>
     <div class="WB_func clearfix">
       <div class="WB_handle">
-        <a><em class="W_ico20 icon_praised_b"></em>赞:{{ tar_attitudes_count }}</a><i class="S_txt3">|</i>
-        <a>转发:{{ tar_repost_count }}</a><i class="S_txt3">|</i>
-        <a>评论:{{ tar_comments_count }}</a><i class="S_txt3">|</i>
-        <a href="/propagate/showResult_single/?time={{ tar_post_date }}&mid={{ tar_id }}&flag=1" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
-        <a id="ma{{ tar_id }}" name ="{{ tar_id }}" style="color:red;">导入素材库</a>
+        <a><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
+        <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
+        <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
+        <a href="/propagate/showResult_single/?time={{ status['status']['created_at'] }}&mid={{ status['status']['_id'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
+        <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
         <script>
-                          $("#ma{{ tar_id }}").click(function () {
+                          $("#ma{{ status['status']['_id'] }}").click(function () {
                               var id=this.getAttribute("name");
                               var weibo_time=$("#weibo_time"+id).html();
-                              var end_time = '{{end_time}}';
-                              console.log(weibo_time);
                               $.ajax({   
                                   type:"POST",  
                                   url:"/propagate/add_material",
                                   dataType: "json",
                                   async:false,
-                                  data:{mid : id,time_ts : weibo_time,end_time: end_time},
+                                  data:{mid : id,time_ts : weibo_time},
                                   success: function(data){
                                       if(data == 'Right') {
                                         alert("导入成功！");
@@ -48,11 +48,13 @@
                       </script>
       </div>
       <div class="WB_from">
-        <a class="S_link2 WB_time" id="weibo_time{{ tar_id }}">{{ tar_post_date }}</a> 
-        <em class="S_txt2">来自</em><a class="S_link2" >{{ tar_source }}</a>                           
+        <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a> 
+        <em class="S_txt2">来自</em><a class="S_link2" >{{ status['status']['source'] }}</a>                           
       </div>
     </div>
     <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
     </div>
     </div>
   </div>
+{% endfor %}
+</div>

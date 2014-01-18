@@ -16,7 +16,7 @@ def _all_history_weibo(status, module='propagate'):
 
 
 def _search_history_weibo(mid, module='propagate'):
-    histories = History.query.filter_by(topic=mid, status=1, module=module).all()
+    histories = History.query.filter_by(mid=mid, status=1, module=module).all()
     if histories:
         return 'success', histories
     else:

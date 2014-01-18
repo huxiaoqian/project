@@ -26,6 +26,10 @@ def main():
 
         result  = calculate_single(mid,time_ts,end_ts)#计算整个转发树结构
         print result
+        #idlist表示以mid为顶点的子树结构中，包含的微博id（mid除外）
+        #idlist必须要先构建整个转发树才能得到
+        result  = calculate_part(mid,time_ts,end_ts,idlist)#计算整个子树结构
+        print result
         _update_single_status2Completed(mid, postDate, db_date)
 
 

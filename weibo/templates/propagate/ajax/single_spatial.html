@@ -1,31 +1,41 @@
 <style>
 /* china map style*/
+  /*
+  #main_first {
+    float:left;
+    width: 49%;
+  }
+  #main_second {
+    float:right;
+    width: 49%;
+  }*/
   #main{
-    width:800px;
-    text-align:center;
+    width:100%;
     margin:0 auto;
   }
-  #Summary{
+  #Summary_first,#Summary_second{
   padding:0px;
-  margin:0 auto 10px 40px;
+  margin:0 auto;
   float:left;
   text-align:center;
   }
-  #Map{
+  #Map_first,#Map_second{
       padding:0px;
       float:left;
       text-align:center;
   }
-  #ChinaMap, #ColorBar{
-      width:560px;
+  #ChinaMap_first,#ChinaMap_second, #ColorBar_first,#ColorBar_second{
       margin:0 auto;
       text-align:center
+  }
+  #ColorBar_first,#ColorBar_second{
+    width:280px;
   }
   .clear-float{clear:both}
   #tiplayer{position:absolute;z-index:1000;max-width:250px;word-wrap:break-word;background:#000;text-align:left;padding:5px;min-height:1em;-moz-border-radius:3px;-khtml-border-radius:3px;-webkit-border-radius:3px;border-radius:3px;color:#fff;font:12px 'Microsoft YaHei',Arial,Tahoma,Sans-Serif;}
 
   #gradient_bar {
-    margin: 178px 20px auto 0px;
+    margin: 10px 10px auto 400px;
     text-align:center; 
     float: left;
     padding: 0px;
@@ -36,15 +46,14 @@
     list-style: none;
     margin: 0;
   } 
-  #gradient_bar ul li {
-    width: 20px;
-    height: 20px;
+  #gradient_bar li {
     display: block;
     padding: 0;
     position: relative;
     overflow: hidden;
+    float: left;
   }
-  #gradient_bar ul li a {
+  #gradient_bar li a {
     width: 30px;
     height: 28px;
     display: block;
@@ -63,15 +72,24 @@
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
   }
 </style>
-<div id="main">
-  <div id="Summary"></div>
+<div id="main" class="container">
+  <div id="main_first" class="span6">
+    <legend style="text-align:center;">整个转发树的地理分布</legend>
+    <div id="Summary_first"></div>
+    <div id="Map_first"><div id="ChinaMap_first"></div></div>
+    <div class="clear-float"></div>
+  </div>
+  <div id="main_second" class="span6">
+    <legend style="text-align:center;">以该微博为顶点的转发树的地理分布</legend>
+    <div id="Summary_second"></div>
+    <div id="Map_second"><div id="ChinaMap_second"></div></div>
+    <div class="clear-float"></div>
+  </div>
   <div class="harmonies gradient" id="gradient_bar">
     <ul>
       <li style="background-color:#ffffff;"><a href="#ffffff" class="txtb">#ffffff</a></li><li style="background-color:#ffebeb;"><a href="#ffebeb" class="txtb">#ffebeb</a></li><li style="background-color:#ffd8d8;"><a href="#ffd8d8" class="txtb">#ffd8d8</a></li><li style="background-color:#ffc4c4;"><a href="#ffc4c4" class="txtb">#ffc4c4</a></li><li style="background-color:#ffb1b1;"><a href="#ffb1b1" class="txtb">#ffb1b1</a></li><li style="background-color:#ff9d9d;"><a href="#ff9d9d" class="txtb">#ff9d9d</a></li><li style="background-color:#ff8989;"><a href="#ff8989" class="txtb">#ff8989</a></li><li style="background-color:#ff7676;"><a href="#ff7676" class="txtb">#ff7676</a></li><li style="background-color:#ff6262;"><a href="#ff6262" class="txtb">#ff6262</a></li><li style="background-color:#ff4e4e;"><a href="#ff4e4e" class="txtb">#ff4e4e</a></li><li style="background-color:#ff3b3b;"><a href="#ff3b3b" class="txtw">#ff3b3b</a></li><li style="background-color:#ff2727;"><a href="#ff2727" class="txtw">#ff2727</a></li><li style="background-color:#ff1414;"><a href="#ff1414" class="txtw">#ff1414</a></li><li style="background-color:#ff0000;"><a href="#ff0000" class="txtw">#ff0000</a></li>
     </ul>
   </div>
-  <div id="Map"><div id="ChinaMap"></div></div>
-  <div class="clear-float"></div>
 </div>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/raphael.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/chinamap.js') }}"></script>
@@ -84,6 +102,8 @@
 	success:function(data){
 	   var map_data = data['map_data'];
        drawChinamap(map_data);
+     var map_data_part = data['map_data_part'];
+       drawChinamap_part(map_data_part);
 	}
   });
 </script>

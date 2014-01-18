@@ -1,5 +1,18 @@
+<style>
+  #count_chart_first {
+    float:left;
+    height: 500px;
+    width: 49%;
+  }
+  #count_chart_second {
+    float:right;
+    height: 500px;
+    width: 49%;
+  }
+</style>
 <div class="container">
-	<div id="count_chart" style="height: 500px;width: 900px; margin: 0px auto auto 200px;"></div>
+	<div id="count_chart_first"></div>
+  <div id="count_chart_second"></div>
 </div>
 <script>
   $.ajax({
@@ -8,24 +21,44 @@
 	data: request_data_dict,
 	type:"POST",
 	success:function(data){
-    console.log(data);
-		display_trend_chart(data);
+		display_trend_chart_first(data);
+    display_trend_chart_second(data);
 	}
   });
-  function display_trend_chart(data){
-  	$('#count_chart').highcharts('StockChart', {
+  function display_trend_chart_first(data){
+  	$('#count_chart_first').highcharts('StockChart', {
  
       rangeSelector : {
         selected : 1
       },
 
       title : {
-        text : '传播趋势'
+        text : '整个转发树传播趋势'
       },
       
       series : [{
         name : '微博数量',
         data : data['perday_blog_count'],
+        tooltip: {
+          valueDecimals: 2
+        }
+      }]
+    });
+  }
+  function display_trend_chart_second(data){
+    $('#count_chart_second').highcharts('StockChart', {
+ 
+      rangeSelector : {
+        selected : 1
+      },
+
+      title : {
+        text : '以该微博为顶点的转发树传播趋势'
+      },
+      
+      series : [{
+        name : '微博数量',
+        data : data['perday_blog_count_part'],
         tooltip: {
           valueDecimals: 2
         }

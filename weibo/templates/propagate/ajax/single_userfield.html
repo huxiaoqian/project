@@ -106,6 +106,9 @@
 <div class = "span12" >
   <legend>关键传播用户</legend>
   <div id="thumbnail">
+    {% if not blog_key_user_list %}
+    <p>计算结果为空</p>
+    {% endif %}
     {% for u in blog_key_user_list %}
       <div class="grid">
         <div id="imgholder"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>

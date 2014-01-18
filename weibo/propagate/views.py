@@ -172,6 +172,19 @@ def getXapianweiboByTs(start_time, end_time):
     statuses_search = getXapianWeiboByDuration(xapian_date_list)
     return statuses_search
 
+def timechange(time_str):
+    year,month,day = time_str.split('-')
+    return str(month)+'月 '+str(day)+','+str(year)
+
+def date2timestr(time):
+    time_ts = datetime2ts(time)
+    end_ts = time_ts + 24*3600
+    time_str = str(ts2datetime(time_ts))
+    end_str = str(ts2datetime(end_ts))
+    beg = timechange(time_str)
+    end = timechange(end_str)
+    print beg,end
+    return str(beg)+' - '+str(end)
 
 def fieldsEn2Zh(name):
     if name == 'finance':
@@ -231,8 +244,14 @@ def log_in():
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            
-            return render_template('propagate/search.html')
+            mid = request.args.get('mid', '')
+            time = str(request.args.get('time', ''))
+            if mid:
+                time_str = date2timestr(time)
+                time_str = _utf_decode(time_str)
+                return render_template('propagate/search.html',mid=mid,time_str=time_str)
+            else:
+                return render_template('propagate/search.html')
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -240,7 +259,14 @@ def index():
                     identy = pa.propagate
                     if identy == 1:
      
-                        return render_template('propagate/search.html')
+                        mid = request.args.get('mid', '')
+                        time = str(request.args.get('time', ''))
+                        if mid:
+                            time_str = date2timestr(time)
+                            time_str = _utf_decode(time_str)
+                            return render_template('propagate/search.html',mid=mid,time_str=time_str)
+                        else:
+                            return render_template('propagate/search.html')
                     else:
                         return redirect('/')
             return redirect('/')

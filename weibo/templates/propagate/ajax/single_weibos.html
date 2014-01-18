@@ -45,12 +45,12 @@
         <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a>                                  
       </div>
       <div class="WB_handle">
-        <a href="/propagate/showResult_single/?time={{ status['status']['created_at'] }}&mid={{ status['status']['_id'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
+        <a href="/propagate/?mid={{ status['status']['_id'] }}&time={{ status['status']['created_at'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
         <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
         <script>
+
             $("#ma{{ status['status']['_id'] }}").click(function () {
               var id=this.getAttribute("name");
-              var weibo_time=$("#weibo_time"+id).html();
               var ori_mid='{{mid}}';
               $.ajax({   
                   type:"POST",  
@@ -108,13 +108,12 @@
         <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a>                                   
       </div>
       <div class="WB_handle">
-        <a href="/propagate/showResult_single/?time={{ status['status']['created_at'] }}&mid={{ status['status']['_id'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
+        <a href="/propagate/?mid={{ status['status']['_id'] }}&time={{ status['status']['created_at'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
         <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
         <script>
             $("#ma{{ status['status']['_id'] }}").click(function () {
                 var id=this.getAttribute("name");
                 var ori_mid='{{mid}}';
-                console.log(ori_mid);
                 $.ajax({   
                     type:"POST",  
                     url:"/propagate/add_material",

@@ -18,15 +18,17 @@ from datetime import date, datetime
 from city_color import province_color_map
 from operator import itemgetter
 from flask.ext import admin
-from time_utils import datetimestr2ts
-from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
-from utils import acquire_topic_id, weiboinfo2url, ts2hour, ts2date, getFieldUsersByScores, datetime2ts, \
-                  last_day, ts2datetime, ts2HMS, last_week_to_date, getUserNameById, getUserIdByName, \
-                  merge, getUsersInfoByUidInteract, user2domain, getFriendship, yymInfo, _utf_8_decode, \
-                  getUserInfoById
+from flask import Flask, url_for, render_template, request, make_response, \
+                  flash, abort, Blueprint, session, redirect
+from utils import acquire_topic_id, weiboinfo2url, getFieldUsersByScores, \
+                  getUserNameById, getUserIdByName, merge, \
+                  getUsersInfoByUidInteract, user2domain, getFriendship, \
+                  yymInfo, _utf_8_decode, getUserInfoById
+from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
-from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+#from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+from _elevator import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
 from _mysql import _search_person_basic, _search_person_important_active, _multi_search
 
 buckets = {}
@@ -785,56 +787,6 @@ def profile_person_tab_ajax(model, uid):
             return redirect('/')
     else:
         return redirect('/')
-
-@mod.route('/person_hourly_pattern/<uid>', methods=['GET', 'POST'])
-def profile_hourly_pattern(uid):
-    if request.method == 'GET' and uid:
-        results = []
-        for duration in [182, 364, 728]:
-            begin_str, end_str = last_day(duration)
-            begin_ts = datetime2ts(begin_str)
-            end_ts = datetime2ts(end_str)
-            query_dict = {
-                'user': uid,
-                'timestamp': {'$gt': begin_ts, '$lt': end_ts}
-            }
-            hourly_count_dict = {}
-            for hour_x in range(0, 24):
-                hourly_count_dict[hour_x] = 0
-            count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp'])
-            for r in get_results():
-                timestamp = r['timestamp']
-                hournum = ts2hour(timestamp)
-                hourly_count_dict[hournum] += 1
-            sorted_hourly_count = sorted(hourly_count_dict.iteritems(), key=itemgetter(0), reverse=False)
-            sorted_hourly_count = [[k, int(v * 100 / duration) / 100.0] for k, v in sorted_hourly_count]
-            results.append(sorted_hourly_count)
-        return json.dumps({'halfyear': results[0], 'oneyear': results[1], 'twoyear': results[2]})
-
-@mod.route('/person_weekly_pattern/<uid>', methods=['GET', 'POST'])
-def profile_weekly_pattern(uid):
-    if request.method == 'GET' and uid:
-        results = []
-        for duration in [182, 364, 728]:
-            begin_str, end_str = last_day(duration)
-            begin_ts = datetime2ts(begin_str)
-            end_ts = datetime2ts(end_str)
-            query_dict = {
-                'user': uid,
-                'timestamp': {'$gt': begin_ts, '$lt': end_ts}
-            }
-            weekday_count_dict = {}
-            for weekday_x in range(1, 8):
-                weekday_count_dict[weekday_x] = 0
-            count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp'])
-            for r in get_results():
-                timestamp = r['timestamp']
-                weekday = date.fromtimestamp(timestamp).isoweekday()
-                weekday_count_dict[weekday] += 1
-            sorted_weekday_count = sorted(weekday_count_dict.iteritems(), key=itemgetter(0), reverse=False)
-            sorted_weekday_count = [[k, int(v * 100 / (duration / 7)) / 100.0] for k, v in sorted_weekday_count]
-            results.append(sorted_weekday_count)
-        return json.dumps({'halfyear': results[0], 'oneyear': results[1], 'twoyear': results[2]})
 
 @mod.route('/person_topic/<uid>', methods=['GET', 'POST'])
 def profile_person_topic(uid):

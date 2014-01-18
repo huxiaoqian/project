@@ -13,8 +13,7 @@ __all__ = ['Field', 'Topic', \
            'TopicIdentification', 'KnowledgeList', 'PropagateTopic', 'PropagateTrend', \
            'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
            'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
-           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf', \
-           'WeiboStatus', 'PropagateSingle', 'PropagateTrendSingle', 'PropagateSpatialSingle', 'PropagateUserSingle', 'PropagateWeiboSingle']
+           'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf']
 
 
 
@@ -513,21 +512,6 @@ class TopicStatus(db.Model):
         self.range = range
         self.db_date = db_date
 
-class WeiboStatus(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    module = db.Column(db.String(10))# 显示是哪个模块
-    status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start -2:删除
-    mid = db.Column(db.String(30))
-    postDate = db.Column(db.DateTime)#发布时间
-    db_date = db.Column(db.BigInteger(10, unsigned=True))#入库时间
-
-    def __init__(self, module, status, mid, postDate, db_date):
-        self.module = module
-        self.status = status
-        self.mid = mid
-        self.postDate = postDate
-        self.db_date = db_date
-
 class SentimentRtTopicCount(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     query = db.Column(db.String(20))
@@ -640,9 +624,8 @@ class PropagateUser(db.Model):
     friend = db.Column(db.Integer)
     status = db.Column(db.Integer)
     description = db.Column(db.Text)
-    image_url = db.Column(db.String(50))
 
-    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description,image_url):
+    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description):
         self.topic_id = topic_id 
         self.user = user
         self.user_name = user_name
@@ -651,7 +634,6 @@ class PropagateUser(db.Model):
         self.friend = friend
         self.status = status
         self.description = description
-        self.image_url = image_url
 
 class PropagateWeibo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -669,113 +651,6 @@ class PropagateWeibo(db.Model):
 
     def __init__(self, topic_id, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount):
         self.topic_id = topic_id 
-        self.mid = mid
-        self.image_url = image_url
-        self.text = text
-        self.sourcePlatform = sourcePlatform
-        self.postDate = postDate
-        self.uid = uid
-        self.user_name = user_name
-        self.repostsCount = repostsCount
-        self.commentsCount = commentsCount
-        self.attitudesCount = attitudesCount
-
-class PropagateSingle(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    mid = db.Column(db.String(30))
-    image_url = db.Column(db.String(50))
-    text = db.Column(db.Text)
-    sourcePlatform = db.Column(db.String(20))
-    postDate = db.Column(db.DateTime)
-    uid = db.Column(db.String(20))
-    user_name = db.Column(db.String(20))
-    repostsCount = db.Column(db.Integer)
-    commentsCount = db.Column(db.Integer)
-    attitudesCount = db.Column(db.Integer)
-    persistent = db.Column(db.Float)
-    sudden = db.Column(db.Float)
-    coverage = db.Column(db.Float)
-    media = db.Column(db.Float)
-    leader = db.Column(db.Float)
-
-    def __init__(self, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader):
-        self.mid = mid
-        self.image_url = image_url
-        self.text = text
-        self.sourcePlatform = sourcePlatform
-        self.postDate = postDate
-        self.uid = uid
-        self.user_name = user_name
-        self.repostsCount = repostsCount
-        self.commentsCount = commentsCount
-        self.attitudesCount = attitudesCount
-        self.persistent = persistent
-        self.sudden = sudden
-        self.coverage = coverage
-        self.media = media
-        self.leader = leader
-
-class PropagateTrendSingle(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    mid = db.Column(db.String(30))
-    date = db.Column(db.Date)
-    count = db.Column(db.BigInteger(10, unsigned=True))
-
-    def __init__(self, mid, date, count):
-        self.mid = mid 
-        self.date = date
-        self.count = count
-
-class PropagateSpatialSingle(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    mid = db.Column(db.String(30))
-    city = db.Column(db.String(20))
-    count = db.Column(db.BigInteger(10, unsigned=True))
-
-    def __init__(self, mid, city, count):
-        self.mid = mid 
-        self.city = city
-        self.count = count
-
-class PropagateUserSingle(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    mid = db.Column(db.String(30))
-    user = db.Column(db.String(20))
-    user_name = db.Column(db.String(50))
-    location = db.Column(db.String(50))
-    follower = db.Column(db.Integer)
-    friend = db.Column(db.Integer)
-    status = db.Column(db.Integer)
-    description = db.Column(db.Text)
-    image_url = db.Column(db.String(50))
-
-    def __init__(self, mid, user, user_name, location, follower, friend, status, description,image_url):
-        self.mid = mid 
-        self.user = user
-        self.user_name = user_name
-        self.location = location
-        self.follower = follower
-        self.friend = friend
-        self.status = status
-        self.description = description
-        self.image_url = image_url
-
-class PropagateWeiboSingle(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    ori_mid = db.Column(db.String(30))
-    mid = db.Column(db.String(30))
-    image_url = db.Column(db.String(50))
-    text = db.Column(db.Text)
-    sourcePlatform = db.Column(db.String(20))
-    postDate = db.Column(db.DateTime)
-    uid = db.Column(db.String(20))
-    user_name = db.Column(db.String(20))
-    repostsCount = db.Column(db.Integer)
-    commentsCount = db.Column(db.Integer)
-    attitudesCount = db.Column(db.Integer)
-
-    def __init__(self, ori_mid, mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount):
-        self.ori_mid = ori_mid 
         self.mid = mid
         self.image_url = image_url
         self.text = text
@@ -860,7 +735,7 @@ class ProfilePersonBasic(db.Model):
     statuseCount = db.Column(db.BigInteger(20, unsigned=True))    
     location = db.Column(db.String(20))
     description = db.Column(db.Text)
-    created_at = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    created_at = db.Column(db.BigInteger(10, unsigned=True))
     date = db.Column(db.Date)
 
     def __init__(self, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date='2014-01-11'):
@@ -882,26 +757,22 @@ class ProfilePersonBasic(db.Model):
 
 class ProfilePersonWeiboCount(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    prod = db.Column(db.Boolean, default=False)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
     endDate = db.Column(db.Date)
-    windowLen = db.Column(db.Integer, default=30)
-    activeSeries = db.Column(db.Text)
-    importantSeries = db.Column(db.Text)
-    repostsSeries = db.Column(db.Text) # 用户转发微博数序列
-    originalSeries = db.Column(db.Text) # 用户原创微博数序列
-    emoticonSeries = db.Column(db.Text) # 用户带情感微博数序列
+    active = db.Column(db.BigInteger(20)) # 用户活跃度
+    important = db.Column(db.BigInteger(20)) # 用户重要度
+    reposts = db.Column(db.BigInteger(20)) # 用户转发微博数
+    original = db.Column(db.BigInteger(20)) # 用户原创微博数
+    emoticon = db.Column(db.BigInteger(20)) # 用户带情感微博数
 
-    def __init__(self, userId, activeSeries, importantSeries, repostsSeries, originalSeries, emoticonSeries, endDate, windowLen=30, prod=False):
+    def __init__(self, userId, active, important, reposts, original, emoticon, endDate):
         self.userId = userId
-        self.prod = prod
         self.endDate = endDate
-        self.windowLen = windowLen
-        self.activeSeries = activeSeries
-        self.importantSeries = importantSeries
-        self.repostsSeries = repostsSeries
-        self.originalSeries = originalSeries
-        self.emoticonSeries = emoticonSeries
+        self.active = active
+        self.important = important
+        self.reposts = reposts
+        self.original = original
+        self.emoticon = emoticon
 
 class ProfilePersonTopic(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -12,7 +12,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta, date
 from weibo.model import *
 from weibo.extensions import db
-from time_utils import datetimestr2ts, ts2datetimestr
+from time_utils import datetimestr2ts, ts2datetimestr, datetime2ts
 from weibo.global_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH, \
                                 REDIS_HOST, REDIS_PORT, DOMAIN_ZH_LIST, USER_DOMAIN
 
@@ -179,15 +179,6 @@ def getUserInfoById(uid):
     else:
         return None
 
-
-def datetime2ts(date):
-    return time.mktime(time.strptime(date, '%Y-%m-%d'))
-
-def ts2HMS(ts):
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))
-
-def ts2hour(ts):
-    return int(time.strftime('%H', time.localtime(ts)))
 
 def get_above100_weibos(topic_id, start_ts, end_ts, page):
     topic = acquire_topic_name(topic_id)
@@ -535,25 +526,13 @@ def test_riak_read(test_bucket, n):
 
         if data != i:
             raise
-            
-def local2datetime(time_str):
-    time_format = '%a %b %d %H:%M:%S +0800 %Y'
-    return datetime.fromtimestamp(int(time.mktime(time.strptime(time_str, time_format))))
 
-def ts2datetime(ts):
-    return time.strftime('%Y-%m-%d', time.localtime(ts))
-
-def ts2date(ts):
-    return date.fromtimestamp(int(float(ts)))
-
-def time2ts(date):
-    return time.mktime(time.strptime(date, '%Y-%m-%d'))
 
 def hot_uid_by_word(starttime, endtime, count=50):
     '''筛选出词语表中有超过50条记录的博主
     '''
-    startdate = ts2datetime(time2ts(starttime))
-    enddate =  ts2datetime(time2ts(endtime))
+    startdate = ts2datetime(datetime2ts(starttime))
+    enddate =  ts2datetime(datetime2ts(endtime))
     uids = set()
     uids_count = db.session.query(Words.uid, func.count(Words.id)).\
                                filter(Words.postDate>startdate, Words.postDate<enddate).\
@@ -581,23 +560,6 @@ def last_month(mon_num=1):
     last_date = now_date - timedelta(days=30 * mon_num)
     return last_date.isoformat(), now_date.isoformat()
 
-def last_day(day_num=1):
-    now_date = date.today()
-    last_date = now_date - timedelta(days=day_num)
-    return last_date.isoformat(), now_date.isoformat()
-
-
-def last_week_to_date(datestr, interval):
-    # datestr: 20130907
-    datelist = []
-    end_ts = datetimestr2ts(datestr)
-    for i in range(0, interval):
-        now_ts = end_ts - i * 24 * 3600
-        now_date = ts2datetimestr(now_ts)
-        datelist.append(now_date)
-
-    return datelist[::-1]
-
 
 def emoticon_find(text):
     seed_set = get_official_seed_set()
@@ -618,11 +580,3 @@ def get_official_seed_set():
         for l in f:
             seed_set.add(l.rstrip())
     return seed_set
-
-def main():
-    getFieldUsersByScores('finance', 0, 19)
-    pass
-    
-if __name__ == '__main__':
-    print last_day(1)
-            

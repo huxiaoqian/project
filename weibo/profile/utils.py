@@ -30,6 +30,13 @@ def username2uid(name):
     return int(uid)
 
 
+def _utf_8_encode(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.encode('utf-8')
+
+
 def merge(d1, d2, merge=lambda x,y:y):
     """
     Merges two dictionaries, non-destructively, combining 

@@ -23,7 +23,7 @@ from flask import Flask, url_for, render_template, request, make_response, \
 from utils import acquire_topic_id, weiboinfo2url, getFieldUsersByScores, \
                   getUserNameById, getUserIdByName, merge, \
                   getUsersInfoByUidInteract, user2domain, getFriendship, \
-                  yymInfo, _utf_8_decode, getUserInfoById
+                  yymInfo, _utf_8_decode, getUserInfoById, _utf_8_encode
 from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
@@ -41,18 +41,6 @@ labels = ['university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 
 
 DOMAIN_LIST = fields_value + labels
 
-
-def _utf_encode(s):
-    if isinstance(s, str):
-        return s
-    else:
-        return s.encode('utf-8')
-
-def _utf_decode(s):
-    if isinstance(s, str):
-        return s.decode('utf-8')
-    else:
-        return s
 
 def _time_zone(stri):
     '''时间段参数从前台时间控件传来
@@ -416,7 +404,7 @@ def test_profile_group():
             if request.method == 'GET':
                 fieldEnName = request.args.get('fieldEnName',None)
                 during_time = request.args.get('during_time',None)
-                during_date = _utf_encode(during_time)
+                during_date = _utf_8_encode(during_time)
                 start_ts,end_ts = _time_zone(during_date)
                 window_size = (end_ts - start_ts)/(24*3600)
             field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]

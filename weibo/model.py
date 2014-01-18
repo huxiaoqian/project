@@ -14,8 +14,10 @@ __all__ = ['Field', 'Topic', \
            'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
            'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
            'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf', \
-           'WeiboStatus', 'PropagateSingle', 'PropagateTrendSingle', 'PropagateSpatialSingle', 'PropagateUserSingle', 'PropagateWeiboSingle',\
-           'PropagateSinglePart', 'PropagateTrendSinglePart', 'PropagateSpatialSinglePart', 'PropagateUserSinglePart', 'PropagateWeiboSinglePart']
+           'WeiboStatus', 'PropagateSingle', 'PropagateTrendSingle', 'PropagateSpatialSingle', \
+           'PropagateUserSingle', 'PropagateWeiboSingle', 'PropagateSinglePart', \
+           'PropagateTrendSinglePart', 'PropagateSpatialSinglePart', \
+           'PropagateUserSinglePart', 'PropagateWeiboSinglePart']
 
 class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -510,6 +512,21 @@ class TopicStatus(db.Model):
         self.start = start
         self.end = end
         self.range = range
+        self.db_date = db_date
+
+class WeiboStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    module = db.Column(db.String(10))# 显示是哪个模块
+    status = db.Column(db.Integer)# 1: completed 0: computing, -1: not_start -2:删除
+    mid = db.Column(db.String(30))
+    postDate = db.Column(db.DateTime)#发布时间
+    db_date = db.Column(db.BigInteger(10, unsigned=True))#入库时间
+
+    def __init__(self, module, status, mid, postDate, db_date):
+        self.module = module
+        self.status = status
+        self.mid = mid
+        self.postDate = postDate
         self.db_date = db_date
 
 class SentimentRtTopicCount(db.Model):

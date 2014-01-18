@@ -18,15 +18,18 @@ from datetime import date, datetime
 from city_color import province_color_map
 from operator import itemgetter
 from flask.ext import admin
-from time_utils import datetimestr2ts
-from flask import Flask, url_for, render_template, request, make_response, flash, abort, Blueprint, session, redirect
-from utils import acquire_topic_id, weiboinfo2url, ts2hour, ts2date, getFieldUsersByScores, datetime2ts, \
-                  last_day, ts2datetime, ts2HMS, last_week_to_date, getUserNameById, getUserIdByName, \
-                  merge, getUsersInfoByUidInteract, user2domain, getFriendship, yymInfo, _utf_8_decode, getUserInfoById
+from flask import Flask, url_for, render_template, request, make_response, \
+                  flash, abort, Blueprint, session, redirect
+from utils import acquire_topic_id, weiboinfo2url, getFieldUsersByScores, \
+                  getUserNameById, getUserIdByName, merge, \
+                  getUsersInfoByUidInteract, user2domain, getFriendship, \
+                  yymInfo, _utf_8_decode, getUserInfoById, _utf_8_encode
+from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv
-from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
-from _mysql import _search_person_basic, _search_person_important_active
+#from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+from _elevator import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+from _mysql import _search_person_basic, _search_person_important_active, _multi_search
 
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
@@ -38,18 +41,6 @@ labels = ['university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 
 
 DOMAIN_LIST = fields_value + labels
 
-
-def _utf_encode(s):
-    if isinstance(s, str):
-        return s
-    else:
-        return s.encode('utf-8')
-
-def _utf_decode(s):
-    if isinstance(s, str):
-        return s.decode('utf-8')
-    else:
-        return s
 
 def _time_zone(stri):
     '''时间段参数从前台时间控件传来
@@ -333,6 +324,9 @@ def profile_search(model='hotest'):
                             users.append(user)                    
                     return json.dumps(users)
                 elif model == 'find':
+                    read_from_xapian = 0
+                    sharding = True
+
                     page = int(request.form['page'])
                     if page == 1:
                         startoffset = 0
@@ -346,6 +340,8 @@ def profile_search(model='hotest'):
                     province_str = request.form['province']
                     rankcount = request.form['rankcount']
                     province = province_str.split(',')
+                    users = []
+
                     query_dict = {}
                     query_dict['$and'] = []
                     query_dict['$and'].append({'statuses_count':{'$gt': statusescount_up - 2000000,'$lt': statusescount_up }})
@@ -356,182 +352,27 @@ def profile_search(model='hotest'):
                     for pro in province:
                         or_dict['$or'].append({'location': pro})
                     query_dict['$and'].append(or_dict)
-                    count, get_results = xapian_search_user.search(query=query_dict, max_offset=result_count,
-                                                                   fields=[ '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                                   sort_by=[rankcount])
-                    users = []
-                    for r in get_results():
-                        statusesCount = r['statuses_count']
-                        followersCount = r['followers_count']
-                        friendsCount = r['friends_count']
-                        userName = r['name']
-                        description = r['description']
-                        uid = r['_id']
-                        profileImageUrl = r['profile_image_url']
-                        users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                                  'description': description, 'profileImageUrl': profileImageUrl})
+
+                    if read_from_xapian:
+                        
+                        count, get_results = xapian_search_user.search(query=query_dict, max_offset=result_count,
+                                                                       fields=[ '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
+                                                                       sort_by=[rankcount])
+                        
+                        for r in get_results():
+                            statusesCount = r['statuses_count']
+                            followersCount = r['followers_count']
+                            friendsCount = r['friends_count']
+                            userName = r['name']
+                            description = r['description']
+                            uid = r['_id']
+                            profileImageUrl = r['profile_image_url']
+                            users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
+                                      'description': description, 'profileImageUrl': profileImageUrl})
+                    else:
+                        users = _multi_search(query_dict, sharding)
                     return json.dumps(users[startoffset:endoffset])
         else:
-            #pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.profile
-                    if identy == 1:
-                        if request.method == 'GET':
-                            statuscount, friendscount, followerscount, province, field = getStaticInfo()
-                            province_str = ''
-                            province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外'] 
-                            for pro in province:
-                                province_str += unicode(pro, 'utf-8') + ','
-                            if model == 'person':
-                                nickname = urllib2.unquote(request.args.get('nickname'))
-                                return render_template('profile/profile_search.html',statuscount=statuscount,
-                                                       friendscount=friendscount, followerscount=followerscount,
-                                                       location=province_str, field=field, model=model, result=None, nickname=nickname)
-                            elif model == 'find':
-                                statuses_count_upBound = request.args.get('statuses_count_upBound',None)
-                                friends_count_upBound = request.args.get('friends_count_upBound',None)
-                                followers_count_upBound = request.args.get('followers_count_upBound',None)
-                                top_n = request.args.get('search_top_n',None)
-                                province_str = request.args.get('province_str',None)
-                                rank_str = request.args.get('rankcount',None)
-                                if(top_n):
-                                    result_count = int(top_n)
-                                else:
-                                    result_count = 100
-                                if(statuses_count_upBound):
-                                    statusescount_up = (int(statuses_count_upBound))*10000
-                                else:
-                                    statusescount_up = 2000000
-
-                                if(friends_count_upBound):
-                                    friendscount_up = int(friends_count_upBound)
-                                else:
-                                    friendscount_up = 400
-
-                                if(followers_count_upBound):
-                                    followerscount_up = (int(followers_count_upBound))*10000
-                                else:
-                                    followerscount_up = 6000000
-
-                                return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up,
-                                                       friendscount_up = friendscount_up,followerscount_up = followerscount_up,
-                                                       location = province_str, field=field, model = model,rankcount=rank_str)  
-                            else:
-                                return render_template('profile/profile_search.html',statuscount=statuscount,
-                                                       friendscount=friendscount, followerscount=followerscount,
-                                                       location=province_str, field=field, model=model, result=None)
-                        if request.method == 'POST' and request.form['page']:
-                            if model == 'newest':
-                                page = int(request.form['page'])
-                                if page == 1:
-                                    startoffset = 0
-                                else:
-                                    startoffset = (page - 1) * COUNT_PER_PAGE
-
-                                total_days = 90
-                                today = datetime.today()
-                                now_ts = time.mktime(datetime(today.year, today.month, today.day, 2, 0).timetuple())
-                                now_ts = int(now_ts)
-                                during = 24 * 3600
-                                begin_ts = now_ts - total_days * during
-
-                                query_dict = {
-                                    'created_at': {
-                                        '$gt': begin_ts,
-                                        '$lt': now_ts,
-                                    }
-                                }
-                                count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
-                                                                   fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                                   sort_by=['-created_at'])
-                                users = []
-                                for r in get_results():
-                                    statusesCount = r['statuses_count']
-                                    followersCount = r['followers_count']
-                                    friendsCount = r['friends_count']
-                                    userName = r['name']
-                                    description = r['description']
-                                    uid = r['_id']
-                                    profileImageUrl = r['profile_image_url']
-                                    users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                                              'description': description, 'profileImageUrl': profileImageUrl})
-                                return json.dumps(users)
-                            elif model == 'hotest':
-                                from utils import active_rank
-                                current_time = '2013-3-7'
-                                window_size = 1
-                                top_n = 2000
-                                rank_results = active_rank(top_n, current_time, window_size)
-                                users = []
-                                page = int(request.form['page'])
-                                if page == 1:
-                                    startoffset = 0
-                                else:
-                                    startoffset = (page - 1) * COUNT_PER_PAGE
-                                endoffset = startoffset + COUNT_PER_PAGE - 1
-                                for uid in rank_results:
-                                    user = getUserInfoById(uid)
-                                    if user:
-                                        users.append(user)
-                                return json.dumps(users[startoffset:endoffset])
-                            elif model in fields_value:
-                                page = int(request.form['page'])
-                                if page == 1:
-                                    startoffset = 0
-                                else:
-                                    startoffset = (page - 1) * COUNT_PER_PAGE
-                                endoffset = startoffset + COUNT_PER_PAGE - 1
-                                uids = getFieldUsersByScores(model, startoffset, endoffset)
-                                uidlist = [int(uid) for uid in uids]
-                                users = User.query.filter(User.id.in_(uidlist)).all()
-                                return json.dumps([i.serialize for i in users])
-                            elif model == 'person':
-                                nickname = urllib2.unquote(request.form['nickname'])
-                                users = User.query.filter(User.userName==nickname).all()
-                                return json.dumps([i.serialize for i in users])
-                            elif model == 'find':
-                                page = int(request.form['page'])
-                                if page == 1:
-                                    startoffset = 0
-                                else:
-                                    startoffset = (page - 1) * COUNT_PER_PAGE
-                                endoffset = startoffset + COUNT_PER_PAGE - 1
-                                result_count = int(request.form['result_count'])
-                                statusescount_up = int(request.form['statusescount_up'])
-                                friendscount_up = int(request.form['friendscount_up'])
-                                followerscount_up = int(request.form['followerscount_up'])
-                                province_str = request.form['province']
-                                rankcount = request.form['rankcount']
-                                province = province_str.split(',')
-                                query_dict = {}
-                                query_dict['$and'] = []
-                                query_dict['$and'].append({'statuses_count':{'$gt': statusescount_up - 2000000,'$lt': statusescount_up }})
-                                query_dict['$and'].append({'followers_count':{'$gt': followerscount_up - 6000000 ,'$lt': followerscount_up}})
-                                query_dict['$and'].append({'friends_count':{'$gt': friendscount_up - 400 ,'$lt': friendscount_up}})
-                                or_dict = {}
-                                or_dict['$or'] = []
-                                for pro in province:
-                                    or_dict['$or'].append({'location': pro})
-                                query_dict['$and'].append(or_dict)
-                                count, get_results = xapian_search_user.search(query=query_dict, max_offset=result_count,
-                                                                               fields=[ '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                                               sort_by=[rankcount])
-                                users = []
-                                for r in get_results():
-                                    statusesCount = r['statuses_count']
-                                    followersCount = r['followers_count']
-                                    friendsCount = r['friends_count']
-                                    userName = r['name']
-                                    description = r['description']
-                                    uid = r['_id']
-                                    profileImageUrl = r['profile_image_url']
-                                    users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                                              'description': description, 'profileImageUrl': profileImageUrl})
-                                return json.dumps(users[startoffset:endoffset])
-                    else:
-                        return redirect('/')
             return redirect('/')
     else:
         return redirect('/')
@@ -563,7 +404,7 @@ def test_profile_group():
             if request.method == 'GET':
                 fieldEnName = request.args.get('fieldEnName',None)
                 during_time = request.args.get('during_time',None)
-                during_date = _utf_encode(during_time)
+                during_date = _utf_8_encode(during_time)
                 start_ts,end_ts = _time_zone(during_date)
                 window_size = (end_ts - start_ts)/(24*3600)
             field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
@@ -934,56 +775,6 @@ def profile_person_tab_ajax(model, uid):
             return redirect('/')
     else:
         return redirect('/')
-
-@mod.route('/person_hourly_pattern/<uid>', methods=['GET', 'POST'])
-def profile_hourly_pattern(uid):
-    if request.method == 'GET' and uid:
-        results = []
-        for duration in [182, 364, 728]:
-            begin_str, end_str = last_day(duration)
-            begin_ts = datetime2ts(begin_str)
-            end_ts = datetime2ts(end_str)
-            query_dict = {
-                'user': uid,
-                'timestamp': {'$gt': begin_ts, '$lt': end_ts}
-            }
-            hourly_count_dict = {}
-            for hour_x in range(0, 24):
-                hourly_count_dict[hour_x] = 0
-            count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp'])
-            for r in get_results():
-                timestamp = r['timestamp']
-                hournum = ts2hour(timestamp)
-                hourly_count_dict[hournum] += 1
-            sorted_hourly_count = sorted(hourly_count_dict.iteritems(), key=itemgetter(0), reverse=False)
-            sorted_hourly_count = [[k, int(v * 100 / duration) / 100.0] for k, v in sorted_hourly_count]
-            results.append(sorted_hourly_count)
-        return json.dumps({'halfyear': results[0], 'oneyear': results[1], 'twoyear': results[2]})
-
-@mod.route('/person_weekly_pattern/<uid>', methods=['GET', 'POST'])
-def profile_weekly_pattern(uid):
-    if request.method == 'GET' and uid:
-        results = []
-        for duration in [182, 364, 728]:
-            begin_str, end_str = last_day(duration)
-            begin_ts = datetime2ts(begin_str)
-            end_ts = datetime2ts(end_str)
-            query_dict = {
-                'user': uid,
-                'timestamp': {'$gt': begin_ts, '$lt': end_ts}
-            }
-            weekday_count_dict = {}
-            for weekday_x in range(1, 8):
-                weekday_count_dict[weekday_x] = 0
-            count, get_results = xapian_search_weibo.search(query=query_dict, fields=['timestamp'])
-            for r in get_results():
-                timestamp = r['timestamp']
-                weekday = date.fromtimestamp(timestamp).isoweekday()
-                weekday_count_dict[weekday] += 1
-            sorted_weekday_count = sorted(weekday_count_dict.iteritems(), key=itemgetter(0), reverse=False)
-            sorted_weekday_count = [[k, int(v * 100 / (duration / 7)) / 100.0] for k, v in sorted_weekday_count]
-            results.append(sorted_weekday_count)
-        return json.dumps({'halfyear': results[0], 'oneyear': results[1], 'twoyear': results[2]})
 
 @mod.route('/person_topic/<uid>', methods=['GET', 'POST'])
 def profile_person_topic(uid):

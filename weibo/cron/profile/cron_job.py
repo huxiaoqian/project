@@ -10,8 +10,9 @@ import heapq
 import leveldb
 import MySQLdb
 import datetime
+from config import db
 from model import ProfilePersonBasic, ProfilePersonWeiboCount, ProfilePersonTopic
-from config import db, xapian_search_user, LEVELDBPATH, REDIS_HOST, REDIS_PORT, DOMAIN_LIST, COBAR_HOST, COBAR_PORT, COBAR_USER
+from config import xapian_search_user, LEVELDBPATH, REDIS_HOST, REDIS_PORT, DOMAIN_LIST, COBAR_HOST, COBAR_PORT, COBAR_USER
 from dynamic_xapian_weibo import getXapianWeiboByDate
 from xapian_weibo.utils import load_scws, cut
 
@@ -67,7 +68,14 @@ def userLeveldb2Domain(uid, updatetime='20131220'):
 
 def get_daily_user_count_db_by_date(datestr):
     # datestr '20140105'
-    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_count_%s' % datestr),
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_count_%s_l2m' % datestr),
+                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    return daily_user_db
+
+
+def get_daily_user_basic_db_by_date(datestr):
+    # datestr '20140105'
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_basic_%s' % datestr),
                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     return daily_user_db
 
@@ -159,25 +167,86 @@ def emoticon_find(text):
 
     return emoticons
 
+def iter_userbasic2leveldb():
+    users = xapian_search_user.iter_all_docs(fields=xapian_user_fields)
 
-def iter_userbasic2mysql(sharding=False):
+    count = 0
+    batch = leveldb.WriteBatch()
+    ts = te = time.time()
+    for user in users:
+        if count % 10000 == 0:
+            te = time.time()
+            daily_profile_person_basic_db.Write(batch, sync=True)
+            batch = leveldb.WriteBatch()
+            print count, '%s sec' % (te - ts), 'xapian2leveldb'
+            ts = te
+        # extraction and transfer
+        try:
+            userId = int(user['_id'])
+        except:
+            count += 1
+            continue
+        province = user['province']
+        city = user['city']
+        verified = user['verified']
+        name = _utf_encode(user['name'])
+        friendsCount = user['friends_count']
+        gender = user['gender']
+        profileImageUrl = user['profile_image_url']
+        verifiedType = user['verified_type']
+        followersCount = user['followers_count']
+        location = _utf_encode(user['location'])
+        statusesCount = user['statuses_count']
+        description = _utf_encode(user['description'])
+        
+        try:
+            created_at = int(user['created_at'])
+        except:
+            count += 1
+            continue
+
+        date = batch_date_1
+        #Load
+        key = str(userId)
+        value = '_\/'.join([str(province), str(city), str(verified), \
+                           str(name), str(friendsCount), str(gender), \
+                           str(profileImageUrl), str(verifiedType), \
+                           str(followersCount), str(location), \
+                           str(statusesCount), str(description)])
+        batch.Put(key, value)
+
+        count += 1
+
+
+def iter_userbasic2mysql(cobar_conn, sharding=False):
+    print cobar_conn
     cursor = cobar_conn.cursor()
     users = xapian_search_user.iter_all_docs(fields=xapian_user_fields)
 
     count = 0
     ts = te = time.time()
     for user in users:
-        if count % 10000 == 0:
-            te = time.time()
+        if count < 3500000:
+            count += 1
+            continue
+
+        if count % 2000 == 0:
             if sharding:
                 # Commit your changes in the database
                 cobar_conn.commit()
-                #except:
-                # Rollback in case there is any error
-                #cobar_conn.rollback()
+
+        if count % 3500000 == 0:
+            cobar_conn.close()
+            cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
+            cursor = cobar_conn.cursor() 
+
+        if count % 10000 == 0:
+            te = time.time()
+            if sharding:
+                pass
             else:
                 db.session.commit()
-            print count, '%s sec' % (te - ts)
+            print count, '%s sec' % (te - ts), 'xapian2mysql'
             ts = te
 
         try:
@@ -208,25 +277,25 @@ def iter_userbasic2mysql(sharding=False):
         date = now_datetimestr
 
         if sharding:
-            sql = """insert into profile_person_basic(userId, province, city, verified, name, gender, \
+            sql = """insert into profile_person_basic_test(userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, \
                      description, created_at, date) values ('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', 
                      '%s', '%s', '%s', '%s', '%s', '%s', '%s')""" % (userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, \
                      description, created_at, date)
+ 
             try:
                 cursor.execute(sql)
             except Exception, e:
                 description = ''
-                sql = """insert into profile_person_basic(userId, province, city, verified, name, gender, \
+                sql = """insert into profile_person_basic_test(userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, \
                      description, created_at, date) values ('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', 
                      '%s', '%s', '%s', '%s', '%s', '%s', '%s')""" % (userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, \
                      description, created_at, date)
-
+            
                 cursor.execute(sql)
-                
         else:
             '''
             item_exist = db.session.query(ProfilePersonBasic).filter(ProfilePersonBasic.userId==userId).first()
@@ -239,6 +308,9 @@ def iter_userbasic2mysql(sharding=False):
             db.session.add(item)
 
         count += 1
+
+    if cobar_conn:
+        cobar_conn.close()
 
 
 def personWeiboCount2levedb():
@@ -263,7 +335,7 @@ def personWeiboCount2levedb():
         text = weibo['text']
 
         try:
-            counts = daily_profile_person_count_db.Get(str(uid))
+            counts = daily_profile_person_count_db.Get(k)
             active, important, reposts, original, emoticon = counts.split('_')
             active = int(active)
             important = int(important)
@@ -288,6 +360,52 @@ def personWeiboCount2levedb():
         batch.Put(str(uid), str(active) + '_' + str(important) + '_' + str(reposts) + '_' + str(original) + '_' + str(emoticon))
 
         count += 1
+
+
+def personWeiboCount2Mysql():
+    cursor = cobar_conn.cursor()
+
+    count = 0
+    ts = te = time.time()
+    for k, v in daily_profile_person_count_db.RangeIter():
+        if count % 2000 == 0:
+            # commit changes to mysql
+            cobar_conn.commit()
+
+        if count % 10000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts), 'leveldb2mysql'
+            ts = te
+
+        # Extract and Transfer
+        try:
+            counts = v
+            active, important, reposts, original, emoticon = counts.split('_')
+            active = int(active)
+            important = int(important)
+            reposts = int(reposts)
+            original = int(original)
+            emoticon = int(emoticon)
+        except KeyError:
+            active = important = reposts = original = emoticon = 0
+
+        endDate = batch_date_1
+        userId = int(k)
+
+        # Load 
+        sql = """insert into profile_person_weibo_count(userId, active, important, reposts, original, emoticon, endDate) values \
+              (%d, %d, %d, %d, %d, %d, '%s')""" % (userId, active, important, reposts, original, emoticon, endDate)
+ 
+        try:
+            cursor.execute(sql)
+        except Exception, e:
+            pass
+
+        #print k, active, important, reposts, original, emoticon
+        count += 1
+
+    if cobar_conn:
+        cobar_conn.close()
 
 
 def personTopic2leveldb(keyword_limit=50):
@@ -570,9 +688,9 @@ def batch_handle_domain():
 
 if __name__ == '__main__':
     sharding = True
-
+    '''
     if sharding:
-        # 连接数据库　
+        # mysqldb连接数据库　
         try:
             cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
             print 'connection success'
@@ -580,26 +698,34 @@ if __name__ == '__main__':
             print e
             sys.exit()
 
-    now_datetimestr = get_now_datestr()
-    iter_userbasic2mysql(sharding)
+    print cobar_conn
+    '''
 
-    if cobar_conn:
-        cobar_conn.close()
-
+    #now_datetimestr = get_now_datestr()
+    #iter_userbasic2mysql(cobar_conn, sharding)
     '''
     seed_set = get_official_seed_set()
     scws = load_scws()
 
     batch_date_1 = '20130901'
-    xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
+    #xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
+    '''
 
+    '''
     daily_domain_keywords_db = {}
     for i in range(-1, 21):
         daily_domain_keywords_db[i] = get_daily_domain_keywords_db_by_date(batch_date_1, i)
+    '''
 
-    # daily_profile_person_count_db = get_daily_user_count_db_by_date(batch_date_1)
-    # personWeiboCount2levedb()
+    batch_date_1 = '20130901'
     
+    # daily_profile_person_count_db = get_daily_user_count_db_by_date(batch_date_1)
+    # personWeiboCount2Mysql()
+    # personWeiboCount2levedb()
+
+    daily_profile_person_basic_db = get_daily_user_basic_db_by_date(batch_date_1)
+    iter_userbasic2leveldb()
+
     # daily_profile_person_topic_db = get_daily_user_topic_db_by_date(batch_date_1)
     # personTopic2leveldb()
 
@@ -614,7 +740,7 @@ if __name__ == '__main__':
 
     # daily_profile_domain_db = get_daily_domain_db_by_date(batch_date_1)
     # batch_handle_domain()
-
+    '''
     daily_profile_domain_keywords = get_daily_domain_rtkeywords_db_by_date(batch_date_1)
     batch_sort_domain_keywords()
     '''

@@ -14,10 +14,10 @@ __all__ = ['Field', 'Topic', \
            'PropagateSpatial', 'PropagateUser', 'PropagateWeibo', 'ProfileDomainTopic', \
            'ProfileDomainBasic', 'ProfileDomainWeiboCount', 'ProfilePersonBasic', \
            'ProfilePersonFriends', 'ProfilePersonTopic', 'ProfilePersonWeiboCount', 'TopicGexf', \
-           'WeiboStatus', 'PropagateSingle', 'PropagateTrendSingle', 'PropagateSpatialSingle', 'PropagateUserSingle', 'PropagateWeiboSingle',\
-           'PropagateSinglePart', 'PropagateTrendSinglePart', 'PropagateSpatialSinglePart', 'PropagateUserSinglePart', 'PropagateWeiboSinglePart']
-
-
+           'WeiboStatus', 'PropagateSingle', 'PropagateTrendSingle', 'PropagateSpatialSingle', \
+           'PropagateUserSingle', 'PropagateWeiboSingle', 'PropagateSinglePart', \
+           'PropagateTrendSinglePart', 'PropagateSpatialSinglePart', \
+           'PropagateUserSinglePart', 'PropagateWeiboSinglePart']
 
 class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -641,9 +641,8 @@ class PropagateUser(db.Model):
     friend = db.Column(db.Integer)
     status = db.Column(db.Integer)
     description = db.Column(db.Text)
-    image_url = db.Column(db.String(50))
 
-    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description,image_url):
+    def __init__(self, topic_id, user, user_name, location, follower, friend, status, description):
         self.topic_id = topic_id 
         self.user = user
         self.user_name = user_name
@@ -652,7 +651,6 @@ class PropagateUser(db.Model):
         self.friend = friend
         self.status = status
         self.description = description
-        self.image_url = image_url
 
 class PropagateWeibo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -968,7 +966,7 @@ class ProfilePersonBasic(db.Model):
     statuseCount = db.Column(db.BigInteger(20, unsigned=True))    
     location = db.Column(db.String(20))
     description = db.Column(db.Text)
-    created_at = db.Column(db.BigInteger(10, unsigned=True), primary_key=True)
+    created_at = db.Column(db.BigInteger(10, unsigned=True))
     date = db.Column(db.Date)
 
     def __init__(self, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, description, created_at, date='2014-01-11'):
@@ -990,26 +988,22 @@ class ProfilePersonBasic(db.Model):
 
 class ProfilePersonWeiboCount(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    userId = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
-    prod = db.Column(db.Boolean, default=False)
+    userId = db.Column(db.BigInteger(11, unsigned=True))
     endDate = db.Column(db.Date)
-    windowLen = db.Column(db.Integer, default=30)
-    activeSeries = db.Column(db.Text)
-    importantSeries = db.Column(db.Text)
-    repostsSeries = db.Column(db.Text) # 用户转发微博数序列
-    originalSeries = db.Column(db.Text) # 用户原创微博数序列
-    emoticonSeries = db.Column(db.Text) # 用户带情感微博数序列
+    active = db.Column(db.BigInteger(20)) # 用户活跃度
+    important = db.Column(db.BigInteger(20)) # 用户重要度
+    reposts = db.Column(db.BigInteger(20)) # 用户转发微博数
+    original = db.Column(db.BigInteger(20)) # 用户原创微博数
+    emoticon = db.Column(db.BigInteger(20)) # 用户带情感微博数
 
-    def __init__(self, userId, activeSeries, importantSeries, repostsSeries, originalSeries, emoticonSeries, endDate, windowLen=30, prod=False):
+    def __init__(self, userId, active, important, reposts, original, emoticon, endDate):
         self.userId = userId
-        self.prod = prod
         self.endDate = endDate
-        self.windowLen = windowLen
-        self.activeSeries = activeSeries
-        self.importantSeries = importantSeries
-        self.repostsSeries = repostsSeries
-        self.originalSeries = originalSeries
-        self.emoticonSeries = emoticonSeries
+        self.active = active
+        self.important = important
+        self.reposts = reposts
+        self.original = original
+        self.emoticon = emoticon
 
 class ProfilePersonTopic(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

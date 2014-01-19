@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="/static/css/jquery-ui.css" />
   <script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
   <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
+      <script src="{{ url_for('static', filename='js/sigma.min.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='js/sigma.parseGexf.js') }}" type="text/javascript"></script>
 {% endblock %}
 
 {% block content %}
@@ -28,7 +30,7 @@
           </div>
           <div style="float:left;padding-top:10px;padding-left:30px;">            
             <label class="appendedInput" style="font-size:18px">发布时间：{{ tar_post_date }} </label>
-            <label class="appendedInput" style="font-size:18px">内容：{{ tar_text }} </label>
+            <!--<label class="appendedInput" style="font-size:18px">内容：{{ tar_text }} </label>-->
           </div>
         </div>
       </div>
@@ -41,7 +43,8 @@
           <li><a href="/propagate/single_ajax_weibos/?mid={{mid}}" >相关微博</a></li>
           <li><a href="/propagate/single_ajax_spatial/">地理分布</a></li>
           <li><a href="/propagate/single_ajax_stat/?mid={{mid}}" >主要指标</a></li>
-          <li><a href="/propagate/single_ajax_path/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >传播路径</a></li>
+          <!--<li><a href="/propagate/single_ajax_path/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >传播路径</a></li>-->
+          <li><a href="/gexf/show_graph/{{mid}}" >传播路径</a></li>
           <li><a href="/propagate/single_ajax_userfield/?mid={{mid}}" >关键人员及领域分布</a></li>
         </ul>
       </div>

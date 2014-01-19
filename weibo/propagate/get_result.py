@@ -129,7 +129,10 @@ def readPropagateUser(keyid):
     if len(propagateUsers):
         for p in propagateUsers:
             user = dict()
-            user['id'] = int(p.user)
+            if p.user == 'None':
+                user['id'] = 0
+            else:
+                user['id'] = int(p.user)
             user['name'] = p.user_name
             user['location'] = p.location
             user['follower'] = p.follower
@@ -150,7 +153,10 @@ def readPropagateSingle(mid):
     if len(propagateSingles):
         for p in propagateSingles:
             user = dict()
-            user['id'] = int(p.uid)
+            if p.uid == 'None':
+                user['id'] = 0
+            else:
+                user['id'] = int(p.uid)
             user['name'] = p.user_name
             user['repostsCount'] = p.repostsCount
             user['commentsCount'] = p.commentsCount
@@ -171,7 +177,7 @@ def readPropagateTrendSingle(mid):
     if len(propagateTrendSingles):
         perday_count_list = []
         date_list = []
-        for p in propagateTrends:
+        for p in propagateTrendSingles:
             perday_count_list.append(p.count)
             date_list.append(p.date)
 
@@ -261,7 +267,10 @@ def readPropagateUserSingle(mid):
     if len(propagateUsers):
         for p in propagateUsers:
             user = dict()
-            user['id'] = int(p.user)
+            if p.user == 'None':
+                user['id'] = 0
+            else:
+                user['id'] = int(p.user)
             user['name'] = p.user_name
             user['location'] = p.location
             user['follower'] = p.follower
@@ -282,7 +291,10 @@ def readPropagateSinglePart(mid):
     if len(propagateSingles):
         for p in propagateSingles:
             user = dict()
-            user['id'] = int(p.uid)
+            if p.uid == 'None':
+                user['id'] = 0
+            else:
+                user['id'] = int(p.uid)
             user['name'] = p.user_name
             user['repostsCount'] = p.repostsCount
             user['commentsCount'] = p.commentsCount
@@ -393,7 +405,10 @@ def readPropagateUserSinglePart(mid):
     if len(propagateUsers):
         for p in propagateUsers:
             user = dict()
-            user['id'] = int(p.user)
+            if p.user == 'None':
+                user['id'] = 0
+            else:
+                user['id'] = int(p.user)
             user['name'] = p.user_name
             user['location'] = p.location
             user['follower'] = p.follower

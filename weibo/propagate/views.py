@@ -578,8 +578,7 @@ def topic_ajax_path():
         if session['user'] == 'admin':
             if request.method == "GET":
                 keyword = request.args.get('keyword', "")
-                beg_time = int(request.args.get('beg_time', ""))
-                end_time = int(request.args.get('end_time', ""))
+                topic_id = request.args.get('topic_id', "")
                 topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
                 if len(topics):
                     for topic in topics:
@@ -592,7 +591,7 @@ def topic_ajax_path():
                     for topic in topics:
                         keyid = topic.id
                 
-                flag = forest_main(keyword,beg_time,end_time,keyid)
+                flag = forest_main(keyword,topic_id,keyid)
                 return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid,flag = flag)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -602,9 +601,7 @@ def topic_ajax_path():
                     if identy == 1:
                         if request.method == "GET":
                             keyword = request.args.get('keyword', "")
-                            keyuser = request.args.get('keyuser', "")
-                            beg_time = int(request.args.get('beg_time', ""))
-                            end_time = int(request.args.get('end_time', ""))
+                            topic_id = request.args.get('topic_id', "")
                             topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
                             if len(topics):
                                 for topic in topics:
@@ -616,7 +613,8 @@ def topic_ajax_path():
                                 topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
                                 for topic in topics:
                                     keyid = topic.id
-                            flag = forest_main(keyword,beg_time,end_time,keyid)
+                
+                            flag = forest_main(keyword,topic_id,keyid)
                             return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid,flag = flag)
                     else:
                         return redirect('/')
@@ -741,8 +739,11 @@ def single_analysis():
                 
             blog_info = readPropagateSingle(mid)#返回整个树的统计
 
-            if blog_info:          
-                blog_img_url = blog_info['profile_image_url']
+            if blog_info:
+                if blog_info[0]['profile_image_url'] == 'None':
+                    blog_img_url = '#'
+                else:
+                    blog_img_url = blog_info[0]['profile_image_url']
                 bloger_name = blog_info[0]['name']
                 blog_reposts_count = blog_info[0]['repostsCount']
                 blog_comments_count = blog_info[0]['commentsCount']
@@ -751,7 +752,10 @@ def single_analysis():
                 blog_text = blog_info[0]['text']
             else:
                 blog_info = readPropagateSinglePart(mid)
-                blog_img_url = blog_info[0]['profile_image_url']
+                if blog_info[0]['profile_image_url'] == 'None':
+                    blog_img_url = '#'
+                else:
+                    blog_img_url = blog_info[0]['profile_image_url']
                 bloger_name = blog_info[0]['name']
                 blog_reposts_count = blog_info[0]['repostsCount']
                 blog_comments_count = blog_info[0]['commentsCount']

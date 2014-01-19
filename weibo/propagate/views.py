@@ -578,8 +578,7 @@ def topic_ajax_path():
         if session['user'] == 'admin':
             if request.method == "GET":
                 keyword = request.args.get('keyword', "")
-                beg_time = int(request.args.get('beg_time', ""))
-                end_time = int(request.args.get('end_time', ""))
+                topic_id = request.args.get('topic_id', "")
                 topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
                 if len(topics):
                     for topic in topics:
@@ -592,7 +591,7 @@ def topic_ajax_path():
                     for topic in topics:
                         keyid = topic.id
                 
-                flag = forest_main(keyword,beg_time,end_time,keyid)
+                flag = forest_main(keyword,topic_id,keyid)
                 return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid,flag = flag)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -602,9 +601,7 @@ def topic_ajax_path():
                     if identy == 1:
                         if request.method == "GET":
                             keyword = request.args.get('keyword', "")
-                            keyuser = request.args.get('keyuser', "")
-                            beg_time = int(request.args.get('beg_time', ""))
-                            end_time = int(request.args.get('end_time', ""))
+                            topic_id = request.args.get('topic_id', "")
                             topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
                             if len(topics):
                                 for topic in topics:
@@ -616,7 +613,8 @@ def topic_ajax_path():
                                 topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
                                 for topic in topics:
                                     keyid = topic.id
-                            flag = forest_main(keyword,beg_time,end_time,keyid)
+                
+                            flag = forest_main(keyword,topic_id,keyid)
                             return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid,flag = flag)
                     else:
                         return redirect('/')

@@ -19,15 +19,20 @@ sys.path.append('./weibo/propagate/')
 from autocalculate import calculate
 from calculate_single import calculate_single,get_user
 from calculatetopic import calculate_topic
+from get_result import *
 
 MAX_COUNT = 15000
-START_DATE = '2013-1-1'
-#END_DATE = '2012-10-30'
+START_DATE = '2013-9-1'
+END_DATE = '2013-9-5'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
-path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
-##xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
-##s = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_weibo', schema_version=2)
+weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
+                'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
+                'comments_count', 'sentiment']
+user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
+               'gender', 'profile_image_url', 'verified_type', 'followers_count', \
+               'followers', 'location', 'statuses_count', 'friends', 'description', \
+               'created_at']
 
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))
@@ -39,62 +44,135 @@ def unix2local(ts):
     return time.strftime('%Y-%m-%d %H:00', time.localtime(ts))
 
 def getXapianWeiboByDuration(datestr_list):
+    path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
     stub_file_list = []
 
     for datestr in datestr_list:
         stub_file = path + datestr
-        print type(stub_file)
         if os.path.exists(stub_file):
             stub_file_list.append(stub_file)
 
     if len(stub_file_list):
         xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
         return xapian_search_weibo 
-
     else:
         return None
 
-def getXapianweiboByTs(start_time, end_time):
-    xapian_date_list =[]
-    Day = 24*3600
-    days = (int(end_time) - int(start_time)) / Day
+def target_whole_xapian_weibo():
+    datestr = '20130904'
+    during = 4
 
-    for i in range(0, days):
-        _ts = start_time + i * Day
-        xapian_date_list.append(ts2datetimestr(_ts))
+    ts = int(time.mktime(time.strptime(datestr, '%Y%m%d')))
+    datelist = []
 
-    statuses_search = getXapianWeiboByDuration(xapian_date_list)
-    return statuses_search
+    for i in range(0, during):
+        now_date = time.strftime('%Y%m%d', time.localtime(ts - i * 24 * 3600))
+        datelist.append(now_date)
+        
+    xapian_weibo = getXapianWeiboByDuration(datelist)
+    return xapian_weibo
 
-def load_data(keyword,beg_time,end_time):
+def target_whole_xapian_user():
+    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
+    xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
+    
+    return xapian_search_user
+
+whole_xapian_weibo = target_whole_xapian_weibo()
+whole_xapian_user = target_whole_xapian_user()
+
+def getNone():
+    user = dict()
+    user['id'] = 0
+    user['province'] = 'None'
+    user['bi_followers_count'] = 'None'
+    user['verified'] = 'None'
+    user['description'] = 'None'
+    user['friends_count'] = 0
+    user['city'] = 'None'
+    user['gender']  = 'None'
+    user['profile_image_url'] = '#'
+    user['verified_reason'] = 'None'
+    user['followers_count'] = 0
+    user['location'] = 'None'
+    user['statuses_count'] = 0
+    user['name'] = 'None'
+    return user
+
+def getWeiboByMid(mid):
+    weibo = whole_xapian_weibo.search_by_id(int(mid), fields=weibo_fields)
+    status = {}
+    if weibo:
+        for field in weibo_fields:
+            if field == 'user':
+                status['user'] = getUserByUid(weibo['user'])
+            elif field == 'timestamp':
+                status['created_at'] = time.strftime("%a %b %d %H:%M:%S +0800 %Y", time.localtime(weibo['timestamp']))
+            else:
+                status[field] = weibo[field]
+    else:
+        for field in weibo_fields:
+            if field == 'user':
+                status['user'] = getNone()
+            elif field == 'timestamp':
+                status['created_at'] = time.strftime("%a %b %d %H:%M:%S +0800 %Y", time.localtime(1377964800))
+            else:
+                status[field] = 'None'
+    status['id'] = int(mid)
+    status['mid'] = str(mid)
+
+    return status
+
+def getUserByUid(uid):
+    user = whole_xapian_user.search_by_id(int(uid), fields=user_fields)
+    user_dict = {}
+    if user:
+        for field in user_fields:
+            user_dict[field] = _utf_8_decode(user[field])
+    else:
+        user_dict['name'] = str(uid)
+        user_dict['location'] = u'未知'
+        user_dict['profile_image_url'] = u''
+
+    result_dict = {}
+    for k, v in user_dict.iteritems():
+        result_dict[k] = v
+    result_dict['id'] = int(uid)
+
+    return result_dict
+
+def _utf_8_decode(stri):
+    if isinstance(stri, str):
+        return unicode(stri, 'utf-8')
+    return stri
+
+def load_data(keyword,topic_id):
     dataset = []
-    statuses_search = getXapianweiboByTs(beg_time, end_time)
-    fields_list = ['text', 'timestamp','reposts_count','comments_count','user', 'terms', '_id','retweeted_mid','bmiddle_pic','geo','source','attitudes_count']
-    number, get_results = statuses_search.search(query={'text': [u'%s'%keyword]}, sort_by=['reposts_count'], fields=fields_list,max_offset=100)
-    topic_info = calculate(get_results())
-    blog_rel_list = topic_info['topic_rel_blog'][:5]
+    blog_rel_list = readPropagateWeibo(topic_id)
 
     n = 0
     ts = []
     for status in blog_rel_list:
-        print status['status']['_id']
-        ts.append(int(time.mktime(time.strptime(str(status['status']['created_at']), '%Y-%m-%d %H:%M:%S'))))
-        number,source_weibo = statuses_search.search(query={'retweeted_mid': status['status']['_id']})#查找热门微博的转发微博
+        print status['status']['_id']                
+        weibo = getWeiboByMid(status['status']['_id'])
+        retweeted_mid = weibo['retweeted_mid']
+        source_weibo = weibo
+        if retweeted_mid != 0:
+            source_weibo = getWeiboByMid(retweeted_mid)
+        ts.append(int(time.mktime(time.strptime(str(source_weibo['created_at']), '%a %b %d %H:%M:%S +0800 %Y'))))
+
+        number,source = whole_xapian_weibo.search(query={'retweeted_mid': source_weibo['id']}, sort_by=['reposts_count'],max_offset=15000)#查找热门微博的转发微博
         print number
         if not number:
             n = n + 1
             continue
 
-        count = 0
         reposts = []#存储转发微博的信息
-        for sw in source_weibo():
-            if count % 10 == 0:
-                print '%s tweets loaded...' % count
+        for sw in source():
             number,get_users = xapian_search_user.search(query={'_id': sw['user']}, fields=['name'])
             for user in get_users():
-                line = user['name'] + '\t'+ sw['text'] + '\t' + status['user']['name'] +'\t'+ str(int(sw['timestamp']))
+                line = user['name'] + '\t'+ sw['text'] + '\t' + source_weibo['user']['name'] +'\t'+ str(int(sw['timestamp']))
                 reposts.append(line)
-            count += 1
         dataset.append(reposts)
     if n == len(blog_rel_list):
         flag = 0
@@ -210,10 +288,13 @@ class Node(object):
     def append(self, child):
         self.childern.append(child)
 
-def build_tree(repost_data, counter, _start_ts, _end_ts):
+def build_tree(repost_data, counter, start=START_DATE, end=END_DATE):
     if not repost_data:
         return None
 
+    _start_ts = date2ts(start)
+    _end_ts = date2ts(end)
+    
     source_user = repost_data[0].strip('\n').split('\t')[2]
     end_ts = int(repost_data[0].strip('\n').split('\t')[3])
     start_ts = int(repost_data[-1].strip('\n').split('\t')[3])
@@ -263,16 +344,10 @@ def build_tree(repost_data, counter, _start_ts, _end_ts):
                 r.append(Node(user, ts, nid=counter))
     return root, start_ts, end_ts, count, counter
 
-def forest_main(keyword,beg_time,end_time,keyid):
+def forest_main(keyword,topic_id,keyid):
 
-    _start_ts = date2ts(START_DATE)
-    if beg_time < _start_ts:
-        beg_time = _start_ts
-
-    if end_time <= beg_time:
-        end_time = int(time.time())
     print 'yuan'
-    first_start_ts, dataset, flag = load_data(keyword,beg_time,end_time)
+    first_start_ts, dataset, flag = load_data(keyword,topic_id)
 
     if flag == 0:
         return 0
@@ -292,7 +367,7 @@ def forest_main(keyword,beg_time,end_time,keyid):
         if not len(reposts):
             continue
         
-        root, start_ts, end_ts, count, counter = build_tree(reposts, counter, beg_time, end_time)
+        root, start_ts, end_ts, count, counter = build_tree(reposts, counter)
         _color = random_color(colors)
 
         build_graph(graph, root, start_ts, end_ts, node_y_table, x_count, y_count, y_name, x=ts2x(start_ts-first_start_ts), y=height, color=_color)

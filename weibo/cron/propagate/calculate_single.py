@@ -111,6 +111,24 @@ def get_user(uid):
     else:
         return user
 
+def getNone():
+    user = dict()
+    user['id'] = 'None'
+    user['province'] = 'None'
+    user['bi_followers_count'] = 'None'
+    user['verified'] = 'None'
+    user['description'] = 'None'
+    user['friends_count'] = 0
+    user['city'] = 'None'
+    user['gender']  = 'None'
+    user['profile_image_url'] = 'None'
+    user['verified_reason'] = 'None'
+    user['followers_count'] = 0
+    user['location'] = 'None'
+    user['statuses_count'] = 0
+    user['name'] = 'None'
+    return user
+
 def get_ori_status(_id, beg_ts, end_ts):
     
     status ={}
@@ -373,6 +391,8 @@ def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
     blog_info['key_reposter'] = user_data
     blog_info['weibo'] = weibo_data
 
+    if not blog_info['user']:
+        blog_info['user'] = getNone()
     save_base_infor(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['sourcePlatform'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
 
     perday_blog_count = blog_info['perday_count']
@@ -551,6 +571,8 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
     blog_info['key_reposter'] = user_data
     blog_info['weibo'] = weibo_data
 
+    if not blog_info['user']:
+        blog_info['user'] = getNone()
     save_base_infor_part(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['sourcePlatform'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
 
     perday_blog_count = blog_info['perday_count']

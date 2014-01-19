@@ -741,8 +741,11 @@ def single_analysis():
                 
             blog_info = readPropagateSingle(mid)#返回整个树的统计
 
-            if blog_info:          
-                blog_img_url = blog_info['profile_image_url']
+            if blog_info:
+                if blog_info[0]['profile_image_url'] == 'None':
+                    blog_img_url = '#'
+                else:
+                    blog_img_url = blog_info[0]['profile_image_url']
                 bloger_name = blog_info[0]['name']
                 blog_reposts_count = blog_info[0]['repostsCount']
                 blog_comments_count = blog_info[0]['commentsCount']
@@ -751,7 +754,10 @@ def single_analysis():
                 blog_text = blog_info[0]['text']
             else:
                 blog_info = readPropagateSinglePart(mid)
-                blog_img_url = blog_info[0]['profile_image_url']
+                if blog_info[0]['profile_image_url'] == 'None':
+                    blog_img_url = '#'
+                else:
+                    blog_img_url = blog_info[0]['profile_image_url']
                 bloger_name = blog_info[0]['name']
                 blog_reposts_count = blog_info[0]['repostsCount']
                 blog_comments_count = blog_info[0]['commentsCount']

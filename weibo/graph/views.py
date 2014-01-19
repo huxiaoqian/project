@@ -2,7 +2,7 @@
 
 import json
 import math
-from graph import getWeiboByMid, graph
+from graph import getWeiboByMid, graph as _graph
 from flask import Blueprint, session, render_template, redirect, url_for, jsonify
 
 mod = Blueprint('graph', __name__, url_prefix='/gexf')
@@ -30,7 +30,7 @@ def show_graph_index(mid, page=None):
         total_page = int(math.ceil(reposts_count * 1.0 / per_page))
         page = total_page
 
-        return redirect({ url_for(graph.show_graph(mid, page))})
+        return redirect('/gexf/show_graph/%s/%s/'%(mid, page))#{url_for(graph.show_graph(mid, page))})
 
     screen_name = 'nobody'
     profile_image_url = 'http://www.baidu.com'
@@ -43,7 +43,7 @@ def show_graph_index(mid, page=None):
 @mod.route('/graph/<int:mid>/')
 @mod.route('/graph/<int:mid>/<int:page>/')
 def graph_index(mid, page=None):
-    return graph(mid)['graph']
+    return _graph(mid)['graph']
     '''
     per_page = 200
     total_page = 0
@@ -104,7 +104,7 @@ def graph_index(mid, page=None):
 
 @mod.route('/tree_stats/<int:mid>/<int:page>/')
 def tree_stats_index(mid, page):
-    tree_stats = graph(mid)['stats']
+    tree_stats = _graph(mid)['stats']
     tree_stats['spread_begin'] = tree_stats['spread_begin'].strftime('%Y-%m-%d %H:%M:%S')
     tree_stats['spread_end'] = tree_stats['spread_end'].strftime('%Y-%m-%d %H:%M:%S')
 

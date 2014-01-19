@@ -15,6 +15,7 @@ Day = Hour * 24
 
 def main():
     topics = _topic_not_calc()
+
     if topics and len(topics):
     	topic = topics[0]
         
@@ -34,42 +35,16 @@ def main():
 
         topic_id = int(topic_id)
         windowsize = int(windowsize)
-        print date,topic_id,windowsize
 
         if not topic_id:
             gexf = ''
         else:
             gexf = make_network_graph(date, topic_id, topicname, windowsize)
+
         save_gexf_results(topicname, date, windowsize, gexf)
-        #nx.write_gexf(gexf, "text.gexf")
 
-        #topic_network() 
         _update_topic_status2Completed(topicname, start_ts, end_ts, db_date)
-        
-def topic_network():
-    topics = _topic_not_calc()
-    print 'catch it', topics
-    if topics and len(topics):
-        topic = topics[0]
-        print topic
-
-        start_ts = topic.start
-        end_ts = topic.end
-        db_date = topic.db_date
-        topicname = topic.topic
-
-        topic_id = acquire_topic_id(topicname, start_ts, end_ts)
-        windowsize = (end_ts - start_ts) / Day
-        date = ts2datetime(end_ts)
-
-        if not topic_id:
-            gexf = ''
-        else:
-            gexf = make_network_graph(date, topic_id, windowsize)
-        output_file = open("gexf_network")
-        nx.write_gexf(gexf, "text.gexf")
 
 
 if __name__ == '__main__':
     main()
-    #topic_network()

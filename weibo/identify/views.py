@@ -499,7 +499,7 @@ def topic():
 
                 return render_template('identify/topic.html', topic=topic, start_ts=start_ts, \
                                        end_ts=end_ts, rank_method=rank_method, page_num=page_num, \
-                                       top_n=top_n)
+                                       top_n=top_n, window_size=1)
 
             if request_method == 'POST':
                 form = request.form
@@ -522,33 +522,32 @@ def topic():
     else:
         return redirect('/')
 
-
 @mod.route("/topic/network/", methods=["POST"])
 def area_network():
     request_method = request.method
     if request_method == 'POST':
-        print 'here o just one'
-        # current_time = time.time()
-        current_time = datetime2ts('2013-9-1')
-        current_date = ts2datetime(current_time)
         gexf = None
         form = request.form
         topic = form.get('topic', None)
-        window_size = int(form.get('window_size', 1))
-        #if not topic_id:
-        #    gexf = ''
-        #else:
-        #    gexf = areaModule.make_network_graph(current_date, topic_id, window_size)
-        #response = make_response(gexf)
-        idGexf = 3
-        dataGexf = read_topic_gexf_results(idGexf)
-        #print '!!!!!!!!', dataGexf
+        start_ts = form.get('start_ts', None)
+        end_ts = form.get('end_ts', None)
+        window_size = 1
 
-        #etree.tostring(gexf.getXML(), pretty_print=True, encoding='utf-8', xml_declaration=True)
-        response = make_response(dataGexf)
-        print '!!!!!!!!', response
+        if start_ts:
+            start_ts = int(start_ts)
+        if end_ts:
+            end_ts = int(end_ts)
+        identifyDate = ts2datetime(end_ts)
+        window_size = int((end_ts - start_ts) / (24 * 3600))
+
+        gexf = read_topic_gexf_results(topic, identifyDate, window_size)
+        if not gexf:
+            gexf = ''
+
+        response = make_response(gexf)
         response.headers['Content-Type'] = 'text/xml'
         return response
+
     else:
         abort(404)
 
@@ -736,7 +735,7 @@ def topic_submit():
             time = _utf_encode(time)
             start_ts, end_ts = _time_zone(time)
             status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
-            return render_template('identify/topic.html', topic=keyword)
+            #return render_template('identify/topic.html', topic=keyword, topic_id=1, window_size=1)
     else:
         return redirect('/')
 

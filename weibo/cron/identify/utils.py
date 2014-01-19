@@ -11,6 +11,17 @@ from time_utils import ts2datetime, datetime2ts, window2time
 
 from config import xapian_search_user as user_search
 
+from pyelevator import WriteBatch, Elevator
+
+def _default_elevator(db_name='default'):
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    return db
+
+def init_db():
+    E.createdb('linhao_identify_gexf')
+
+    E.disconnect()
+
 
 def acquire_topic_id(name, start_ts, end_ts, module="identify"):
     item = db.session.query(TopicStatus).filter_by(topic=name, start=start_ts, end=end_ts, module=module).first()
@@ -87,7 +98,23 @@ def read_key_users(date, window, topicname, top_n=10):
             users.append(uid)
     return users
 
+
+def _utf8_unicode(s):
+    if isinstance(s, unicode):
+        return s
+    else:
+        return unicode(s, 'utf-8')
+
+
 def save_gexf_results(topic, identifyDate, identifyWindow, identifyGexf):
-    item = TopicGexf(topic, identifyDate, identifyWindow, identifyGexf)
-    db.session.add(item)
-    db.session.commit()
+    E = _default_elevator()
+    E.connect('linhao_identify_gexf')
+    key = _utf8_unicode(topic) + '_' + str(identifyDate) + '_' + str(identifyWindow)
+    value = str(identifyGexf)
+    E.Put(key, value)
+    E.disconnect()
+
+
+if __name__ == '__main__':
+    E = _default_elevator()
+    # init_db()

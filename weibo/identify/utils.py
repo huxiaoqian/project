@@ -10,9 +10,13 @@ from weibo.model import TopicIdentification, KnowledgeList, TopicGexf
 #    print 'Warning: Not in web environment.'
 
 from time_utils import ts2datetime, datetime2ts, window2time
+from pyelevator import WriteBatch, Elevator
 
 from weibo.global_config import xapian_search_weibo as status_search, xapian_search_user as user_search
 
+def _default_elevator(db_name='default'):
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    return db
 
 def acquire_topic_id(name):
     item = db.session.query(Topic).filter_by(topicName=name).first()
@@ -198,8 +202,22 @@ def acquire_user_by_id_v2(uid):
             
     return user
 
-#def read_topic_gexf_results(topicname):
-def read_topic_gexf_results(idGexf):
-    item = db.session.query(TopicGexf).filter_by(id=idGexf).first()
-    data = item.identifyGexf
-    return data
+
+def read_topic_gexf_results(topic, identifyDate, identifyWindow):
+    E = _default_elevator()
+    E.connect('linhao_identify_gexf')
+    key = _utf8_unicode(topic) + '_' + str(identifyDate) + '_' + str(identifyWindow)
+    try:
+        value = E.Get(key)
+    except KeyError:
+        value = None
+
+    E.disconnect()
+    return value
+
+
+def _utf8_unicode(s):
+    if isinstance(s, unicode):
+        return s
+    else:
+        return unicode(s, 'utf-8')

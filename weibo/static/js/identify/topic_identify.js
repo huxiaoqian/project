@@ -2,7 +2,7 @@ var previous_data = null;
 var current_data = null;
 var networkShowed = 0;
 var networkUpdated = 0;
-var animation = 1;
+var animation = 0;
 var start_ts = null;
 var end_ts = null;
 var sigInst = null;
@@ -62,20 +62,20 @@ Date.prototype.format = function(format) {
 
 function draw_animation() {
     if (start_ts > end_ts) {
-	if (animation_timer)
-	    clearInterval(animation_timer);
+				if (animation_timer)
+	    			clearInterval(animation_timer);
     }
     else {
-	sigInst.iterNodes(function(n){
-	    var timestamp = 0;
-	    for (var i=0;i<n.attr['attributes'].length;i++) {
-		if (n.attr['attributes'][i]['attr'] == 'timestamp')
-		    timestamp = parseInt(n.attr['attributes'][i]['val']);
-	    }
-	    if (timestamp < start_ts)
-		n.hidden = 0;
-	}).draw(2,2,2);
-	start_ts = start_ts + 24*60*60;
+				sigInst.iterNodes(function(n){
+	    			var timestamp = 0;
+	    			for (var i=0;i<n.attr['attributes'].length;i++) {
+								if (n.attr['attributes'][i]['attr'] == 'timestamp')
+		    						timestamp = parseInt(n.attr['attributes'][i]['val']);
+	    			}
+	    			if (timestamp < start_ts)
+								n.hidden = 0;
+				}).draw(2, 2, 2);
+				start_ts = start_ts + 24 * 60 * 60;
     }
 }
 
@@ -84,128 +84,144 @@ function network_request_callback(data) {
     $("#network_progress").removeClass("progress-striped");
     networkUpdated = 1;
     if (data) {
-	sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
-	    defaultLabelColor: '#fff'
-	}).graphProperties({
-	    minNodeSize: 0.5,
-	    maxNodeSize: 5
-	});
+    		$("#loading_network_data").text("计算完成!");
+				sigInst = sigma.init($('#sigma-graph')[0]).drawingProperties({
+	    			defaultLabelColor: '#fff'
+				}).graphProperties({
+	    			minNodeSize: 0.5,
+	    			maxNodeSize: 5
+				});
 
-	sigInst.parseGexf(data);
+				sigInst.parseGexf(data);
 
-	if (animation) {
-	    sigInst.iterNodes(function(n){
-		n.hidden = 1;
-		var timestamp = 0;
-		for (var i=0;i<n.attr['attributes'].length;i++) {
-		    if (n.attr['attributes'][i]['attr'] == 'timestamp')
-			timestamp = parseInt(n.attr['attributes'][i]['val']);
-		}
-		if (!start_ts)
-		    start_ts = timestamp;
-		else {
-		    if (timestamp < start_ts)
-			start_ts = timestamp;
-		}
-		if (!end_ts)
-		    end_ts = timestamp;
-		else {
-		    if (timestamp > end_ts)
-			end_ts = timestamp;
-		}
-	    }).draw(2,2,2);
-	    start_ts = end_ts - 5*24*60*60;
-	    setInterval(draw_animation, 1000);
-	}
+				if (animation) {
+				    sigInst.iterNodes(function(n){
+							n.hidden = 1;
+							var timestamp = 0;
+							for (var i=0;i<n.attr['attributes'].length;i++) {
+							    if (n.attr['attributes'][i]['attr'] == 'timestamp')
+											timestamp = parseInt(n.attr['attributes'][i]['val']);
+							}
+							if (!start_ts)
+							    start_ts = timestamp;
+							else {
+							    if (timestamp < start_ts)
+										start_ts = timestamp;
+							}
+							if (!end_ts)
+							    end_ts = timestamp;
+							else {
+							    if (timestamp > end_ts) end_ts = timestamp;
+							}
+				    }).draw(2,2,2);
+				    start_ts = end_ts - 5*24*60*60;
+				    setInterval(draw_animation, 1000);
+				}
 
-	(function(){
-	    var popUp;
-	    
-	    // This function is used to generate the attributes list from the node attributes.
-	    // Since the graph comes from GEXF, the attibutes look like:
-	    // [
-	    //   { attr: 'Lorem', val: '42' },
-	    //   { attr: 'Ipsum', val: 'dolores' },
-	    //   ...
-	    //   { attr: 'Sit',   val: 'amet' }
-	    // ]
-	    function attributesToString(attr) {
-		return '<ul>' +
-		    attr.map(function(o){
-			if (o.attr == 'name')
-			    return '<li>' + '博主昵称' + ' : ' + o.val + '</li>';
-			else if (o.attr == 'location')
-			    return '<li>' + '博主地域' + ' : ' + o.val + '</li>';
-			else if (o.attr == 'timestamp')
-			    return '<li>' + '博主最早出现时间' + ' : ' + new Date(o.val*1000).format("yyyy-MM-dd") + '</li>';
-			else
-			    return '<li>' + o.attr + ' : ' + o.val + '</li>';
-		    }).join('') +
-		    '</ul>';
-	    }
-	    
-	    function showNodeInfo(event) {
-		popUp && popUp.remove();
-		
-		var node;
-		sigInst.iterNodes(function(n){
-		    node = n;
-		},[event.content[0]]);
-		popUp = $(
-		    '<div class="node-info-popup"></div>'
-		).append(
-		    // The GEXF parser stores all the attributes in an array named
-		    // 'attributes'. And since sigma.js does not recognize the key
-		    // 'attributes' (unlike the keys 'label', 'color', 'size' etc),
-		    // it stores it in the node 'attr' object :
-		    attributesToString( node['attr']['attributes'] )
-		).attr(
-		    'id',
-		    'node-info'+sigInst.getID()
-		).css({
-		    'display': 'inline-block',
-		    'border-radius': 3,
-		    'padding': 5,
-		    'background': '#fff',
-		    'color': '#000',
-		    'box-shadow': '0 0 4px #666',
-		    'position': 'absolute',
-		    'left': node.displayX,
-		    'top': node.displayY+15
-		});
-		
-		$('ul',popUp).css('margin','0 0 0 20px');
-		
-		$('#sigma-graph').append(popUp);
-	    }
-	    
-	    function hideNodeInfo(event) {
-		popUp && popUp.remove();
-		popUp = false;
-	    }
-	    
-	    sigInst.bind('overnodes',showNodeInfo).bind('outnodes',hideNodeInfo).draw();
-	})();
+				(function(){
+				    var popUp;
+				    
+				    // This function is used to generate the attributes list from the node attributes.
+				    // Since the graph comes from GEXF, the attibutes look like:
+				    // [
+				    //   { attr: 'Lorem', val: '42' },
+				    //   { attr: 'Ipsum', val: 'dolores' },
+				    //   ...
+				    //   { attr: 'Sit',   val: 'amet' }
+				    // ]
+				    function attributesToString(attr) {
+								return '<ul>' + attr.map(function(o){
+									if (o.attr == 'name')
+									    return '<li>' + '博主昵称' + ' : ' + o.val + '</li>';
+									else if (o.attr == 'location')
+									    return '<li>' + '博主地域' + ' : ' + o.val + '</li>';
+									else if (o.attr == 'timestamp')
+									    return '<li>' + '博主最早出现时间' + ' : ' + new Date(o.val*1000).format("yyyy-MM-dd") + '</li>';
+									else
+									    return '<li>' + o.attr + ' : ' + o.val + '</li>';
+								 }).join('') + '</ul>';
+						}
+				    
+				    function showNodeInfo(event) {
+								popUp && popUp.remove();
+								
+								var node;
+								sigInst.iterNodes(function(n){
+								    node = n;
+								},[event.content[0]]);
+								popUp = $(
+								    '<div class="node-info-popup"></div>'
+								).append(
+								    // The GEXF parser stores all the attributes in an array named
+								    // 'attributes'. And since sigma.js does not recognize the key
+								    // 'attributes' (unlike the keys 'label', 'color', 'size' etc),
+								    // it stores it in the node 'attr' object :
+								    attributesToString( node['attr']['attributes'] )
+								).attr(
+								    'id',
+								    'node-info'+sigInst.getID()
+								).css({
+								    'display': 'inline-block',
+								    'border-radius': 3,
+								    'padding': 5,
+								    'background': '#fff',
+								    'color': '#000',
+								    'box-shadow': '0 0 4px #666',
+								    'position': 'absolute',
+								    'left': node.displayX,
+								    'top': node.displayY+15
+								});
+								
+								$('ul',popUp).css('margin','0 0 0 20px');
+								
+								$('#sigma-graph').append(popUp);
+						}
+							    
+						function hideNodeInfo(event) {
+								popUp && popUp.remove();
+								popUp = false;
+						}
+							    
+						sigInst.bind('overnodes',showNodeInfo).bind('outnodes',hideNodeInfo).draw();
+				})();
     }
+
     else {
-	$("#loading_network_data").text("暂无结果!");
-	$("#loading_network_data").show();
-    }
+    		console.log('1');
+				$("#loading_network_data").text("暂无结果!");
+		}
+
 }
 
-function show_network(topic_id, window_size) {
-    if (!networkShowed) {
-	$("#network").removeClass('out');
-	$("#network").addClass('in');
-	networkShowed = 1;
-	if (!networkUpdated)
-	    $.post("/identify/topic/network/", {'topic_id': topic_id, 'window_size': window_size}, network_request_callback, "xml");
-    }
-    else {
+function show_network() {
 	networkShowed = 0;
-	$("#network").removeClass('in');
-	$("#network").addClass('out');
-    }
+  if (!networkShowed) {
+			$("#network").removeClass('out');
+			$("#network").addClass('in');
+			networkShowed = 0;
+			if (!networkUpdated){
+          $.ajax({
+        			url: "/identify/topic/network/",
+        			data: {'topic': topic, 'start_ts': begin_ts, 'end_ts': over_ts},
+        			dataType: 'xml',
+        			type: "POST",
+        			success: function (data) {
+        					network_request_callback(data);
+        			},
+        			error: function(result) {
+        					$("#loading_network_data").text("暂无结果!");
+        					console.log("Status: " + result.status);
+                	console.log("Status: " + result.textStatus);
+                	console.log("Error: " + result.errorThrown); 
+              }
+          })
+			  }
+	}
+  else {
+			networkShowed = 0;
+			$("#network").removeClass('in');
+			$("#network").addClass('out');
+  }
 }
 
 (function ($) {

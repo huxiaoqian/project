@@ -131,14 +131,17 @@ def _multi_search(query_dict, sharding=True):
     for person in results:
         person_dict = {}
         _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, date = person
-        person_dict['statusesCount'] = statuseCount
-        person_dict['followersCount'] = followersCount
-        person_dict['friendsCount'] = friendsCount
-        person_dict['userName'] = name
+        person_dict['statuses_count'] = statuseCount
+        person_dict['followers_count'] = followersCount
+        person_dict['friends_count'] = friendsCount
+        person_dict['name'] = name
         person_dict['description'] = description
-        person_dict['profileImageUrl'] = profileImageUrl
-        person_dict['id'] = userId
+        person_dict['profile_image_url'] = profileImageUrl
+        person_dict['_id'] = userId
         person_dict['location'] = location
+        person_dict['gender'] = gender
+        person_dict['verifiedType'] = verifiedType
+        person_dict['verified'] = verified
         person_dict['created_at'] = ts2HMS(created_at)
         persons.append(person_dict)
 
@@ -147,14 +150,41 @@ def _multi_search(query_dict, sharding=True):
     return persons
 
 
-def thumbnail_user_template(data):
-    html = ''
-    for item in data:
-        html += "<div class='grid'>"
-        html += "<div class='imgholder'><a href='/profile/person/" + str(item['id']) + "\" target=\"_blank\"><img src=\"" + item['profileImageUrl'] + "' /></a></div>";
-        html += "<strong>" + item['userName'] + "</strong>";
-        html += "<p>微博数：" + item['statusesCount'] + "</p>";
-        html += "<p>关注数：" + item['friendsCount'] + "</p>";
-        html += "<p>粉丝数：" + item['followersCount'] + "</p>";
-        html += "<p>个人描述：" + item['description'] + "</p>";
-        html += "<div class='meta'><a href='http://weibo.com/u/" + str(item['id']) + "' target='_blank'>weibo.com/u/" + str(item['id']) + "</a></div></div>"
+def _search_order_by_created_at(limit=1000, sharding=True):
+    if sharding:
+        cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
+    else:
+        cobar_conn = MySQLdb.connect(host='192.168.2.11', user='root', db='weibo', charset='utf8')
+
+    persons = []
+    cursor = cobar_conn.cursor()
+
+    sql = "SELECT * from profile_person_basic ORDER BY created_at DESC LIMIT %d" % limit
+    
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchall()
+    except:
+        return persons
+
+    for person in results:
+        person_dict = {}
+        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, date = person
+        person_dict['statuses_count'] = statuseCount
+        person_dict['followers_count'] = followersCount
+        person_dict['friends_count'] = friendsCount
+        person_dict['name'] = name
+        person_dict['description'] = description
+        person_dict['profile_image_url'] = profileImageUrl
+        person_dict['_id'] = userId
+        person_dict['location'] = location
+        person_dict['gender'] = u'男' if gender == 'f' else u'女'
+        person_dict['verifiedType'] = verifiedType
+        print type(verifiedType)
+        person_dict['verified'] = u'是' if verified else u'否'
+        person_dict['created_at'] = ts2HMS(created_at)
+        persons.append(person_dict)
+
+    cobar_conn.close() 
+
+    return persons

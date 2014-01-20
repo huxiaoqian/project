@@ -725,13 +725,21 @@
       for(; i<length; i++) {
         item = data[i];
         html += "<div class=\"grid\">";
-        html += "<div class=\"imgholder\"><a href=\"/profile/person/" + item.id + "\" target=\"_blank\"><img src=\"" + item.profileImageUrl + "\" /></a></div>";
-        html += "<strong>" + item.userName + "</strong>";
-        html += "<p>微博数：" + item.statusesCount + "</p>";
-        html += "<p>关注数：" + item.friendsCount + "</p>";
-        html += "<p>粉丝数：" + item.followersCount + "</p>";
+        html += "<div class=\"imgholder\"><a href=\"/profile/person/" + item._id + "\" target=\"_blank\"><img src=\"" + item.profile_image_url + "\" /></a></div>";
+        html += "<strong>" + item.name + "</strong>";
+        html += "<p>微博数：" + item.statuses_count + "</p>";
+        html += "<p>关注数：" + item.friends_count + "</p>";
+        html += "<p>粉丝数：" + item.followers_count + "</p>";
+        html += "<p>活跃度：" + item.active + "</p>";
+        html += "<p>重要度：" + item.important + "</p>";
+        html += "<p>性别：" + item.gender + "</p>";
+        html += "<p>认证：" + item.verified + "</p>";
+        if(item.verified == '是')
+            html += "<p>认证类型：" + item.verified_type + "</p>";
+        html += "<p>注册地：" + item.location + "</p>";
+        html += "<p>注册日期：" + item.created_at + "</p>";
         html += "<p>个人描述：" + item.description + "</p>";
-        html += "<div class=\"meta\"><a href=\"http://weibo.com/u/" + item.id + "\" target=\"_blank\">weibo.com/u/" + item.id + "</a></div></div>";
+        html += "<div class=\"meta\"><a href=\"http://weibo.com/u/" + item._id + "\" target=\"_blank\">weibo.com/u/" + item._id + "</a></div></div>";
       }
       
       // Add image HTML to the page.

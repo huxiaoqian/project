@@ -24,10 +24,11 @@ from utils import acquire_topic_id, weiboinfo2url, getFieldUsersByScores, \
                   getUserNameById, getUserIdByName, merge, \
                   getUsersInfoByUidInteract, user2domain, getFriendship, \
                   yymInfo, _utf_8_decode, getUserInfoById, _utf_8_encode
-from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts
+from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts, ts2datetime
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
-                                fields_value, fields_id, emotions_zh_kv, emotions_kv
+                                fields_value, fields_id, emotions_zh_kv, emotions_kv, LATEST_DATE
 #from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+from _multi_search import _hotest_users, _newest_users
 from _elevator import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
 from _mysql import _search_person_basic, _search_person_important_active, _multi_search
 
@@ -208,67 +209,28 @@ def profile_search(model='hotest'):
                                            location=province_str, field=field, model=model, result=None)
             if request.method == 'POST' and request.form['page']:
                 if model == 'newest':
-                    page = int(request.form['page'])
-                    if page == 1:
-                        startoffset = 0
-                    else:
-                        startoffset = (page - 1) * COUNT_PER_PAGE
-
-                    total_days = 90
-                    begin_ts = int(time.mktime(datetime(2013,1, 1, 2, 0).timetuple()))
-                    now_ts = int(time.mktime(datetime(2014, 1, 1, 2, 0).timetuple()))
-                    during = 24 * 3600
-                    total_days = (now_ts - begin_ts) / during
-                    query_dict = {
-                        'created_at': {
-                            '$gt': begin_ts,
-                            '$lt': now_ts,
-                        }
-                    }
-                    count, get_results = xapian_search_user.search(query=query_dict, start_offset=startoffset, max_offset=COUNT_PER_PAGE,
-                                                                   fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'], 
-                                                                   sort_by=['created_at'])
-                    users = []
-
-                    for r in get_results():
-                        statusesCount = r['statuses_count']
-                        followersCount = r['followers_count']
-                        friendsCount = r['friends_count']
-                        userName = r['name']
-                        description = r['description']
-                        uid = r['_id']
-                        profileImageUrl = r['profile_image_url']
-                        users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
-                                  'description': description, 'profileImageUrl': profileImageUrl})
-                    return json.dumps(users)
-                elif model == 'hotest':
-                    from utils import active_rank
-                    current_time = '2013-3-7'
-                    window_size = 1
-                    top_n = 2000
-                    rank_results = active_rank(top_n, current_time, window_size)
-                    users = []
+                    top_n = 1000
                     page = int(request.form['page'])
                     if page == 1:
                         startoffset = 0
                     else:
                         startoffset = (page - 1) * COUNT_PER_PAGE
                     endoffset = startoffset + COUNT_PER_PAGE - 1
-                    for uid in rank_results:
-                        count, get_results = xapian_search_user.search(query={'_id':int(uid)}, fields=['created_at', '_id', 'name', 'statuses_count', 'followers_count', 'friends_count', 'description', 'profile_image_url'] )
-                        for r in get_results():
-                            statuses_count = r['statuses_count']
-                            followers_count = r['followers_count']
-                            friends_count = r['friends_count']
-                            userName = r['name']
-                            description = r['description']
-                            uid = r['_id']
-                            profile_image_url = r['profile_image_url']
-                            user = {'id': uid, 'userName': userName, 'statusesCount': statuses_count, 'followersCount': followers_count, 'friendsCount': friends_count,
-                                      'description': description, 'profileImageUrl': profile_image_url}
-                            if user:
-                                users.append(user)
+                    users = _newest_users(top_n)
                     return json.dumps(users[startoffset:endoffset])
+
+                elif model == 'hotest':
+                    top_n = 1000
+                    latest = ts2datetime(datetimestr2ts(LATEST_DATE))
+                    page = int(request.form['page'])
+                    if page == 1:
+                        startoffset = 0
+                    else:
+                        startoffset = (page - 1) * COUNT_PER_PAGE
+                    endoffset = startoffset + COUNT_PER_PAGE - 1
+                    users = _hotest_users(top_n, latest)
+                    return json.dumps(users[startoffset:endoffset])
+
                 elif model == 'oversea':
                     page = int(request.form['page'])
                     if page == 1:

@@ -25,32 +25,9 @@
         <ul class="nav nav-list">
           {% for f in field %}
             {% if model == f.fieldEnName %}
-               <li class="active"><a href="/profile/group/{{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
+               <li class="active"><a href="/profile/group/?fieldEnName={{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
             {% endif %}
           {% endfor %}
-          <li class="nav-header">业务领域</li>
-          <li><a href="/profile/group/finance">财经</a></li>
-          <li><a href="/profile/group/fashion">时尚</a></li>
-          <li><a href="/profile/group/entertainment">娱乐</a></li>
-          <li><a href="/profile/group/media">媒体</a></li>
-          <li><a href="/profile/group/sports">体育</a></li>
-          <li><a href="/profile/group/culture">文化</a></li>
-          <li><a href="/profile/group/education">教育</a></li>
-          <li><a href="/profile/group/technology">科技</a></li>
-          <li><a href="/profile/group/oversea">境外</a></li>
-          <li class="nav-header">舆情领域</li>
-          <li><a href="/profile/group/university">高校微博</a></li>
-          <li><a href="/profile/group/homeadmin">境内机构</a></li>
-          <li><a href="/profile/group/abroadadmin">境外机构</a></li>
-          <li><a href="/profile/group/homemedia">境内媒体</a></li>
-          <li><a href="/profile/group/abroadmedia">境外媒体</a></li>
-          <li><a href="/profile/group/folkorg">民间组织</a></li>
-          <li><a href="/profile/group/lawyer">律师</a></li>
-          <li><a href="/profile/group/politician">政府官员</a></li>
-          <li><a href="/profile/group/mediaworker">媒体人士</a></li>
-          <li><a href="/profile/group/activer">活跃人士</a></li>
-          <li><a href="/profile/group/grassroot">草根</a></li>
-          <li><a href="/profile/group/other">其它</a></li>
         </ul>
       </div>
 

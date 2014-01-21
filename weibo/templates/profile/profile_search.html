@@ -730,8 +730,10 @@
         html += "<p>微博数：" + item.statuses_count + "</p>";
         html += "<p>关注数：" + item.friends_count + "</p>";
         html += "<p>粉丝数：" + item.followers_count + "</p>";
-        html += "<p>活跃度：" + item.active + "</p>";
-        html += "<p>重要度：" + item.important + "</p>";
+        if(item.active)
+            html += "<p>活跃度：" + item.active + "</p>";
+        if(item.important)
+            html += "<p>重要度：" + item.important + "</p>";
         html += "<p>性别：" + item.gender + "</p>";
         html += "<p>认证：" + item.verified + "</p>";
         if(item.verified == '是')

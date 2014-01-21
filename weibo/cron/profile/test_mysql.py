@@ -5,29 +5,24 @@ import MySQLdb
 
 # 连接数据库　
 try:
-    #conn = MySQLdb.connect(host='192.168.2.11', user='cobar', db='cobar_db_weibo', port=8066)
+    conn = MySQLdb.connect(host='192.168.2.11', user='cobar', db='cobar_db_weibo', port=8066)
     #conn = MySQLdb.connect(host='192.168.2.10', user='root', db='cobar_weibo')
-    conn = MySQLdb.connect(host='192.168.2.21', user='root', db='cobar_weibo')
+    #conn = MySQLdb.connect(host='192.168.2.21', user='root', db='cobar_weibo')
     print 'connection success'
 except Exception, e:
     print e
     sys.exit()
-'''
-try:
-    read_conn = MySQLdb.connect(host='192.168.2.11', user='root', db='weibo')
-    print 'connection success'
-except Exception, e:
-    print e
-    sys.exit()
-'''
 
 # 获取cursor对象来进行操作
-#read_cursor = read_conn.cursor()
 cursor = conn.cursor()
 
+try:
+    cursor.execute("DROP TABLE profile_person_basic;")
+except Exception, e:
+    print e
+
 # 创建表
-'''
-sql = "CREATE TABLE if not exists profile_person_basic_test ( \
+sql = "CREATE TABLE profile_person_basic ( \
   id int(11) NOT NULL AUTO_INCREMENT, \
   userId bigint(20) DEFAULT NULL, \
   province int(11) DEFAULT NULL, \
@@ -43,6 +38,7 @@ sql = "CREATE TABLE if not exists profile_person_basic_test ( \
   location varchar(20) DEFAULT NULL, \
   description text, \
   created_at bigint(20) NULL, \
+  domain text, \
   date date DEFAULT NULL, \
   PRIMARY KEY (id) \
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;"
@@ -58,6 +54,7 @@ sql = "CREATE TABLE profile_person_weibo_count ( \
   emoticon bigint(20) DEFAULT NULL, \
   PRIMARY KEY (id) \
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+'''
 
 cursor.execute(sql)
 '''
@@ -87,9 +84,6 @@ sql = "select * from profile_person_basic"
 # cursor.execute(sql)
 # alldata = cursor.fetchall()
 
-read_cursor.execute(sql)
-one_record = read_cursor.fetchone()
-
 read_data = cursor.fetchall()
 
 for record in read_data:
@@ -106,19 +100,4 @@ if alldata:
 cursor.close()
 conn.close()
 
-read_cursor.close()
-read_conn.close()
-
-'''
-'''
-def test_sqlalchemy():
-    from database import db_session
-    from models import ProfilePersonBasic
-    person = db_session.query(ProfilePersonBasic).filter_by(userId=2015464173).first()
-    print person.name
-    db_session.remove()
-    #print ProfilePersonBasic.query.all().count()
-
-if __name__ == '__main__':
-    test_sqlalchemy()
 '''

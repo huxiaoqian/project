@@ -23,9 +23,10 @@ class Person():
     date = None
     verifiedType = None
     description = None
+    domain = None
 
     def __init__(self, person_tuple):
-        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, date = person_tuple
+        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, domain, date = person_tuple
         self.userId = userId
         self.profileImageUrl = profileImageUrl
         self.name = name
@@ -38,7 +39,26 @@ class Person():
         self.location = location
         self.date = date
         self.verifiedType = verifiedType
-        self.description = description    
+        self.domain = domain
+        self.description = description
+
+    def _to_dict(self):
+        person_dict = {}
+        person_dict['statuses_count'] = self.statuseCount
+        person_dict['followers_count'] = self.followersCount
+        person_dict['friends_count'] = self.friendsCount
+        person_dict['name'] = self.name
+        person_dict['description'] = self.description
+        person_dict['profile_image_url'] = self.profileImageUrl
+        person_dict['_id'] = self.userId
+        person_dict['location'] = self.location
+        person_dict['gender'] = u'男' if self.gender == 'm' else u'女'
+        person_dict['verifiedType'] = self.verifiedType
+        person_dict['verified'] = u'是' if self.verified else u'否'
+        person_dict['created_at'] = ts2HMS(self.created_at)
+        person_dict['domain'] = self.domain
+
+        return person_dict
 
 
 def _search_person_basic(userId, sharding=False):
@@ -51,8 +71,8 @@ def _search_person_basic(userId, sharding=False):
         try:
             cursor.execute(sql)
             person = cursor.fetchone()
-        except:
-            pass
+        except Exception, e:
+            print e
 
         if person:
             person = Person(person)
@@ -130,7 +150,7 @@ def _multi_search(query_dict, sharding=True):
 
     for person in results:
         person_dict = {}
-        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, date = person
+        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, domain, date = person
         person_dict['statuses_count'] = statuseCount
         person_dict['followers_count'] = followersCount
         person_dict['friends_count'] = friendsCount
@@ -139,10 +159,11 @@ def _multi_search(query_dict, sharding=True):
         person_dict['profile_image_url'] = profileImageUrl
         person_dict['_id'] = userId
         person_dict['location'] = location
-        person_dict['gender'] = gender
+        person_dict['gender'] = u'男' if gender == 'f' else u'女'
         person_dict['verifiedType'] = verifiedType
-        person_dict['verified'] = verified
+        person_dict['verified'] = u'是' if verified else u'否'
         person_dict['created_at'] = ts2HMS(created_at)
+        person_dict['domain'] = domain
         persons.append(person_dict)
 
     cobar_conn.close() 
@@ -169,7 +190,7 @@ def _search_order_by_created_at(limit=1000, sharding=True):
 
     for person in results:
         person_dict = {}
-        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, date = person
+        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, domain, date = person
         person_dict['statuses_count'] = statuseCount
         person_dict['followers_count'] = followersCount
         person_dict['friends_count'] = friendsCount
@@ -180,9 +201,50 @@ def _search_order_by_created_at(limit=1000, sharding=True):
         person_dict['location'] = location
         person_dict['gender'] = u'男' if gender == 'f' else u'女'
         person_dict['verifiedType'] = verifiedType
-        print type(verifiedType)
         person_dict['verified'] = u'是' if verified else u'否'
         person_dict['created_at'] = ts2HMS(created_at)
+        person_dict['domain'] = domain
+        persons.append(person_dict)
+
+    cobar_conn.close() 
+
+    return persons
+
+
+def _search_by_domain(domain, limit=1000, sharding=True):
+    if sharding:
+        cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
+    else:
+        cobar_conn = MySQLdb.connect(host='192.168.2.11', user='root', db='weibo', charset='utf8')
+
+    persons = []
+    cursor = cobar_conn.cursor()
+
+    sql = "SELECT * from profile_person_basic where domain='%s' ORDER BY followersCount DESC LIMIT %d" % (domain, limit)
+    
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchall()
+    except Exception, e:
+        print e
+        return persons
+
+    for person in results:
+        person_dict = {}
+        _id, userId, province, city, verified, name, gender, profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, description, created_at, domain, date = person
+        person_dict['statuses_count'] = statuseCount
+        person_dict['followers_count'] = followersCount
+        person_dict['friends_count'] = friendsCount
+        person_dict['name'] = name
+        person_dict['description'] = description
+        person_dict['profile_image_url'] = profileImageUrl
+        person_dict['_id'] = userId
+        person_dict['location'] = location
+        person_dict['gender'] = u'男' if gender == 'f' else u'女'
+        person_dict['verifiedType'] = verifiedType
+        person_dict['verified'] = u'是' if verified else u'否'
+        person_dict['created_at'] = ts2HMS(created_at)
+        person_dict['domain'] = domain
         persons.append(person_dict)
 
     cobar_conn.close() 

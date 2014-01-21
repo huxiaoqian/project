@@ -21,7 +21,7 @@ xapian_user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_co
                      'gender', 'profile_image_url', 'verified_type','followers_count', \
                      'location', 'statuses_count', 'description', 'created_at']
 try:
-    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_20140112_4'),
+    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_20140112'),
                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 except:
     print 'leveldb not available now'
@@ -64,6 +64,16 @@ def userLeveldb2Domain(uid, updatetime='20131220'):
         domainid = -1
 
     return domainid
+
+
+def userLeveldb2DomainZh(uid, updatetime='20131220'):
+    try:
+        v = spieduser_bucket.Get(str(uid) + '_' + str(updatetime))
+        domain = v
+    except KeyError:
+        domain = '其他'
+
+    return domain
 
 
 def get_daily_user_count_db_by_date(datestr):
@@ -178,7 +188,7 @@ def iter_userbasic2leveldb():
             te = time.time()
             daily_profile_person_basic_db.Write(batch, sync=True)
             batch = leveldb.WriteBatch()
-            print count, '%s sec' % (te - ts), 'xapian2leveldb'
+            print count, '%s sec' % (te - ts), 'xapian2leveldb person basic'
             ts = te
         # extraction and transfer
         try:
@@ -198,6 +208,7 @@ def iter_userbasic2leveldb():
         location = _utf_encode(user['location'])
         statusesCount = user['statuses_count']
         description = _utf_encode(user['description'])
+        domain = userLeveldb2DomainZh(userId)
         
         try:
             created_at = int(user['created_at'])
@@ -209,103 +220,83 @@ def iter_userbasic2leveldb():
         #Load
         key = str(userId)
         value = '_\/'.join([str(province), str(city), str(verified), \
-                           str(name), str(friendsCount), str(gender), \
-                           str(profileImageUrl), str(verifiedType), \
-                           str(followersCount), str(location), \
-                           str(statusesCount), str(description)])
+                            str(name), str(friendsCount), str(gender), \
+                            str(profileImageUrl), str(verifiedType), \
+                            str(followersCount), str(location), \
+                            str(statusesCount), str(description), \
+                            str(created_at), str(domain)])
         batch.Put(key, value)
 
         count += 1
 
 
 def iter_userbasic2mysql(cobar_conn, sharding=False):
-    print cobar_conn
     cursor = cobar_conn.cursor()
-    users = xapian_search_user.iter_all_docs(fields=xapian_user_fields)
 
+    # drop non-primary indexes on table
+    try:
+        cursor.execute("SHOW INDEX FROM profile_person_basic")
+        results = cursor.fetchall()
+        for r in results:
+            index_name = r[2]
+            if index_name != 'PRIMARY':
+                cursor.execute("DROP INDEX %s ON profile_person_basic" % index_name)
+    except Exception, e:
+        print e
+    print 'drop indexes completely'
+
+    # delete data from table
+    try:
+        cursor.execute("DELETE FROM profile_person_basic")
+        cobar_conn.commit()
+    except Exception, e:
+        cobar_conn.rollback()
+        print e
+    print 'clean table data completely'
+
+    # insert new data
     count = 0
     ts = te = time.time()
-    for user in users:
-        if count < 3500000:
-            count += 1
-            continue
-
+    for k, v in daily_profile_person_basic_db.RangeIter():
         if count % 2000 == 0:
             if sharding:
                 # Commit your changes in the database
                 cobar_conn.commit()
 
-        if count % 3500000 == 0:
-            cobar_conn.close()
-            cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
-            cursor = cobar_conn.cursor() 
-
         if count % 10000 == 0:
             te = time.time()
-            if sharding:
-                pass
-            else:
-                db.session.commit()
-            print count, '%s sec' % (te - ts), 'xapian2mysql'
+            print count, '%s sec' % (te - ts), 'leveldb2mysql person basic'
             ts = te
 
-        try:
-            userId = int(user['_id'])
-        except:
-            count += 1
-            continue
-        province = user['province']
-        city = user['city']
-        verified = user['verified']
-        name = user['name']
-        friendsCount = user['friends_count']
-        gender = user['gender']
-        profileImageUrl = user['profile_image_url']
-        verifiedType = user['verified_type']
-        followersCount = user['followers_count']
-        location = user['location']
-        statusesCount = user['statuses_count']
-        description = user['description']
-        description = _utf_decode(description)
-        
-        try:
-            created_at = int(user['created_at'])
-        except:
-            count += 1
-            continue
-
-        date = now_datetimestr
+        userId = int(k)
+        province, city, verified, name, friendsCount, gender, profileImageUrl, verifiedType, \
+        followersCount, location, statusesCount, description, created_at, domain = v.split('_\/')
+        description = _utf_encode(description)
+        domain = _utf_encode(domain)
+        verified = 1 if verified == 'True' else 0
+        date = batch_date_1
 
         if sharding:
-            sql = """insert into profile_person_basic_test(userId, province, city, verified, name, gender, \
+            sql = """insert into profile_person_basic(userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, \
-                     description, created_at, date) values ('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', 
+                     created_at, description, domain) values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', 
                      '%s', '%s', '%s', '%s', '%s', '%s', '%s')""" % (userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, \
-                     description, created_at, date)
- 
+                     created_at, description, domain)
+
             try:
                 cursor.execute(sql)
             except Exception, e:
+                #print e
                 description = ''
-                sql = """insert into profile_person_basic_test(userId, province, city, verified, name, gender, \
+                sql = """insert into profile_person_basic(userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, \
-                     description, created_at, date) values ('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', 
+                     created_at, description, domain) values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', 
                      '%s', '%s', '%s', '%s', '%s', '%s', '%s')""" % (userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statusesCount, location, \
-                     description, created_at, date)
+                     created_at, description, domain)
             
                 cursor.execute(sql)
-        else:
-            '''
-            item_exist = db.session.query(ProfilePersonBasic).filter(ProfilePersonBasic.userId==userId).first()
-            if item_exist:
-                db.session.delete(item_exist)
-            '''
-            item = ProfilePersonBasic(userId, province, city, verified, name, gender, profileImageUrl, \
-                                      verifiedType, friendsCount, followersCount, statusesCount, location, \
-                                      description, created_at, date)
-            db.session.add(item)
 
         count += 1
 
@@ -688,7 +679,7 @@ def batch_handle_domain():
 
 if __name__ == '__main__':
     sharding = True
-    '''
+
     if sharding:
         # mysqldb连接数据库　
         try:
@@ -698,11 +689,7 @@ if __name__ == '__main__':
             print e
             sys.exit()
 
-    print cobar_conn
-    '''
-
-    #now_datetimestr = get_now_datestr()
-    #iter_userbasic2mysql(cobar_conn, sharding)
+    #
     '''
     seed_set = get_official_seed_set()
     scws = load_scws()
@@ -724,7 +711,8 @@ if __name__ == '__main__':
     # personWeiboCount2levedb()
 
     daily_profile_person_basic_db = get_daily_user_basic_db_by_date(batch_date_1)
-    iter_userbasic2leveldb()
+    #iter_userbasic2leveldb()
+    iter_userbasic2mysql(cobar_conn, sharding)
 
     # daily_profile_person_topic_db = get_daily_user_topic_db_by_date(batch_date_1)
     # personTopic2leveldb()

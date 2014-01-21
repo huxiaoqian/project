@@ -8,34 +8,18 @@
 <body>
 <div class="container">
   <div class="well">
-    <legend><strong>领域特征</strong></legend>
+    <legend><strong>领域画像</strong></legend>
     <form id="profile_group" action="/profile/group/" class="form-inline" method="GET">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>领域:</b></font>
       <div class="btn-group">
         <a id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-        财经<span class="caret"></span></a>
+          {% if fields[0] %}
+              {{ fields[0].fieldZhName }}<span class="caret"></span></a>
+          {% endif %}
           <ul id="area_rank_method_dropdown_menu" class="dropdown-menu">
-            <li><a href="#" onClick="choose_field('area', 'finance');" data-toggle="tab">财经</a></li>
-            <li><a href="#" onClick="choose_field('area', 'fashion');" data-toggle="tab">时尚</a></li>
-            <li><a href="#" onClick="choose_field('area', 'entertainment');" data-toggle="tab">娱乐</a></li>
-            <li><a href="#" onClick="choose_field('area', 'media');" data-toggle="tab">媒体</a></li>
-            <li><a href="#" onClick="choose_field('area', 'sports');" data-toggle="tab">体育</a></li>
-            <li><a href="#" onClick="choose_field('area', 'culture');" data-toggle="tab">文化</a></li>
-            <li><a href="#" onClick="choose_field('area', 'education');" data-toggle="tab">教育</a></li>
-            <li><a href="#" onClick="choose_field('area', 'technology');" data-toggle="tab">科技</a></li>
-            <li><a href="#" onClick="choose_field('area', 'oversea');" data-toggle="tab">境外</a></li>
-            <li><a href="#" onClick="choose_field('area', 'university');" data-toggle="tab">高校微博</a></li>
-            <li><a href="#" onClick="choose_field('area', 'homeadmin');" data-toggle="tab">境内机构</a></li>
-            <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外机构</a></li>
-            <li><a href="#" onClick="choose_field('area', 'homemedia');" data-toggle="tab">境内媒体</a></li>
-            <li><a href="#" onClick="choose_field('area', 'abroadmedia');" data-toggle="tab">境外媒体</a></li>
-            <li><a href="#" onClick="choose_field('area', 'folkorg');" data-toggle="tab">民间组织</a></li>
-            <li><a href="#" onClick="choose_field('area', 'lawyer');" data-toggle="tab">律师</a></li>
-            <li><a href="#" onClick="choose_field('area', 'politician');" data-toggle="tab">政府官员</a></li>
-            <li><a href="#" onClick="choose_field('area', 'mediaworker');" data-toggle="tab">媒体人士</a></li>
-            <li><a href="#" onClick="choose_field('area', 'activer');" data-toggle="tab">活跃人士</a></li>
-            <li><a href="#" onClick="choose_field('area', 'grassroot');" data-toggle="tab">草根</a></li>
-            <li><a href="#" onClick="choose_field('area', 'other');" data-toggle="tab">其它</a></li>
+            {% for f in fields %}
+                <li><a href="#" onClick="choose_field('area', '{{ f.fieldEnName }}');" data-toggle="tab">{{ f.fieldZhName }}</a></li>
+            {% endfor %}
           </ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
@@ -44,14 +28,14 @@
         <span id="field_date">9月 1日,2013 - 9月 5日,2013</span> 
         <b class="caret"></b>
       </div> 
-      <input id="topic_hidden" type="hidden" name="fieldEnName" value="finance">
+      <input id="field_hidden" type="hidden" name="fieldEnName" value="">
       <input id="during_time" type="hidden" name="during_time" value="9月 1日,2013 - 9月 5日,2013">
       &nbsp&nbsp&nbsp
-      <input type="submit" class="btn btn-primary" onclick="gettime()" value="分析">
+      <input type="submit" class="btn btn-primary" onclick="submit_search_profile_group()" value="分析">
     </form>
   </div>
   <div class="well">
-    <legend><strong>博主特征</strong></legend>
+    <legend><strong>博主画像</strong></legend>
     <form id="profile_search" action="/profile/search/find" class="form-inline" method="GET">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博数:</b></font>
       <div class="btn-group">
@@ -278,12 +262,185 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{{ url_for('static', filename='js/profile/choose.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
   <script>
+  function choose_field(prefix, area){
+      $("#field_hidden").val(area)
+      cn_area = '';
+      if(area=='finance')
+          cn_area = '财经';
+      else if(area=='media')
+          cn_area = '媒体';
+      else if(area=='sports')
+          cn_area = '体育';
+      else if(area=='fashion')
+          cn_area = '时尚';
+      else if(area=='culture')
+          cn_area = '文化';
+      else if(area=='education')
+          cn_area = '教育';
+      else if(area=='technology')
+          cn_area = '科技';
+      else if(area=='abroad')
+          cn_area = '境外';
+      else if(area=='entertainment')
+          cn_area = '娱乐';
+      else if(area=='university')
+          cn_area = '高校微博';
+      else if(area=='homeadmin')
+          cn_area = '境内机构';
+      else if(area=='abroadadmin')
+          cn_area = '境外机构';
+      else if(area=='homemedia')
+          cn_area = '境内媒体';
+      else if(area=='abroadadmin')
+          cn_area = '境外媒体';
+      else if(area=='folkorg')
+          cn_area = '民间组织';
+      else if(area=='lawyer')
+          cn_area = '律师';
+      else if(area=='politician')
+          cn_area = '政府官员';
+      else if(area=='mediaworker')
+          cn_area = '媒体人士';
+      else if(area=='activer')
+          cn_area = '活跃人士';
+      else if(area=='grassroot')
+          cn_area = '草根';
+      else if(area=='other')
+          cn_area = '其它';
+      $("#area_rank_method_choosen").text(cn_area);
+      $("#area_rank_method_choosen").append(' <span class="caret"></span>');
+      //close dropdown
+      $("#area_rank_method_choosen").parent().removeClass('open');
+      $("#area_rank_method_dropdown_menu").children().removeClass('active');
+    }
+
+  function choose_window(range, window) {
+      $("#"+range+"_window_size").val(window);
+      cn_window = '';
+      if(window==1)
+          cn_window = '1天';
+      else if(window==7)
+          cn_window = '1周';
+      else if(window==30)
+          cn_window = '1个月';
+      else if(window==90)
+          cn_window = '3个月';
+      $("#"+range+"_window_size_choosen").text(cn_window);
+      $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+      //close dropdown
+      $("#"+range+"_window_size_choosen").parent().removeClass('open');
+      $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+  }
+  function choose_statuses_count(range, window) {
+      $("#"+range+"_window_size").val(window);
+      cn_window = '';
+      if(window==200)
+          cn_window = '0-200万';
+      else if(window==400)
+    cn_window = '200-400万';
+      else if(window==600)
+    cn_window = '400-600万';
+      else if(window==800)
+    cn_window = '600-800万';
+      else if(window==1000)
+      cn_window = '800-1000万';
+      else if(window==1200)
+      cn_window = '1000-1200万';
+      else if(window==1400)
+      cn_window = '1200-1400万';
+      else if(window==1600)
+      cn_window = '1400-1600万';
+      else if(window==1800)
+      cn_window = '1600-1800万';
+      else if(window==2000)
+      cn_window = '1800-2000万';
+      $("#"+range+"_window_size_choosen").text(cn_window);
+      $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+      //close dropdown
+      $("#"+range+"_window_size_choosen").parent().removeClass('open');
+      $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+  }
+
+  function choose_followers_count(range, window) {
+      $("#"+range+"_window_size").val(window);
+      cn_window = '';
+      if(window==600)
+          cn_window = '0-600万';
+      else if(window==1200)
+      cn_window = '600-1200万';
+      else if(window==1800)
+      cn_window = '1200-1800万';
+      else if(window==2400)
+      cn_window = '1800-2400万';
+      else if(window==3000)
+      cn_window = '2400-3000万';
+      else if(window==3600)
+      cn_window = '3000-3600万';
+      else if(window==4200)
+      cn_window = '3600-4200万';
+      else if(window==4800)
+      cn_window = '4200-4800万';
+      else if(window==5400)
+      cn_window = '4800-5400万';
+      else if(window==6000)
+      cn_window = '5400-6000万';
+      $("#"+range+"_window_size_choosen").text(cn_window);
+      $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+      //close dropdown
+      $("#"+range+"_window_size_choosen").parent().removeClass('open');
+      $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+  }
+  function choose_friends_count(range, window) {
+      $("#"+range+"_window_size").val(window);
+      cn_window = '';
+      if(window==400)
+          cn_window = '0-400';
+      else if(window==800)
+      cn_window = '400-800';
+      else if(window==1200)
+      cn_window = '800-1200';
+      else if(window==1600)
+      cn_window = '1200-1600';
+      else if(window==2000)
+      cn_window = '1600-2000';
+      else if(window==2400)
+      cn_window = '2000-2400';
+      else if(window==2800)
+      cn_window = '2400-2800';
+      else if(window==3200)
+      cn_window = '2800-3200';
+      else if(window==3600)
+      cn_window = '3200-3600';
+      else if(window==4000)
+      cn_window = '3600-4000';
+      $("#"+range+"_window_size_choosen").text(cn_window);
+      $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+      //close dropdown
+      $("#"+range+"_window_size_choosen").parent().removeClass('open');
+      $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+  }
+  function choose_rankcount(range, method) {
+      $("#"+range+"_rank_method").val(method);
+      cn_method = '';
+      if(method=='followers_count')
+        cn_method = '粉丝数';
+      else if(method=='friends_count')
+        cn_method = '关注数';
+      else if(method=='statuses_count')
+        cn_method = '微博数';
+      else if(method=='created_at')
+        cn_method = '注册时间';
+      $("#"+range+"_rank_method_choosen").text(cn_method);
+      $("#"+range+"_rank_method_choosen").append(' <span class="caret"></span>');
+      //close dropdown
+      $("#"+range+"_rank_method_choosen").parent().removeClass('open');
+      $("#"+range+"_rank_method_dropdown_menu").children().removeClass('active');
+  }
   function choose_province()
   {
     var el = document.getElementsByTagName("input");
@@ -327,11 +484,14 @@
         }
     }
   }
-  function gettime()
-  {
+
+  function submit_search_profile_group(){
     var field_time = $('#field_date').html();
     document.getElementById('during_time').value = field_time;
+    var field_hidden = $('#area_rank_method_choosen').val();
+    document.getElementById('field_hidden').value = field_hidden;
   }
+
   $(document).ready(function() {
     var field_time = $('#field_date').html();
     document.getElementById('during_time').value = field_time;

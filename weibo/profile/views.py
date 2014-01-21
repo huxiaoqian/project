@@ -26,9 +26,10 @@ from utils import acquire_topic_id, weiboinfo2url, getFieldUsersByScores, \
                   yymInfo, _utf_8_decode, getUserInfoById, _utf_8_encode
 from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts, ts2datetime
 from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
-                                fields_value, fields_id, emotions_zh_kv, emotions_kv, LATEST_DATE
+                                fields_value, fields_id, emotions_zh_kv, emotions_kv, LATEST_DATE, DOMAIN_LIST, \
+                                DOMAIN_ZH_LIST
 #from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
-from _multi_search import _hotest_users, _newest_users
+from _multi_search import _hotest_users, _newest_users, _domain_users
 from _elevator import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
 from _mysql import _search_person_basic, _search_person_important_active, _multi_search
 
@@ -40,7 +41,9 @@ fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', '
 labels = ['university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', \
           'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
 
-DOMAIN_LIST = fields_value + labels
+#DOMAIN_LIST = fields_value + labels
+DOMAIN_LIST = DOMAIN_LIST[9:]
+DOMAIN_ZH_LIST = DOMAIN_ZH_LIST[9:]
 
 
 def _time_zone(stri):
@@ -125,7 +128,7 @@ def getStaticInfo():
     friendsRange = [{'lowBound': friendscount[i], 'upBound': friendscount[i+1]} for i in range(len(friendscount)-1)]
     followersRange = [{'lowBound': followerscount[i], 'upBound': followerscount[i+1]} for i in range(len(followerscount)-1)]
     province = [{'province': unicode(i, 'utf-8')} for i in province]
-    fields = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
+    fields = [{'fieldEnName': f, 'fieldZhName': DOMAIN_ZH_LIST[i]} for i, f in enumerate(DOMAIN_LIST)]
     return statusRange, friendsRange, followersRange, province, fields
 
 @mod.route('/log_in', methods=['GET','POST'])
@@ -137,26 +140,24 @@ def log_in():
     else:
         return json.dumps('Wrong')
 
-#添加画像主页
 @mod.route('/', methods=['GET','POST'])
-def test_index():
+def index():
     if 'logged_in' in session and session['logged_in']:
+        statuscount, friendscount, followerscount, province, field = getStaticInfo()
         if session['user'] == 'admin':
-            return render_template('profile/index.html')
+            return render_template('profile/index.html', fields=field)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            #pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.identify
                     if identy == 1:
-                        return render_template('profile/index.html')
+                        return render_template('profile/index.html', fields=field)
                     else:
                         return redirect('/')
             return redirect('/')
     else:
         return redirect('/')
-#添加画像主页
 
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
@@ -249,42 +250,29 @@ def profile_search(model='hotest'):
                             break
                         offset += 1
                     return json.dumps(users)
-                elif model in fields_value:
+
+                elif model in DOMAIN_LIST:
                     page = int(request.form['page'])
                     if page == 1:
                         startoffset = 0
                     else:
                         startoffset = (page - 1) * COUNT_PER_PAGE
                     endoffset = startoffset + COUNT_PER_PAGE - 1
-                    fieldEnName = model
-                    count, field_users = xapian_search_domain.search(query={'domain':str(fields_id[str(fieldEnName)])}, sort_by=['followers_count'], fields=['_id', 'name', 'statuses_count', 'friends_count', 'followers_count', 'profile_image_url', 'description'], max_offset=10000)
-                    users = []
-                    count = 0
-                    for field_user in field_users():#[startoffset: endoffset]:
-                        if count < startoffset:
-                            count += 1
-                            continue
-                        if count > endoffset:
-                            break
-                        field_user['id'] = field_user['_id']
-                        field_user['profileImageUrl'] = field_user['profile_image_url']
-                        field_user['userName'] = field_user['name']
-                        field_user['statusesCount'] = field_user['statuses_count']
-                        field_user['friendsCount'] = field_user['friends_count']
-                        field_user['followersCount'] = field_user['followers_count']
-                        field_user['description'] = field_user['description']
-                        users.append(field_user)
-                        count += 1
-                    return json.dumps(users)
+
+                    users = _domain_users(model)
+                    return json.dumps(users[startoffset:endoffset])
+
                 elif model == 'person':
+                    sharding = True
                     nickname = urllib2.unquote(request.form['nickname'])
                     uid = getUidByName(nickname)
                     users = []
                     if uid:
-                        user = getUserInfoById(uid)
-                        if user:
-                            users.append(user)                    
+                        status, user = _search_person_basic(uid, sharding)
+                        if status == 'success':
+                            users.append(user._to_dict())                    
                     return json.dumps(users)
+
                 elif model == 'find':
                     read_from_xapian = 0
                     sharding = True
@@ -294,6 +282,7 @@ def profile_search(model='hotest'):
                         startoffset = 0
                     else:
                         startoffset = (page - 1) * COUNT_PER_PAGE
+                        
                     endoffset = startoffset + COUNT_PER_PAGE - 1
                     result_count = int(request.form['result_count'])
                     statusescount_up = int(request.form['statusescount_up'])
@@ -339,48 +328,19 @@ def profile_search(model='hotest'):
     else:
         return redirect('/')
 
-@mod.route('/group/<fieldEnName>', methods=['GET', 'POST'])
-def profile_group(fieldEnName):
+@mod.route('/group/', methods=['GET','POST'])
+def profile_group():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
-            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
-        else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.profile
-                    if identy == 1:
-                        field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
-                        return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
-                    else:
-                        return redirect('/')
-            return redirect('/')
-    else:
-        return redirect('/')
-
-@mod.route('/group/',methods=['GET','POST'])
-def test_profile_group():
-    if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin':
+            statuscount, friendscount, followerscount, province, field = getStaticInfo()
             if request.method == 'GET':
                 fieldEnName = request.args.get('fieldEnName',None)
                 during_time = request.args.get('during_time',None)
                 during_date = _utf_8_encode(during_time)
                 start_ts,end_ts = _time_zone(during_date)
                 window_size = (end_ts - start_ts)/(24*3600)
-            field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
             return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.profile
-                    if identy == 1:
-                        field = [{'fieldEnName': f, 'fieldZhName': fieldsEn2Zh(f)} for f in fields_value]
-                        return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
-                    else:
-                        return redirect('/')
             return redirect('/')
     else:
         return redirect('/')
@@ -593,64 +553,6 @@ def profile_interact_network(uid):
             first_cicle['children'] = second_circle
 
         return json.dumps({'status': 'finished', 'data': first_cicle})
-
-@mod.route('/topic/', methods=['POST', 'GET'])
-def index():
-    if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin':
-            error = None
-            if request.method == 'GET':
-                return render_template('index.html')
-            elif request.method == 'POST':
-                form = request.form
-                query = form.get('keyword', None)
-                level = form.get('level', None)
-                startstr = form.get('startdate', None)
-                endstr = form.get('enddate', None)
-
-                if query:
-                    topic_id = acquire_topic_id(query)
-                    if level == 'macroview':
-                        return render_template('macroview.html', keyword=query, startdate=startstr, enddate=endstr)
-                    elif level == 'microview':
-                        return render_template('microview.html', keyword=query, startdate=startstr, enddate=endstr)
-                    else:
-                        pass
-                else:
-                    flash(u'请输入事件关键词！')
-                    return render_template('index.html')
-        else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.profile
-                    if identy == 1:
-                        error = None
-                        if request.method == 'GET':
-                            return render_template('index.html')
-                        elif request.method == 'POST':
-                            form = request.form
-                            query = form.get('keyword', None)
-                            level = form.get('level', None)
-                            startstr = form.get('startdate', None)
-                            endstr = form.get('enddate', None)
-
-                            if query:
-                                topic_id = acquire_topic_id(query)
-                                if level == 'macroview':
-                                    return render_template('macroview.html', keyword=query, startdate=startstr, enddate=endstr)
-                                elif level == 'microview':
-                                    return render_template('microview.html', keyword=query, startdate=startstr, enddate=endstr)
-                                else:
-                                    pass
-                            else:
-                                flash(u'请输入事件关键词！')
-                                return render_template('index.html')
-                    else:
-                        return redirect('/')
-            return redirect('/')
-    else:
-        return redirect('/')
     
 @mod.route('/person_tab_ajax/<model>/<uid>')
 def profile_person_tab_ajax(model, uid):

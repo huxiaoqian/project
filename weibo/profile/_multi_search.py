@@ -5,7 +5,7 @@ from weibo.model import WholeIdentification, ProfilePersonBasic
 from weibo.global_config import xapian_search_user
 
 from sqlalchemy import asc
-from _mysql import _search_order_by_created_at
+from _mysql import _search_order_by_created_at, _search_by_domain
 from time_utils import datetimestr2ts, ts2datetime, ts2HMS
 
 thumbnail_user_fields = ['_id', 'followers_count', 'friends_count', 'statuses_count', \
@@ -55,3 +55,7 @@ def _hotest_users(limit=1000, date='2013-09-04'):
 
 def _newest_users(limit=1000, date='2013-09-04'):
 		return _search_order_by_created_at(limit)
+
+
+def _domain_users(domain, limit=1000, date='2013-09-04'):
+		return _search_by_domain(domain, limit)

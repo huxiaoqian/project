@@ -1,27 +1,22 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
-
 {% block body %}
-<div id='d3_cloud'></div>
-<canvas type="hidden" id="svgtoimg" width="100px" height="100px" style="display: none"></canvas>
-<!--
-<div class="span12">
-  <h2>导出关键词云</h2>
-  <br>
-  <button class="btn btn-success" id="save_as_svg" value="">导出SVG</button>
-  <button class="btn btn-success" id="save_as_pdf" value="">导出PDF</button>
-  <button class="btn btn-success" id="save_as_png" value="">导出PNG</button>
-  <br>  
-</div>
--->
-<!-- Hidden <FORM> to submit the SVG data to the server, which will convert it to SVG/PDF/PNG downloadable file.
-     The form is populated and submitted by the JavaScript below. -->
-<!--<form id="svgform" method="post" action="http://d3export.cancan.cshl.edu/download.pl">
- <input type="hidden" id="output_format" name="output_format" value="">
- <input type="hidden" id="data" name="data" value="">
-</form>
--->
-<div class="span3" style="float:right;">
-  <button class="btn btn-success" id="editor_save">导出图片</button>
+<div class="well">
+    <legend><strong>话题兴趣</strong></legend>
+    <div>
+        <div id="loading_current_topic" class="alert alert-info">
+            系统繁忙计算中，请稍后...
+        </div>
+        <label>
+          <div id="current_topic_process" class="progress progress-striped active">
+            <div id="current_topic_bar" class="bar" style="width: 100%;"></div>
+          </div>
+        </label>
+    </div>
+    <div>
+        <p><a class="btn btn-small btn-success" href="#" id="editor_save"><i class="icon-download-alt"></i> 导出</a></p>
+    </div>
+    <div id='d3_cloud'></div>
+    <canvas type="hidden" id="svgtoimg" width="100px" height="100px" style="display: none"></canvas>
 </div>
 
 <script>
@@ -112,7 +107,22 @@
         dataType: 'json',   
         type: "GET",   
         success: function (data) {
-          display_d3_cloud(data);
+          $('#d3_cloud').empty();
+          var status = data['status'];
+          var topic_data = data['data'];
+          if (status == 'current finished') {
+              $("#current_topic_bar").css('width', "100%")
+              $("#current_topic_process").removeClass("active");
+              $("#current_topic_process").removeClass("progress-striped");
+              if (topic_data.length) {
+                  $("#loading_current_topic").text("计算完成!");
+                  display_d3_cloud(topic_data);
+              }else{
+                   $("#loading_current_topic").text("很抱歉，计算结果为空!");
+              }
+          }
+          else
+              return
         }
     });
   });

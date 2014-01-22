@@ -28,10 +28,10 @@
         <span id="field_date">9月 1日,2013 - 9月 5日,2013</span> 
         <b class="caret"></b>
       </div> 
-      <input id="field_hidden" type="hidden" name="fieldEnName" value="">
+      <input id="field_hidden" type="hidden" name="fieldEnName" value="{{ fields[0].fieldEnName }}">
       <input id="during_time" type="hidden" name="during_time" value="9月 1日,2013 - 9月 5日,2013">
       &nbsp&nbsp&nbsp
-      <input type="submit" class="btn btn-primary" onclick="submit_search_profile_group()" value="分析">
+      <input type="submit" class="btn btn-primary" onclick="submit_search_profile_group();return false;" value="分析">
     </form>
   </div>
   <div class="well">
@@ -268,7 +268,7 @@
   <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
   <script>
   function choose_field(prefix, area){
-      $("#field_hidden").val(area)
+      $("#field_hidden").val(area);
       cn_area = '';
       if(area=='finance')
           cn_area = '财经';
@@ -488,8 +488,7 @@
   function submit_search_profile_group(){
     var field_time = $('#field_date').html();
     document.getElementById('during_time').value = field_time;
-    var field_hidden = $('#area_rank_method_choosen').val();
-    document.getElementById('field_hidden').value = field_hidden;
+    window.location.href = '/profile/group/?fieldEnName=' + $('#field_hidden').val() + '&during_time=' + field_time;
   }
 
   $(document).ready(function() {

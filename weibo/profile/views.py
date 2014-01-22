@@ -334,12 +334,12 @@ def profile_group():
         if session['user'] == 'admin':
             statuscount, friendscount, followerscount, province, field = getStaticInfo()
             if request.method == 'GET':
-                fieldEnName = request.args.get('fieldEnName',None)
-                during_time = request.args.get('during_time',None)
-                during_date = _utf_8_encode(during_time)
-                start_ts,end_ts = _time_zone(during_date)
-                window_size = (end_ts - start_ts)/(24*3600)
-            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=fieldsEn2Zh(fieldEnName))
+                fieldEnName = request.args.get('fieldEnName', None)
+                during_time = request.args.get('during_time', None)
+                # during_date = _utf_8_encode(during_time)
+                # start_ts,end_ts = _time_zone(during_date)
+                # window_size = (end_ts - start_ts)/(24*3600)
+            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=DOMAIN_ZH_LIST[DOMAIN_LIST.index(fieldEnName)])
         else:
             return redirect('/')
     else:
@@ -849,7 +849,7 @@ def profile_group_topic(fieldEnName):
         limit = 50
         window_size = 24*60*60
         datestr = '20130901'
-        domainid = DOMAIN_LIST.index(fieldEnName)
+        domainid = DOMAIN_LIST.index(fieldEnName) + 9
         keywords_dict = getDomainKeywordsData(domainid, datestr)
         if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
             interval =  int(request.args.get('interval'))
@@ -860,6 +860,7 @@ def profile_group_topic(fieldEnName):
             keywords_sorted = sorted(keywords_dict.iteritems(), key=lambda(k, v): v, reverse=False)
             top_keywords = keywords_sorted[len(keywords_sorted)-limit:]
             result_arr = [{'text': k, 'size': float(v)} for k, v in top_keywords]
+            print result_arr
             return json.dumps({'status': 'current finished', 'data': result_arr})
     else:
         return json.dumps([])
@@ -875,7 +876,7 @@ def profile_group_status_count(fieldEnName):
     datestr = '20130907'
 
     date_list = last_week_to_date(datestr, interval)
-    domainid = DOMAIN_LIST.index(fieldEnName)
+    domainid = DOMAIN_LIST.index(fieldEnName) + 9
 
     time_arr = []
     total_arr = []
@@ -885,11 +886,11 @@ def profile_group_status_count(fieldEnName):
     for datestr in date_list:
         active, important, reposts, original = getDomainCountData(domainid, datestr)
         sumcount = reposts + original
-        if sumcount > 0:
-            time_arr.append(ts2date(datetimestr2ts(datestr)).isoformat())
-            total_arr.append(sumcount)
-            repost_arr.append(reposts)
-            fipost_arr.append(original)
+        #if sumcount > 0:
+        time_arr.append(ts2date(datetimestr2ts(datestr)).isoformat())
+        total_arr.append(sumcount)
+        repost_arr.append(reposts)
+        fipost_arr.append(original)
 
     return json.dumps({'time': time_arr, 'count': total_arr, 'repost': repost_arr, 'fipost': fipost_arr})
 
@@ -902,16 +903,16 @@ def group_active_count(fieldEnName):
     datestr = '20130907'
 
     date_list = last_week_to_date(datestr, interval)
-    domainid = DOMAIN_LIST.index(fieldEnName)
+    domainid = DOMAIN_LIST.index(fieldEnName) + 9
 
     time_arr = []
     important_arr = []
 
     for datestr in date_list:
         active, important, reposts, original = getDomainCountData(domainid, datestr)
-        if important > 0:
-            time_arr.append(ts2date(datetimestr2ts(datestr)).isoformat())
-            important_arr.append(important)
+        #if important > 0:
+        time_arr.append(ts2date(datetimestr2ts(datestr)).isoformat())
+        important_arr.append(important)
 
     return json.dumps({'time': time_arr, 'important': important_arr})
 
@@ -960,7 +961,7 @@ def profile_group_emotion(fieldEnName):
 @mod.route('/group_verify/<fieldEnName>')
 def profile_group_verify(fieldEnName):
     datestr = '20130901'
-    domainid = DOMAIN_LIST.index(fieldEnName)
+    domainid = DOMAIN_LIST.index(fieldEnName) + 9
     verified_count, unverified_count, province_dict = getDomainBasic(domainid, datestr)
     verified_count = int(verified_count)
     unverified_count = int(unverified_count)
@@ -975,7 +976,7 @@ def profile_group_verify(fieldEnName):
 def profile_group_location(fieldEnName):
     city_count = {}
     datestr = '20130901'
-    domainid = DOMAIN_LIST.index(fieldEnName)
+    domainid = DOMAIN_LIST.index(fieldEnName) + 9
     verified_count, unverified_count, province_dict = getDomainBasic(domainid, datestr)
     city_count = province_dict
     results = province_color_map(city_count)

@@ -64,9 +64,11 @@ def getPersonData(uid, datestr):
 def getDomainCountData(domain, datestr):
     # domain: -1~20
     try:
-	level = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr))
+        level = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr))
     except Exception, e:
-	print e
+        print e
+        active = important = reposts = original = 0
+        return active, important, reposts, original
 
     try:
         results = level.Get(str(domain))

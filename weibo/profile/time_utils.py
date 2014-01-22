@@ -38,6 +38,8 @@ def last_week_to_date(datestr, interval):
         date = ts2datetimestr(now_ts)
         dates.append(date)
 
+    dates.reverse()
+
     return dates
 
 def local2datetime(time_str):

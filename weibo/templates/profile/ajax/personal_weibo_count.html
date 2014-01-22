@@ -1,23 +1,6 @@
 {% extends 'profile/ajax/ajax_layout.html' %}
 
 {% block body %}
-<style>
-    .ct-tags {
-      font-size: 17px;
-      margin-left: 1%;
-      color: #D14836;
-    }
-    .clearfix {
-      display: block;
-    }
-    .clearfix:after {
-      content: ".";
-      display: block;
-      height: 0;
-      clear: both;
-      visibility: hidden;
-    }
-</style>
 <script>
     var len = $('script').filter(function () {
       return ($(this).attr('src') == '/static/js/profile/highcharts.js');

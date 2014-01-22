@@ -26,9 +26,10 @@ def show_graph_index(mid, page=None):
         if retweeted_mid != 0:
             source_weibo = getWeiboByMid(retweeted_mid)
 
-        reposts_count = source_weibo['reposts_count']
-        total_page = int(math.ceil(reposts_count * 1.0 / per_page))
-        page = total_page
+        #reposts_count = source_weibo['reposts_count']
+        #total_page = int(math.ceil(reposts_count * 1.0 / per_page))
+        #page = total_page
+        page = 0
 
         return redirect('/gexf/show_graph/%s/%s/'%(mid, page))#{url_for(graph.show_graph(mid, page))})
 

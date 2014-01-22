@@ -93,44 +93,35 @@
     }
     
   </style>
-  <!--
-  <form>
-    时间范围:
-    <select class="span2" name="interval" id="loc_interval">
-      <option value="180">6个月</option>
-      <option value="150">5个月</option>
-      <option value="120">4个月</option>
-      <option value="90">3个月</option>
-      <option value="60">2个月</option>
-      <option value="30">1个月</option>
-      <option value="7">1周</option>
-    </select>
-    <button type="button" class="btn btn-primary" onclick="return false;"><i class="icon-search"></i>统计</button>
-  </form>-->
-  <div id="locationdist" class="result_de container-fluid">
-    <div class="row-fluid">
-      <div class="span3">
-        <div class="row-fluid">
-          <div id="Summary"></div>
+
+  <div class="well">
+    <legend><strong>认证及地理分布</strong></legend>
+    <div id="locationdist" class="result_de container-fluid">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="row-fluid">
+            <div id="Summary"></div>
+          </div>
+          <div class="row-fluid">
+            <div id="verified_container"><canvas id="verifiedCanvas" width="210" height="200" style="cursor: pointer;">[No canvas support]</canvas></div>
+          </div>
         </div>
-        <div class="row-fluid">
-          <div id="verified_container"><canvas id="verifiedCanvas" width="210" height="200" style="cursor: pointer;">[No canvas support]</canvas></div>
+        <div class="harmonies gradient" id="gradient_bar">
+          <ul>
+            <li style="background-color:#ffffff;"><a href="#ffffff" class="txtb">#ffffff</a></li><li style="background-color:#ffebeb;"><a href="#ffebeb" class="txtb">#ffebeb</a></li><li style="background-color:#ffd8d8;"><a href="#ffd8d8" class="txtb">#ffd8d8</a></li><li style="background-color:#ffc4c4;"><a href="#ffc4c4" class="txtb">#ffc4c4</a></li><li style="background-color:#ffb1b1;"><a href="#ffb1b1" class="txtb">#ffb1b1</a></li><li style="background-color:#ff9d9d;"><a href="#ff9d9d" class="txtb">#ff9d9d</a></li><li style="background-color:#ff8989;"><a href="#ff8989" class="txtb">#ff8989</a></li><li style="background-color:#ff7676;"><a href="#ff7676" class="txtb">#ff7676</a></li><li style="background-color:#ff6262;"><a href="#ff6262" class="txtb">#ff6262</a></li><li style="background-color:#ff4e4e;"><a href="#ff4e4e" class="txtb">#ff4e4e</a></li><li style="background-color:#ff3b3b;"><a href="#ff3b3b" class="txtw">#ff3b3b</a></li><li style="background-color:#ff2727;"><a href="#ff2727" class="txtw">#ff2727</a></li><li style="background-color:#ff1414;"><a href="#ff1414" class="txtw">#ff1414</a></li><li style="background-color:#ff0000;"><a href="#ff0000" class="txtw">#ff0000</a></li>
+          </ul>
         </div>
-      </div>
-      <div class="harmonies gradient" id="gradient_bar">
-        <ul>
-          <li style="background-color:#ffffff;"><a href="#ffffff" class="txtb">#ffffff</a></li><li style="background-color:#ffebeb;"><a href="#ffebeb" class="txtb">#ffebeb</a></li><li style="background-color:#ffd8d8;"><a href="#ffd8d8" class="txtb">#ffd8d8</a></li><li style="background-color:#ffc4c4;"><a href="#ffc4c4" class="txtb">#ffc4c4</a></li><li style="background-color:#ffb1b1;"><a href="#ffb1b1" class="txtb">#ffb1b1</a></li><li style="background-color:#ff9d9d;"><a href="#ff9d9d" class="txtb">#ff9d9d</a></li><li style="background-color:#ff8989;"><a href="#ff8989" class="txtb">#ff8989</a></li><li style="background-color:#ff7676;"><a href="#ff7676" class="txtb">#ff7676</a></li><li style="background-color:#ff6262;"><a href="#ff6262" class="txtb">#ff6262</a></li><li style="background-color:#ff4e4e;"><a href="#ff4e4e" class="txtb">#ff4e4e</a></li><li style="background-color:#ff3b3b;"><a href="#ff3b3b" class="txtw">#ff3b3b</a></li><li style="background-color:#ff2727;"><a href="#ff2727" class="txtw">#ff2727</a></li><li style="background-color:#ff1414;"><a href="#ff1414" class="txtw">#ff1414</a></li><li style="background-color:#ff0000;"><a href="#ff0000" class="txtw">#ff0000</a></li>
-        </ul>
-      </div>
-      <div class="span8">
-        <div id="Map">
-          <div id="ChinaMap"></div>
-          <!--<div id="ColorBar"></div>-->
+        <div class="span8">
+          <div id="Map">
+            <div id="ChinaMap"></div>
+            <!--<div id="ColorBar"></div>-->
+          </div>
         </div>
-        
       </div>
     </div>
   </div>
+
+
 
 {% endblock body %}
 

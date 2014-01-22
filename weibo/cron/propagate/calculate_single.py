@@ -8,16 +8,22 @@ import os
 import heapq
 import time
 from datetime import date
-
 from model import *
 from config import db
-
-
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
+from graph import graph
+from pyelevator import WriteBatch, Elevator
 from global_config import xapian_search_user as user_search
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
+
+try:
+    from weibo.global_config import LEVELDBPATH
+except:
+    LEVELDBPATH = '/home/mirage/leveldb'
+    print 'not in web environment'
+
 
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))
@@ -174,8 +180,30 @@ def get_ori_status(_id, beg_ts, end_ts):
         break
 
     return status
+
+
+def _default_elevator(db_name='default'):
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    return db
+
+
+def init_db():
+    E = _default_elevator()
+    E.createdb(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
+
+    E.disconnect()
+
+
+def save_whole_weibo_tree(key, value):
+    E = _default_elevator('linhao_weibo_gexf_tree')
+    E.Put(key, value)
+    E.disconnect()
+
     
 def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
+    # 转发树图信息
+    tree_g, tree_stats = graph(_id)
+    save_whole_weibo_tree(str(_id), tree_g)
 
     #初始化
     blog_info = {}
@@ -726,8 +754,10 @@ def save_weibo(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,r
     db.session.commit()
 
 if __name__ == "__main__":
+    # init_db()
 
-##    topic_info = calculate_part(3617839380294898, 1377964800, 1378224000,[3617782506173763,3618043278635735,3618455003121922,3618481590955662,3618479728507301])
-##    print topic_info
+    # topic_info = calculate_part(3617839380294898, 1377964800, 1378224000,[3617782506173763,3618043278635735,3618455003121922,3618481590955662,3618479728507301])
+    # print topic_info
+
     topic_info = calculate_single(3617726042418839, 1377964800, 1378224000)
     print topic_info

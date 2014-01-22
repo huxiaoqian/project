@@ -24,8 +24,10 @@
       <div class="span2 well" style="padding: 8px 0;">
         <ul class="nav nav-list">
           {% for f in field %}
-            {% if model == f.fieldEnName %}
+            {% if atfield == f.fieldZhName %}
                <li class="active"><a href="/profile/group/?fieldEnName={{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
+            {% else %}
+               <li><a href="/profile/group/?fieldEnName={{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
             {% endif %}
           {% endfor %}
         </ul>
@@ -39,7 +41,7 @@
           <li class="btn span2" id="tab3">微博数量走势</li>
           <li class="btn span2" id="tab4">重要度走势</li>
         </ul>
-        <div id="content_container" class="well"></div>
+        <div id="content_container"></div>
       </div>
 
     </div><!--row-fluid-->

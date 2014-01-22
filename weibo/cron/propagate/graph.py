@@ -12,7 +12,6 @@ from gen_weibospread import Tree
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
-from flask import Blueprint, session, redirect, url_for
 
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
                 'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
@@ -21,8 +20,6 @@ user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
                'gender', 'profile_image_url', 'verified_type', 'followers_count', \
                'followers', 'location', 'statuses_count', 'friends', 'description', \
                'created_at']
-
-# graph = Blueprint('graph', __name__)
 
 def reposts2tree(source_weibo, reposts, per_page, page_count):
     # root

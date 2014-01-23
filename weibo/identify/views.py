@@ -734,7 +734,8 @@ def topic_submit():
             timestamp = int(timestamp)
             time = _utf_encode(time)
             start_ts, end_ts = _time_zone(time)
-            status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
+            status, item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
+            return status, item
             #return render_template('identify/topic.html', topic=keyword, topic_id=1, window_size=1)
     else:
         return redirect('/')

@@ -55,33 +55,18 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/sigma.min.js') }}" type="text/javascript"></script>
-    <script src="{{ url_for('static', filename='js/sigma.parseGexf.js') }}" type="text/javascript"></script>
+    <script src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}" type="text/javascript"></script>
 
     <script>
-        console.log('here');
-        var init = function () {
+        function graph_request_callback(data){
             var sigInst = sigma.init($('#sigma')[0]).drawingProperties({
                 defaultLabelColor: '#fff'
             }).graphProperties({
                 minNodeSize: 0.5,
                 maxNodeSize: 5
             });
-            console.log('here1');
-            // (requires "sigma.parseGexf.js" to be executed)
-            sigInst.parseGexf("{{ url_for('graph.graph_index', mid=mid, page=page) }}");
 
-            $.ajax({
-                url: "{{ url_for('graph.tree_stats_index', mid=mid, page=page) }}",
-                success: function( data ) {
-                    var stats = data["stats"];
-                    $( "#reposts-count" ).html( stats['reposts_count'] );
-                    $( "#repost-people-count" ).html( stats['repost_people_count'] );
-                    $( "#max-width" ).html( stats['max_width'] );
-                    $( "#max-depth" ).html( stats['max_depth'] );
-                    $( "#spread-begin" ).html( stats['spread_begin'] );
-                    $( "#spread-end" ).html( stats['spread_end'] );
-                }
-            });
+            sigInst.parseGexf(data);
 
             (function(){
                 var popUp;
@@ -140,6 +125,38 @@
 
                 sigInst.bind('overnodes',showNodeInfo).draw();
             })();
+        }
+        var init = function () {
+            $.ajax({
+                url: "/gexf/graph/{{mid}}/{{page}}",
+                dataType: 'xml',
+                type: "GET",
+                success: function (data) {
+                    // (requires "sigma.parseGexf.js" to be executed)
+                    console.log(data);
+                    graph_request_callback(data);
+                },
+                error: function(result) {
+                    console.log(result);
+                    //$("#loading_network_data").text("暂无结果!");
+                    console.log("Status: " + result.status);
+                    console.log("Status: " + result.textStatus);
+                    console.log("Error: " + result.errorThrown); 
+              }
+            })
+            /*
+            $.ajax({
+                url: "{{ url_for('graph.tree_stats_index', mid=mid, page=page) }}",
+                success: function( data ) {
+                    var stats = data["stats"];
+                    $( "#reposts-count" ).html( stats['reposts_count'] );
+                    $( "#repost-people-count" ).html( stats['repost_people_count'] );
+                    $( "#max-width" ).html( stats['max_width'] );
+                    $( "#max-depth" ).html( stats['max_depth'] );
+                    $( "#spread-begin" ).html( stats['spread_begin'] );
+                    $( "#spread-end" ).html( stats['spread_end'] );
+                }
+            });*/
         }
         /*
         if (document.addEventListener) {

@@ -11,6 +11,8 @@ import buchheim_weibospread
 from gen_weibospread import Tree
 from gexf import Gexf
 from lxml import etree
+from pyelevator import WriteBatch, Elevator
+from weibo.global_config import LEVELDBPATH
 from xapian_weibo.xapian_backend import XapianSearch
 from flask import Blueprint, session, redirect, url_for
 
@@ -302,6 +304,22 @@ def graph(mid, page=1, per_page=1000):
     tree_stats['max_width'] = max_width
 
     return {'graph': graph, 'stats': tree_stats}
+
+def _default_elevator(db_name='default'):
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    return db
+    
+
+def graph_from_elevator(mid):
+    try:
+        E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
+        g = E.Get(str(mid))
+        E.disconnect()
+    except Exception, e:
+        print e
+        g = ''
+
+    return g
 
 
 if __name__ == '__main__':

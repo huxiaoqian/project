@@ -3,11 +3,12 @@
 from __future__ import division
 import  calendar
 import re
-from datetime import datetime
 import os
+import json
 import heapq
 import time
 from datetime import date
+from datetime import datetime
 from model import *
 from config import db
 from xapian_weibo.xapian_backend import XapianSearch
@@ -194,16 +195,18 @@ def init_db():
     E.disconnect()
 
 
-def save_whole_weibo_tree(key, value):
-    E = _default_elevator('linhao_weibo_gexf_tree')
-    E.Put(key, value)
+def save_whole_weibo_tree(mid, g, stats):
+    E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
+    E.Put(str(mid), g + '_\/' + json.dumps(stats))
     E.disconnect()
 
     
 def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
     # 转发树图信息
-    tree_g, tree_stats = graph(_id)
-    save_whole_weibo_tree(str(_id), tree_g)
+    g = graph(_id)
+    tree_g = g['graph']
+    stats = g['stats']
+    save_whole_weibo_tree(str(_id), tree_g, stats)
 
     #初始化
     blog_info = {}
@@ -754,7 +757,7 @@ def save_weibo(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,r
     db.session.commit()
 
 if __name__ == "__main__":
-    # init_db()
+    #init_db()
 
     # topic_info = calculate_part(3617839380294898, 1377964800, 1378224000,[3617782506173763,3618043278635735,3618455003121922,3618481590955662,3618479728507301])
     # print topic_info

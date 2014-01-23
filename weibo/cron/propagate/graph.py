@@ -2,6 +2,7 @@
 
 import os
 import re
+import sys
 import math
 import time
 import base62
@@ -12,6 +13,9 @@ from gen_weibospread import Tree
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
+
+XAPIAN_FIRST_DATE = '20130901'
+XAPIAN_LAST_DATE = '20130930'
 
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
                 'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
@@ -158,26 +162,27 @@ def getXapianWeiboByDuration(datestr_list):
         stub_file = path + datestr
         if os.path.exists(stub_file):
             stub_file_list.append(stub_file)
+    print stub_file_list
 
     if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
+        xapian_search_weibo = XapianSearch(stub=stub_file_list, schema_version=5)
         return xapian_search_weibo 
     else:
         return None
 
 
-def target_whole_xapian_weibo():
-    datestr = '20130904'
-    during = 4
-
-    ts = int(time.mktime(time.strptime(datestr, '%Y%m%d')))
+def target_whole_xapian_weibo(start_date=XAPIAN_FIRST_DATE, end_date=XAPIAN_LAST_DATE):
     datelist = []
+    start_ts = int(time.mktime(time.strptime(start_date, '%Y%m%d')))
+    end_ts = int(time.mktime(time.strptime(end_date, '%Y%m%d'))) + 24 * 3600
 
+    during = (end_ts - start_ts) / (24 * 3600)
     for i in range(0, during):
-        now_date = time.strftime('%Y%m%d', time.localtime(ts - i * 24 * 3600))
+        now_date = time.strftime('%Y%m%d', time.localtime(start_ts + i * 24 * 3600))
         datelist.append(now_date)
-        
+
     xapian_weibo = getXapianWeiboByDuration(datelist)
+
     return xapian_weibo
 
 
@@ -188,7 +193,7 @@ def target_whole_xapian_user():
     return xapian_search_user
 
 
-whole_xapian_weibo = target_whole_xapian_weibo()
+whole_xapian_weibo = target_whole_xapian_weibo('20130901', '20130905')
 whole_xapian_user = target_whole_xapian_user()
 
 
@@ -228,13 +233,13 @@ def getUserByUid(uid):
     return result_dict
 
 
-def getWeiboRepostsByMid(mid, begin_ts, end_ts):
+def getWeiboRepostsByMid(mid, begin_ts, end_ts, limit=100000):
     query_dict = {
-        #'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
         'retweeted_mid': int(mid)
     }
 
-    count, get_results = whole_xapian_weibo.search(query=query_dict, fields=weibo_fields)
+    count, get_results = whole_xapian_weibo.search(query=query_dict, fields=weibo_fields, max_offset=limit)
     statuses = []
     
     count = 0
@@ -269,7 +274,12 @@ def _utf_8_decode(stri):
     return stri
 
 
-def graph(mid, page=1, per_page=1000):
+def local2ts(time_str):
+    time_format = '%a %b %d %H:%M:%S +0800 %Y'
+    return int(time.mktime(time.strptime(time_str, time_format)))
+
+
+def graph(mid):
     # weibo
     weibo = getWeiboByMid(mid)
     retweeted_mid = weibo['retweeted_mid']
@@ -281,18 +291,24 @@ def graph(mid, page=1, per_page=1000):
         source_weibo = getWeiboByMid(retweeted_mid)
 
     # reposts
-    begin_ts = 0
-    end_ts = 100000000000000
     reposts = []
-    reposts = getWeiboRepostsByMid(source_weibo['id'], begin_ts, end_ts)
-    print 'search reposts completely'
+    if 'created_at' not in source_weibo:
+        sys.exit('source weibo not available')
 
-    print source_weibo['id'], 'total reposts count : ', len(reposts), \
+    try:
+        begin_ts = local2ts(source_weibo['created_at'])
+        end_ts = begin_ts + 24 * 3600
+    except Exception, e:
+        sys.exit(e)
+
+    # max_limit = per_page * page_count
+    per_page = 10000
+    page_count = 10
+
+    reposts = getWeiboRepostsByMid(source_weibo['id'], begin_ts, end_ts, per_page * page_count)
+    print 'search source weibo reposts completely ', source_weibo['id'], 'total reposts count : ', len(reposts), \
           ' source user name: ', source_weibo['user']['name'], source_weibo['user']['id']
 
-    #
-    total_page = 10
-    page_count = total_page - page + 1 if total_page >= page else 0
     tree, tree_stats = reposts2tree(source_weibo, reposts, per_page, page_count)
     graph, max_depth, max_width = tree2graph(tree)
     tree_stats['max_depth'] = max_depth
@@ -301,8 +317,87 @@ def graph(mid, page=1, per_page=1000):
     return {'graph': graph, 'stats': tree_stats}
 
 
+def getSubWeiboRepostsByMid(mid, name, retweeted_mid, begin_ts, end_ts, limit=100000):
+    query_dict = {
+        'timestamp': {'$gt': begin_ts, '$lt': end_ts},
+        'retweeted_mid': int(retweeted_mid)
+    }
+
+    count, get_results = whole_xapian_weibo.search(query=query_dict, fields=weibo_fields, max_offset=limit)
+    statuses = []
+    
+    count = 0
+    ts = te = time.time()
+    for r in get_results():
+        if count % 10000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts), ' search reposts'
+            ts = te
+
+        repost_users = re.findall(u'/@([a-zA-Z-_\u0391-\uFFE5]+)', r['text'])
+        if name not in repost_users:
+            count += 1
+            continue
+
+        status = {}
+        for field in weibo_fields:
+            if field == 'user':
+                status['user'] = getUserByUid(r['user'])
+            elif field == 'timestamp':
+                status['created_at'] = time.strftime("%a %b %d %H:%M:%S +0800 %Y", time.localtime(r['timestamp']))
+            else:
+                status[field] = r[field]
+
+        status['id'] = status['_id']
+        status['mid'] = str(status['_id'])
+        statuses.append(status)
+
+        count += 1
+
+    return statuses
+
+
+def sub_graph(mid):
+    # weibo to be source weibo
+    weibo = getWeiboByMid(mid)
+    print weibo
+    retweeted_mid = weibo['retweeted_mid']
+    retweeted_uid = weibo['retweeted_uid']
+
+    if retweeted_mid != 0:
+        source_weibo = weibo
+
+        #reposts
+        reposts = []
+        if 'created_at' not in source_weibo:
+            sys.exit('source weibo not available')
+
+        try:
+            begin_ts = local2ts(source_weibo['created_at'])
+            end_ts = begin_ts + 24 * 3600
+        except Exception, e:
+            sys.exit(e)
+
+        # max_limit = per_page * page_count
+        per_page = 10000
+        page_count = 10
+
+        reposts = getSubWeiboRepostsByMid(source_weibo['id'], source_weibo['user']['name'], retweeted_mid, begin_ts, end_ts, per_page * page_count)
+        print 'search source weibo reposts completely ', source_weibo['id'], 'total reposts count : ', len(reposts), \
+              ' source user name: ', source_weibo['user']['name'], source_weibo['user']['id']
+
+        tree, tree_stats = reposts2tree(source_weibo, reposts, per_page, page_count)
+        graph, max_depth, max_width = tree2graph(tree)
+        tree_stats['max_depth'] = max_depth
+        tree_stats['max_width'] = max_width
+
+        return {'graph': graph, 'stats': tree_stats}
+
+    else:
+        sys.exit('Is source weibo')
+
+
 if __name__ == '__main__':
-    whole_xapian_weibo = target_whole_xapian_weibo()
-    whole_xapian_user = target_whole_xapian_user()
-    source_mid = 3618201981966170#3617726042418839
-    graph(source_mid)
+    source_mid = 3617841875854702#3618476080282985#3617726042418839#3618201981966170#
+    # graph(source_mid)
+    sub_graph(source_mid)

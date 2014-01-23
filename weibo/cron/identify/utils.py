@@ -65,6 +65,15 @@ def save_rank_results(sorted_uids, identifyRange, method, date, window, topicnam
     data = []
     rank = 1
     count = 0
+
+    exist_items = db.session.query(TopicIdentification).filter(TopicIdentification.topic==topicname, \
+                                                               TopicIdentification.identifyWindow==window, \
+                                                               TopicIdentification.identifyDate==date, \
+                                                               TopicIdentification.identifyMethod==method).all()
+    for item in exist_items:
+        db.session.delete(item)
+    db.session.commit()
+
     for uid in sorted_uids:
         user = acquire_user_by_id(uid)
         if not user:

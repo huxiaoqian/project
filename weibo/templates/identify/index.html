@@ -452,7 +452,7 @@
           var html = "<div  class=\"inline\"><font color=\"#003366\" face=\"Georgia, Times New Roman, Times, serif\"><b>您的历史记录相关选项:</b></font></div><div  class=\"well\">";
           if(data.length > 0){
             for(idx in data){
-              html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&during=" + during + "&customized=0\">" + data[idx] + "</a></li>";
+              html += "<li><a target='_blank' href=\"/identify/topic/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "&customized=0\">" + data[idx] + "</a></li>";
             }
             html = html + "</div>";
           }

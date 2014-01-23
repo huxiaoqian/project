@@ -269,13 +269,18 @@ def iter_userbasic2mysql(cobar_conn, sharding=False):
             ts = te
 
         userId = int(k)
-        province, city, verified, name, friendsCount, gender, profileImageUrl, verifiedType, \
-        followersCount, location, statusesCount, description, created_at, domain = v.split('_\/')
+        
+        try:
+    	    province, city, verified, name, friendsCount, gender, profileImageUrl, verifiedType, followersCount, location, statusesCount, description, created_at, domain = v.split('_\/')
+        except Exception, e:
+            print e
+            count += 1
+            continue
         description = _utf_encode(description)
         domain = _utf_encode(domain)
         verified = 1 if verified == 'True' else 0
         date = batch_date_1
-
+        
         if sharding:
             sql = """insert into profile_person_basic(userId, province, city, verified, name, gender, \
                      profileImageUrl, verifiedType, friendsCount, followersCount, statuseCount, location, \

@@ -4,6 +4,7 @@ from __future__ import division
 import  calendar
 import re
 import os
+import sys
 import json
 import heapq
 import time
@@ -111,7 +112,7 @@ def get_user(uid):
         if r['name']:
             user['name'] = r['name']
         else:
-            user['name'] = u'未知用户'
+            user['name'] = 'unknown'
         break
     if user == {}:
         return None
@@ -174,7 +175,7 @@ def get_ori_status(_id, beg_ts, end_ts):
         if r['user']: 
             status['user'] = get_user(r['user'])
         else:
-            status['user'] = {'name':'未知用户'}
+            status['user'] = {'name': 'unknown'}
 
         status['timestamp'] =r['timestamp']
         status['postDate'] = datetime.fromtimestamp(r['timestamp'])
@@ -195,31 +196,48 @@ def init_db():
     E.disconnect()
 
 
-def save_whole_weibo_tree(mid, g, stats):
+def save_weibo_tree(mid, whole_g, whole_stats, sub_g, sub_stats):
     E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
-    E.Put(str(mid), g + '_\/' + json.dumps(stats))
+    E.Put(str(mid), whole_g + '_\/' + json.dumps(whole_stats) + '_\/' + sub_g + '_\/' + json.dumps(sub_stats))
     E.disconnect()
 
     
-def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
-    # 转发树图信息
+def calculate_single(_id):
+    # 转发树（全树与子树计算）
     g = graph(_id)
-    tree_g = g['graph']
-    stats = g['stats']
-    save_whole_weibo_tree(str(_id), tree_g, stats)
+    whole_g = g['whole']
+    sub_g = g['sub']
 
+    whole_g_graph = whole_g['graph']
+    whole_g_stats = whole_g['stats']
+    whole_g_reposts = whole_g['reposts']
+
+    sub_g_graph = sub_g['graph']
+    sub_g_stats = sub_g['stats']
+    sub_g_reposts = sub_g['reposts']
+
+    save_weibo_tree(str(_id), whole_g_graph, whole_g_stats, sub_g_graph, sub_g_stats)
+    
+    calculate_single_whole(whole_g_reposts, whole_g['ori'])
+    calculate_single_sub(sub_g_reposts, sub_g['ori'])
+
+
+def calculate_single_whole(whole_g_reposts, retweeted_ori):
     #初始化
     blog_info = {}
     city_count = {}
     topic_rel_blog = dict()
-    province_name=dict()
-    html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option>
-                <option value="44">广东</option><option value="45">广西</option><option value="52">贵州</option><option value="46">海南</option><option value="13">河北</option>
-                <option value="23">黑龙江</option><option value="41">河南</option><option value="42">湖北</option><option value="43">湖南</option><option value="15">内蒙古</option><option value="32">江苏</option>
-                <option value="36">江西</option><option value="22">吉林</option><option value="21">辽宁</option><option value="64">宁夏</option><option value="63">青海</option><option value="14">山西</option><option value="37">山东</option>
-                <option value="31">上海</option><option value="51">四川</option><option value="12">天津</option><option value="54">西藏</option><option value="65">新疆</option><option value="53">云南</option><option value="33">浙江</option>
-                <option value="61">陕西</option><option value="71">台湾</option><option value="81">香港</option><option value="82">澳门</option><option value="400">海外</option><option value="100">其他</option></select>'''
+    province_name = dict()
+
+    html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option><option value="44">广东</option>
+              <option value="45">广西</option><option value="52">贵州</option><option value="46">海南</option><option value="13">河北</option><option value="23">黑龙江</option><option value="41">河南</option><option value="42">湖北</option>
+              <option value="43">湖南</option><option value="15">内蒙古</option><option value="32">江苏</option><option value="36">江西</option><option value="22">吉林</option><option value="21">辽宁</option><option value="64">宁夏</option>
+              <option value="63">青海</option><option value="14">山西</option><option value="37">山东</option><option value="31">上海</option><option value="51">四川</option><option value="12">天津</option><option value="54">西藏</option>
+              <option value="65">新疆</option><option value="53">云南</option><option value="33">浙江</option><option value="61">陕西</option><option value="71">台湾</option><option value="81">香港</option><option value="82">澳门</option>
+              <option value="400">海外</option><option value="100">其他</option></select>'''
+    
     province_soup = BeautifulSoup(html)
+
     for province in province_soup.findAll('option'):
         pp = province.string
         key = province['value']
@@ -228,121 +246,125 @@ def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
             continue
         city_count[pp] = 0
     
-    beg_limit = time.mktime(datetime(2013, 9, 1).timetuple())
-    end_limit = time.mktime(datetime(2013, 9, 5).timetuple())
-    #获取原微博信息
-    status_ori = get_ori_status(_id, beg_ts, end_ts)
-    if not status_ori:
-        return 'None'
-    if status_ori['retweetedMid']:#该微博为转发微博
-        time_ts = status_ori['timestamp']
-        beg_ts = time_ts - 7*24*3600
-        end_ts = time_ts
-        if beg_ts < beg_limit:
-            beg_ts = beg_limit
-        if end_ts > end_limit:
-            end_ts = end_limit
-        retweeted_ori = get_ori_status(status_ori['retweetedMid'], beg_ts, end_ts)#获取原创微博信息
-    else:#该微博为原创微博
-        retweeted_ori = status_ori
- 
-    if retweeted_ori:
-        time_ts = retweeted_ori['timestamp']
-        beg_ts = time_ts
-        end_ts = time_ts + 2*24*3600
-        if beg_ts < beg_limit:
-            beg_ts = beg_limit
-        if end_ts > end_limit:
-            end_ts = end_limit
-        statuses_search = getXapianWeiboByTs(beg_ts,end_ts)
-        count,get_results = statuses_search.search(query={'retweeted_mid': retweeted_ori['id']}, sort_by=['timestamp'])
-    else:
-        return 'None'
-    print count
-    reposter = []
-    
+    reposter = set() # 转发用户集合
     date_list = []
-    date_list.append(date.fromtimestamp(status_ori['timestamp']))
     perday_repost_count = []
-    perday_repost_count.append(1)
-    
-    per = date(2000,01,02)-date(2000,01,01)
     reposts_sum = 0
     comments_sum = 0
     key_reposter = dict()
-    weibo = dict()
+    weibo_rank = dict()
     topic_user = dict()
+    
+    retweeted_timestamp = retweeted_ori['timestamp']
+    retweeted_ori['postDate'] = date.fromtimestamp(retweeted_timestamp)
+    try:
+        retweeted_ori['repostsCount'] = int(retweeted_ori['reposts_count'])
+    except:
+        retweeted_ori['repostsCount'] = 0
+    try:
+        retweeted_ori['commentsCount'] = int(retweeted_ori['comments_count'])
+    except:
+        retweeted_ori['commentsCount'] = 0
+    try:
+        retweeted_ori['attitudesCount'] = int(retweeted_ori['attitudes_count'])
+    except:
+        retweeted_ori['attitudesCount'] = 0
+    try:
+        retweeted_ori['text'] = retweeted_ori['text']
+    except:
+        retweeted_ori['text'] = ''
+    date_list.append(date.fromtimestamp(retweeted_timestamp))
+    perday_repost_count.append(1)
+    
     leader_index = 0
-    n = 0 
-    for r in get_results():
+    iter_count = 0
+    for r in whole_g_reposts:
+        friends_count = 0
+        followers_count = 0
+        statuses_count = 0
+        reposts_count = 0
+        comments_count = 0
+        attitudes_count = 0
+        try:
+            reposts_count += r['reposts_count']
+        except:
+            pass
+        try:
+            comments_count += r['comments_count']
+        except:
+            pass
+        try:
+            attitudes_count += r['attitudes_count']
+        except:
+            pass
+        try:
+            created_date = date.fromtimestamp(r['timestamp'])
+        except:
+            continue
+        try:
+            text = r['text']
+        except:
+            text = ''
 
-        if not r['reposts_count']:
-            r['reposts_count'] = 0
-        if not r['comments_count']:
-            r['comments_count'] = 0
+        if 'user' in r and r['user']:
+            user = r['user']
+            userId = r['id']
 
-        if 'attitudes_count' not in r:
-            r['attitudes_count'] = 0
-        else:
-            if not r['attitudes_count']:
-                r['attitudes_count'] = 0
-
-        if r['user']:
-            user = get_user(r['user'])
-            if not user:
-                continue
-            if user['province'] != None:
+            # 将用户加入转发者集合
+            reposter.add(userId)
+            
+            # 统计转发用户注册省份
+            if 'province' in user and user['province']:
                 p = province_name[user['province']]
                 if p == u'海外' or p == u'其他':
                     pass
                 else:
                     city_count[p] += 1
-            if user['id'] not in reposter:
-                reposter.append(user['id'])
+            
+            # leader_index
             if r['reposts_count'] > 1000:
                 leader_index = leader_index + 1
-            if topic_user.has_key(r['user']):#生成用户对应的排序指标
+            
+            # 生成用户对应的排序指标
+            try:
+                friends_count += user['friends_count']
+            except:
                 pass
-            else:
-                topic_user[r['user']] = user['friends_count'] + user['followers_count'] + user['statuses_count']
-            if key_reposter.has_key(r['user']):#存储用户信息
+            try:
+                followers_count += user['followers_count']
+            except:
                 pass
-            else:                
-                key_reposter[r['user']] = user
+            try:
+                statuses_count += user['statuses_count']
+            except:
+                pass
+            if userId not in topic_user.keys():
+                topic_user[userId] = friends_count + followers_count + statuses_count
+            
+            # 存储用户信息
+            if userId not in key_reposter.keys():
+                key_reposter[userId] = user
+
+            # 存储微博信息
             temp = {}
             temp['status'] = r
-            if not r['reposts_count']:
-                temp['status']['repostsCount'] = 0
-            else:
-                temp['status']['repostsCount'] = r['reposts_count']
-            if not r['comments_count']:
-                temp['status']['commentsCount'] = 0
-            else:
-                temp['status']['commentsCount'] = r['comments_count']
-            if 'attitudes_count' not in r:
-                temp['status']['attitudesCount'] = 0
-            else:
-                if not r['attitudes_count']:
-                    temp['status']['attitudesCount'] = 0
-                else:
-                    temp['status']['attitudesCount'] = r['attitudes_count']
-            temp['status']['created_at'] = datetime.fromtimestamp(r['timestamp'])
-            temp['status']['text'] = r['text']
-            temp['status']['source'] = 'None'
+            temp['status']['repostsCount'] = reposts_count
+            temp['status']['commentsCount'] = comments_count
+            temp['status']['attitudesCount'] = attitudes_count
+            temp['status']['created_at'] = created_date
+            temp['status']['postDate'] = created_date
+            temp['status']['text'] = text
+            temp['status']['source'] = 'unknown'
             temp['user'] = user
+            topic_rel_blog[r['id']] = temp
             
-            if weibo.has_key(temp['status']['_id']):#生成微博对应的排序指标
-                pass
-            else:
-                weibo[temp['status']['_id']] = r['reposts_count']
-            if topic_rel_blog.has_key(temp['status']['_id']):#存储微博信息
-                pass
-            else:
-                topic_rel_blog[temp['status']['_id']] = temp
+            # 生成微博对应的排序指标
+            weibo_rank[r['id']] = reposts_count
+            
         else:
              continue
 
-        tempdate = date.fromtimestamp(r['timestamp'])
+        tempdate = created_date
         if tempdate < date_list[-1]:
             if tempdate in date_list:
                 temp_index = date_list.index(tempdate)
@@ -351,66 +373,85 @@ def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
                 i = 0
                 while i < len(date_list):
                     if tempdate > date_list[i] and tempdate < date_list[i+1]:
-                        date_list.insert(i+1,tempdate)
-                        perday_repost_count.insert(i+1,1)
+                        date_list.insert(i+1, tempdate)
+                        perday_repost_count.insert(i+1, 1)
                         break
                     else:
                         i += 1
-        if tempdate == date_list[-1]:
+
+        elif tempdate == date_list[-1]:
             perday_repost_count[-1] += 1
-        if tempdate > date_list[-1]:
-            timedelta = date(2000,1,2)-date(2000,1,1)
+
+        else:
+            timedelta = date(2000, 1, 2)-date(2000, 1, 1)
             while date_list[-1] != tempdate:
                 tempdate1 = date_list[-1] + timedelta
                 date_list.append(tempdate1)
                 perday_repost_count.append(0)
             perday_repost_count[-1] = 1
-        reposts_sum += r['reposts_count']
-        if 'comments_count' not in r:
-            comments_sum += 0
-        else:
-            comments_sum += r['comments_count']
 
-        n = n + 1
-        if n%100 == 0:
-            print n
+        reposts_sum += reposts_count
+        comments_sum += comments_count
 
+        iter_count = iter_count + 1
+        if iter_count % 10000 == 0:
+            print iter_count
+    
+    # totalRepost & avg
     totalRepost = reposts_sum + 1
-    avg = (float(totalRepost))/len(date_list)
+    if len(date_list):
+        avg = (float(totalRepost)) / len(date_list)
+    else:
+        avg = 0
+    
+    # persistent
     persistent_index = 0
     sudden_count = 0
     j = 0
     while j < len(date_list):
        if perday_repost_count[j] > avg:
           persistent_index += 1
-          sudden_count = perday_repost_count[j]-avg+sudden_count
+          sudden_count = perday_repost_count[j] - avg + sudden_count
           j += 1
        else:
           j += 1
-    sudden_index = '%10.2f'%((float(sudden_count))/totalRepost)
-    coverage_index = '%10.2f'%((totalRepost+comments_sum)/float(24*len(date_list)))
-   
+    
+    #  sudden
+    if totalRepost:
+        sudden_index = '%10.2f' % ( (float(sudden_count)) / totalRepost )
+    else:
+        sudden_index = 0
+    
+    # coverage
+    if len(date_list):
+        coverage_index = '%10.2f'%((totalRepost+comments_sum)/float(24*len(date_list)))
+    else:
+        coverage_index = 0
+    
+    # media
     media_index = 0
     medias = db.session.query(IMedia).all()
     for media in medias:
         key = media.mediaID
         if key in reposter:
             media_index += 1
-
+    
+    # 用户排序
     user_th = TopkHeap(1000)
-    for d,x in topic_user.items():#用户排序
-        user_th.Push((x,d))#排序指标、id
+    for d, x in topic_user.items():
+        user_th.Push((x, d)) # 排序指标、id
 
     user_data = user_th.TopK()
-
+    
+    # 微博排序
     weibo_th = TopkHeap(1000)
-    for d,x in weibo.items():#微博排序
-        weibo_th.Push((x,d))#排序指标、id
+    for d,x in weibo_rank.items():
+        weibo_th.Push((x,d)) # 排序指标、id
 
     weibo_data = weibo_th.TopK()
     
-    blog_info['status'] = status_ori
-    blog_info['user'] = status_ori['user']
+    blog_info['status'] = retweeted_ori
+    blog_info['user'] = retweeted_ori['user']
     blog_info['datelist'] = date_list
     blog_info['perday_count'] = perday_repost_count
     blog_info['persistent_index'] = persistent_index
@@ -421,10 +462,10 @@ def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
     blog_info['geo'] = city_count
     blog_info['key_reposter'] = user_data
     blog_info['weibo'] = weibo_data
-
+    
     if not blog_info['user']:
         blog_info['user'] = getNone()
-    save_base_infor(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['sourcePlatform'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
+    save_base_infor(blog_info['status']['id'], blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['source'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
 
     perday_blog_count = blog_info['perday_count']
     date_list = blog_info['datelist']   
@@ -436,7 +477,10 @@ def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
 
     for i in range(0,len(blog_info['key_reposter'])):
         uid = blog_info['key_reposter'][i][1]
-        save_user(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
+        try:
+            save_user(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
+        except:
+            continue
 
     if len(blog_info['weibo'])>=5:
         top_weibo = blog_info['weibo'][:5]
@@ -445,23 +489,25 @@ def calculate_single(_id, beg_ts,end_ts):#统计含_id的整个树的各指标
     for i in range(0,len(top_weibo)):
         mid = top_weibo[i][1]
         save_weibo(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['created_at'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
-  
+ 
     return 'Done'
 
-def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的各指标
-
+def calculate_single_sub(sub_g_reposts, retweeted_ori):
     #初始化
     blog_info = {}
     city_count = {}
     topic_rel_blog = dict()
-    province_name=dict()
-    html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option>
-                <option value="44">广东</option><option value="45">广西</option><option value="52">贵州</option><option value="46">海南</option><option value="13">河北</option>
-                <option value="23">黑龙江</option><option value="41">河南</option><option value="42">湖北</option><option value="43">湖南</option><option value="15">内蒙古</option><option value="32">江苏</option>
-                <option value="36">江西</option><option value="22">吉林</option><option value="21">辽宁</option><option value="64">宁夏</option><option value="63">青海</option><option value="14">山西</option><option value="37">山东</option>
-                <option value="31">上海</option><option value="51">四川</option><option value="12">天津</option><option value="54">西藏</option><option value="65">新疆</option><option value="53">云南</option><option value="33">浙江</option>
-                <option value="61">陕西</option><option value="71">台湾</option><option value="81">香港</option><option value="82">澳门</option><option value="400">海外</option><option value="100">其他</option></select>'''
+    province_name = dict()
+
+    html = '''<select name="province" id="province" defvalue="11"><option value="34">安徽</option><option value="11">北京</option><option value="50">重庆</option><option value="35">福建</option><option value="62">甘肃</option><option value="44">广东</option>
+              <option value="45">广西</option><option value="52">贵州</option><option value="46">海南</option><option value="13">河北</option><option value="23">黑龙江</option><option value="41">河南</option><option value="42">湖北</option>
+              <option value="43">湖南</option><option value="15">内蒙古</option><option value="32">江苏</option><option value="36">江西</option><option value="22">吉林</option><option value="21">辽宁</option><option value="64">宁夏</option>
+              <option value="63">青海</option><option value="14">山西</option><option value="37">山东</option><option value="31">上海</option><option value="51">四川</option><option value="12">天津</option><option value="54">西藏</option>
+              <option value="65">新疆</option><option value="53">云南</option><option value="33">浙江</option><option value="61">陕西</option><option value="71">台湾</option><option value="81">香港</option><option value="82">澳门</option>
+              <option value="400">海外</option><option value="100">其他</option></select>'''
+    
     province_soup = BeautifulSoup(html)
+
     for province in province_soup.findAll('option'):
         pp = province.string
         key = province['value']
@@ -470,66 +516,126 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
             continue
         city_count[pp] = 0
     
-    beg_limit = time.mktime(datetime(2013, 9, 1).timetuple())
-    end_limit = time.mktime(datetime(2013, 9, 5).timetuple())
-    #获取原微博信息
-    status_ori = get_ori_status(_id, beg_ts, end_ts)
-    if not status_ori:
-        return 'None'
-    
-    end_ts = beg_ts + 2*24*3600
-    if end_ts > end_limit:
-        end_ts = end_limit
-    reposter = []
-    
+    reposter = set() # 转发用户集合
     date_list = []
-    date_list.append(date.fromtimestamp(status_ori['timestamp']))
     perday_repost_count = []
-    perday_repost_count.append(1)
-    
-    per = date(2000,01,02)-date(2000,01,01)
     reposts_sum = 0
     comments_sum = 0
     key_reposter = dict()
-    weibo = dict()
+    weibo_rank = dict()
     topic_user = dict()
-    leader_index = 0
-    for rid in idlist:
-        r =  get_ori_status(rid, beg_ts, end_ts)
-        if not r:
-            continue
-        if not r['user']:
-            continue
-        user = r['user']
-        if user['province'] != None:
-            p = province_name[user['province']]
-            if p == u'海外' or p == u'其他':
-                pass
-            else:
-                city_count[p] += 1
-        if user['id'] not in reposter:
-            reposter.append(user['id'])
-        if r['repostsCount'] > 1000:
-            leader_index = leader_index + 1
-        if topic_user.has_key(user['id']):#生成用户对应的排序指标
-            pass
-        else:
-            topic_user[user['id']] = user['friends_count'] + user['followers_count'] + user['statuses_count']
-        if key_reposter.has_key(user['id']):#存储用户信息
-            pass
-        else:
-            key_reposter[user['id']] = user
-            
-        if weibo.has_key(r['id']):#生成微博对应的排序指标
-            pass
-        else:
-            weibo[r['id']] = r['repostsCount']
-        if topic_rel_blog.has_key(r['id']):#存储微博信息
-            pass
-        else:
-            topic_rel_blog[r['id']] = r
+    
+    retweeted_timestamp = retweeted_ori['timestamp']
+    retweeted_ori['postDate'] = date.fromtimestamp(retweeted_timestamp)
+    try:
+        retweeted_ori['repostsCount'] = int(retweeted_ori['reposts_count'])
+    except:
+        retweeted_ori['repostsCount'] = 0
+    try:
+        retweeted_ori['commentsCount'] = int(retweeted_ori['comments_count'])
+    except:
+        retweeted_ori['commentsCount'] = 0
+    try:
+        retweeted_ori['attitudesCount'] = int(retweeted_ori['attitudes_count'])
+    except:
+        retweeted_ori['attitudesCount'] = 0
+    try:
+        retweeted_ori['text'] = retweeted_ori['text']
+    except:
+        retweeted_ori['text'] = ''
 
-        tempdate = date.fromtimestamp(r['timestamp'])
+    date_list.append(date.fromtimestamp(retweeted_timestamp))
+    perday_repost_count.append(1)
+    
+    leader_index = 0
+    iter_count = 0
+    for r in sub_g_reposts:
+        friends_count = 0
+        followers_count = 0
+        statuses_count = 0
+        reposts_count = 0
+        comments_count = 0
+        attitudes_count = 0
+        try:
+            reposts_count += r['reposts_count']
+        except:
+            pass
+        try:
+            comments_count += r['comments_count']
+        except:
+            pass
+        try:
+            attitudes_count += r['attitudes_count']
+        except:
+            pass
+        try:
+            created_date = date.fromtimestamp(r['timestamp'])
+        except:
+            continue
+        try:
+            text = r['text']
+        except:
+            text = ''
+
+        if 'user' in r and r['user']:
+            user = r['user']
+            userId = r['id']
+
+            # 将用户加入转发者集合
+            reposter.add(userId)
+            
+            # 统计转发用户注册省份
+            if 'province' in user and user['province']:
+                p = province_name[user['province']]
+                if p == u'海外' or p == u'其他':
+                    pass
+                else:
+                    city_count[p] += 1
+            
+            # leader_index
+            if r['reposts_count'] > 1000:
+                leader_index = leader_index + 1
+            
+            # 生成用户对应的排序指标
+            try:
+                friends_count += user['friends_count']
+            except:
+                pass
+            try:
+                followers_count += user['followers_count']
+            except:
+                pass
+            try:
+                statuses_count += user['statuses_count']
+            except:
+                pass
+            if userId not in topic_user.keys():
+                topic_user[userId] = friends_count + followers_count + statuses_count
+            
+            # 存储用户信息
+            if userId not in key_reposter.keys():
+                key_reposter[userId] = user
+
+            # 存储微博信息
+            temp = {}
+            temp['status'] = r
+            temp['status']['repostsCount'] = reposts_count
+            temp['status']['commentsCount'] = comments_count
+            temp['status']['attitudesCount'] = attitudes_count
+            temp['status']['created_at'] = created_date
+            temp['status']['postDate'] = created_date
+            temp['status']['text'] = text
+            temp['status']['source'] = 'unknown'
+            temp['user'] = user
+            topic_rel_blog[r['id']] = temp
+            
+            # 生成微博对应的排序指标
+            weibo_rank[r['id']] = reposts_count
+            
+        else:
+             continue
+
+        tempdate = created_date
         if tempdate < date_list[-1]:
             if tempdate in date_list:
                 temp_index = date_list.index(tempdate)
@@ -538,59 +644,85 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
                 i = 0
                 while i < len(date_list):
                     if tempdate > date_list[i] and tempdate < date_list[i+1]:
-                        date_list.insert(i+1,tempdate)
-                        perday_repost_count.insert(i+1,1)
+                        date_list.insert(i+1, tempdate)
+                        perday_repost_count.insert(i+1, 1)
                         break
                     else:
                         i += 1
-        if tempdate == date_list[-1]:
+
+        elif tempdate == date_list[-1]:
             perday_repost_count[-1] += 1
-        if tempdate > date_list[-1]:
-            timedelta = date(2000,1,2)-date(2000,1,1)
+
+        else:
+            timedelta = date(2000, 1, 2)-date(2000, 1, 1)
             while date_list[-1] != tempdate:
                 tempdate1 = date_list[-1] + timedelta
                 date_list.append(tempdate1)
                 perday_repost_count.append(0)
             perday_repost_count[-1] = 1
-        reposts_sum += r['repostsCount']
-        comments_sum += r['commentsCount']
 
+        reposts_sum += reposts_count
+        comments_sum += comments_count
+
+        iter_count = iter_count + 1
+        if iter_count % 10000 == 0:
+            print iter_count
+    
+    # totalRepost & avg
     totalRepost = reposts_sum + 1
-    avg = (float(totalRepost))/len(date_list)
+    if len(date_list):
+        avg = (float(totalRepost)) / len(date_list)
+    else:
+        avg = 0
+    
+    # persistent
     persistent_index = 0
     sudden_count = 0
     j = 0
     while j < len(date_list):
        if perday_repost_count[j] > avg:
           persistent_index += 1
-          sudden_count = perday_repost_count[j]-avg+sudden_count
+          sudden_count = perday_repost_count[j] - avg + sudden_count
           j += 1
        else:
           j += 1
-    sudden_index = '%10.2f'%((float(sudden_count))/totalRepost)
-    coverage_index = '%10.2f'%((totalRepost+comments_sum)/float(24*len(date_list)))
-   
+    
+    #  sudden
+    if totalRepost:
+        sudden_index = '%10.2f' % ( (float(sudden_count)) / totalRepost )
+    else:
+        sudden_index = 0
+    
+    # coverage
+    if len(date_list):
+        coverage_index = '%10.2f'%((totalRepost+comments_sum)/float(24*len(date_list)))
+    else:
+        coverage_index = 0
+    
+    # media
     media_index = 0
     medias = db.session.query(IMedia).all()
     for media in medias:
         key = media.mediaID
         if key in reposter:
             media_index += 1
-
+    
+    # 用户排序
     user_th = TopkHeap(1000)
-    for d,x in topic_user.items():#用户排序
-        user_th.Push((x,d))#排序指标、id
+    for d, x in topic_user.items():
+        user_th.Push((x, d)) # 排序指标、id
 
     user_data = user_th.TopK()
-
+    
+    # 微博排序
     weibo_th = TopkHeap(1000)
-    for d,x in weibo.items():#微博排序
-        weibo_th.Push((x,d))#排序指标、id
+    for d,x in weibo_rank.items():
+        weibo_th.Push((x,d)) # 排序指标、id
 
     weibo_data = weibo_th.TopK()
     
-    blog_info['status'] = status_ori
-    blog_info['user'] = status_ori['user']
+    blog_info['status'] = retweeted_ori
+    blog_info['user'] = retweeted_ori['user']
     blog_info['datelist'] = date_list
     blog_info['perday_count'] = perday_repost_count
     blog_info['persistent_index'] = persistent_index
@@ -604,7 +736,7 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
 
     if not blog_info['user']:
         blog_info['user'] = getNone()
-    save_base_infor_part(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['sourcePlatform'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
+    save_base_infor_part(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['source'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
 
     perday_blog_count = blog_info['perday_count']
     date_list = blog_info['datelist']   
@@ -616,7 +748,10 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
 
     for i in range(0,len(blog_info['key_reposter'])):
         uid = blog_info['key_reposter'][i][1]
-        save_user_part(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
+        try:
+            save_user_part(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
+        except:
+            continue
 
     if len(blog_info['weibo'])>=5:
         top_weibo = blog_info['weibo'][:5]
@@ -624,8 +759,8 @@ def calculate_part(_id, beg_ts, end_ts, idlist):#统计以_id开头的子树的�
         top_weibo = blog_info['weibo']
     for i in range(0,len(top_weibo)):
         mid = top_weibo[i][1]
-        save_weibo_part(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['text'],topic_rel_blog[mid]['sourcePlatform'],topic_rel_blog[mid]['postDate'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['repostsCount'],topic_rel_blog[mid]['commentsCount'],topic_rel_blog[mid]['attitudesCount'])
-  
+        save_weibo_part(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['postDate'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
+
     return 'Done'
 
 def save_base_infor_part(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader):#微博id、头像url、内容、来源、发布时间、用户id、用户昵称、转发数、评论数、赞数、4个指标
@@ -641,6 +776,11 @@ def save_base_infor_part(mid, image_url, text, sourcePlatform, postDate, uid, us
     coverage = float(coverage)
     media = float(media)
     leader = float(leader)
+    
+    exist_items = db.session.query(PropagateSinglePart).filter(PropagateSinglePart.mid==mid).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
 
     #print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
     new_item = PropagateSinglePart(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
@@ -651,6 +791,13 @@ def save_daily_count_part(mid,date,perday_blog_count):#mid、日期、微博数
 
     date = ts2datetime(time.mktime(date.timetuple()))
     perday_blog_count = int(perday_blog_count)
+
+    exist_items = db.session.query(PropagateTrendSinglePart).\
+                           filter(PropagateTrendSinglePart.id==mid, \
+                                  PropagateTrendSinglePart.date==date).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
 
     #print mid,date,perday_blog_count
     new_item = PropagateTrendSinglePart(mid,date,perday_blog_count)
@@ -692,8 +839,8 @@ def save_weibo_part(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_n
     db.session.add(new_item)
     db.session.commit()
 
-def save_base_infor(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader):#微博id、头像url、内容、来源、发布时间、用户id、用户昵称、转发数、评论数、赞数、4个指标
-
+def save_base_infor(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader):
+    #微博id、头像url、内容、来源、发布时间、用户id、用户昵称、转发数、评论数、赞数、4个指标
     mid = str(mid)
     image_url = str(image_url)
     uid = str(uid)
@@ -706,6 +853,11 @@ def save_base_infor(mid, image_url, text, sourcePlatform, postDate, uid, user_na
     media = float(media)
     leader = float(leader)
 
+    exist_items = db.session.query(PropagateSingle).filter(PropagateSingle.mid==mid).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+
     #print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
     new_item = PropagateSingle(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
     db.session.add(new_item)
@@ -715,6 +867,13 @@ def save_daily_count(mid,date,perday_blog_count):#mid、日期、微博数
 
     date = ts2datetime(time.mktime(date.timetuple()))
     perday_blog_count = int(perday_blog_count)
+
+    exist_items = db.session.query(PropagateTrendSingle).\
+                       filter(PropagateTrendSingle.id==mid, \
+                              PropagateTrendSingle.date==date).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
 
     #print mid,date,perday_blog_count
     new_item = PropagateTrendSingle(mid,date,perday_blog_count)
@@ -762,5 +921,11 @@ if __name__ == "__main__":
     # topic_info = calculate_part(3617839380294898, 1377964800, 1378224000,[3617782506173763,3618043278635735,3618455003121922,3618481590955662,3618479728507301])
     # print topic_info
 
-    topic_info = calculate_single(3617726042418839, 1377964800, 1378224000)
+    # topic_info = calculate_single(3617726042418839)
+    # print topic_info
+
+    # topic_info = calculate_single(3618201981966170)
+    # print topic_info
+
+    topic_info = calculate_single(3618204893345603)
     print topic_info

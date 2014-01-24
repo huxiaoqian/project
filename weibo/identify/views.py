@@ -365,7 +365,7 @@ def area():
         if session['user'] == 'admin':
             request_method = request.method
             if request_method == 'GET':
-                return render_template('identify/area.html', from_external=True)
+                return render_template('identify/area.html', from_external=True, field='university')
             elif request_method == 'POST':
                 form = request.form
                 action = form.get('action', 'run')
@@ -380,7 +380,7 @@ def area():
                 start_ts,end_ts = _time_zone(during_date)
                 window_size = (end_ts - start_ts)/(24*3600)
 
-                field = form.get('field', 'finance')
+                field = form.get('field', 'university')
                 field_id = domain[field]
 
                 if action == 'previous_rank':
@@ -416,63 +416,6 @@ def area():
                     during_date = _utf_decode(during_date)
                     return render_template('identify/area.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, field=field)
         else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.identify
-                    if identy == 1:
-                        request_method = request.method
-                        if request_method == 'GET':
-                            return render_template('identify/area.html', from_external=True)
-                        elif request_method == 'POST':
-                            form = request.form
-                            action = form.get('action', 'run')
-
-                            top_n = int(form.get('top_n', 500))
-                            if top_n > 500:
-                                top_n = 500
-                            page_num = int(form.get('page_num', 20))
-                            rank_method = form.get('rank_method', 'followers')
-                            during_date = form.get('window_size', '9月 1日,2013 - 9月 5日,2013')
-                            during_date = _utf_encode(during_date)
-                            start_ts,end_ts = _time_zone(during_date)
-                            window_size = (end_ts - start_ts)/(24*3600)
-
-                            field = form.get('field', 'finance')
-                            field_id = domain[field]
-
-                            if action == 'previous_rank':
-                                action = 'rank'
-                            if action == 'rank':
-                                current_date = ts2datetime(end_ts-24*3600)
-                                previous_date = ts2datetime(start_ts-24*3600)
-
-                                data = area_caculate(current_date,window_size,rank_method,top_n,field_id)
-                                previous_data = area_caculate(previous_date,window_size,rank_method,top_n,field_id)
-
-                                index = dict()
-                                for i in range(0,len(data)):#比较上期结果
-                                    flag = 0
-                                    for j in range(0,len(previous_data)):
-                                        if previous_data[j][1] == data[i][1]:
-                                            flag = 1
-                                            compare = previous_data[j][0] - data[i][0]
-                                            index[previous_data[j][1]] = j
-                                            break
-                                    if flag == 0:
-                                        compare = 0
-                                    data[i].append(compare)
-
-                                pre_data = []
-                                for i in range(0,len(previous_data)):
-                                    if  index.has_key(previous_data[i][1]):
-                                        pass
-                                    else:
-                                        pre_data.append(previous_data[i])
-                                return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
-                            elif action == 'run':
-                                during_date = _utf_decode(during_date)
-                                return render_template('identify/area.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, field=field)
             return redirect('/')
     else:
         return redirect('/')
@@ -579,7 +522,7 @@ def _time_zone(stri):
     start_ts = tslist[0]
     end_ts = tslist[1]
 
-    return int(start_ts), int(end_ts)
+    return int(start_ts), int(end_ts) + 3600 * 24
 
 @mod.route("/monitor/burst/", methods=["GET", "POST"])
 def burst_monitor():

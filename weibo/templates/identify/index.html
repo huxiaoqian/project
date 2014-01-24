@@ -123,10 +123,11 @@
       
       <div class="btn-group">
   <a  id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-    财经
+    高校微博
     <span class="caret"></span>
   </a>
   <ul id="area_rank_method_dropdown_menu" class="dropdown-menu">
+    <!--
     <li><a href="#" onClick="choose_field('area', 'finance');" data-toggle="tab">财经</a></li>
           <li><a href="#" onClick="choose_field('area', 'fashion');" data-toggle="tab">时尚</a></li>
           <li><a href="#" onClick="choose_field('area', 'entertainment');" data-toggle="tab">娱乐</a></li>
@@ -135,7 +136,7 @@
           <li><a href="#" onClick="choose_field('area', 'culture');" data-toggle="tab">文化</a></li>
           <li><a href="#" onClick="choose_field('area', 'education');" data-toggle="tab">教育</a></li>
           <li><a href="#" onClick="choose_field('area', 'technology');" data-toggle="tab">科技</a></li>
-          <li><a href="#" onClick="choose_field('area', 'abroad');" data-toggle="tab">境外</a></li>
+          <li><a href="#" onClick="choose_field('area', 'abroad');" data-toggle="tab">境外</a></li>-->
           <li><a href="#" onClick="choose_field('area', 'university');" data-toggle="tab">高校微博</a></li>
           <li><a href="#" onClick="choose_field('area', 'homeadmin');" data-toggle="tab">境内机构</a></li>
           <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外机构</a></li>
@@ -172,7 +173,7 @@
       &nbsp&nbsp&nbsp
       <input type="submit" class="btn btn-primary" value="识别">
       <input type="hidden" name="action" value="run">
-      <input type="hidden" id="topic_hidden" name="field" value="finance">
+      <input type="hidden" id="topic_hidden" name="field" value="university">
       <input id="area1_rank_method" type="hidden" name="rank_method" value="followers">
       <input id="area_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
     </form>
@@ -239,15 +240,62 @@
 {% endblock %}
 
 {% block script %}
-  <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/burst.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
   <script type="text/javascript" charset="utf-8">
+  function choose_method(range, method) {
+    $("#"+range+"_rank_method").val(method);
+    cn_method = '';
+    if(method=='followers')
+        cn_method = '粉丝数';
+    else if(method=='active')
+  cn_method = '活跃度';
+    else if(method=='important')
+  cn_method = '重要度';
+    $("#"+range+"_rank_method_choosen").text(cn_method);
+    $("#"+range+"_rank_method_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_rank_method_choosen").parent().removeClass('open');
+    $("#"+range+"_rank_method_dropdown_menu").children().removeClass('active');
+}
+
+function choose_method2(range, method) {
+    $("#"+range+"_rank_method").val(method);
+    cn_method = '';
+    if(method=='active')
+  cn_method = '活跃度差值';
+    else if(method=='important')
+  cn_method = '重要度差值';
+    $("#"+range+"_rank_method_choosen").text(cn_method);
+    $("#"+range+"_rank_method_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_rank_method_choosen").parent().removeClass('open');
+    $("#"+range+"_rank_method_dropdown_menu").children().removeClass('active');
+}
+
+function choose_window(range, window) {
+    $("#"+range+"_window_size").val(window);
+    cn_window = '';
+    if(window==1)
+        cn_window = '1天';
+    else if(window==7)
+  cn_window = '1周';
+    else if(window==30)
+  cn_window = '1个月';
+    else if(window==90)
+  cn_window = '3个月';
+    $("#"+range+"_window_size_choosen").text(cn_window);
+    $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_window_size_choosen").parent().removeClass('open');
+    $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+}
+
   function choose_field(prefix, area){
-    $("#topic_hidden").val(area)
+    $("#topic_hidden").val(area);
     cn_area = '';
     if(area=='finance')
         cn_area = '经济';

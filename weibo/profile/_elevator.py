@@ -47,6 +47,7 @@ def getPersonData(uid, datestr):
         original = int(original)
         emoticon = int(emoticon)
         interact_dict = json.loads(interact_dict)
+        print interact_dict
         direct_interact = interact_dict['direct']
         retweeted_interact = interact_dict['retweeted']
         keywords_dict = json.loads(keywords_dict)

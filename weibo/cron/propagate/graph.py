@@ -205,9 +205,12 @@ def getWeiboByMid(mid):
             if field == 'user':
                 status['user'] = getUserByUid(weibo['user'])
             elif field == 'timestamp':
+                status['timestamp'] = weibo['timestamp']
                 status['created_at'] = time.strftime("%a %b %d %H:%M:%S +0800 %Y", time.localtime(weibo['timestamp']))
             else:
                 status[field] = weibo[field]
+    else:
+        status['text'] = ''
     
     status['id'] = int(mid)
     status['mid'] = str(mid)
@@ -222,7 +225,7 @@ def getUserByUid(uid):
             user_dict[field] = _utf_8_decode(user[field])
     else:
         user_dict['name'] = str(uid)
-        user_dict['location'] = u'未知'
+        user_dict['location'] = 'unknown'
         user_dict['profile_image_url'] = u''
 
     result_dict = {}
@@ -255,6 +258,7 @@ def getWeiboRepostsByMid(mid, begin_ts, end_ts, limit=100000):
             if field == 'user':
                 status['user'] = getUserByUid(r['user'])
             elif field == 'timestamp':
+                status['timestamp'] = r['timestamp']
                 status['created_at'] = time.strftime("%a %b %d %H:%M:%S +0800 %Y", time.localtime(r['timestamp']))
             else:
                 status[field] = r[field]
@@ -266,55 +270,6 @@ def getWeiboRepostsByMid(mid, begin_ts, end_ts, limit=100000):
         count += 1
 
     return statuses
-
-
-def _utf_8_decode(stri):
-    if isinstance(stri, str):
-        return unicode(stri, 'utf-8')
-    return stri
-
-
-def local2ts(time_str):
-    time_format = '%a %b %d %H:%M:%S +0800 %Y'
-    return int(time.mktime(time.strptime(time_str, time_format)))
-
-
-def graph(mid):
-    # weibo
-    weibo = getWeiboByMid(mid)
-    retweeted_mid = weibo['retweeted_mid']
-    retweeted_uid = weibo['retweeted_uid']
-
-    # source_weibo
-    source_weibo = weibo
-    if retweeted_mid != 0:
-        source_weibo = getWeiboByMid(retweeted_mid)
-
-    # reposts
-    reposts = []
-    if 'created_at' not in source_weibo:
-        sys.exit('source weibo not available')
-
-    try:
-        begin_ts = local2ts(source_weibo['created_at'])
-        end_ts = begin_ts + 24 * 3600
-    except Exception, e:
-        sys.exit(e)
-
-    # max_limit = per_page * page_count
-    per_page = 10000
-    page_count = 10
-
-    reposts = getWeiboRepostsByMid(source_weibo['id'], begin_ts, end_ts, per_page * page_count)
-    print 'search source weibo reposts completely ', source_weibo['id'], 'total reposts count : ', len(reposts), \
-          ' source user name: ', source_weibo['user']['name'], source_weibo['user']['id']
-
-    tree, tree_stats = reposts2tree(source_weibo, reposts, per_page, page_count)
-    graph, max_depth, max_width = tree2graph(tree)
-    tree_stats['max_depth'] = max_depth
-    tree_stats['max_width'] = max_width
-
-    return {'graph': graph, 'stats': tree_stats}
 
 
 def getSubWeiboRepostsByMid(mid, name, retweeted_mid, begin_ts, end_ts, limit=100000):
@@ -344,6 +299,7 @@ def getSubWeiboRepostsByMid(mid, name, retweeted_mid, begin_ts, end_ts, limit=10
             if field == 'user':
                 status['user'] = getUserByUid(r['user'])
             elif field == 'timestamp':
+                status['timestamp'] = r['timestamp']
                 status['created_at'] = time.strftime("%a %b %d %H:%M:%S +0800 %Y", time.localtime(r['timestamp']))
             else:
                 status[field] = r[field]
@@ -357,47 +313,112 @@ def getSubWeiboRepostsByMid(mid, name, retweeted_mid, begin_ts, end_ts, limit=10
     return statuses
 
 
-def sub_graph(mid):
-    # weibo to be source weibo
+def _utf_8_decode(stri):
+    if isinstance(stri, str):
+        return unicode(stri, 'utf-8')
+    return stri
+
+
+def local2ts(time_str):
+    time_format = '%a %b %d %H:%M:%S +0800 %Y'
+    return int(time.mktime(time.strptime(time_str, time_format)))
+
+
+def graph(mid):
+    # weibo
     weibo = getWeiboByMid(mid)
-    print weibo
+    if 'retweeted_mid' not in weibo or 'retweeted_uid' not in weibo:
+        sys.exit('weibo not found from the whole xapian db')
     retweeted_mid = weibo['retweeted_mid']
     retweeted_uid = weibo['retweeted_uid']
 
+    # source_weibo
+    repost_flag = False # 该微博为非转发微博
     if retweeted_mid != 0:
+        repost_flag = True # 该微博为原创微博
+        source_weibo = getWeiboByMid(retweeted_mid)
+    else:
         source_weibo = weibo
 
-        #reposts
-        reposts = []
-        if 'created_at' not in source_weibo:
-            sys.exit('source weibo not available')
+    if 'created_at' not in source_weibo or 'created_at' not in weibo:
+        sys.exit('source weibo or weibo not exist created_at')
 
-        try:
-            begin_ts = local2ts(source_weibo['created_at'])
-            end_ts = begin_ts + 24 * 3600
-        except Exception, e:
-            sys.exit(e)
+    # 完整树的reposts
+    begin_ts = local2ts(source_weibo['created_at'])
+    end_ts = begin_ts + 24 * 3600
 
-        # max_limit = per_page * page_count
+    per_page = 10000
+    page_count = 10
+    reposts = getWeiboRepostsByMid(source_weibo['id'], begin_ts, end_ts, per_page * page_count)
+    print 'search source weibo reposts completely ', source_weibo['id'], 'total reposts count : ', len(reposts), \
+    ' source user name: ', source_weibo['user']['name'], source_weibo['user']['id']
+
+    whole_graph_stats = {'graph': '', 'stats': '', 'reposts': reposts, 'ori': source_weibo}
+    '''
+    # 完整转发树绘制
+    print 'start draw whole tree'
+    tree, tree_stats = reposts2tree(source_weibo, reposts, per_page, page_count)
+    graph, max_depth, max_width = tree2graph(tree)
+    tree_stats['max_depth'] = max_depth
+    tree_stats['max_width'] = max_width
+    try:
+        tree_stats['spread_begin'] = time.mktime(tree_stats['spread_begin'].timetuple())
+        tree_stats['spread_end'] = time.mktime(tree_stats['spread_end'].timetuple())
+    except Exception, e:
+        tree_stats['spread_begin'] = 'unknown'
+        tree_stats['spread_end'] = 'unknown'
+        print e
+
+    whole_graph_stats = {'graph': graph, 'stats': tree_stats, 'reposts': reposts, 'ori': source_weibo}
+    print tree_stats
+    print 'end draw whole tree'
+    '''
+
+    sub_graph_stats = {'graph': '', 'stats': '', 'reposts': [], 'ori': None}
+    if repost_flag:
+        # 转发微博需要进行子树计算
+        print 'start draw sub tree'
+
+        # 子树的reposts，从该条微博往下
+        sub_reposts = []
+        begin_ts = local2ts(weibo['created_at'])
+        end_ts = begin_ts + 24 * 3600
+
         per_page = 10000
         page_count = 10
-
-        reposts = getSubWeiboRepostsByMid(source_weibo['id'], source_weibo['user']['name'], retweeted_mid, begin_ts, end_ts, per_page * page_count)
-        print 'search source weibo reposts completely ', source_weibo['id'], 'total reposts count : ', len(reposts), \
-              ' source user name: ', source_weibo['user']['name'], source_weibo['user']['id']
-
-        tree, tree_stats = reposts2tree(source_weibo, reposts, per_page, page_count)
+        reposts = getSubWeiboRepostsByMid(weibo['id'], weibo['user']['name'], source_weibo['id'], begin_ts, end_ts, per_page * page_count)
+        print 'search sub weibo reposts completely ', weibo['id'], 'total reposts count : ', len(reposts), \
+        ' source user name: ', weibo['user']['name']
+        
+        # 子树转发树绘制
+        tree, tree_stats = reposts2tree(weibo, reposts, per_page, page_count)
         graph, max_depth, max_width = tree2graph(tree)
         tree_stats['max_depth'] = max_depth
         tree_stats['max_width'] = max_width
+        try:
+            tree_stats['spread_begin'] = time.mktime(tree_stats['spread_begin'].timetuple())
+            tree_stats['spread_end'] = time.mktime(tree_stats['spread_end'].timetuple())
+        except Exception, e:
+            tree_stats['spread_begin'] = 'unknown'
+            tree_stats['spread_end'] = 'unknown'
+            print e
 
-        return {'graph': graph, 'stats': tree_stats}
+        sub_graph_stats['graph'] = graph
+        sub_graph_stats['stats'] = tree_stats
+        sub_graph_stats['reposts'] = reposts
+        sub_graph_stats['ori'] = weibo
+        print tree_stats
+        print 'end draw sub tree'
 
     else:
-        sys.exit('Is source weibo')
+        # 原创微博不需要进行子树计算
+        print 'original need not draw sub tree'
+
+    return {'whole': whole_graph_stats, 'sub': sub_graph_stats}
 
 
 if __name__ == '__main__':
-    source_mid = 3617841875854702#3618476080282985#3617726042418839#3618201981966170#
-    # graph(source_mid)
-    sub_graph(source_mid)
+    # repost: 3618204893345603
+    #3618476080282985   3617726042418839    3618201981966170    3617841875854702
+    source_mid = 3618204893345603
+    graph(source_mid)

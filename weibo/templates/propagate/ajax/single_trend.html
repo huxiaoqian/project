@@ -15,15 +15,35 @@
   <div id="count_chart_second"></div>
 </div>
 <script>
+  var len = $('script').filter(function () {
+    return ($(this).attr('src') == '/static/js/highstock.js');
+  }).length;
+
+  if(len == 0){
+    loadScript('/static/js/highstock.js');
+    loadScript('/static/js/exporting.js');
+  }
+
+  function loadScript(scriptLocationAndName) {
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = scriptLocationAndName;
+    head.appendChild(script);
+  }
+
+  var request_data_dict = {'mid': '{{mid}}'};
   $.ajax({
-	url:"/propagate/single_ajax_trend/",
-	dataType:"json",
-	data: request_data_dict,
-	type:"POST",
-	success:function(data){
-		display_trend_chart_first(data);
-    display_trend_chart_second(data);
-	}
+	   url:"/propagate/single_ajax_trend/",
+	   dataType:"json",
+	   data: request_data_dict,
+	   type:"POST",
+    	success:function(data){
+        console.log('here1');
+        console.log(data);
+    		display_trend_chart_first(data);
+        display_trend_chart_second(data);
+    	}
   });
   function display_trend_chart_first(data){
   	$('#count_chart_first').highcharts('StockChart', {
@@ -33,7 +53,7 @@
       },
 
       title : {
-        text : '整个转发树传播趋势'
+        text : '全树传播趋势'
       },
       
       series : [{
@@ -53,7 +73,7 @@
       },
 
       title : {
-        text : '以该微博为顶点的转发树传播趋势'
+        text : '子树传播趋势'
       },
       
       series : [{

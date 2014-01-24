@@ -9,6 +9,8 @@ cron_start = '2013-9-1'
 cron_end = '2013-9-6'
 SIMULATE_BASE_DATE = '2013-12-22 19:00:00'
 
+USER_DOMAIN = "user_domain"
+
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']

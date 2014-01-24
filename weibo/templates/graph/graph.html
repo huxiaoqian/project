@@ -144,10 +144,9 @@
                     console.log("Error: " + result.errorThrown); 
               }
             })
-            /*
             $.ajax({
-                url: "{{ url_for('graph.tree_stats_index', mid=mid, page=page) }}",
-                success: function( data ) {
+                url: "/gexf/tree_stats/{{mid}}/{{page}}",
+                success: function(data) {
                     var stats = data["stats"];
                     $( "#reposts-count" ).html( stats['reposts_count'] );
                     $( "#repost-people-count" ).html( stats['repost_people_count'] );
@@ -156,7 +155,7 @@
                     $( "#spread-begin" ).html( stats['spread_begin'] );
                     $( "#spread-end" ).html( stats['spread_end'] );
                 }
-            });*/
+            });
         }
         /*
         if (document.addEventListener) {

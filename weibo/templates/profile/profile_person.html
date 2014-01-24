@@ -48,8 +48,8 @@
         </div>
         <div class="span9" id="index-tabs">
           <ul class="nav nav-pills tab_container">
-            <li class="btn span2 btn-primary" id="tab1">行为信息</li>
-            <li class="btn span2" id="tab2">兴趣偏好</li>
+            <li class="btn span2 btn-primary" id="tab2">兴趣偏好</li>
+            <li class="btn span2" id="tab1">行为信息</li>
             <li class="btn span2" id="tab3">关注结构</li>
             <li class="btn span2" id="tab4">粉丝结构</li>
             <li class="btn span2" id="tab5">交互结构</li>
@@ -62,7 +62,7 @@
 {% block script %}
   <script>
     $('#content_container').empty();
-    $('#content_container').load("/profile/person_tab_ajax/personalweibocount/{{user.id}}", function() {});
+    $('#content_container').load("/profile/person_tab_ajax/personaltopic/{{user.id}}", function() {});
 
     tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5'];
     tabUrlArr = ["/profile/person_tab_ajax/personalweibocount/{{user.id}}", "/profile/person_tab_ajax/personaltopic/{{user.id}}", "/profile/person_tab_ajax/personalnetwork/{{user.id}}", "/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}", "/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}"];

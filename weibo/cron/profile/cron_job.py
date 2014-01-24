@@ -106,7 +106,7 @@ def get_daily_user_interact_db_by_date(datestr):
 
 def get_daily_user_db_by_date(datestr):
     # datestr '20140105'
-    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % datestr),
+    daily_user_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s_test' % datestr),
                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     return daily_user_db
 
@@ -305,6 +305,31 @@ def iter_userbasic2mysql(cobar_conn, sharding=False):
 
         count += 1
 
+    # create index
+    print 'create cbw_ppb_userid index on table profile_person_basic'
+    try:
+        cursor.execute("CREATE INDEX cbw_ppb_userid on profile_person_basic(userId)")
+    except Exception, e:
+        print e
+
+    print 'create cbw_ppb_fol_fri_sta_loc index on table profile_person_basic'
+    try:
+        cursor.execute("CREATE INDEX cbw_ppb_fol_fri_sta_loc on profile_person_basic(followersCount, friendsCount, statuseCount, location)")
+    except Exception, e:
+        print e
+
+    print 'create cbw_ppb_created index on table profile_person_basic'
+    try:
+        cursor.execute("CREATE INDEX cbw_ppb_created on profile_person_basic(created_at)")
+    except Exception, e:
+        print e
+
+    print 'create cbw_ppb_fol_domain index on table profile_person_basic'
+    try:
+        cursor.execute("CREATE INDEX cbw_ppb_fol_domain on profile_person_basic(followersCount, domain)")
+    except Exception, e:
+        print e
+
     if cobar_conn:
         cobar_conn.close()
 
@@ -358,52 +383,6 @@ def personWeiboCount2levedb():
         count += 1
 
 
-def personWeiboCount2Mysql():
-    cursor = cobar_conn.cursor()
-
-    count = 0
-    ts = te = time.time()
-    for k, v in daily_profile_person_count_db.RangeIter():
-        if count % 2000 == 0:
-            # commit changes to mysql
-            cobar_conn.commit()
-
-        if count % 10000 == 0:
-            te = time.time()
-            print count, '%s sec' % (te - ts), 'leveldb2mysql'
-            ts = te
-
-        # Extract and Transfer
-        try:
-            counts = v
-            active, important, reposts, original, emoticon = counts.split('_')
-            active = int(active)
-            important = int(important)
-            reposts = int(reposts)
-            original = int(original)
-            emoticon = int(emoticon)
-        except KeyError:
-            active = important = reposts = original = emoticon = 0
-
-        endDate = batch_date_1
-        userId = int(k)
-
-        # Load 
-        sql = """insert into profile_person_weibo_count(userId, active, important, reposts, original, emoticon, endDate) values \
-              (%d, %d, %d, %d, %d, %d, '%s')""" % (userId, active, important, reposts, original, emoticon, endDate)
- 
-        try:
-            cursor.execute(sql)
-        except Exception, e:
-            pass
-
-        #print k, active, important, reposts, original, emoticon
-        count += 1
-
-    if cobar_conn:
-        cobar_conn.close()
-
-
 def personTopic2leveldb(keyword_limit=50):
     # test 0.6 seconds per 10000 weibos
     weibos = xapian_search_weibo.iter_all_docs(fields=['user', 'text'])
@@ -450,7 +429,7 @@ def personInteract2leveldb():
             te = time.time()
             daily_profile_person_interact_db.Write(batch, sync=True)
             batch = leveldb.WriteBatch()
-            print count, '%s sec' % (te - ts)
+            print count, '%s sec' % (te - ts), ' profile person interact ', batch_date_1
             ts = te
 
         uid = int(weibo['user'])
@@ -465,9 +444,14 @@ def personInteract2leveldb():
             direct_interact = {}
             retweeted_interact = {}
 
-        repost_user = re.search('//@([a-zA-Z-_\u0391-\uFFE5]+)', text)
-        if repost_user:
-            repost_user = repost_user.group(0)
+        if isinstance(text, str):
+            text = text.decode('utf-8', 'ignore')
+
+        RE = re.compile(u'//@([a-zA-Z-_⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]+):', re.UNICODE)
+        repost_users = RE.findall(text)
+
+        if len(repost_users):
+            repost_user = repost_users[0]
             try:
                 direct_interact[repost_user] += 1
             except KeyError:
@@ -496,7 +480,7 @@ def batch_handle():
             te = time.time()
             daily_profile_person_db.Write(batch, sync=True)
             batch = leveldb.WriteBatch()
-            print count, '%s sec' % (te - ts)
+            print count, '%s sec' % (te - ts), ' profile person calc', batch_date_1
             ts = te
 
         uid = weibo['user']
@@ -535,10 +519,15 @@ def batch_handle():
         _emoticons = emoticon_find(text)
         if _emoticons and len(_emoticons):
             emoticon += 1
+        
+        if isinstance(text, str):
+            text = text.decode('utf-8', 'ignore')
 
-        repost_user = re.search('//@([a-zA-Z-_\u0391-\uFFE5]+)', text)
-        if repost_user:
-            repost_user = repost_user.group(0)
+        RE = re.compile(u'//@([a-zA-Z-_⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]+):', re.UNICODE)
+        repost_users = RE.findall(text)
+
+        if len(repost_users):
+            repost_user = repost_users[0]
             try:
                 direct_interact[repost_user] += 1
             except KeyError:
@@ -683,8 +672,15 @@ def batch_handle_domain():
 
 
 if __name__ == '__main__':
-    sharding = True
+    # init xapian weibo
+    batch_date_1 = '20130905'
+    xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
 
+    #
+    seed_set = get_official_seed_set()
+    scws = load_scws()
+
+    sharding = False
     if sharding:
         # mysqldb连接数据库　
         try:
@@ -694,39 +690,32 @@ if __name__ == '__main__':
             print e
             sys.exit()
 
-    #
-    '''
-    seed_set = get_official_seed_set()
-    scws = load_scws()
-
-    batch_date_1 = '20130901'
-    #xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
-    '''
-
     '''
     daily_domain_keywords_db = {}
     for i in range(-1, 21):
         daily_domain_keywords_db[i] = get_daily_domain_keywords_db_by_date(batch_date_1, i)
     '''
-
-    batch_date_1 = '20130901'
     
+    # update person basics once a week
+    # daily_profile_person_basic_db = get_daily_user_basic_db_by_date(batch_date_1)
+    # iter_userbasic2leveldb()
+    # iter_userbasic2mysql(cobar_conn, sharding)
+    
+    # update person active, important, reposts, original, emoticon once a day
     # daily_profile_person_count_db = get_daily_user_count_db_by_date(batch_date_1)
-    # personWeiboCount2Mysql()
     # personWeiboCount2levedb()
-
-    daily_profile_person_basic_db = get_daily_user_basic_db_by_date(batch_date_1)
-    #iter_userbasic2leveldb()
-    iter_userbasic2mysql(cobar_conn, sharding)
-
+    
+    # update person topic once a day
     # daily_profile_person_topic_db = get_daily_user_topic_db_by_date(batch_date_1)
     # personTopic2leveldb()
-
+    
+    # update person interact once a day
     # daily_profile_person_interact_db = get_daily_user_interact_db_by_date(batch_date_1)
     # personInteract2leveldb()
-
-    # daily_profile_person_db = get_daily_user_db_by_date(batch_date_1)
-    # batch_handle()
+    
+    # integration person values into one leveldb
+    daily_profile_person_db = get_daily_user_db_by_date(batch_date_1)
+    batch_handle()
 
     # daily_profile_domain_basic_db = get_daily_domain_basic_db_by_date(batch_date_1)
     # batch_handle_domain_basic()

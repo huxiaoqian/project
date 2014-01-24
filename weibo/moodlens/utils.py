@@ -162,8 +162,6 @@ def read_range_kcount_results(start_ts, over_ts, during=Hour):
             kcount = read_kcount_results(v, start_ts=start_ts, over_ts=end_ts, during=during)
             emotion_dic[k] = kcount
 
-    print emotion_dic
-
     return emotion_dic
 
 
@@ -183,8 +181,6 @@ def read_range_count_results(start_ts, over_ts, during=Hour):
         for k, v in emotions_kv.iteritems():
             count = read_count_results(v, start_ts=start_ts, over_ts=end_ts, during=during)
             emotion_dic[k] = [end_ts * 1000, count]
-
-    print emotion_dic
 
     return emotion_dic
 
@@ -224,8 +220,6 @@ def getUsernameByUid(uid):
 
 def weiboinfo2url(uid, _mid):
     mid_str =  mid2str(_mid)
-    if mid_str == 'A7pmVewf0':
-        print _mid, mid_str
     return "http://weibo.com/{uid}/{mid}".format(uid=uid, mid=mid_str)
 
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

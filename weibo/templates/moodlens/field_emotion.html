@@ -114,7 +114,7 @@
     #togglecount{
         width: 200px;
         position: absolute;
-        top: 147px;
+        top: 125px;
         left: 90px;
         z-index: 1000;
     }
@@ -179,7 +179,6 @@
   <script src="{{ url_for('static', filename='js/highstock.js') }}"></script>
   <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>
 
   <script>
     var START_TS = parseInt('{{start_ts}}');
@@ -189,6 +188,9 @@
     var WEIBOS_LIMIT = 10;
     var KEYWORDS_LIMIT = 10;
     var click_flag=false;
+    var status_flag = 'relative';
+    var series_flag = [1, 1, 1, 1, 1, 1, -1, -1, -1]; //记录9个series选中与否的状态
+
     var emotion_ratio = {};
     var emotion_absolute={};
 
@@ -274,7 +276,6 @@
             html += "<div class=\"chartclient-annotation-date\"> " + time + "<span style=\"float:right\"> 转发数：" +  repost_count + "</span></div></li>";
         }
         $("#vertical-ticker").append(html);
-        display_vertical_list();
     }
 
     function chg_emotion_pie(raw_data){
@@ -283,17 +284,6 @@
             $('#emotion_pie_container').empty();//attention
             display_emotion_pie(data);
         }
-    }
-
-    function display_vertical_list(){
-        $('#vertical-ticker').totemticker({
-            row_height  :   '100px',
-            next        :   '#ticker-next',
-            previous    :   '#ticker-previous',
-            stop        :   '#stop',
-            start       :   '#start',
-            mousestop   :   true,
-        });
     }
 
     function isEmptyObject(obj){
@@ -876,6 +866,7 @@
                 type: 'line',//spline,
                 animation: Highcharts.svg, // don't animate in old IE
                 marginRight: 10,
+                //marginLeft: 120,
                 events: {
                     load: function() {
                         var during = DURING_INTERGER;
@@ -888,6 +879,28 @@
                         init_statistics(end_ts, end_ts - begin_ts,field_en);
                               
                         pull_emotion_count(FIELD_NAME, total_nodes, times_init, begin_ts, during, this.series[0], this.series[1], this.series[2], this.series[3], this.series[4], this.series[5], this.series[6], this.series[7], this.series[8]);
+                    }
+                }
+            },
+            plotOptions:{
+                line:{
+                    events: {
+                        legendItemClick: function () {
+                            var seriesIndex = this.index;
+                            series_flag[seriesIndex] = - series_flag[seriesIndex];
+                            if(seriesIndex <= 2){
+                                if(status_flag == 'absolute'){
+                                    if(series_flag[seriesIndex] != series_flag[seriesIndex+6]){
+                                        $(this.chart.series[seriesIndex+6].legendItem.element).trigger('click');
+                                    }
+                                }
+                                else{
+                                    if (series_flag[seriesIndex] != series_flag[seriesIndex+3]){
+                                        $(this.chart.series[seriesIndex+3].legendItem.element).trigger('click');
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -931,13 +944,15 @@
                 xDateFormat: '%Y-%m-%d %H:%M'
             },
             legend: {
-               layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'top',
-                x: -20,
-                y: 0,
+                layout: 'horizontal',
+                //verticalAlign: true,
+                //floating: true,
+                align: 'center', //'right',
+                verticalAlign: 'bottom',
+                x: 0,
+                y: -2,
                 borderWidth: 1,
-                enabled: true
+                enabled: true,
             },
             exporting: {
                 enabled: true
@@ -967,7 +982,7 @@
                     enabled : false,    
                 }
             },{
-                name: '相对高兴拐点',
+                name: '相对拐点(高兴)',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -976,7 +991,7 @@
                 width : 16,
                 color: '#006600'
             },{
-                name: '相对愤怒拐点',
+                name: '相对拐点(愤怒)',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -985,7 +1000,7 @@
                 width : 16,
                 color: '#FF0000'
             },{
-                name: '相对悲伤拐点',
+                name: '相对拐点(悲伤)',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -994,7 +1009,7 @@
                 width : 16,
                 color: '#000099'
             },{
-                name: '绝对高兴拐点',
+                name: '绝对拐点(高兴)',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -1004,7 +1019,7 @@
                 color: '#006600',
                 visible:false
             },{
-                name: '绝对愤怒拐点',
+                name: '绝对拐点(愤怒)',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -1014,7 +1029,7 @@
                 color: '#FF0000',
                 visible:false
             },{
-                name: '绝对悲伤拐点',
+                name: '绝对拐点(悲伤)',
                 type : 'flags',
                 data : [],
                 cursor: 'pointer',
@@ -1045,6 +1060,7 @@
             chart.series[6].show();
             chart.series[7].show();
             chart.series[8].show();
+            status_flag = 'absolute';
         }
         else{
             alert("请等待相对曲线加载完毕！");
@@ -1067,7 +1083,7 @@
         chart.series[3].show();
         chart.series[4].show();
         chart.series[5].show();
-       
+        status_flag = 'relative';
     }
     
     function en2chs(en){

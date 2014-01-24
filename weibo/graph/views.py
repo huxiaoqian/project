@@ -45,18 +45,50 @@ def show_graph_index(mid, page=None):
 @mod.route('/graph/<int:mid>/')
 @mod.route('/graph/<int:mid>/<int:page>/')
 def graph_index(mid, page=None):
+    module = request.args.get('module', 'sub')
     g = graph_from_elevator(mid)
 
     if not g:
         g = ''
 
-    response = make_response(g)
-    response.headers['Content-Type'] = 'text/xml'
-    return response 
+    result = g.split('_\/')
+    if len(result) > 1:
+        if module == 'sub':
+            tree_g = result[2]
+            tree_stats = json.loads(result[3])
+        else:
+            tree_g = result[0]
+            tree_stats = json.loads(result[1])
+
+        response = make_response(tree_g)
+        response.headers['Content-Type'] = 'text/xml'
+
+        return response
+    else:
+        response = make_response('')
+        response.headers['Content-Type'] = 'text/xml'
+
+        return response
 
 @mod.route('/tree_stats/<int:mid>/<int:page>/')
 def tree_stats_index(mid, page):
-    tree_stats = _graph(mid)['stats']
+    module = request.args.get('module', 'sub')
+    g = graph_from_elevator(mid)
+
+    if not g:
+        g = ''
+
+    result = g.split('_\/')
+    if len(result) > 1:
+        if module == 'sub':
+            tree_g = result[2]
+            tree_stats = json.loads(result[3])
+        else:
+            tree_g = result[0]
+            tree_stats = json.loads(result[1])
+    else:
+        tree_stats = {}
+
     tree_stats['spread_begin'] = tree_stats['spread_begin'].strftime('%Y-%m-%d %H:%M:%S')
     tree_stats['spread_end'] = tree_stats['spread_end'].strftime('%Y-%m-%d %H:%M:%S')
 

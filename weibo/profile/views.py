@@ -354,8 +354,15 @@ def profile_person(uid):
         if session['user'] == 'admin':
             if uid:
                 user = {}
-                current_time = '20130904'
-                active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, current_time)
+                datestr = '20130904'
+                interval = 7
+                date_list = [datestr]#last_week_to_date(datestr, interval)
+                active = important = reposts = original = emoticon = 0
+                for current_time in date_list:
+                    _active, _important, _reposts, _original, _emoticon, _direct_interact, _retweeted_interact, _keywords_dict = getPersonData(uid, current_time)
+                    active += _active
+                    important += _important
+
                 user['active_rank'] = active
                 user['important_rank'] = important
                 if read_from_xapian:
@@ -559,22 +566,8 @@ def profile_person_tab_ajax(model, uid):
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if model == 'personaltopic':
-                user = xapian_search_domain.search_by_id(uid, fields=['domain'])
-                if user:
-                    domain = user['domain']
-                    d_ = domain.split(',')
-                    if len(d_) == 2:
-                        field1, field2 = d_
-                        field1 = fieldsEn2Zh(fields_value[int(field1)-1])
-                        field2 = fieldsEn2Zh(fields_value[int(field2)-1])
-                    else:
-                        field1 = d_[0]
-                        field1 = fieldsEn2Zh(fields_value[int(field1)-1])
-                        field2 = u'未知'
-                else:
-                    field1 = unicode('未知', 'utf-8')
-                    field2 = unicode('未知', 'utf-8')
-                return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=field1 + ',' + field2)
+                domain = user2domain(uid)
+                return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=domain)
             elif model == 'personalweibocount':
                 return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
             elif model == 'personalnetwork':
@@ -592,65 +585,31 @@ def profile_person_tab_ajax(model, uid):
             elif model == 'groupimportant':
                 return render_template('profile/ajax/group_important.html', field=uid)
         else:
-            pas = db.session.query(UserList).filter(UserList.id==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.profile
-                    if identy == 1:
-                        if model == 'personaltopic':
-                            user = xapian_search_domain.search_by_id(uid, fields=['domain'])
-                            if user:
-                                domain = user['domain']
-                                d_ = domain.split(',')
-                                if len(d_) == 2:
-                                    field1, field2 = d_
-                                    field1 = fieldsEn2Zh(fields_value[int(field1)-1])
-                                    field2 = fieldsEn2Zh(fields_value[int(field2)-1])
-                                else:
-                                    field1 = d_[0]
-                                    field1 = fieldsEn2Zh(fields_value[int(field1)-1])
-                                    field2 = u'未知'
-                            else:
-                                field1 = u'未知'
-                                field2 = u'未知'
-                                return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=field1 + ',' + field2)
-                        elif model == 'personalweibocount':
-                            return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
-                        elif model == 'personalnetwork':
-                            return render_template('profile/ajax/personal_friends.html', uid=uid)
-                        elif model == 'personalnetwork_follow':       
-                            return render_template('profile/ajax/personal_followers.html', uid=uid)
-                        elif model == 'personalinteractnetwork':
-                            return render_template('profile/ajax/personal_interact.html', uid=uid)
-                        elif model == 'grouptopic':
-                            return render_template('profile/ajax/group_word_cloud.html', field=uid)
-                        elif model == 'groupweibocount':
-                            return render_template('profile/ajax/group_weibo_count.html', field=uid)
-                        elif model == 'grouprank':
-                            return render_template('profile/ajax/group_rank_bloggers.html', field=uid)
-                        elif model == 'grouplocation':
-                            return render_template('profile/ajax/group_location.html', field=uid)
-                        elif model == 'groupactive':
-                            return render_template('profile/ajax/group_active.html', field=uid)
-                        elif model == 'groupemotion':
-                            return render_template('profile/ajax/group_emotion.html', field=uid)
-                    else:
-                        return redirect('/')
             return redirect('/')
     else:
         return redirect('/')
 
 @mod.route('/person_topic/<uid>', methods=['GET', 'POST'])
 def profile_person_topic(uid):
-
     if request.method == 'GET' and uid:
         result_arr = []
         limit = 50
 
-        # 暂定取20130901数据
-        time_str = '20130901'
+        datestr = '20130907'
+        interval = 7
+        date_list = last_week_to_date(datestr, interval)
+        active = important = reposts = original = emoticon = 0
+        keywords_dict = {}
+        for current_time in date_list:
+            _active, _important, _reposts, _original, _emoticon, _direct_interact, _retweeted_interact, _keywords_dict = getPersonData(uid, current_time)
+            active += _active
+            important += _important
+            reposts += _reposts
+            original += _original
+            emoticon += _emoticon
+            if _keywords_dict:
+                keywords_dict.update(_keywords_dict)
 
-        active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, time_str)
         if keywords_dict:
             sortedkeywords = sorted(keywords_dict.iteritems(), key=operator.itemgetter(1), reverse=True)
             for k, v in sortedkeywords[:limit]:
@@ -690,6 +649,7 @@ def profile_network(friendship, uid):
     
         for datestr in date_list:
             active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, datestr)
+            print direct_interact           
             for k, v in retweeted_interact.iteritems():
                 k = int(k)
                 v = int(v)

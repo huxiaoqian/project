@@ -145,7 +145,7 @@ def _time_zone(stri):
     start_ts = tslist[0]
     end_ts = tslist[1]
 
-    return int(start_ts), int(end_ts)
+    return int(start_ts), int(end_ts) + 24 * 3600
 
 
 @mod.route('/all/', methods=['GET','POST'])

@@ -822,29 +822,29 @@ def single_ajax_trend():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                return render_template('propagate/ajax/single_trend.html')
+                mid = request.args.get('mid')
+                return render_template('propagate/ajax/single_trend.html', mid=mid)
             else:
-
-                mid = str(request.form.get('mid', ""))
-                post_time = request.form.get('post_time', "")
-            
+                mid = str(request.form.get('mid', ""))            
                 blog_info = readPropagateTrendSingle(mid)
+                #print blog_info
                 if blog_info:
                     perday_repost_count = blog_info['perday_count']
                     blog_date_list = blog_info['date_list']
                     date_list = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list]
                 else:
-                    perday_repost_count = [1]                    
-                    date_list = [int(datetime2ts(post_time)+24*3600)*1000]
+                    perday_repost_count = [1]
+                    date_list = []
 
                 blog_info_part = readPropagateTrendSinglePart(mid)
                 if blog_info_part:
                     perday_repost_count_part = blog_info_part['perday_count']
                     blog_date_list_part = blog_info_part['date_list']
                     date_list_part = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list_part]
+                    date_list_part = []
                 else:
                     perday_repost_count_part = [1]
-                    date_list_part = [int(datetime2ts(post_time)+24*3600)*1000]
+                    date_list_part = []
                 
                 return json.dumps({'perday_blog_count': zip(date_list, perday_repost_count),'perday_blog_count_part': zip(date_list_part, perday_repost_count_part)})
         else:

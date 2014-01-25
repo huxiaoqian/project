@@ -38,9 +38,11 @@ def user2FollowersCount(uid):
 
 def read_xapian(date):
     # init leveldb
+    print 'init leveldb'
     dailycount_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % date),
                                         block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
+    print 'init xapian weibo'
     # init xapian weibo
     datestr = date.replace('-', '')
     xapian_search_weibo = getXapianWeiboByDate(datestr)
@@ -57,7 +59,7 @@ def read_xapian(date):
     for weibo in weibos:
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), 'identify weibo count to leveldb ', date
+            print count, '%s sec' % (te - ts), 'identify weibo calc to leveldb ', date
             ts = te
         count += 1
 
@@ -94,8 +96,8 @@ def read_xapian(date):
 
 
 if __name__ == "__main__":
-    # answer = read_xapian('2013-09-01')
-    # print answer
-
-    answer = read_xapian('2013-09-06')
+    import sys
+    date = sys.argv[1]#'2013-09-06'
+    print 'here'
+    answer = read_xapian()
     print answer

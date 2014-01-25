@@ -673,22 +673,13 @@ def batch_handle_domain():
 
 if __name__ == '__main__':
     # init xapian weibo
-    batch_date_1 = '20130905'
+    import sys
+    batch_date_1 = sys.argv[1]#'20130905'
     xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
 
     #
     seed_set = get_official_seed_set()
     scws = load_scws()
-
-    sharding = False
-    if sharding:
-        # mysqldb连接数据库　
-        try:
-            cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
-            print 'connection success'
-        except Exception, e:
-            print e
-            sys.exit()
 
     '''
     daily_domain_keywords_db = {}
@@ -697,6 +688,15 @@ if __name__ == '__main__':
     '''
     
     # update person basics once a week
+    # sharding = False
+    # if sharding:
+    #    # mysqldb连接数据库　
+    #    try:
+    #        cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
+    #        print 'connection success'
+    #    except Exception, e:
+    #        print e
+    #        sys.exit()
     # daily_profile_person_basic_db = get_daily_user_basic_db_by_date(batch_date_1)
     # iter_userbasic2leveldb()
     # iter_userbasic2mysql(cobar_conn, sharding)

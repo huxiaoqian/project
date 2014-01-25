@@ -65,7 +65,7 @@ def sentiment_count(xapian_search_weibo, start_ts=start_range_ts, over_ts=end_ra
             count = xapian_search_weibo.search(query=query_dict, count_only=True)
             emotions_data[v] = [end_ts, count]
 
-        print 'saved: ', emotions_data
+        print date, 'saved: ', emotions_data 
         save_count_results(emotions_data, during)
 
 
@@ -95,8 +95,9 @@ def cal_sentiment_count_by_date(datestr, duration):
 
 if __name__ == '__main__':
     # test mysql write
-    for date in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
-        cal_sentiment_count_by_date(date, Fifteenminutes)
+    import sys
+    date = sys.argv[1] # '2013-09-13'
+    cal_sentiment_count_by_date(date, Fifteenminutes)
 
 
     # test mysql read

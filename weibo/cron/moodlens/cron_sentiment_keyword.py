@@ -97,7 +97,7 @@ def sentiment_keywords(xapian_search_weibo, start_ts=start_range_ts, over_ts=end
 
             print k, v, ', emotion keywords length: ', len(keywords_with_count), ', emotion weibos length: ', len(top_ws)
 
-        print '%s %s saved emotions keywords and weibos' % (begin_ts, end_ts)
+        print date, '%s %s saved emotions keywords and weibos' % (begin_ts, end_ts)
         save_count_results(emotions_data, during, TOP_KEYWORDS_LIMIT)
         save_weibos_results(emotions_weibo, during, TOP_WEIBOS_LIMIT)
 
@@ -112,11 +112,13 @@ def cal_sentiment_kcount_by_date(datestr, duration):
 
 if __name__ == '__main__':
     # test mysql write
-
-    for date in ['2013-09-04', '2013-09-05']:#['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
-        cal_sentiment_kcount_by_date(date, Fifteenminutes)
+    import sys
+    date = sys.argv[1] # '2013-09-13'
+    cal_sentiment_kcount_by_date(date, Fifteenminutes)
 
     # test mysql read
+    
+    '''
     xapian_search_weibo = getXapianWeiboByDate('20130901')
     start_ts = datetime2ts('2013-09-01')
     end_ts = datetime2ts('2013-09-02')
@@ -128,3 +130,4 @@ if __name__ == '__main__':
     }
     count = xapian_search_weibo.search(query=query_dict, count_only=True)
     print count
+    '''

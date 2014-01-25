@@ -2,8 +2,9 @@
 
 
 import json
-from config import cron_start, cron_end, \
-                   xapian_search_domain, xapian_search_user, emotions_kv
+from config import cron_start, cron_end, xapian_search_domain, \
+                   xapian_search_user, emotions_kv, COBAR_HOST, \
+                   COBAR_USER, COBAR_PORT
 from time_utils import datetime2ts, ts2HourlyTime
 from xapian_weibo.utils import top_keywords, gen_mset_iter
 from config import db
@@ -59,6 +60,18 @@ def getDomainUsers(domain, top=TOP_DOMAIN_LIMIT):
 
     return domain_uids
 
+
+def DomainUsersFromMysql(domain):
+    # domain: university
+    try:
+        cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
+        cursor.execute("select userId from profile_person_basic where domain = '%s' limit 10000" % domain)
+        users = cursor.fetchall()
+        domain_uids = [int(user[0]) for user in users]
+    except:
+        domain_uids = []
+
+    return domain_uids
 
 def save_count_results(domain, dic, during):
     for k, v in dic.iteritems():
@@ -119,7 +132,7 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
 
 
 def sentiment_field(domain, xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
-    domain_uids = getDomainUsers(domain, top=TOP_DOMAIN_LIMIT)
+    domain_uids = DomainUsersFromMysql(domain, top=TOP_DOMAIN_LIMIT)
 
     print 'domain uid: ', len(domain_uids)
 
@@ -199,17 +212,10 @@ if __name__ == '__main__':
     #test_domain()
 
     # test mysql write
-    domains = _domains_active()
-    domains = [{'idx': 8}]
-    jobs = []
-    for datestr in ['2013-09-01', '2013-09-02', '2013-09-03', '2013-09-04', '2013-09-05']:
-        for domain in domains:
-            worker(domain['idx'], datestr)
-            '''
-            p = multiprocessing.Process(target=worker, args=(domain['idx'], datestr))
-            jobs.append(p)
-            p.start()
-            '''
+    import sys
+    domain = sys.argv[1]
+    date = sys.argv[2] # '2013-09-01'
+    worker(domain, date)
 
     # test mysql read
     # start_range_ts = datetime2ts('2013-09-29')

@@ -21,7 +21,7 @@ xapian_user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_co
                      'gender', 'profile_image_url', 'verified_type','followers_count', \
                      'location', 'statuses_count', 'description', 'created_at']
 try:
-    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'spiedusers_3'),
+    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'spiedusers_7'),
                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 except:
     print 'leveldb not available now'
@@ -710,11 +710,11 @@ if __name__ == '__main__':
     # integration person values into one leveldb
     # daily_profile_person_db = get_daily_user_db_by_date(batch_date_1)
     # batch_handle()
-    
+
     daily_profile_domain_basic_db = get_daily_domain_basic_db_by_date(batch_date_1)
     batch_handle_domain_basic()
-    
-    '''
+
+    '''    
     #
     daily_domain_keywords_db = {}
     for i in range(-1, 21):

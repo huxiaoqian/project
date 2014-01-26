@@ -68,12 +68,6 @@ def _time_zone(stri):
 
     return int(start_ts), int(end_ts)
 
-def get_bucket(bucket):
-    if bucket in buckets:
-        return buckets[bucket]
-    buckets[bucket] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_' + bucket), block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    return buckets[bucket]
-
 
 def fieldsEn2Zh(name):
     if name == 'finance':
@@ -336,10 +330,17 @@ def profile_group():
             if request.method == 'GET':
                 fieldEnName = request.args.get('fieldEnName', None)
                 during_time = request.args.get('during_time', None)
-                # during_date = _utf_8_encode(during_time)
-                # start_ts,end_ts = _time_zone(during_date)
-                # window_size = (end_ts - start_ts)/(24*3600)
-            return render_template('profile/profile_group.html', field=field, model=fieldEnName, atfield=DOMAIN_ZH_LIST[DOMAIN_LIST.index(fieldEnName)])
+                if during_time:
+                    during_date = _utf_8_encode(during_time)
+                    start_ts, end_ts = _time_zone(during_date)
+                else:
+                    interval, datestr = _default_time()
+                    end_ts = datetimestr2ts(datestr)
+                    start_ts = end_ts - interval * 24 * 3600
+
+            return render_template('profile/profile_group.html', field=field, model=fieldEnName, \
+                                   atfield=DOMAIN_ZH_LIST[DOMAIN_LIST.index(fieldEnName)], \
+                                   start_ts=start_ts, end_ts=end_ts)
         else:
             return redirect('/')
     else:
@@ -565,6 +566,9 @@ def profile_interact_network(uid):
 def profile_person_tab_ajax(model, uid):
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
+            start_ts = request.args.get('start_ts', None)
+            end_ts = request.args.get('end_ts', None)
+
             if model == 'personaltopic':
                 domain = user2domain(uid)
                 return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=domain)
@@ -577,13 +581,13 @@ def profile_person_tab_ajax(model, uid):
             elif model == 'personalinteractnetwork':
                 return render_template('profile/ajax/personal_interact.html', uid=uid)
             elif model == 'grouptopic':
-                return render_template('profile/ajax/group_word_cloud.html', field=uid)
+                return render_template('profile/ajax/group_word_cloud.html', field=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'groupweibocount':
-                return render_template('profile/ajax/group_weibo_count.html', field=uid)
+                return render_template('profile/ajax/group_weibo_count.html', field=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'grouplocation':
-                return render_template('profile/ajax/group_location.html', field=uid)
+                return render_template('profile/ajax/group_location.html', field=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'groupimportant':
-                return render_template('profile/ajax/group_important.html', field=uid)
+                return render_template('profile/ajax/group_important.html', field=uid, start_ts=start_ts, end_ts=end_ts)
         else:
             return redirect('/')
     else:
@@ -699,71 +703,22 @@ def profile_network(friendship, uid):
                            'retweeted_friends': retweeted_friends_name_sorted, \
                            'retweeted_uid': retweeted_name_sorted, 'users': users, 'domains': domain_count}})
 
-@mod.route('/person_fri_fol/<friendship>/<uid>', methods=['GET', 'POST'])
-def profile_person_fri_fol(friendship, uid):
-    if request.method == 'GET' and uid and request.args.get('page'):
-        page = int(request.args.get('page'))
-        COUNT_PER_PAGE = 10
-        if page == 1:
-            startoffset = 0
-        else:
-            startoffset = (page - 1) * COUNT_PER_PAGE
-        friendship_bucket = get_bucket('friendship')
-        fri_fol = []
-        if friendship == 'friends':
-            friends_key = str(uid) + '_' + 'friends'
-            try:
-                friends = json.loads(friendship_bucket.Get(friends_key))
-            except KeyError:
-                friends = []
-            fri_fol = friends
-        if friendship == 'followers':
-            followers_key = str(uid) + '_' + 'followers'
-            try:
-                followers = json.loads(friendship_bucket.Get(followers_key))
-            except KeyError:
-                followers = []
-            fri_fol = followers
-        field_bucket = get_bucket('user_daily_field')
-        user_dict = {}
-        field_user_count = {}
-        if fri_fol != []:
-            for user_id in set(fri_fol[:10000]):
-                try:
-                    fields = field_bucket.Get(str(user_id) + '_' + '20130430')
-                    field = fields.split(',')[0]
-                    field = fieldsEn2Zh(field)
-                except KeyError:
-                    continue
-                try:
-                    field_user_count[field] = field_user_count[field] + 1
-                except KeyError:
-                    field_user_count[field] = 1
-                count, get_results = xapian_search_user.search(query={'_id': user_id}, fields=['_id', 'name', 'statuses_count', 'followers_count', 'friends_count'])
-                if count > 0:
-                    for user in get_results():
-                        user_dict[user_id] = [user['name'], user['statuses_count'], user['followers_count'], user['friends_count'], field]
-        sorted_users = sorted(user_dict.items(), key=lambda d: d[1][2], reverse=True)
-        result = []
-        for id, value in sorted_users:
-            result.append({'id': id,'userName': unicode(value[0], "utf-8"), 'statusesCount': value[1],
-                           'followersCount': value[2], 'friendsCount': value[3],
-                           'field': value[4]})
-        total_pages = len(result) / COUNT_PER_PAGE + 1
-        try:
-            users = result[startoffset:(startoffset+COUNT_PER_PAGE-1)]
-        except:
-            users = result[startoffset: len(result)-1]
-        sorted_field_count = sorted(field_user_count.items(), key=lambda d: d[1], reverse=True)
-        return json.dumps({'users': users, 'pages': total_pages, 'fields': sorted_field_count})
-
 @mod.route('/person_count/<uid>', methods=['GET', 'POST'])
 def personal_weibo_count(uid):
-    if request.args.get('interval'):
-        interval =  int(request.args.get('interval'))
+    start_ts = request.args.get('start_ts', None)
+    end_ts = request.args.get('end_ts', None)
 
-    interval = 7
-    datestr = '20130907'
+    if start_ts:
+        start_ts = int(start_ts)
+
+    if end_ts:
+        end_ts = int(end_ts)
+    
+    try:
+        interval = (end_ts - start_ts) / (24 * 3600)
+        datestr = ts2datetimestr(end_ts) # '20130907'
+    except:
+        interval, datestr = _default_time()
 
     date_list = last_week_to_date(datestr, interval)
 
@@ -808,9 +763,28 @@ def profile_group_topic(fieldEnName):
         topic_type = None
         limit = 50
         window_size = 24*60*60
-        datestr = '20130901'
+        start_ts = request.args.get('start_ts', None)
+        end_ts = request.args.get('end_ts', None)
+
+        if start_ts:
+            start_ts = int(start_ts)
+
+        if end_ts:
+            end_ts = int(end_ts)
+        
+        try:
+            interval = (end_ts - start_ts) / (24 * 3600)
+            datestr = ts2datetimestr(end_ts) # '20130907'
+        except:
+            interval, datestr = _default_time()
+
         domainid = DOMAIN_LIST.index(fieldEnName) + 9
-        keywords_dict = getDomainKeywordsData(domainid, datestr)
+        date_list = last_week_to_date(datestr, interval)
+
+        keywords_dict = {}
+        for datestr in date_list:
+            keywords_dict.update(getDomainKeywordsData(domainid, datestr))
+
         if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
             interval =  int(request.args.get('interval'))
             sort =  request.args.get('sort')
@@ -829,11 +803,20 @@ def profile_group_topic(fieldEnName):
 
 @mod.route('/group_count/<fieldEnName>', methods=['GET', 'POST'])
 def profile_group_status_count(fieldEnName):
-    if request.args.get('interval'):
-        interval =  int(request.args.get('interval'))
+    start_ts = request.args.get('start_ts', None)
+    end_ts = request.args.get('end_ts', None)
 
-    interval = 7
-    datestr = '20130907'
+    if start_ts:
+        start_ts = int(start_ts)
+
+    if end_ts:
+        end_ts = int(end_ts)
+    
+    try:
+        interval = (end_ts - start_ts) / (24 * 3600)
+        datestr = ts2datetimestr(end_ts) # '20130907'
+    except:
+        interval, datestr = _default_time()
 
     date_list = last_week_to_date(datestr, interval)
     domainid = DOMAIN_LIST.index(fieldEnName) + 9
@@ -854,13 +837,28 @@ def profile_group_status_count(fieldEnName):
 
     return json.dumps({'time': time_arr, 'count': total_arr, 'repost': repost_arr, 'fipost': fipost_arr})
 
-@mod.route('/group_important/<fieldEnName>', methods=['GET', 'POST'])
-def group_active_count(fieldEnName):
-    if request.args.get('interval'):
-        interval =  int(request.args.get('interval'))
 
+def _default_time():
     interval = 7
     datestr = '20130907'
+    return interval, datestr
+
+@mod.route('/group_important/<fieldEnName>', methods=['GET', 'POST'])
+def group_active_count(fieldEnName):
+    start_ts = request.args.get('start_ts', None)
+    end_ts = request.args.get('end_ts', None)
+
+    if start_ts:
+        start_ts = int(start_ts)
+
+    if end_ts:
+        end_ts = int(end_ts)
+    
+    try:
+        interval = (end_ts - start_ts) / (24 * 3600)
+        datestr = ts2datetimestr(end_ts) # '20130907'
+    except:
+        interval, datestr = _default_time()
 
     date_list = last_week_to_date(datestr, interval)
     domainid = DOMAIN_LIST.index(fieldEnName) + 9
@@ -876,55 +874,24 @@ def group_active_count(fieldEnName):
 
     return json.dumps({'time': time_arr, 'important': important_arr})
 
-@mod.route('/group_emotion/<fieldEnName>')
-def profile_group_emotion(fieldEnName):
-    total_days = 30
-    today = datetime.today()
-    now_ts = time.mktime(datetime(2013, 10, 1, 2, 0).timetuple())
-    now_ts = int(now_ts)
-    during = 24 * 3600
-
-    time_arr = []
-    happy_arr = []
-    angry_arr = []
-    sad_arr = []
-
-    interval = None
-    if request.args.get('interval'):
-        interval =  int(request.args.get('interval'))
-        total_days = interval - 180
-
-    startoffset = 0
-    endoffset = 10000
-    fields_set = getFieldUsersByScores(fieldEnName, startoffset, endoffset)
-    for i in xrange(-total_days + 1, 1, 7):
-        lt = now_ts + during * i
-        emotion_count = {}
-        for emotion in emotions_kv.values():
-            e_count = 0
-            for uid in fields_set:
-                query_dict = {
-                    'timestamp': {'$gt': lt, '$lt': lt + during},
-                    'sentiment': emotion,
-                    'user': uid
-                }
-                e_count += xapian_search_weibo.search(query=query_dict, count_only=True)
-            emotion_count[emotion] = e_count
-        if sum(emotion_count.values()) > 0:
-            sumcount = sum(emotion_count.values())
-            time_arr.append(ts2date(lt).isoformat())
-            happy_arr.append(int(emotion_count[1] * 100 / sumcount) / 100.0)
-            angry_arr.append(int(emotion_count[2] * 100 / sumcount) / 100.0)
-            sad_arr.append(int(emotion_count[3] * 100 / sumcount) / 100.0)
-    return json.dumps({'time': time_arr, 'happy': happy_arr, 'angry': angry_arr, 'sad': sad_arr})
 
 @mod.route('/group_verify/<fieldEnName>')
 def profile_group_verify(fieldEnName):
-    datestr = '20130901'
+    interval, datestr = _default_time()
     domainid = DOMAIN_LIST.index(fieldEnName) + 9
-    verified_count, unverified_count, province_dict = getDomainBasic(domainid, datestr)
-    verified_count = int(verified_count)
-    unverified_count = int(unverified_count)
+    date_list = last_week_to_date(datestr, interval)
+    date_list.reverse()
+
+    verified_count, unverified_count, province_dict = 0, 0, {}
+    for datestr in date_list:
+        _verified_count, _unverified_count, _province_dict = getDomainBasic(domainid, datestr)
+        verified_count = int(_verified_count)
+        unverified_count = int(_unverified_count)
+        province_dict = _province_dict
+        print verified_count, unverified_count, province_dict, datestr
+        if verified_count != 0 or unverified_count != 0 or province_dict != {}:
+            break
+
     result_list = ''
     if verified_count + unverified_count > 0:
         sumcount = verified_count + unverified_count
@@ -934,10 +901,21 @@ def profile_group_verify(fieldEnName):
 
 @mod.route('/group_location/<fieldEnName>')
 def profile_group_location(fieldEnName):
-    city_count = {}
-    datestr = '20130901'
+    interval, datestr = _default_time()
     domainid = DOMAIN_LIST.index(fieldEnName) + 9
-    verified_count, unverified_count, province_dict = getDomainBasic(domainid, datestr)
+    date_list = last_week_to_date(datestr, interval)
+    date_list.reverse()
+
+    verified_count, unverified_count, province_dict = 0, 0, {}
+    for datestr in date_list:
+        _verified_count, _unverified_count, _province_dict = getDomainBasic(domainid, datestr)
+        verified_count = int(_verified_count)
+        unverified_count = int(_unverified_count)
+        province_dict = _province_dict
+        print verified_count, unverified_count, province_dict, datestr
+        if verified_count != 0 or unverified_count != 0 or province_dict != {}:
+            break
+
     city_count = province_dict
     results = province_color_map(city_count)
     return json.dumps(results)

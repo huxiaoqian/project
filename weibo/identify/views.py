@@ -439,6 +439,8 @@ def topic():
 
                 dur_time = _utf_encode(time)
                 start_ts, end_ts = _time_zone(dur_time)
+                print dur_time
+                print start_ts, end_ts
 
                 return render_template('identify/topic.html', topic=topic, start_ts=start_ts, \
                                        end_ts=end_ts, rank_method=rank_method, page_num=page_num, \
@@ -617,7 +619,7 @@ def search_history():
         if histories1:
             for history in histories1:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
-                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end-24*3600))
                 datestr  = str(start) + ' - ' + str(end)
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
@@ -632,7 +634,7 @@ def search_history():
         if histories2:
             for history in histories2:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
-                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end-24*3600))
                 datestr  = str(start) + ' - ' + str(end)
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
@@ -647,7 +649,7 @@ def search_history():
         if histories:
             for history in histories:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
-                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end-24*3600))
                 datestr  = str(start) + ' - ' + str(end)
                 histories_names.append([history.topic, datestr])
         return json.dumps(histories_names)

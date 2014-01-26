@@ -5,7 +5,7 @@
   var len = $('script').filter(function () {
     return ($(this).attr('src') == '/static/js/profile/highcharts.js');
   }).length;
-
+  console.log(len);
   if(len == 0){
     loadScript('/static/js/profile/highcharts.js');
     loadScript('/static/js/profile/exporting.js');
@@ -77,10 +77,11 @@
   }
 
   function init_post_count(){
-    //var interval_arg = $("#weibo_count_interval")[0].value;
     var interval_arg = 7;
+    var start_ts = '{{ start_ts }}';
+    var end_ts = '{{ end_ts }}';
     $.ajax({
-        url: "/profile/group_count/{{field}}?interval=" + interval_arg,
+        url: "/profile/group_count/{{field}}?interval=" + interval_arg + "&start_ts=" + start_ts + "&end_ts=" + end_ts,
         dataType: 'json',   
         type: "GET",   
         success: function (data) {

@@ -267,8 +267,7 @@ def data(area='global'):
         area = None
     else:
         search_method = 'domain'
-        #area = FIELDS2ID[area]
-        area = area
+        area = FIELDS2ID[area]
    
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
     
@@ -313,8 +312,7 @@ def keywords_data(area='global'):
         area = None
     else:
         search_method = 'domain'
-        #area = FIELDS2ID[area]
-        area = area
+        area = FIELDS2ID[area]
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
 
@@ -358,8 +356,7 @@ def weibos_data(emotion='global', area='global'):
         area = None
     else:
         search_method = 'domain'
-        # area = FIELDS2ID[area]
-        area = area
+        area = FIELDS2ID[area]
         
     search_func = getattr(weibosModule, 'search_%s_weibos' % search_method, None)
     
@@ -403,7 +400,6 @@ def getPeaks():
     ts_lis = [float(da) for da in ts_lis.split(',')]
 
     new_zeros = detect_peaks(lis)
-    print new_zeros
 
     if area == 'global':
         search_method = 'global'
@@ -565,7 +561,7 @@ def search_history():
         if histories1:
             for history in histories1:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
-                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end-24*3600))
                 datestr  = str(start) + ' - ' + str(end)
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
@@ -580,7 +576,7 @@ def search_history():
         if histories2:
             for history in histories2:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
-                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end-24*3600))
                 datestr  = str(start) + ' - ' + str(end)
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
@@ -595,7 +591,7 @@ def search_history():
         if histories:
             for history in histories:
                 start = time.strftime("%m月 %d日, %Y", time.localtime(history.start))
-                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end))
+                end = time.strftime("%m月 %d日, %Y", time.localtime(history.end-24*3600))
                 datestr  = str(start) + ' - ' + str(end)
                 histories_names.append([history.topic, datestr])
         return json.dumps(histories_names)

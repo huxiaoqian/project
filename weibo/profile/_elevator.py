@@ -47,7 +47,6 @@ def getPersonData(uid, datestr):
         original = int(original)
         emoticon = int(emoticon)
         interact_dict = json.loads(interact_dict)
-        print interact_dict
         direct_interact = interact_dict['direct']
         retweeted_interact = interact_dict['retweeted']
         keywords_dict = json.loads(keywords_dict)
@@ -92,9 +91,10 @@ def getDomainCountData(domain, datestr):
 def getDomainKeywordsData(domain, datestr):
     # domain: -1~20
     try:
-	level = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_profile_domain_rtkeywords_%s' % datestr))
+        level = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_profile_domain_rtkeywords_%s' % datestr))
     except Exception, e:
-	print e
+        print e
+        return {}
 
     try:
         results = level.Get(str(domain))
@@ -112,9 +112,10 @@ def getDomainKeywordsData(domain, datestr):
 
 def getDomainBasic(domain, datestr):
     try:
-	level = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_profile_domain_basic_%s' % datestr))
+        level = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_profile_domain_basic_%s' % datestr))
     except Exception, e:
-	print e
+        print e
+        return 0, 0, {}
 
     try:
         results = level.Get(str(domain))

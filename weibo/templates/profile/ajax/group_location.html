@@ -20,14 +20,16 @@
       }
   }
   $(document).ready(function(){
+    var start_ts = '{{ start_ts }}';
+    var end_ts = '{{ end_ts }}';
     $.ajax({
-      url:"/profile/group_location/{{field}}",
+      url:"/profile/group_location/{{field}}?start_ts=" + start_ts + "&end_ts=" + end_ts,
       dataType:"json",
       success:function(data){
         drawChinamap(data);
       }
     });
-    RGraph.AJAX('/profile/group_verify/{{field}}', drawVerifiedpie);
+    RGraph.AJAX("/profile/group_verify/{{field}}?start_ts=" + start_ts + "&end_ts=" + end_ts, drawVerifiedpie);
     
   })
 

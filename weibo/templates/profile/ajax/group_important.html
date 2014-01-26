@@ -70,10 +70,11 @@
   }
 
     function init_important_count(){
-      //var interval_arg = $("#weibo_count_interval")[0].value;
       var interval_arg = 7;
+      var start_ts = '{{ start_ts }}';
+      var end_ts = '{{ end_ts }}';
       $.ajax({
-          url: "/profile/group_important/{{field}}?interval=" + interval_arg,
+          url: "/profile/group_important/{{field}}?interval=" + interval_arg + "&start_ts=" + start_ts + "&end_ts=" + end_ts,
           dataType: 'json',   
           type: "GET",   
           success: function (data) {

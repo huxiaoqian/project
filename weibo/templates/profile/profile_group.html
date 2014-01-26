@@ -49,11 +49,14 @@
 {% endblock content %}
 {% block script %}
   <script>
+    var start_ts = '{{ start_ts }}';
+    var end_ts = '{{ end_ts }}';
+
     $('#content_container').empty();
-    $('#content_container').load("/profile/person_tab_ajax/grouptopic/{{model}}", function() {});
+    $('#content_container').load("/profile/person_tab_ajax/grouptopic/{{model}}?start_ts=" + start_ts + "&end_ts=" + end_ts, function() {});
 
     tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4'];
-    tabUrlArr = ["/profile/person_tab_ajax/grouptopic/{{model}}", "/profile/person_tab_ajax/grouplocation/{{model}}", "/profile/person_tab_ajax/groupweibocount/{{model}}", "/profile/person_tab_ajax/groupimportant/{{model}}"];
+    tabUrlArr = ["/profile/person_tab_ajax/grouptopic/{{model}}?start_ts=" + start_ts + "&end_ts=" + end_ts, "/profile/person_tab_ajax/grouplocation/{{model}}?start_ts=" + start_ts + "&end_ts=" + end_ts, "/profile/person_tab_ajax/groupweibocount/{{model}}?start_ts=" + start_ts + "&end_ts=" + end_ts, "/profile/person_tab_ajax/groupimportant/{{model}}?start_ts=" + start_ts + "&end_ts=" + end_ts];
     for (var i = 0, len = tabIdArr.length; i < len; i++) {
       document.getElementById(tabIdArr[i]).onclick = function(data) {
         var tabId = data.srcElement.id;

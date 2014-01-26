@@ -403,7 +403,6 @@ def getPeaks():
     ts_lis = [float(da) for da in ts_lis.split(',')]
 
     new_zeros = detect_peaks(lis)
-    print new_zeros
 
     if area == 'global':
         search_method = 'global'

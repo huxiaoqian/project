@@ -15,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from dynamic_xapian_weibo import getXapianWeiboByDate
 import multiprocessing
 from domain_user import _domain_user
+from config import DOMAIN_LIST
 from domain import _is_domain_active, _domain_en_name, _domains_active
 
 
@@ -179,9 +180,9 @@ def sentiment_field(domain, xapian_search_weibo, start_ts=start_range_ts, over_t
                 print k, v, ', emotions count: ', emotions_count, ', emotion keywords length: ', len(kcount), ', emotion weibos length: ', len(top_ws)
 
             print domain, date, ' %s %s saved emotions counts, keywords and weibos' % (begin_ts, end_ts)
-            save_count_results(domain, emotions_count, during)
-            save_kcount_results(domain, emotions_kcount, during, TOP_KEYWORDS_LIMIT)
-            save_weibos_results(domain, emotions_weibo, during, TOP_WEIBOS_LIMIT)
+            save_count_results(DOMAIN_LIST.index(domain), emotions_count, during)
+            save_kcount_results(DOMAIN_LIST.index(domain), emotions_kcount, during, TOP_KEYWORDS_LIMIT)
+            save_weibos_results(DOMAIN_LIST.index(domain), emotions_weibo, during, TOP_WEIBOS_LIMIT)
 
 
 def cal_field_sentiment_by_date(domainid, datestr, duration):

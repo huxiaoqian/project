@@ -43,7 +43,8 @@ def _check_run_customize_topic(cron_start_ts, during=Fifteenminutes):
 
     for topic in topics:
         topicname = topic.topic
-        
+
+        '''
         # 本时段计算上个时段的数据
         cron_start_ts = cron_start_ts - cron_start_ts % during
         end_ts = cron_start_ts
@@ -58,6 +59,7 @@ def _check_run_customize_topic(cron_start_ts, during=Fifteenminutes):
             sentimentCronTopic(topicname, xapian_search_weibo, start_ts, end_ts)
         else:
             print 'lack xapian weibo data from %s to %s' % (start_ts, end_ts)
+        '''
 
 
 def _check_run_notcustomize_topic(during=Fifteenminutes):
@@ -76,7 +78,7 @@ def _check_run_notcustomize_topic(during=Fifteenminutes):
         _update_topic_status2Computing(topicname, start_ts, end_ts, db_date)
         
         print topicname.encode('utf-8'),  ' run realtime job from %s to %s ' % (start_ts, end_ts)
-        sentimentRealTimeTopic(topicname, start_ts, end_ts)
+        sentimentRealTimeTopic(topicname, start_ts, end_ts+24*3600)
 
         # update status to 1
         _update_topic_status2Completed(topicname, start_ts, end_ts, db_date)

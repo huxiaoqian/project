@@ -128,6 +128,15 @@
         padding: 0;
         -webkit-box-shadow: 0 1px 3px rgba(0,0,0, .4);
     }
+    #vertical-ticker {
+        height: 361px;
+        width: 400px;
+        overflow: hidden;
+        margin-left: 1px;
+        margin-top: 2px;
+        padding: 0;
+        -webkit-box-shadow: 0 1px 3px rgba(0,0,0, .4);
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -179,6 +188,7 @@
   <script src="{{ url_for('static', filename='js/highstock.js') }}"></script>
   <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>
 
   <script>
     var START_TS = parseInt('{{start_ts}}');
@@ -224,6 +234,17 @@
         display_realtime_emotion();
         redraw_tagcanvas();
     })
+
+    function display_vertical_list(){
+        $('#vertical-ticker').totemticker({
+            row_height  :   '100px',
+            next        :   '#ticker-next',
+            previous    :   '#ticker-previous',
+            stop        :   '#stop',
+            start       :   '#start',
+            mousestop   :   true,
+        });
+    }
 
     function redraw_tagcanvas() {
         if(!$('#myCanvas').tagcanvas(oopts,'tags_div')) {
@@ -278,6 +299,7 @@
             html += "<div class=\"chartclient-annotation-date\"> " + time + "<span style=\"float:right\"> 转发数：" +  repost_count + "</span></div></li>";
         }
         $("#vertical-ticker").append(html);
+        display_vertical_list();
     }
 
     function chg_emotion_pie(raw_data){
@@ -683,7 +705,14 @@
                 series4.addPoint({'x': x, 'title': happy_title, 'text': happy_text, 'emotion': 'happy', 'events': {'click': flagClick}}, true, isShift);
               }
             }
-        }
+            },
+            error: function(result) {
+                    console.log(result);
+                    //$("#loading_network_data").text("暂无结果!");
+                    console.log("Status: " + result.status);
+                    console.log("Status: " + result.textStatus);
+                    console.log("Error: " + result.errorThrown); 
+            }
         })
         $.ajax({
             url: "/moodlens/emotionpeak/?lis=" + angry_list.join(',') + "&ts=" + ts_list + '&during=' + during + "&emotion=angry" + "&query=" + QUERY_ARG + "&customized=" + CUSTOMIZED,

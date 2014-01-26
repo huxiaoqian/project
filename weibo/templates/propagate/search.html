@@ -57,8 +57,8 @@
           <ul>
             <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博MID:</b></font>
             <input type="text" class="span2" placeholder="请输入微博ID" value="" role="textbox" name="weibo_mid" id="weibo_mid" style="margin-bottom: 0px;">
-            <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
-            <div id="reportrange_singlebyid" class="btn dropdown-toggle">
+            <!--<font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>-->
+            <div id="reportrange_singlebyid" class="btn dropdown-toggle"  style="display:none;">
               <i class="icon-calendar icon-large"></i>
               <span id="weibo_time_id">{% if time_str %}{{time_str}}{% else %}9月 1,2013 - 9月 3,2013{% endif %}</span> 
               <b class="caret"></b>

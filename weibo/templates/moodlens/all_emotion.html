@@ -179,8 +179,7 @@
   <script src="{{ url_for('static', filename='js/highstock.js') }}"></script>
   <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script src="{{ url_for('static', filename='js/jquery.tagcanvas.min.js') }}"></script>
-  <!--
-  <script src="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>-->
+  <script src="{{ url_for('static', filename='js/jquery.totemticker.js') }}"></script>
 
   <script>
     var START_TS = parseInt('{{start_ts}}');
@@ -225,6 +224,16 @@
         redraw_tagcanvas();
     })
 
+    function display_vertical_list(){
+        $('#vertical-ticker').totemticker({
+            row_height  :   '100px',
+            next        :   '#ticker-next',
+            previous    :   '#ticker-previous',
+            stop        :   '#stop',
+            start       :   '#start',
+            mousestop   :   true,
+        });
+    }
 
     function refresh_page(){
         //document.location.reload();
@@ -283,6 +292,7 @@
             html += "<div class=\"chartclient-annotation-date\"> " + time + "<span style=\"float:right\"> 转发数：" +  repost_count + "</span></div></li>";
         }
         $("#vertical-ticker").append(html);
+        display_vertical_list();
     }
 
     function chg_emotion_pie(raw_data){

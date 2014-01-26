@@ -194,7 +194,14 @@
       function(start, end) {
         $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
       }
-    );    
+    );
+
+    function submit_define_request(keyword){
+      var time = $("#topic_time").html();
+      var during = document.getElementById("topic_durtime").value;
+      window.open("/moodlens/topic/?keyword=" +  keyword + "&during=" + during + "&time=" + time, "_blank")
+      //window.location.href =   + "";
+    }
 
     // 动态获取系统定制的话题
     function getCustomizedTopics(){
@@ -208,7 +215,8 @@
           $('#show_define_msg').empty();
           var html = "";
           for(idx in data){
-            html += "<li><a target='_blank' href=\"/moodlens/topic/?keyword=" +  data[idx] + "&during=" + during + "&time=" + time  + "\">" + data[idx] + "</a></li>";
+            keyword = data[idx][0];
+            html += "<li><a href='#' onclick=\"submit_define_request('" + keyword + "');\">" + data[idx] + "</a></li>";
           }
           $('#show_define_msg').append(html);
         }
@@ -294,7 +302,6 @@
     $("#search_all").click(function() {
       var time = $("#all_time").html();
       var during = document.getElementById("all_durtime").value;
-      console.log(time,during);
       window.location.href="/moodlens/all/?time="+time+"&during="+during;
     });
     $("#search_field").click(function() {

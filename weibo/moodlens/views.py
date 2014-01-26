@@ -23,7 +23,6 @@ import os
 import weibo.model
 import json
 import re
-from datetime import datetime
 
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
@@ -35,6 +34,8 @@ FIELDS_ZH_NAME = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒�
 FIELDS2ID = {}
 FIELDS2ZHNAME = {}
 
+from weibo.global_config import DOMAIN_LIST, DOMAIN_ZH_LIST
+
 Minute = 60
 Fifteenminutes = 15 * Minute
 Hour = 3600
@@ -42,10 +43,11 @@ SixHour = Hour * 6
 Day = Hour * 24
 MinInterval = Fifteenminutes
 
-for key in FIELDS_VALUE:
-    idx = FIELDS_VALUE.index(key)
+for key in DOMAIN_LIST:
+    idx = DOMAIN_LIST.index(key)
     FIELDS2ID[key] = idx
-    FIELDS2ZHNAME[key] = FIELDS_ZH_NAME[idx]
+    FIELDS2ZHNAME[key] = DOMAIN_ZH_LIST[idx]
+
 
 buckets = {}
 total_days = 90
@@ -195,7 +197,7 @@ def field():
             if field_name == '':
                 return render_template('moodlens/index.html', active='moodlens')
             else:
-                field_en = field_id[field_name]
+                field_en = DOMAIN_LIST[DOMAIN_ZH_LIST.index(field_name)]
 
             return render_template('moodlens/field_emotion.html', start_ts=start_ts, end_ts=end_ts, during=during,field_en=field_en)
             
@@ -244,7 +246,6 @@ def data(area='global'):
     """
     
     customized = request.args.get('customized', '1')
-    print customized
     query = request.args.get('query', None)
     if query:
         query = query.strip()
@@ -265,7 +266,8 @@ def data(area='global'):
         area = None
     else:
         search_method = 'domain'
-        area = FIELDS2ID[area]
+        #area = FIELDS2ID[area]
+        area = area
    
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
     
@@ -310,8 +312,8 @@ def keywords_data(area='global'):
         area = None
     else:
         search_method = 'domain'
-        #print "here :"+area
-        area = FIELDS2ID[area]
+        #area = FIELDS2ID[area]
+        area = area
         
     search_func = getattr(keywordsModule, 'search_%s_keywords' % search_method, None)
 
@@ -355,7 +357,8 @@ def weibos_data(emotion='global', area='global'):
         area = None
     else:
         search_method = 'domain'
-        area = FIELDS2ID[area]
+        # area = FIELDS2ID[area]
+        area = area
         
     search_func = getattr(weibosModule, 'search_%s_weibos' % search_method, None)
     

@@ -10,11 +10,8 @@ try:
     from model import WholeIdentification
 except ImportError:
     print 'Warning: Not in web environment.'
-
-from xapian_weibo.xapian_backend import XapianSearch
 from time_utils import ts2datetime, datetime2ts
-path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
-LEVELDBPATH = '/home/mirage/leveldb'
+from config import LEVELDBPATH
 
 class TopkHeap(object):
     def __init__(self, k):
@@ -41,17 +38,22 @@ def read_level(date):
 
 def whole_rank(datestr,date):#全网排序
 
-    print 'whole rank'
-    dailycount_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s'%datestr),
+    print 'whole rank', datestr
+    dailycount_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s'%date),
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     active_th = TopkHeap(1000)
     important_th = TopkHeap(1000)
     follower_th = TopkHeap(1000)
-    count =0 
-    for d,x in dailycount_bucket.RangeIter():
+    count =0
+    te = ts = time.time()
+    for d, x in dailycount_bucket.RangeIter():
+        
+        if count % 10000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts), 'identify whole rank to mysql ', datestr
+            ts = te
         count = count + 1
-        if count%10000 == 0:
-            print count
+
         active,important,follower,domain = x.split('_')
         d = int(d)
         active = int(active)
@@ -88,17 +90,20 @@ def save_mysql(date,user_id,user_active,user_important,user_followers,user_rank,
     db.session.add(new_item)
     db.session.commit()
 
+
+def test(date):
+    dailycount_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s'%date),
+                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    for k, v in dailycount_bucket.RangeIter():
+        active, important, follower, domain = v.split('_')
+        print domain, type(domain)
+
+
 if __name__ == "__main__":
-
-    answer = read_level('2013-09-02')
+    test('2013-09-06')
+    '''
+    import sys
+    date = sys.argv[1] # '2013-09-06'
+    answer = read_level(date)
     print answer
-
-    answer = read_level('2013-09-03')
-    print answer
-
-    answer = read_level('2013-09-04')
-    print answer
-
-    answer = read_level('2013-09-05')
-    print answer
-
+    '''

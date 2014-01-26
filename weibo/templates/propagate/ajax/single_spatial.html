@@ -95,6 +95,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/raphael.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/chinamap.js') }}"></script>
 <script>
+  var request_data_dict= {'mid': '{{mid}}'};
   $.ajax({
 	url:"/propagate/single_ajax_spatial/",
 	dataType:"json",

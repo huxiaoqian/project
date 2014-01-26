@@ -17,13 +17,16 @@
             top: 0;
             left: 0;
         }
+        /*
+        #togglecount{
+            width: 50px;
+            top: 25px;
+            z-index: 1000;
+        }*/
     </style>
 {% endblock %}
 {% block body %}
     <div class="row">
-        <div class="span1">
-            <h4>图谱</h4>
-        </div>
         <div class="span2">
             <h5>转发数(包括但不限于下图)</h5><h5 id="reposts-count"></h5>
         </div>
@@ -45,6 +48,15 @@
         <div class="span2">
             <h5>截止时间</h5><h5 id="spread-end"></h5>
         </div>
+        <div class="control-group" id="togglecount">
+            <div class="controls btn switch switch-two">
+                <input id="relative" name="view" type="radio">
+                <label for="relative" onclick="load_whole_tree();">全树</label>
+
+                <input id="absolute" name="view" type="radio" checked="">    
+                <label for="absolute" onclick="load_sub_tree();">子树</label>
+            </div>
+        </div>
     </div>
     {%- if page > 1 %}
         <a href="{{ url_for('graph.show_graph_index', mid=mid, page=page-1) }}">更多&rarr;</a>
@@ -58,8 +70,9 @@
     <script src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}" type="text/javascript"></script>
 
     <script>
+        var sigInst;
         function graph_request_callback(data){
-            var sigInst = sigma.init($('#sigma')[0]).drawingProperties({
+            sigInst = sigma.init($('#sigma')[0]).drawingProperties({
                 defaultLabelColor: '#fff'
             }).graphProperties({
                 minNodeSize: 0.5,
@@ -126,7 +139,11 @@
                 sigInst.bind('overnodes',showNodeInfo).draw();
             })();
         }
-        var init = function () {
+        function load_sub_tree(){
+            if(sigInst){
+                $('#sigma').remove();
+                $('#sigma').html();
+            }
             $.ajax({
                 url: "/gexf/graph/{{mid}}/{{page}}",
                 dataType: 'xml',
@@ -157,6 +174,41 @@
                 }
             });
         }
+        function load_whole_tree(){
+            if(sigInst){
+                $('#sigma').remove();
+                $('#sigma').html();
+            }
+            $.ajax({
+                url: "/gexf/graph/{{mid}}/{{page}}?module=whole",
+                dataType: 'xml',
+                type: "GET",
+                success: function (data) {
+                    // (requires "sigma.parseGexf.js" to be executed)
+                    console.log(data);
+                    graph_request_callback(data);
+                },
+                error: function(result) {
+                    console.log(result);
+                    //$("#loading_network_data").text("暂无结果!");
+                    console.log("Status: " + result.status);
+                    console.log("Status: " + result.textStatus);
+                    console.log("Error: " + result.errorThrown); 
+              }
+            })
+            $.ajax({
+                url: "/gexf/tree_stats/{{mid}}/{{page}}?module=whole",
+                success: function(data) {
+                    var stats = data["stats"];
+                    $( "#reposts-count" ).html( stats['reposts_count'] );
+                    $( "#repost-people-count" ).html( stats['repost_people_count'] );
+                    $( "#max-width" ).html( stats['max_width'] );
+                    $( "#max-depth" ).html( stats['max_depth'] );
+                    $( "#spread-begin" ).html( stats['spread_begin'] );
+                    $( "#spread-end" ).html( stats['spread_end'] );
+                }
+            });
+        }
         /*
         if (document.addEventListener) {
             document.addEventListener('DOMContentLoaded', init, false);
@@ -164,7 +216,7 @@
             $(document).ready() = init;
             //window.onload = init;
         }*/
-        init();
+        load_sub_tree();
     </script>
 {% endblock %}
 

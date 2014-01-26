@@ -186,12 +186,27 @@
 </div>
 </div>
 </div>
-
 <script src="/static/js/profile/bootstrap.min.js"></script>
 <script src="/static/js/profile/jquery.bootpag.min.js"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
 <script>
+  var len = $('script').filter(function () {
+    return ($(this).attr('src') == '/static/js/highstock.js');
+  }).length;
+
+  if(len == 0){
+    loadScript('/static/js/highstock.js');
+    loadScript('/static/js/exporting.js');
+  }
+
+  function loadScript(scriptLocationAndName) {
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = scriptLocationAndName;
+    head.appendChild(script);
+  }
   $('#select_all').click(function(){
       var $this = $(this);
       this.checked = !this.checked;

@@ -11,10 +11,9 @@ try:
 except ImportError:
     print 'Warning: Not in web environment.'
 
-from xapian_weibo.xapian_backend import XapianSearch
 from time_utils import ts2datetime, datetime2ts
-path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
-LEVELDBPATH = '/home/mirage/leveldb'
+from config import LEVELDBPATH
+
 
 class TopkHeap(object):
     def __init__(self, k):
@@ -42,23 +41,27 @@ def read_level(date,area):
 def area_rank(datestr,date,area):
 
     print 'area rank'
-    dailycount_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s'%datestr),
+    dailycount_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s'%date),
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     active_th = TopkHeap(1000)
     important_th = TopkHeap(1000)
     follower_th = TopkHeap(1000)
-    count =0 
-    for d,x in dailycount_bucket.RangeIter():        
+    count =0
+    te = ts = time.time()
+    for d,x in dailycount_bucket.RangeIter():
         active,important,follower,domain = x.split('_')
         d = int(d)
         active = int(active)
         important = int(important)
         follower = int(follower)
         domain = int(domain)
-        if domain == area:
+        if domain == area: 
+            if count % 10000 == 0:
+                te = time.time()
+                print count, '%s sec' % (te - ts), 'identify area rank to mysql ', datestr, ' ', area
+                ts = te
             count = count + 1
-            if count%100 == 0:
-                print count
+
             active_th.Push((active,important,follower,domain,d))#活跃度、重要度、粉丝数、领域、id
             important_th.Push((important,active,follower,domain,d))#重要度、活跃度、粉丝数、领域、id
             follower_th.Push((follower,active,important,domain,d))#粉丝数、活跃度、重要度、领域、id
@@ -97,24 +100,9 @@ def save_mysql(date,user_id,user_active,user_important,user_followers,area,user_
     db.session.commit()
 
 if __name__ == "__main__":
-
-    for i in range(0,21):
+    import sys
+    date = sys.argv[1] # '2013-09-02'
+    for i in range(-1,21):
         print str(i)+' starting...'
-        answer = read_level('2013-09-02',i)
+        answer = read_level(date, i)
         print answer
-
-    for i in range(0,21):
-        print str(i)+' starting...'
-        answer = read_level('2013-09-03',i)
-        print answer
-
-    for i in range(0,21):
-        print str(i)+' starting...'
-        answer = read_level('2013-09-04',i)
-        print answer
-
-    for i in range(0,21):
-        print str(i)+' starting...'
-        answer = read_level('2013-09-05',i)
-        print answer
-

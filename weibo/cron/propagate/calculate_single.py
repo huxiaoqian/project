@@ -217,9 +217,8 @@ def calculate_single(_id):
     sub_g_reposts = sub_g['reposts']
 
     save_weibo_tree(str(_id), whole_g_graph, whole_g_stats, sub_g_graph, sub_g_stats)
-    
     calculate_single_whole(whole_g_reposts, whole_g['ori'])
-    calculate_single_sub(sub_g_reposts, sub_g['ori'])
+    #calculate_single_sub(sub_g_reposts, sub_g['ori'])
 
 
 def calculate_single_whole(whole_g_reposts, retweeted_ori):
@@ -477,19 +476,25 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori):
 
     for i in range(0,len(blog_info['key_reposter'])):
         uid = blog_info['key_reposter'][i][1]
-        try:
-            save_user(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
-        except:
-            continue
+        save_user(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
 
+    print 'blog weibo ', blog_info['weibo']
     if len(blog_info['weibo'])>=5:
         top_weibo = blog_info['weibo'][:5]
     else:
         top_weibo = blog_info['weibo']
+
+    exist_items = db.session.query(PropagateWeiboSingle).\
+                             filter(PropagateWeiboSingle.ori_mid==blog_info['status']['id']).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.delete(exist_item)
+
     for i in range(0,len(top_weibo)):
         mid = top_weibo[i][1]
         save_weibo(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['created_at'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
- 
+        print blog_info['status']['id'], mid
+    print media_index, persistent_index
     return 'Done'
 
 def calculate_single_sub(sub_g_reposts, retweeted_ori):
@@ -748,15 +753,19 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
 
     for i in range(0,len(blog_info['key_reposter'])):
         uid = blog_info['key_reposter'][i][1]
-        try:
-            save_user_part(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
-        except:
-            continue
+        save_user_part(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
 
     if len(blog_info['weibo'])>=5:
         top_weibo = blog_info['weibo'][:5]
     else:
         top_weibo = blog_info['weibo']
+
+    exist_items = db.session.query(PropagateWeiboSinglePart).\
+                             filter(PropagateWeiboSinglePart.ori_mid==blog_info['status']['id']).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+
     for i in range(0,len(top_weibo)):
         mid = top_weibo[i][1]
         save_weibo_part(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['postDate'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
@@ -807,19 +816,32 @@ def save_daily_count_part(mid,date,perday_blog_count):#mid、日期、微博数
 def save_map_part(mid,city,count):#mid、城市、数量
 
     count = int(count)
+    exist_items = db.session.query(PropagateSpatialSinglePart).\
+                             filter(PropagateSpatialSinglePart.mid==mid).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+
     #print mid,city,count
     new_item = PropagateSpatialSinglePart(mid,city,count)
     db.session.add(new_item)
     db.session.commit()
 
 def save_user_part(mid,uid,name,location,follower,friend,status,description,profile_image_url):#mid、用户id、用户昵称、地址、粉丝数、关注数、微博数、个人描述
-
     user = str(uid)
     follower = int(follower)
     friend = int(friend)
     status = int(status)
     if not description:
         description = 'None'
+
+    exist_items = db.session.query(PropagateUserSinglePart).\
+                             filter(PropagateUserSinglePart.mid==mid, \
+                                    PropagateUserSinglePart.user==user).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+
     #print mid,user,name,location,follower,friend,status,description,profile_image_url
     new_item = PropagateUserSinglePart(mid,user,name,location,follower,friend,status,description,profile_image_url)
     db.session.add(new_item)
@@ -881,9 +903,12 @@ def save_daily_count(mid,date,perday_blog_count):#mid、日期、微博数
     db.session.commit()
 
 def save_map(mid,city,count):#mid、城市、数量
-
     count = int(count)
-    #print mid,city,count
+    exist_items = db.session.query(PropagateSpatialSingle).filter(PropagateSpatialSingle.mid==mid).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+
     new_item = PropagateSpatialSingle(mid,city,count)
     db.session.add(new_item)
     db.session.commit()
@@ -896,6 +921,14 @@ def save_user(mid,uid,name,location,follower,friend,status,description,profile_i
     status = int(status)
     if not description:
         description = 'None'
+
+    exist_items = db.session.query(PropagateUserSingle).\
+                                   filter(PropagateUserSingle.mid==mid, \
+                                          PropagateUserSingle.user==user).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+
     #print mid,user,name,location,follower,friend,status,description,profile_image_url
     new_item = PropagateUserSingle(mid,user,name,location,follower,friend,status,description,profile_image_url)
     db.session.add(new_item)

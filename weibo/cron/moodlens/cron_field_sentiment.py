@@ -2,6 +2,7 @@
 
 
 import json
+import MySQLdb
 from config import cron_start, cron_end, xapian_search_domain, \
                    xapian_search_user, emotions_kv, COBAR_HOST, \
                    COBAR_USER, COBAR_PORT
@@ -61,14 +62,17 @@ def getDomainUsers(domain, top=TOP_DOMAIN_LIMIT):
     return domain_uids
 
 
-def DomainUsersFromMysql(domain):
+def DomainUsersFromMysql(domain, limit=10000):
     # domain: university
+    print domain, 'search domain users from mysql'
     try:
         cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
-        cursor.execute("select userId from profile_person_basic where domain = '%s' limit 10000" % domain)
+        cursor = cobar_conn.cursor()
+        cursor.execute("select userId from profile_person_basic where domain = '%s' limit %d" % (domain, limit))
         users = cursor.fetchall()
         domain_uids = [int(user[0]) for user in users]
-    except:
+    except Exception, e:
+        print e
         domain_uids = []
 
     return domain_uids
@@ -132,7 +136,7 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
 
 
 def sentiment_field(domain, xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
-    domain_uids = DomainUsersFromMysql(domain, top=TOP_DOMAIN_LIMIT)
+    domain_uids = DomainUsersFromMysql(domain, TOP_DOMAIN_LIMIT)
 
     print 'domain uid: ', len(domain_uids)
 
@@ -174,7 +178,7 @@ def sentiment_field(domain, xapian_search_weibo, start_ts=start_range_ts, over_t
 
                 print k, v, ', emotions count: ', emotions_count, ', emotion keywords length: ', len(kcount), ', emotion weibos length: ', len(top_ws)
 
-            print '%s %s saved emotions counts, keywords and weibos' % (begin_ts, end_ts)
+            print domain, date, ' %s %s saved emotions counts, keywords and weibos' % (begin_ts, end_ts)
             save_count_results(domain, emotions_count, during)
             save_kcount_results(domain, emotions_kcount, during, TOP_KEYWORDS_LIMIT)
             save_weibos_results(domain, emotions_weibo, during, TOP_WEIBOS_LIMIT)

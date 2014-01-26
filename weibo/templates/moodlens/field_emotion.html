@@ -185,6 +185,7 @@
     var END_TS = parseInt('{{end_ts}}');
     var DURING_INTERGER = parseInt('{{during}}');
     var FIELD_NAME = '{{field_en}}'
+    console.log(FIELD_NAME);
     var WEIBOS_LIMIT = 10;
     var KEYWORDS_LIMIT = 10;
     var click_flag=false;
@@ -1110,7 +1111,52 @@
         }
         else if(en=="technology"){
             document.getElementById("title_name").innerText='科技领域情绪分析';
+        }else if(en=="education"){
+            document.getElementById("title_name").innerText='教育领域情绪分析';
         }
+        else if(en=="entertainment"){
+            document.getElementById("title_name").innerText='娱乐领域情绪分析';
+        }
+        else if(en=="fashion"){
+            document.getElementById("title_name").innerText='时尚领域情绪分析';
+        }
+        else if(en=="university"){
+            document.getElementById("title_name").innerText='高校微博领域情绪分析';
+        }
+        else if(en=="homeadmin"){
+            document.getElementById("title_name").innerText='境内机构领域情绪分析';
+        }
+        else if(en=="abroadadmin"){
+            document.getElementById("title_name").innerText='境外机构领域情绪分析';
+        }
+        else if(en=="homemedia"){
+            document.getElementById("title_name").innerText='媒体领域情绪分析';
+        }
+        else if(en=="abroadmedia"){
+            document.getElementById("title_name").innerText='境外媒体领域情绪分析';
+        }
+        else if(en=="folkorg"){
+            document.getElementById("title_name").innerText='民间组织领域情绪分析';
+        }
+        else if(en=="lawyer"){
+            document.getElementById("title_name").innerText='律师领域情绪分析';
+        }
+        else if(en=="politician"){
+            document.getElementById("title_name").innerText='政府官员领域情绪分析';
+        }
+        else if(en=="mediaworker"){
+            document.getElementById("title_name").innerText='媒体人士领域情绪分析';
+        }
+        else if(en=="activer"){
+            document.getElementById("title_name").innerText='活跃人士领域情绪分析';
+        }
+        else if(en=="grassroot"){
+            document.getElementById("title_name").innerText='草根领域情绪分析';
+        }
+        else{
+            document.getElementById("title_name").innerText='其他领域情绪分析';
+        }
+
     }
   </script>
 {% endblock %}

@@ -10,11 +10,9 @@ try:
     from model import BurstIdentification
 except ImportError:
     print 'Warning: Not in web environment.'
-
-from xapian_weibo.xapian_backend import XapianSearch
+from config import LEVELDBPATH
 from time_utils import ts2datetime, datetime2ts
-path = '/home/mirage/dev/data/stub/master_timeline_weibo_'
-LEVELDBPATH = '/home/mirage/leveldb'
+
 
 class TopkHeap(object):
     def __init__(self, k):
@@ -37,14 +35,11 @@ def read_level(date):
     end = datetime2ts(date)
     begints = end - 24*3600
     begin = ts2datetime(begints)
-    end_time = date.replace('-', '')
-    begin_time = begin.replace('-', '')
-
-    burst_rank(begin_time,end_time,date)
+    
+    burst_rank(begin, date, date)
     return 'Done'
 
 def burst_rank(begin_time,end_time,date):
-
     print 'burst rank'
     dailycount_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s'%end_time),
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
@@ -52,11 +47,15 @@ def burst_rank(begin_time,end_time,date):
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     active_th = TopkHeap(1000)
     important_th = TopkHeap(1000)
-    count =0 
+    count =0
+    te = ts = time.time()
     for d,x in dailycount_bucket.RangeIter():
+        if count % 10000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts), 'identify burst rank to mysql ', date
+            ts = te
         count = count + 1
-        if count%10000 == 0:
-            print count
+
         active,important,follower,domain = x.split('_')
         d = int(d)
         active = int(active)
@@ -101,16 +100,7 @@ def save_mysql(date,user_id,active_diff,important_diff,user_active,user_importan
     db.session.commit()
 
 if __name__ == "__main__":
-    
-##    answer = read_level('2013-09-02')
-##    print answer
-
-    answer = read_level('2013-09-03')
+    import sys
+    date = sys.argv[1] # '2013-09-03'
+    answer = read_level(date)
     print answer
-
-    answer = read_level('2013-09-04')
-    print answer
-
-    answer = read_level('2013-09-05')
-    print answer
-

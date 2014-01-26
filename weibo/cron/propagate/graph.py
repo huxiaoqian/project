@@ -227,6 +227,10 @@ def getUserByUid(uid):
         user_dict['name'] = str(uid)
         user_dict['location'] = 'unknown'
         user_dict['profile_image_url'] = u''
+        user_dict['followers_count'] = 0
+        user_dict['friends_count'] = 0
+        user_dict['statuses_count'] = 0
+        user_dict['description'] = ''
 
     result_dict = {}
     for k, v in user_dict.iteritems():
@@ -241,7 +245,7 @@ def getWeiboRepostsByMid(mid, begin_ts, end_ts, limit=100000):
         'timestamp': {'$gt': begin_ts, '$lt': end_ts},
         'retweeted_mid': int(mid)
     }
-
+    print '---', limit
     count, get_results = whole_xapian_weibo.search(query=query_dict, fields=weibo_fields, max_offset=limit)
     statuses = []
     
@@ -347,14 +351,12 @@ def graph(mid):
     begin_ts = local2ts(source_weibo['created_at'])
     end_ts = begin_ts + 24 * 3600
 
-    per_page = 10000
+    per_page = 100#10000
     page_count = 10
     reposts = getWeiboRepostsByMid(source_weibo['id'], begin_ts, end_ts, per_page * page_count)
     print 'search source weibo reposts completely ', source_weibo['id'], 'total reposts count : ', len(reposts), \
     ' source user name: ', source_weibo['user']['name'], source_weibo['user']['id']
 
-    whole_graph_stats = {'graph': '', 'stats': '', 'reposts': reposts, 'ori': source_weibo}
-    '''
     # 完整转发树绘制
     print 'start draw whole tree'
     tree, tree_stats = reposts2tree(source_weibo, reposts, per_page, page_count)
@@ -372,7 +374,6 @@ def graph(mid):
     whole_graph_stats = {'graph': graph, 'stats': tree_stats, 'reposts': reposts, 'ori': source_weibo}
     print tree_stats
     print 'end draw whole tree'
-    '''
 
     sub_graph_stats = {'graph': '', 'stats': '', 'reposts': [], 'ori': None}
     if repost_flag:
@@ -384,8 +385,6 @@ def graph(mid):
         begin_ts = local2ts(weibo['created_at'])
         end_ts = begin_ts + 24 * 3600
 
-        per_page = 10000
-        page_count = 10
         reposts = getSubWeiboRepostsByMid(weibo['id'], weibo['user']['name'], source_weibo['id'], begin_ts, end_ts, per_page * page_count)
         print 'search sub weibo reposts completely ', weibo['id'], 'total reposts count : ', len(reposts), \
         ' source user name: ', weibo['user']['name']

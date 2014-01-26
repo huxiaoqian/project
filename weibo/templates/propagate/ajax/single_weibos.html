@@ -20,7 +20,7 @@
 </style>
 <div class="well" style="height:1000px">
 <div id="count_chart_first">
-  <legend style="text-align:center;">整个转发树的相关微博</legend>
+  <legend style="text-align:center;">全树相关微博</legend>
   {% if not blog_info %}
   <p>计算结果为空</p>
   {% endif %}
@@ -83,7 +83,7 @@
 {% endfor %}
 </div>
 <div id="count_chart_second">
-  <legend style="text-align:center;">以该微博为顶点的转发树的相关微博</legend>
+  <legend style="text-align:center;">子树的相关微博</legend>
   {% if not blog_info_part %}
   <p>计算结果为空</p>
   {% endif %}

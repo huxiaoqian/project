@@ -33,6 +33,10 @@ from calculatetopic import calculate_topic
 from history import _all_history, _add_history, _search_history
 from history_weibo import _all_history_weibo, _add_history_weibo, _search_history_weibo
 from get_result import *
+from xapian_weibo.xapian_backend import XapianSearch
+
+XAPIAN_FIRST_DATE = '20130901'
+XAPIAN_LAST_DATE = '20130930'
 
 sys.path.append('./weibo/propagate/graph')
 from tree import *
@@ -739,6 +743,7 @@ def single_analysis():
                 
             blog_info = readPropagateSingle(mid)#返回整个树的统计
 
+
             if blog_info:
                 if blog_info[0]['profile_image_url'] == 'None':
                     blog_img_url = '#'
@@ -825,8 +830,13 @@ def single_ajax_trend():
                 mid = request.args.get('mid')
                 return render_template('propagate/ajax/single_trend.html', mid=mid)
             else:
-                mid = str(request.form.get('mid', ""))            
-                blog_info = readPropagateTrendSingle(mid)
+                mid = str(request.form.get('mid', ""))  
+                retweeted_mid = getWeiboRetweetedStatus(mid)
+                if retweeted_mid:
+                    blog_info = readPropagateTrendSingle(retweeted_mid)
+                else:
+                    blog_info = readPropagateTrendSingle(mid)
+
                 #print blog_info
                 if blog_info:
                     perday_repost_count = blog_info['perday_count']
@@ -890,9 +900,15 @@ def single_ajax_weibos():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
+                retweeted_mid = getWeiboRetweetedStatus(mid)
 
-                blog_info = readPropagateWeiboSingle(mid)
+                if retweeted_mid:
+                    blog_info = readPropagateWeiboSingle(retweeted_mid)
+                else:
+                    blog_info = readPropagateWeiboSingle(mid)
+
                 blog_info_part = readPropagateWeiboSinglePart(mid)
+
                 return render_template('propagate/ajax/single_weibos.html', 
                                        blog_info = blog_info,
                                        blog_info_part = blog_info_part,
@@ -928,7 +944,12 @@ def single_ajax_spatial():
                 return render_template('propagate/ajax/single_spatial.html')
             else:
                 mid = str(request.form.get('mid', ""))
-                area_list = readPropagateSpatialSingle(mid)
+                retweeted_mid = getWeiboRetweetedStatus(mid)
+                if retweeted_mid:
+                    area_list = readPropagateSpatialSingle(retweeted_mid)
+                else:
+                    area_list = readPropagateSpatialSingle(mid)
+
                 area_list_part = readPropagateSpatialSinglePart(mid)
                 return json.dumps({'map_data': area_list,'map_data_part': area_list_part})
         else:
@@ -956,7 +977,11 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
-                blog_info = readIndexSingle(mid)
+                retweeted_mid = getWeiboRetweetedStatus(mid)
+                if retweeted_mid:
+                    blog_info = readIndexSingle(retweeted_mid)
+                else:
+                    blog_info = readIndexSingle(mid)
                 if blog_info: 
                     tar_persistent_count = blog_info['persistent_index']
                     tar_sudden_count = blog_info['sudden_index']
@@ -1004,7 +1029,12 @@ def single_ajax_stat():
                     if identy == 1:
                         if request.method == 'GET':
                             mid = int(request.args.get('mid', ""))
-                            blog_info = readIndexSingle(mid)
+                            retweeted_mid = getWeiboRetweetedStatus(mid)
+                            if retweeted_mid:
+                                blog_info = readIndexSingle(retweeted_mid)
+                            else:
+                                blog_info = readIndexSingle(mid)
+
                             if blog_info: 
                                 tar_persistent_count = blog_info['persistent_index']
                                 tar_sudden_count = blog_info['sudden_index']
@@ -1082,7 +1112,11 @@ def single_ajax_userfield():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
-                blog_key_user_list = readPropagateUserSingle(mid)
+                retweeted_mid = getWeiboRetweetedStatus(mid)
+                if retweeted_mid:
+                    blog_key_user_list = readPropagateUserSingle(retweeted_mid)
+                else:
+                    blog_key_user_list = readPropagateUserSingle(mid)
 
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
                 for result in blog_key_user_list:                    
@@ -1168,7 +1202,11 @@ def single_ajax_userfield():
                     if identy == 1:
                         if request.method == "GET":
                             mid = str(request.args.get('mid', ""))
-                            blog_key_user_list = readPropagateUserSingle(mid)
+                            retweeted_mid = getWeiboRetweetedStatus(mid)
+                            if retweeted_mid:
+                                blog_key_user_list = readPropagateUserSingle(retweeted_mid)
+                            else:
+                                blog_key_user_list = readPropagateUserSingle(mid)
 
                             domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
                             for result in blog_key_user_list:                    
@@ -1633,3 +1671,30 @@ def url_mid():
     else:
         return 'Wrong'
     return str(mid)
+
+
+def target_whole_xapian_weibo(start_date=XAPIAN_FIRST_DATE, end_date=XAPIAN_LAST_DATE):
+    datelist = []
+    start_ts = int(time.mktime(time.strptime(start_date, '%Y%m%d')))
+    end_ts = int(time.mktime(time.strptime(end_date, '%Y%m%d'))) + 24 * 3600
+
+    during = (end_ts - start_ts) / (24 * 3600)
+    for i in range(0, during):
+        now_date = time.strftime('%Y%m%d', time.localtime(start_ts + i * 24 * 3600))
+        datelist.append(now_date)
+
+    xapian_weibo = getXapianWeiboByDuration(datelist)
+
+    return xapian_weibo
+
+whole_xapian_weibo = target_whole_xapian_weibo('20130901', '20130905')
+
+
+def getWeiboRetweetedStatus(mid):
+    weibo = whole_xapian_weibo.search_by_id(int(mid), fields=['retweeted_mid'])
+    retweeted_mid = None
+    if weibo:
+        retweeted_mid = weibo['retweeted_mid']
+
+    return retweeted_mid
+

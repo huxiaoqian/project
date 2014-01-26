@@ -21,7 +21,7 @@ xapian_user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_co
                      'gender', 'profile_image_url', 'verified_type','followers_count', \
                      'location', 'statuses_count', 'description', 'created_at']
 try:
-    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_20140112'),
+    spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'spiedusers_3'),
                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 except:
     print 'leveldb not available now'
@@ -674,18 +674,12 @@ def batch_handle_domain():
 if __name__ == '__main__':
     # init xapian weibo
     import sys
-    batch_date_1 = sys.argv[1]#'20130905'
+    batch_date_1 = sys.argv[1] # '20130905'
     xapian_search_weibo = getXapianWeiboByDate(batch_date_1)
 
     #
     seed_set = get_official_seed_set()
     scws = load_scws()
-
-    '''
-    daily_domain_keywords_db = {}
-    for i in range(-1, 21):
-        daily_domain_keywords_db[i] = get_daily_domain_keywords_db_by_date(batch_date_1, i)
-    '''
     
     # update person basics once a week
     # sharding = False
@@ -714,15 +708,19 @@ if __name__ == '__main__':
     # personInteract2leveldb()
     
     # integration person values into one leveldb
-    daily_profile_person_db = get_daily_user_db_by_date(batch_date_1)
-    batch_handle()
-
-    # daily_profile_domain_basic_db = get_daily_domain_basic_db_by_date(batch_date_1)
-    # batch_handle_domain_basic()
-
-    # daily_profile_domain_db = get_daily_domain_db_by_date(batch_date_1)
-    # batch_handle_domain()
+    # daily_profile_person_db = get_daily_user_db_by_date(batch_date_1)
+    # batch_handle()
+    
+    daily_profile_domain_basic_db = get_daily_domain_basic_db_by_date(batch_date_1)
+    batch_handle_domain_basic()
+    
     '''
+    #
+    daily_domain_keywords_db = {}
+    for i in range(-1, 21):
+        daily_domain_keywords_db[i] = get_daily_domain_keywords_db_by_date(batch_date_1, i)
+    daily_profile_domain_db = get_daily_domain_db_by_date(batch_date_1)
+    batch_handle_domain()
     daily_profile_domain_keywords = get_daily_domain_rtkeywords_db_by_date(batch_date_1)
     batch_sort_domain_keywords()
     '''

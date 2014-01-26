@@ -2,9 +2,10 @@
 
 import json
 import math
+import time
 from graph import getWeiboByMid, graph_from_elevator
 from flask import Blueprint, session, render_template, redirect, \
-                  url_for, jsonify, make_response
+                  url_for, jsonify, make_response, request
 
 mod = Blueprint('graph', __name__, url_prefix='/gexf')
 
@@ -89,7 +90,11 @@ def tree_stats_index(mid, page):
     else:
         tree_stats = {}
 
-    tree_stats['spread_begin'] = tree_stats['spread_begin'].strftime('%Y-%m-%d %H:%M:%S')
-    tree_stats['spread_end'] = tree_stats['spread_end'].strftime('%Y-%m-%d %H:%M:%S')
+    tree_stats['spread_begin'] = ts2HMS(tree_stats['spread_begin'])#tree_stats['spread_begin'].strftime('%Y-%m-%d %H:%M:%S')
+    tree_stats['spread_end'] = ts2HMS(tree_stats['spread_end'])#tree_stats['spread_end'].strftime('%Y-%m-%d %H:%M:%S')
 
     return jsonify(stats=tree_stats)
+
+
+def ts2HMS(ts):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))

@@ -652,8 +652,7 @@ def profile_network(friendship, uid):
         date_list = last_week_to_date(datestr, interval)
     
         for datestr in date_list:
-            active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, datestr)
-            print direct_interact           
+            active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict = getPersonData(uid, datestr)    
             for k, v in retweeted_interact.iteritems():
                 k = int(k)
                 v = int(v)
@@ -794,7 +793,6 @@ def profile_group_topic(fieldEnName):
             keywords_sorted = sorted(keywords_dict.iteritems(), key=lambda(k, v): v, reverse=False)
             top_keywords = keywords_sorted[len(keywords_sorted)-limit:]
             result_arr = [{'text': k, 'size': float(v)} for k, v in top_keywords]
-            print result_arr
             return json.dumps({'status': 'current finished', 'data': result_arr})
     else:
         return json.dumps([])
@@ -839,8 +837,8 @@ def profile_group_status_count(fieldEnName):
 
 
 def _default_time():
-    interval = 7
-    datestr = '20130907'
+    interval = 5
+    datestr = '20130905'
     return interval, datestr
 
 @mod.route('/group_important/<fieldEnName>', methods=['GET', 'POST'])
@@ -888,7 +886,6 @@ def profile_group_verify(fieldEnName):
         verified_count = int(_verified_count)
         unverified_count = int(_unverified_count)
         province_dict = _province_dict
-        print verified_count, unverified_count, province_dict, datestr
         if verified_count != 0 or unverified_count != 0 or province_dict != {}:
             break
 
@@ -912,7 +909,6 @@ def profile_group_location(fieldEnName):
         verified_count = int(_verified_count)
         unverified_count = int(_unverified_count)
         province_dict = _province_dict
-        print verified_count, unverified_count, province_dict, datestr
         if verified_count != 0 or unverified_count != 0 or province_dict != {}:
             break
 

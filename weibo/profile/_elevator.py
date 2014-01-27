@@ -18,11 +18,26 @@ def _default_elevator(db_name='default'):
 
 
 def init_db(datestr):
-    E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % datestr))
-    E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr))
-    E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_domain_rtkeywords_%s' % datestr))
-    E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_domain_basic_%s' % datestr))
-
+    try:
+        E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % datestr))
+    except Exception, e:
+        print e
+    try:
+        E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s_test' % datestr))
+    except Exception, e:
+        print e
+    try:
+        E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr))
+    except Exception, e:
+        print e
+    try:
+        E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_domain_rtkeywords_%s' % datestr))
+    except Exception, e:
+        print e
+    try:
+        E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_domain_basic_%s' % datestr))
+    except Exception, e:
+        print e
     E.disconnect()
 
 
@@ -134,7 +149,9 @@ def getDomainBasic(domain, datestr):
 
 
 if __name__ == '__main__':
+    import sys
+    datestr = sys.argv[1] # '20130903'
     E = _default_elevator()
-    #init_db('20130902')
-    init_db('20130903')
-    #init_db('20130904')
+    #E.connect(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr))
+    #E.repairdb()
+    init_db(datestr)

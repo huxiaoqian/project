@@ -4,7 +4,7 @@ import redis
 import pickle
 import zlib
 import time
-from config import emotions_kv, fields_id, REDIS_HOST, REDIS_PORT
+from config import emotions_kv, fields_id, REDIS_HOST, REDIS_PORT, DOMAIN_LIST
 from xapian_weibo.utils import get_now_db_no
 from cron_sentiment_count import save_count_results as save_global_count
 from cron_sentiment_keyword import save_count_results as save_global_keywords, \
@@ -77,15 +77,15 @@ def sentiment_count_redis2mysql(r, end_ts, during=Fifteenminutes):
         print 'topic %s saved count: ' % keyword, topic_emotions_data
         save_topic_results('count', keyword, topic_emotions_data, during)
 
-    for field, fieldid in fields_id.iteritems():
+    for fieldid, field in enumerate(DOMAIN_LIST):
         domain_emotions_data = {}
         for k, v in emotions_kv.iteritems():
-            domain_count = r.get(DOMAIN_SENTIMENT_COUNT % (fieldid-1, v))
+            domain_count = r.get(DOMAIN_SENTIMENT_COUNT % (fieldid, v))
             if not domain_count:
                 domain_count = 0
             domain_emotions_data[v] = [end_ts, domain_count]
-        print 'domain %s saved: ' % (fieldid-1), domain_emotions_data
-        save_domain_count(int(fieldid)-1, domain_emotions_data, during)        
+        print 'domain %s saved: ' % fieldid, domain_emotions_data
+        save_domain_count(fieldid, domain_emotions_data, during)        
 
 
 def sentiment_kcount_redis2mysql(r, end_ts, during=Fifteenminutes):
@@ -107,12 +107,12 @@ def sentiment_kcount_redis2mysql(r, end_ts, during=Fifteenminutes):
         print 'topic %s saved keywords: ' % topic
         save_topic_results('kcount', topic, topic_emotions_data, during)
 
-    for field, fieldid in fields_id.iteritems():
+    for fieldid, field in enumerate(DOMAIN_LIST):
         domain_emotions_data = {}
         for k, v in emotions_kv.iteritems():
-            domain_emotions_data[v] = [end_ts, r.zrange(DOMAIN_TOP_KEYWORDS_RANK % (v, fieldid), 0, 50, desc=True, withscores=True)]
-        print 'domain %s saved keywords: ' % (fieldid-1)
-        save_domain_kcount(int(fieldid-1), domain_emotions_data, during, TOP_KEYWORDS_LIMIT)       
+            domain_emotions_data[v] = [end_ts, r.zrange(DOMAIN_TOP_KEYWORDS_RANK % (fieldid, v), 0, 50, desc=True, withscores=True)]
+        print 'domain %s saved keywords: ' % (fieldid)
+        save_domain_kcount(int(fieldid), domain_emotions_data, during, TOP_KEYWORDS_LIMIT)       
 
 
 def sentiment_weibo_redis2mysql(r, end_ts, during=Fifteenminutes):
@@ -136,14 +136,14 @@ def sentiment_weibo_redis2mysql(r, end_ts, during=Fifteenminutes):
         print 'topic %s saved weibos: ' % topic
         save_topic_results('weibos', topic, topic_emotions_data, during)
         
-    for field, fieldid in fields_id.iteritems():
+    for fieldid, field in enumerate(DOMAIN_LIST):
         domain_emotions_data = {}
         for k, v in emotions_kv.iteritems():
-            weiboids = r.zrange(DOMAIN_TOP_WEIBO_REPOSTS_COUNT_RANK % (v, fieldid), 0, 50, desc=True, withscores=False)
+            weiboids = r.zrange(DOMAIN_TOP_WEIBO_REPOSTS_COUNT_RANK % (fieldid, v), 0, 50, desc=True, withscores=False)
             weibos = [pickle.loads(zlib.decompress(r.get(TOP_WEIBO_KEY % mid))) for mid in weiboids]    
             domain_emotions_data[v] = [end_ts, weibos]
-        print 'domain %s saved weibos: ' % (fieldid-1)
-        save_domain_weibos(int(fieldid-1), domain_emotions_data, during, TOP_WEIBOS_LIMIT)
+        print 'domain %s saved weibos: ' % (fieldid)
+        save_domain_weibos(int(fieldid), domain_emotions_data, during, TOP_WEIBOS_LIMIT)
     
 
 if __name__ == '__main__':

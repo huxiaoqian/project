@@ -941,10 +941,12 @@ def single_ajax_spatial():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                return render_template('propagate/ajax/single_spatial.html')
+                mid = request.args.get('mid')
+                return render_template('propagate/ajax/single_spatial.html', mid=mid)
             else:
                 mid = str(request.form.get('mid', ""))
                 retweeted_mid = getWeiboRetweetedStatus(mid)
+                print retweeted_mid
                 if retweeted_mid:
                     area_list = readPropagateSpatialSingle(retweeted_mid)
                 else:

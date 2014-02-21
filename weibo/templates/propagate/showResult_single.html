@@ -44,12 +44,15 @@
   </div>
 {% endblock %}
 {% block script %}
+  <script src="/static/js/jquery-ui.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script>
     $('#content_container').empty();
     $('#content_container').load("/propagate/single_ajax_weibos/?mid={{mid}}", function() {});
 
     tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5', 'tab6'];
-    tabUrlArr = ["/propagate/single_ajax_trend/?mid={{mid}}", "/propagate/single_ajax_weibos/?mid={{mid}}", "/propagate/single_ajax_spatial/", "/propagate/single_ajax_stat/?mid={{mid}}", "/gexf/show_graph/{{mid}}", "/propagate/single_ajax_userfield/?mid={{mid}}"];
+    tabUrlArr = ["/propagate/single_ajax_trend/?mid={{mid}}", "/propagate/single_ajax_weibos/?mid={{mid}}", "/propagate/single_ajax_spatial/?mid={{mid}}", "/propagate/single_ajax_stat/?mid={{mid}}", "/gexf/show_graph/{{mid}}", "/propagate/single_ajax_userfield/?mid={{mid}}"];
     for (var i = 0, len = tabIdArr.length; i < len; i++) {
       document.getElementById(tabIdArr[i]).onclick = function(data) {
         var tabId = data.srcElement.id;

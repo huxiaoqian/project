@@ -244,7 +244,7 @@ def log_in():
     else:
         return json.dumps('Wrong')
 
-@mod.route("/")
+@mod.route("/", methods=['GET','POST'])
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
@@ -830,14 +830,14 @@ def single_ajax_trend():
                 mid = request.args.get('mid')
                 return render_template('propagate/ajax/single_trend.html', mid=mid)
             else:
-                mid = str(request.form.get('mid', ""))  
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                if retweeted_mid:
-                    blog_info = readPropagateTrendSingle(retweeted_mid)
-                else:
-                    blog_info = readPropagateTrendSingle(mid)
+                mid = str(request.form.get('mid', ""))
 
-                #print blog_info
+##                retweeted_mid = getWeiboRetweetedStatus(mid)
+##                if retweeted_mid:
+##                    blog_info = readPropagateTrendSingle(retweeted_mid)
+##                else:
+                blog_info = readPropagateTrendSingle(mid)
+
                 if blog_info:
                     perday_repost_count = blog_info['perday_count']
                     blog_date_list = blog_info['date_list']
@@ -851,11 +851,10 @@ def single_ajax_trend():
                     perday_repost_count_part = blog_info_part['perday_count']
                     blog_date_list_part = blog_info_part['date_list']
                     date_list_part = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list_part]
-                    date_list_part = []
                 else:
                     perday_repost_count_part = [1]
                     date_list_part = []
-                
+
                 return json.dumps({'perday_blog_count': zip(date_list, perday_repost_count),'perday_blog_count_part': zip(date_list_part, perday_repost_count_part)})
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -900,12 +899,12 @@ def single_ajax_weibos():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-
-                if retweeted_mid:
-                    blog_info = readPropagateWeiboSingle(retweeted_mid)
-                else:
-                    blog_info = readPropagateWeiboSingle(mid)
+##                retweeted_mid = getWeiboRetweetedStatus(mid)
+##
+##                if retweeted_mid:
+##                    blog_info = readPropagateWeiboSingle(retweeted_mid)
+##                else:
+                blog_info = readPropagateWeiboSingle(mid)
 
                 blog_info_part = readPropagateWeiboSinglePart(mid)
 
@@ -945,12 +944,12 @@ def single_ajax_spatial():
                 return render_template('propagate/ajax/single_spatial.html', mid=mid)
             else:
                 mid = str(request.form.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                print retweeted_mid
-                if retweeted_mid:
-                    area_list = readPropagateSpatialSingle(retweeted_mid)
-                else:
-                    area_list = readPropagateSpatialSingle(mid)
+##                retweeted_mid = getWeiboRetweetedStatus(mid)
+##                print retweeted_mid
+##                if retweeted_mid:
+##                    area_list = readPropagateSpatialSingle(retweeted_mid)
+##                else:
+                area_list = readPropagateSpatialSingle(mid)
 
                 area_list_part = readPropagateSpatialSinglePart(mid)
                 return json.dumps({'map_data': area_list,'map_data_part': area_list_part})
@@ -979,11 +978,11 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                if retweeted_mid:
-                    blog_info = readIndexSingle(retweeted_mid)
-                else:
-                    blog_info = readIndexSingle(mid)
+##                retweeted_mid = getWeiboRetweetedStatus(mid)
+##                if retweeted_mid:
+##                    blog_info = readIndexSingle(retweeted_mid)
+##                else:
+                blog_info = readIndexSingle(mid)
                 if blog_info: 
                     tar_persistent_count = blog_info['persistent_index']
                     tar_sudden_count = blog_info['sudden_index']
@@ -1114,11 +1113,11 @@ def single_ajax_userfield():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                if retweeted_mid:
-                    blog_key_user_list = readPropagateUserSingle(retweeted_mid)
-                else:
-                    blog_key_user_list = readPropagateUserSingle(mid)
+##                retweeted_mid = getWeiboRetweetedStatus(mid)
+##                if retweeted_mid:
+##                    blog_key_user_list = readPropagateUserSingle(retweeted_mid)
+##                else:
+                blog_key_user_list = readPropagateUserSingle(mid)
 
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
                 for result in blog_key_user_list:                    

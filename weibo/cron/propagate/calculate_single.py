@@ -36,35 +36,6 @@ def date2ts(date):
 def ts2datetime(ts):
     return time.strftime('%Y-%m-%d', time.localtime(ts))
 
-def getXapianWeiboByDuration(datestr_list):
-    stub_file_list = []
-
-    for datestr in datestr_list:
-        stub_file = path + datestr
-        print type(stub_file)
-        if os.path.exists(stub_file):
-            stub_file_list.append(stub_file)
-
-    if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
-        return xapian_search_weibo 
-
-    else:
-        return None
-
-def getXapianWeiboByTs(start_time, end_time):
-    xapian_date_list =[]
-    end_time = end_time + 24*3600
-    Day = 24*3600
-    days = int((int(end_time) - int(start_time)) / Day)
-
-    for i in range(0, days):
-        _ts = start_time + i * Day
-        xapian_date_list.append(ts2datetimestr(_ts))
-    print xapian_date_list
-    statuses_search = getXapianWeiboByDuration(xapian_date_list)
-    return statuses_search
-
 class TopkHeap(object):
     def __init__(self, k):
         self.k = k
@@ -81,108 +52,23 @@ class TopkHeap(object):
     def TopK(self):
         return [x for x in reversed([heapq.heappop(self.data) for x in xrange(len(self.data))])]
 
-def get_user(uid):
-    user = {}
-    count,get_results = user_search.search(query={'_id': uid})
-    for r in get_results():
-        user['id'] = r['_id']
-        user['province'] = r['province']
-        user['bi_followers_count'] = 'None'
-        user['verified'] = r['verified']
-        user['description'] = r['description']
-        if not r['friends_count']:
-            user['friends_count'] = 0
-        else:
-            user['friends_count'] = r['friends_count']
-        user['city'] = r['city']
-        user['gender']  = r['gender']
-        user['profile_image_url'] = r['profile_image_url']
-        user['verified_reason'] = 'None'
-        if not r['followers_count']:
-            user['followers_count'] = 0
-        else:
-            user['followers_count'] = r['followers_count']
-
-        user['location'] = r['location']
-        if not r['statuses_count']:
-            user['statuses_count'] = 0
-        else:
-            user['statuses_count'] = r['statuses_count']
-
-        if r['name']:
-            user['name'] = r['name']
-        else:
-            user['name'] = 'unknown'
-        break
-    if user == {}:
-        return None
-    else:
-        return user
-
 def getNone():
     user = dict()
-    user['id'] = 'None'
+    user['_id'] = 'None'
     user['province'] = 'None'
-    user['bi_followers_count'] = 'None'
+   # user['bi_followers_count'] = 'None'
     user['verified'] = 'None'
     user['description'] = 'None'
     user['friends_count'] = 0
     user['city'] = 'None'
     user['gender']  = 'None'
     user['profile_image_url'] = 'None'
-    user['verified_reason'] = 'None'
+    user['verified_type'] = 'None'
     user['followers_count'] = 0
     user['location'] = 'None'
     user['statuses_count'] = 0
     user['name'] = 'None'
     return user
-
-def get_ori_status(_id, beg_ts, end_ts):
-    
-    status ={}
-    statuses_search = getXapianWeiboByTs(beg_ts,end_ts)
-    count,get_results = statuses_search.search(query={'_id': _id},fields=['text','_id','geo','source','retweeted_mid','reposts_count','comments_count','attitudes_count','user','timestamp'])
-
-    for r in get_results():
-        status['text'] = r['text']
-        status['id'] = r['_id']
-        if r['geo']:
-            status['geo'] = r['geo']
-        else:
-            status['geo'] = None
-        status['sourcePlatform'] = 'None'
-        if r['retweeted_mid']:
-            status['retweetedMid'] = r['retweeted_mid']
-        else:
-            status['retweetedMid'] = None
-        if not r['reposts_count']:
-            status['repostsCount'] = 0
-        else:
-            status['repostsCount'] = r['reposts_count']
-        if not r['comments_count']:
-            status['commentsCount'] = 0
-        else:
-            status['commentsCount'] = r['comments_count']
-        
-        if 'attitudes_count' not in r:
-            status['attitudesCount'] = 0
-        else:
-            if not r['attitudes_count']:
-                status['attitudesCount'] = 0
-            else:
-                status['attitudesCount'] = r['attitudes_count']
-
-        if r['user']: 
-            status['user'] = get_user(r['user'])
-        else:
-            status['user'] = {'name': 'unknown'}
-
-        status['timestamp'] =r['timestamp']
-        status['postDate'] = datetime.fromtimestamp(r['timestamp'])
-        break
-
-    return status
-
 
 def _default_elevator(db_name='default'):
     db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
@@ -197,9 +83,10 @@ def init_db():
 
 
 def save_weibo_tree(mid, whole_g, whole_stats, sub_g, sub_stats):
-    E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
-    E.Put(str(mid), whole_g + '_\/' + json.dumps(whole_stats) + '_\/' + sub_g + '_\/' + json.dumps(sub_stats))
-    E.disconnect()
+##    E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
+##    E.Put(str(mid), whole_g + '_\/' + json.dumps(whole_stats) + '_\/' + sub_g + '_\/' + json.dumps(sub_stats))
+##    E.disconnect()
+    print mid,whole_g,whole_stats,sub_g,sub_stats
 
     
 def calculate_single(_id):
@@ -217,11 +104,12 @@ def calculate_single(_id):
     sub_g_reposts = sub_g['reposts']
 
     save_weibo_tree(str(_id), whole_g_graph, whole_g_stats, sub_g_graph, sub_g_stats)
-    calculate_single_whole(whole_g_reposts, whole_g['ori'])
-    #calculate_single_sub(sub_g_reposts, sub_g['ori'])
+    calculate_single_whole(whole_g_reposts, whole_g['ori'], sub_g['ori'])
+    calculate_single_sub(sub_g_reposts, sub_g['ori'])
+    return 'Done'
 
 
-def calculate_single_whole(whole_g_reposts, retweeted_ori):
+def calculate_single_whole(whole_g_reposts, retweeted_ori, mid_ori):
     #初始化
     blog_info = {}
     city_count = {}
@@ -275,6 +163,26 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori):
     date_list.append(date.fromtimestamp(retweeted_timestamp))
     perday_repost_count.append(1)
     
+    mid_timestamp = mid_ori['timestamp']
+    mid_ori['postDate'] = date.fromtimestamp(mid_timestamp)
+    try:
+        mid_ori['repostsCount'] = int(mid_ori['reposts_count'])
+    except:
+        mid_ori['repostsCount'] = 0
+    try:
+        mid_ori['commentsCount'] = int(mid_ori['comments_count'])
+    except:
+        mid_ori['commentsCount'] = 0
+    try:
+        mid_ori['attitudesCount'] = int(mid_ori['attitudes_count'])
+    except:
+        mid_ori['attitudesCount'] = 0
+    try:
+        mid_ori['text'] = mid_ori['text']
+    except:
+        mid_ori['text'] = ''
+    
+    
     leader_index = 0
     iter_count = 0
     for r in whole_g_reposts:
@@ -307,7 +215,7 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori):
 
         if 'user' in r and r['user']:
             user = r['user']
-            userId = r['id']
+            userId = user['id']
 
             # 将用户加入转发者集合
             reposter.add(userId)
@@ -355,10 +263,10 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori):
             temp['status']['text'] = text
             temp['status']['source'] = 'unknown'
             temp['user'] = user
-            topic_rel_blog[r['id']] = temp
+            topic_rel_blog[r['_id']] = temp
             
             # 生成微博对应的排序指标
-            weibo_rank[r['id']] = reposts_count
+            weibo_rank[r['_id']] = reposts_count
             
         else:
              continue
@@ -449,8 +357,8 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori):
 
     weibo_data = weibo_th.TopK()
     
-    blog_info['status'] = retweeted_ori
-    blog_info['user'] = retweeted_ori['user']
+    blog_info['status'] = mid_ori
+    blog_info['user'] = mid_ori['user']
     blog_info['datelist'] = date_list
     blog_info['perday_count'] = perday_repost_count
     blog_info['persistent_index'] = persistent_index
@@ -464,37 +372,40 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori):
     
     if not blog_info['user']:
         blog_info['user'] = getNone()
-    save_base_infor(blog_info['status']['id'], blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['source'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
+    save_base_infor(blog_info['status']['_id'], blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['source'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
 
     perday_blog_count = blog_info['perday_count']
     date_list = blog_info['datelist']   
     for i in range(0,len(date_list)):
-        save_daily_count(blog_info['status']['id'],date_list[i],perday_blog_count[i])
+        save_daily_count(blog_info['status']['_id'],date_list[i],perday_blog_count[i])
 
+    exist_items = db.session.query(PropagateSpatialSingle).filter(PropagateSpatialSingle.mid==blog_info['status']['_id']).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+    
     for d,x in blog_info['geo'].items():
-        save_map(blog_info['status']['id'],d,x)
+        save_map(blog_info['status']['_id'],d,x)
 
     for i in range(0,len(blog_info['key_reposter'])):
         uid = blog_info['key_reposter'][i][1]
-        save_user(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
+        save_user(blog_info['status']['_id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
 
-    print 'blog weibo ', blog_info['weibo']
     if len(blog_info['weibo'])>=5:
         top_weibo = blog_info['weibo'][:5]
     else:
         top_weibo = blog_info['weibo']
 
     exist_items = db.session.query(PropagateWeiboSingle).\
-                             filter(PropagateWeiboSingle.ori_mid==blog_info['status']['id']).all()
+                             filter(PropagateWeiboSingle.ori_mid==blog_info['status']['_id']).all()
     for exist_item in exist_items:
         db.session.delete(exist_item)
-    db.session.delete(exist_item)
+    db.session.commit()
 
     for i in range(0,len(top_weibo)):
         mid = top_weibo[i][1]
-        save_weibo(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['created_at'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
-        print blog_info['status']['id'], mid
-    print media_index, persistent_index
+        save_weibo(blog_info['status']['_id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['created_at'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
+
     return 'Done'
 
 def calculate_single_sub(sub_g_reposts, retweeted_ori):
@@ -584,7 +495,7 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
 
         if 'user' in r and r['user']:
             user = r['user']
-            userId = r['id']
+            userId = user['id']
 
             # 将用户加入转发者集合
             reposter.add(userId)
@@ -632,10 +543,10 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
             temp['status']['text'] = text
             temp['status']['source'] = 'unknown'
             temp['user'] = user
-            topic_rel_blog[r['id']] = temp
+            topic_rel_blog[r['_id']] = temp
             
             # 生成微博对应的排序指标
-            weibo_rank[r['id']] = reposts_count
+            weibo_rank[r['_id']] = reposts_count
             
         else:
              continue
@@ -741,19 +652,25 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
 
     if not blog_info['user']:
         blog_info['user'] = getNone()
-    save_base_infor_part(blog_info['status']['id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['source'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
+    save_base_infor_part(blog_info['status']['_id'],blog_info['user']['profile_image_url'],blog_info['status']['text'],blog_info['status']['source'],blog_info['status']['postDate'],blog_info['user']['id'],blog_info['user']['name'],blog_info['status']['repostsCount'],blog_info['status']['commentsCount'],blog_info['status']['attitudesCount'],blog_info['persistent_index'],blog_info['sudden_index'],blog_info['coverage_index'],blog_info['media_index'],blog_info['leader_index'])    
 
     perday_blog_count = blog_info['perday_count']
     date_list = blog_info['datelist']   
     for i in range(0,len(date_list)):
-        save_daily_count_part(blog_info['status']['id'],date_list[i],perday_blog_count[i])
+        save_daily_count_part(blog_info['status']['_id'],date_list[i],perday_blog_count[i])
 
+    exist_items = db.session.query(PropagateSpatialSinglePart).\
+                            filter(PropagateSpatialSinglePart.mid==blog_info['status']['_id']).all()
+    for exist_item in exist_items:
+        db.session.delete(exist_item)
+    db.session.commit()
+    
     for d,x in blog_info['geo'].items():
-        save_map_part(blog_info['status']['id'],d,x)
+        save_map_part(blog_info['status']['_id'],d,x)
 
     for i in range(0,len(blog_info['key_reposter'])):
         uid = blog_info['key_reposter'][i][1]
-        save_user_part(blog_info['status']['id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
+        save_user_part(blog_info['status']['_id'],uid,key_reposter[uid]['name'],key_reposter[uid]['location'],key_reposter[uid]['followers_count'],key_reposter[uid]['friends_count'],key_reposter[uid]['statuses_count'],key_reposter[uid]['description'],key_reposter[uid]['profile_image_url'])
 
     if len(blog_info['weibo'])>=5:
         top_weibo = blog_info['weibo'][:5]
@@ -761,14 +678,14 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
         top_weibo = blog_info['weibo']
 
     exist_items = db.session.query(PropagateWeiboSinglePart).\
-                             filter(PropagateWeiboSinglePart.ori_mid==blog_info['status']['id']).all()
+                             filter(PropagateWeiboSinglePart.ori_mid==blog_info['status']['_id']).all()
     for exist_item in exist_items:
         db.session.delete(exist_item)
     db.session.commit()
 
     for i in range(0,len(top_weibo)):
         mid = top_weibo[i][1]
-        save_weibo_part(blog_info['status']['id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['postDate'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
+        save_weibo_part(blog_info['status']['_id'],mid,topic_rel_blog[mid]['user']['profile_image_url'],topic_rel_blog[mid]['status']['text'],topic_rel_blog[mid]['status']['source'],topic_rel_blog[mid]['status']['postDate'],topic_rel_blog[mid]['user']['id'],topic_rel_blog[mid]['user']['name'],topic_rel_blog[mid]['status']['repostsCount'],topic_rel_blog[mid]['status']['commentsCount'],topic_rel_blog[mid]['status']['attitudesCount'])
 
     return 'Done'
 
@@ -791,7 +708,7 @@ def save_base_infor_part(mid, image_url, text, sourcePlatform, postDate, uid, us
         db.session.delete(exist_item)
     db.session.commit()
 
-    #print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
+#    print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
     new_item = PropagateSinglePart(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
     db.session.add(new_item)
     db.session.commit()
@@ -808,7 +725,7 @@ def save_daily_count_part(mid,date,perday_blog_count):#mid、日期、微博数
         db.session.delete(exist_item)
     db.session.commit()
 
-    #print mid,date,perday_blog_count
+#    print mid,date,perday_blog_count
     new_item = PropagateTrendSinglePart(mid,date,perday_blog_count)
     db.session.add(new_item)
     db.session.commit()
@@ -816,13 +733,8 @@ def save_daily_count_part(mid,date,perday_blog_count):#mid、日期、微博数
 def save_map_part(mid,city,count):#mid、城市、数量
 
     count = int(count)
-    exist_items = db.session.query(PropagateSpatialSinglePart).\
-                             filter(PropagateSpatialSinglePart.mid==mid).all()
-    for exist_item in exist_items:
-        db.session.delete(exist_item)
-    db.session.commit()
 
-    #print mid,city,count
+#    print mid,city,count
     new_item = PropagateSpatialSinglePart(mid,city,count)
     db.session.add(new_item)
     db.session.commit()
@@ -842,7 +754,7 @@ def save_user_part(mid,uid,name,location,follower,friend,status,description,prof
         db.session.delete(exist_item)
     db.session.commit()
 
-    #print mid,user,name,location,follower,friend,status,description,profile_image_url
+#    print mid,user,name,location,follower,friend,status,description,profile_image_url
     new_item = PropagateUserSinglePart(mid,user,name,location,follower,friend,status,description,profile_image_url)
     db.session.add(new_item)
     db.session.commit()
@@ -856,7 +768,7 @@ def save_weibo_part(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_n
     commentsCount = int(commentsCount)
     attitudesCount = int(attitudesCount)
 
-    #print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
+#    print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
     new_item = PropagateWeiboSinglePart(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount)
     db.session.add(new_item)
     db.session.commit()
@@ -880,7 +792,7 @@ def save_base_infor(mid, image_url, text, sourcePlatform, postDate, uid, user_na
         db.session.delete(exist_item)
     db.session.commit()
 
-    #print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
+#    print mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader
     new_item = PropagateSingle(mid, image_url, text, sourcePlatform, postDate, uid, user_name, repostsCount, commentsCount, attitudesCount, persistent, sudden, coverage, media, leader)
     db.session.add(new_item)
     db.session.commit()
@@ -897,18 +809,15 @@ def save_daily_count(mid,date,perday_blog_count):#mid、日期、微博数
         db.session.delete(exist_item)
     db.session.commit()
 
-    #print mid,date,perday_blog_count
+#    print mid,date,perday_blog_count
     new_item = PropagateTrendSingle(mid,date,perday_blog_count)
     db.session.add(new_item)
     db.session.commit()
 
 def save_map(mid,city,count):#mid、城市、数量
     count = int(count)
-    exist_items = db.session.query(PropagateSpatialSingle).filter(PropagateSpatialSingle.mid==mid).all()
-    for exist_item in exist_items:
-        db.session.delete(exist_item)
-    db.session.commit()
 
+#    print mid,city,count
     new_item = PropagateSpatialSingle(mid,city,count)
     db.session.add(new_item)
     db.session.commit()
@@ -929,7 +838,7 @@ def save_user(mid,uid,name,location,follower,friend,status,description,profile_i
         db.session.delete(exist_item)
     db.session.commit()
 
-    #print mid,user,name,location,follower,friend,status,description,profile_image_url
+#    print mid,user,name,location,follower,friend,status,description,profile_image_url
     new_item = PropagateUserSingle(mid,user,name,location,follower,friend,status,description,profile_image_url)
     db.session.add(new_item)
     db.session.commit()
@@ -943,7 +852,7 @@ def save_weibo(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,r
     commentsCount = int(commentsCount)
     attitudesCount = int(attitudesCount)
 
-    #print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
+#    print ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount
     new_item = PropagateWeiboSingle(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,repostsCount,commentsCount,attitudesCount)
     db.session.add(new_item)
     db.session.commit()

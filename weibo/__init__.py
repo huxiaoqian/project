@@ -23,7 +23,7 @@ def create_app():
     app.register_blueprint(identifyModule)
     app.register_blueprint(moodlensModule)
     app.register_blueprint(profileModule)
-    #app.register_blueprint(propagateModule)
+    app.register_blueprint(propagateModule)
     app.register_blueprint(adminModule)
     app.register_blueprint(graphModule)
     

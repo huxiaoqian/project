@@ -41,15 +41,16 @@
     </div><!--上侧基本信息-->
           
     <div class="row-fluid" style="padding-top:20px;">
-      <div class="span12" id = "index-tabs">
-        <ul class="nav nav-tabs">
-          <li><a href="/propagate/topic_ajax_trend/" >演变趋势</a></li>
-          <li><a href="/propagate/topic_ajax_weibos/?topic_id={{topic_id}}&beg_time={{beg_time}}&end_time={{end_time}}" >相关微博</a></li>
-          <li><a href="/propagate/topic_ajax_spatial/" >地理分布</a></li>
-          <li><a href="/propagate/topic_ajax_stat/?topic_id={{topic_id}}" >主要指标</a></li>
-          <li><a href="/propagate/topic_ajax_path/?keyword={{keyword}}&topic_id={{topic_id}}" >传播路径</a></li>
-          <li><a href="/propagate/topic_ajax_userfield/?topic_id={{topic_id}}" >人员领域分布</a></li>
+      <div class="span12" id="index-tabs">
+        <ul class="nav nav-pills tab_container">
+          <li class="btn span2 btn-primary" id="tab2" >关联微博</a></li>
+          <li class="btn span2" id="tab1">传播数量走势</li>
+          <li class="btn span2" id="tab3">地理分布</a></li>
+          <li class="btn span2" id="tab4">传播指标</a></li>
+          <li class="btn span2" id="tab6" >关键人员统计</a></li>
+          <li class="btn span2" id="tab5">传播路径</a></li>          
         </ul>
+        <div id="content_container"></div>
       </div>
     </div>
   </div>
@@ -59,19 +60,24 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
   <script>
-    var keywords = '{{keyword}}';
-    var begin_str = '{{beg_time}}';
-    var end_str = '{{end_time}}';
-    var topic_id = '{{topic_id}}'
-    var request_data_dict = {'keyword': keywords, 'topic_id': topic_id, 'beg_time': begin_str, 'end_time': end_str};
-    $(document).ready(function(){
-      $("#index-tabs" ).tabs({
-        beforeLoad: function( event, ui ) {
-          ui.jqXHR.error(function() {
-            ui.panel.html("无法显示此页，我们将尽快解决该问题. ");
-          });
+    $('#content_container').empty();
+    $('#content_container').load("/propagate/topic_ajax_weibos/?topic_id={{topic_id}}&beg_time={{beg_time}}&end_time={{end_time}}", function() {});
+
+    tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5', 'tab6'];
+    tabUrlArr = ["/propagate/topic_ajax_trend/?topic_id={{topic_id}}", "/propagate/topic_ajax_weibos/?topic_id={{topic_id}}&beg_time={{beg_time}}&end_time={{end_time}}", "/propagate/topic_ajax_spatial/?topic_id={{topic_id}}", "/propagate/topic_ajax_stat/?topic_id={{topic_id}}", "/gexf/show_forest/?topic_id={{topic_id}}", "/propagate/topic_ajax_userfield/?topic_id={{topic_id}}"];
+    for (var i = 0, len = tabIdArr.length; i < len; i++) {
+      document.getElementById(tabIdArr[i]).onclick = function(data) {
+        var tabId = data.srcElement.id;
+        var tabIdx = parseInt(tabId.substring(3, 4));
+        $('#content_container').empty();
+        for (var j = 0, len = tabIdArr.length; j < len; j++){
+          if(j != tabIdx - 1){
+            $("#" + tabIdArr[j]).removeClass('btn-primary');
+          }
         }
-      });
-    })
+        $("#" + tabId).addClass('btn-primary');
+        $('#content_container').load(tabUrlArr[tabIdx - 1], function() {});
+      }
+    }
   </script>
 {% endblock script %}

@@ -17,41 +17,9 @@
             top: 0;
             left: 0;
         }
-        /*
-        #togglecount{
-            width: 50px;
-            top: 25px;
-            z-index: 1000;
-        }*/
     </style>
 {% endblock %}
 {% block body %}
-    <div class="row">
-        <div class="span2">
-            <h5>转发数(包括但不限于下图)</h5><h5 id="reposts-count"></h5>
-        </div>
-        <div class="span1">
-            <h5>|<h5><h5>|<h5>
-        </div>
-        <div class="span1">
-            <h5>参与人数</h5><h5 id="repost-people-count"></h5>
-        </div>
-         <div class="span1">
-            <h5>宽度</h5><h5 id="max-width"></h5>
-        </div>
-        <div class="span1">
-            <h5>深度</h5><h5 id="max-depth"></h5>
-        </div>
-        <div class="span2">
-            <h5>开始时间</h5><h5 id="spread-begin"></h5>
-        </div>
-        <div class="span2">
-            <h5>截止时间</h5><h5 id="spread-end"></h5>
-        </div>
-    </div>
-    {%- if page > 1 %}
-        <a href="{{ url_for('graph.show_graph_index', mid=mid, page=page-1) }}">更多&rarr;</a>
-    {%- endif %}
     <div class="sigma-parent">
         <div class="sigma-expand" id="sigma">
         </div>
@@ -130,13 +98,13 @@
                 sigInst.bind('overnodes',showNodeInfo).draw();
             })();
         }
-        function load_sub_tree(){
+        function load_forest(){
             if(sigInst){
                 $('#sigma').remove();
                 $('#sigma').html();
             }
             $.ajax({
-                url: "/gexf/graph/{{mid}}/{{page}}/?module=sub",
+                url: "/gexf/forest/{{topic_id}}",
                 dataType: 'xml',
                 type: "GET",
                 success: function (data) {
@@ -152,64 +120,8 @@
                     console.log("Error: " + result.errorThrown); 
               }
             })
-            $.ajax({
-                url: "/gexf/tree_stats/{{mid}}/{{page}}/?module=sub",
-                success: function(data) {
-                    var stats = data["stats"];
-                    $( "#reposts-count" ).html( stats['reposts_count'] );
-                    $( "#repost-people-count" ).html( stats['repost_people_count'] );
-                    $( "#max-width" ).html( stats['max_width'] );
-                    $( "#max-depth" ).html( stats['max_depth'] );
-                    $( "#spread-begin" ).html( stats['spread_begin'] );
-                    $( "#spread-end" ).html( stats['spread_end'] );
-                }
-            });
         }
-        function load_whole_tree(){
-            if(sigInst){
-                $('#sigma').remove();
-                $('#sigma').html();
-            }
-            $.ajax({
-                url: "/gexf/graph/{{mid}}/{{page}}/?module=whole",
-                dataType: 'xml',
-                type: "GET",
-                success: function (data) {
-                    // (requires "sigma.parseGexf.js" to be executed)
-                    console.log(data);
-                    graph_request_callback(data);
-                },
-                error: function(result) {
-                    console.log(result);
-                    //$("#loading_network_data").text("暂无结果!");
-                    console.log("Status: " + result.status);
-                    console.log("Status: " + result.textStatus);
-                    console.log("Error: " + result.errorThrown); 
-              }
-            })
-            $.ajax({
-                url: "/gexf/tree_stats/{{mid}}/{{page}}/?module=whole",
-                success: function(data) {
-                    var stats = data["stats"];
-                    $( "#reposts-count" ).html( stats['reposts_count'] );
-                    $( "#repost-people-count" ).html( stats['repost_people_count'] );
-                    $( "#max-width" ).html( stats['max_width'] );
-                    $( "#max-depth" ).html( stats['max_depth'] );
-                    $( "#spread-begin" ).html( stats['spread_begin'] );
-                    $( "#spread-end" ).html( stats['spread_end'] );
-                }
-            });
-        }
-        var module = '{{module}}';
-        console.log(module);
-        if(module =='sub'){
-            console.log('yuan');
-            load_sub_tree();
-        }
-        else{
-            console.log('shi');
-            load_whole_tree();
-        }
+        load_forest();
     </script>
 {% endblock %}
 

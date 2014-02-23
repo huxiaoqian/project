@@ -15,6 +15,7 @@ from config import db
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from global_config import xapian_search_user as user_search
+from forest import forest_main
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 def ts2datetimestr(ts):
@@ -363,7 +364,9 @@ def calculate(keyword, beg_time, end_time):
     weibo = topic_info['topic_rel_blog'][:5]
     for i in range(0,len(weibo)):
         save_weibo(wordid,weibo[i])
-  
+
+    forest_main(keyword,wordid)#转发森林构建
+
     return 'right'
 
 def save_base_infor(keyword,topic_poster,topic_url,blogs_sum,topic_ori_blog_count,topic_index,topic_post_date,beg_ts,end_ts):#话题、发起人、头像url、微博数、原创微博数、4个指标、发起时间、起始时间、终止时间

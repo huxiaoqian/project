@@ -3,19 +3,19 @@
 import json
 import math
 import time
-from graph import getWeiboByMid, graph_from_elevator
+from graph import getWeiboByMid, graph_from_elevator, forest_from_elevator
 from flask import Blueprint, session, render_template, redirect, \
                   url_for, jsonify, make_response, request
 
 mod = Blueprint('graph', __name__, url_prefix='/gexf')
 
 
-@mod.route('/show_graph/<int:mid>/')
-@mod.route('/show_graph/<int:mid>/<int:page>/')
-def show_graph_index(mid, page=None):
+@mod.route('/show_graph/<int:mid>/<module>/')
+@mod.route('/show_graph/<int:mid>/<int:page>/<module>/')
+def show_graph_index(mid, module, page=None):
+
     if page is None:
         per_page = 200
-
         # weibo
         weibo = getWeiboByMid(mid)
         try:
@@ -33,20 +33,21 @@ def show_graph_index(mid, page=None):
         #page = total_page
         page = 0
 
-        return redirect('/gexf/show_graph/%s/%s/'%(mid, page))#{url_for(graph.show_graph(mid, page))})
+        return redirect('/gexf/show_graph/%s/%s/%s'%(mid, page, module))#{url_for(graph.show_graph(mid, page))})
 
     screen_name = 'nobody'
     profile_image_url = 'http://www.baidu.com'
     return render_template('graph/graph.html', btnuserpicvisible='inline',
                            btnloginvisible='none',
                            screen_name=screen_name, profile_image_url=profile_image_url,
-                           mid=mid,
+                           mid=mid, module=module,
                            page=page)
 
 @mod.route('/graph/<int:mid>/')
 @mod.route('/graph/<int:mid>/<int:page>/')
 def graph_index(mid, page=None):
-    module = request.args.get('module', 'sub')
+    module = str(request.args.get('module'))
+    print 'index',module
     g = graph_from_elevator(mid)
 
     if not g:
@@ -73,7 +74,8 @@ def graph_index(mid, page=None):
 
 @mod.route('/tree_stats/<int:mid>/<int:page>/')
 def tree_stats_index(mid, page):
-    module = request.args.get('module', 'sub')
+    module = str(request.args.get('module'))
+    print 'stats_index',module
     g = graph_from_elevator(mid)
 
     if not g:
@@ -98,3 +100,29 @@ def tree_stats_index(mid, page):
 
 def ts2HMS(ts):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))
+
+@mod.route('/show_forest/')
+def show_forest_index():
+    topic_id = request.args.get('topic_id')
+
+    screen_name = 'nobody'
+    profile_image_url = 'http://www.baidu.com'
+    return render_template('graph/forest.html', btnuserpicvisible='inline',
+                           btnloginvisible='none',
+                           screen_name=screen_name, profile_image_url=profile_image_url,
+                           topic_id=topic_id)
+
+@mod.route('/forest/<int:topic_id>/')
+def forest_index(topic_id):
+    g = forest_from_elevator(topic_id)
+
+    if g:
+        response = make_response(g)
+        response.headers['Content-Type'] = 'text/xml'
+
+        return response
+    else:
+        response = make_response('')
+        response.headers['Content-Type'] = 'text/xml'
+
+        return response

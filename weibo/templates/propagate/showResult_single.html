@@ -30,13 +30,13 @@
     <div class="row-fluid" style="padding-top:20px;">
       <div class="span12" id="index-tabs">
         <ul class="nav nav-pills tab_container">
-          <li class="btn span2 btn-primary" id="tab2" >关联微博</a></li>
-          <li class="btn span2" id="tab1">传播数量走势</li>
-          <li class="btn span2" id="tab3">地理分布</a></li>
-          <li class="btn span2" id="tab4">传播指标</a></li>
-          <!--<li><a href="/propagate/single_ajax_path/?mid={{mid}}&beg_ts={{beg_ts}}&end_ts={{end_ts}}" >传播路径</a></li>-->
-          <li class="btn span2" id="tab5">传播路径</a></li>
-          <li class="btn span2" id="tab6" >关键人员统计</a></li>
+          <li class="btn span2 btn-primary" style="width:150px;" id="tab2" >关联微博</a></li>
+          <li class="btn span2" style="width:150px;" id="tab1">传播数量走势</li>
+          <li class="btn span2" style="width:150px;" id="tab3">地理分布</a></li>
+          <li class="btn span2" style="width:150px;" id="tab4">传播指标</a></li>
+          <li class="btn span2" style="width:150px;" id="tab6" >关键人员统计</a></li>
+          <li class="btn span2" style="width:150px;" id="tab5">传播路径(子树)</a></li>
+          <li class="btn span2" style="width:150px;" id="tab7">传播路径(全树)</a></li>          
         </ul>
         <div id="content_container"></div>
       </div>
@@ -51,8 +51,8 @@
     $('#content_container').empty();
     $('#content_container').load("/propagate/single_ajax_weibos/?mid={{mid}}", function() {});
 
-    tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5', 'tab6'];
-    tabUrlArr = ["/propagate/single_ajax_trend/?mid={{mid}}", "/propagate/single_ajax_weibos/?mid={{mid}}", "/propagate/single_ajax_spatial/?mid={{mid}}", "/propagate/single_ajax_stat/?mid={{mid}}", "/gexf/show_graph/{{mid}}", "/propagate/single_ajax_userfield/?mid={{mid}}"];
+    tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5', 'tab6', 'tab7'];
+    tabUrlArr = ["/propagate/single_ajax_trend/?mid={{mid}}", "/propagate/single_ajax_weibos/?mid={{mid}}", "/propagate/single_ajax_spatial/?mid={{mid}}", "/propagate/single_ajax_stat/?mid={{mid}}", "/gexf/show_graph/{{mid}}/sub", "/propagate/single_ajax_userfield/?mid={{mid}}", "/gexf/show_graph/{{mid}}/whole"];
     for (var i = 0, len = tabIdArr.length; i < len; i++) {
       document.getElementById(tabIdArr[i]).onclick = function(data) {
         var tabId = data.srcElement.id;

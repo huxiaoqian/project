@@ -321,6 +321,16 @@ def graph_from_elevator(mid):
 
     return g
 
+def forest_from_elevator(topic_id):
+    try:
+        E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_forest'))
+        g = E.Get(str(topic_id))
+        E.disconnect()
+    except Exception, e:
+        print e
+        g = ''
+
+    return g
 
 if __name__ == '__main__':
     whole_xapian_weibo = target_whole_xapian_weibo()

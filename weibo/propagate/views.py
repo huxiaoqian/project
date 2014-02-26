@@ -244,7 +244,7 @@ def log_in():
     else:
         return json.dumps('Wrong')
 
-@mod.route("/")
+@mod.route("/", methods=['GET','POST'])
 def index():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
@@ -291,7 +291,6 @@ def showresult_by_topic():
             else:
                 dur_time = _utf_encode(dur_time)
                 beg_time, end_time = _time_yuan(dur_time)
-            print type(keyword),keyword
 
             return_beg_str = beg_time
             return_end_str = end_time
@@ -336,7 +335,7 @@ def showresult_by_topic():
                 if len(topic_img_url):
                     topic_profile_image_url = topic_img_url[0]
                 else:
-                    topic_profile_image_url = ''
+                    topic_profile_image_url = '#'
                 return render_template('propagate/showResult.html',
                                         topic_profile_image_url = topic_profile_image_url,
                                         topic_ori_screen_name = topic_ori_screen_name,
@@ -407,7 +406,7 @@ def showresult_by_topic():
                             if len(topic_img_url):
                                 topic_profile_image_url = topic_img_url[0]
                             else:
-                                topic_profile_image_url = ''
+                                topic_profile_image_url = '#'
                             return render_template('propagate/showResult.html',
                                                     topic_profile_image_url = topic_profile_image_url,
                                                     topic_ori_screen_name = topic_ori_screen_name,
@@ -430,7 +429,8 @@ def topic_ajax_trend():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                return render_template('propagate/ajax/topic_trend.html')
+                topic_id = request.args.get('topic_id')
+                return render_template('propagate/ajax/topic_trend.html',topic_id=topic_id)
             else:
                 keyword = request.form.get('topic_id', "")              
 
@@ -496,7 +496,8 @@ def topic_ajax_spatial():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                return render_template('propagate/ajax/topic_spatial.html')
+                topic_id = request.args.get('topic_id')
+                return render_template('propagate/ajax/topic_spatial.html',topic_id=topic_id)
             else:
                 keyword = request.form.get('topic_id', "")
 
@@ -569,57 +570,6 @@ def topic_ajax_stat():
                                                     topic_media_count = topic_media_count,
                                                     topic_leader_count = topic_leader_count
                             )
-                    else:
-                        return redirect('/')
-            return redirect('/')
-    else:
-        return redirect('/')
-    
-@mod.route("/topic_ajax_path/", methods=['GET', 'POST'])
-def topic_ajax_path():
-    import urllib2
-    if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin':
-            if request.method == "GET":
-                keyword = request.args.get('keyword', "")
-                topic_id = request.args.get('topic_id', "")
-                topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
-                if len(topics):
-                    for topic in topics:
-                        keyid = topic.id
-                else:        
-                    new_item = Topic(topicName=keyword)
-                    db.session.add(new_item)
-                    db.session.commit()
-                    topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
-                    for topic in topics:
-                        keyid = topic.id
-                
-                flag = forest_main(keyword,topic_id,keyid)
-                return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid,flag = flag)
-        else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.propagate
-                    if identy == 1:
-                        if request.method == "GET":
-                            keyword = request.args.get('keyword', "")
-                            topic_id = request.args.get('topic_id', "")
-                            topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
-                            if len(topics):
-                                for topic in topics:
-                                    keyid = topic.id
-                            else:        
-                                new_item = Topic(topicName=keyword)
-                                db.session.add(new_item)
-                                db.session.commit()
-                                topics = db.session.query(Topic).filter(Topic.topicName==keyword).all()
-                                for topic in topics:
-                                    keyid = topic.id
-                
-                            flag = forest_main(keyword,topic_id,keyid)
-                            return render_template('propagate/ajax/topic_retweetpath.html',keyid = keyid,flag = flag)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -743,7 +693,6 @@ def single_analysis():
                 
             blog_info = readPropagateSingle(mid)#返回整个树的统计
 
-
             if blog_info:
                 if blog_info[0]['profile_image_url'] == 'None':
                     blog_img_url = '#'
@@ -787,8 +736,11 @@ def single_analysis():
                     if identy == 1:
                         blog_info = readPropagateSingle(mid)#返回整个树的统计
 
-                        if blog_info:          
-                            blog_img_url = blog_info['profile_image_url']
+                        if blog_info:
+                            if blog_info[0]['profile_image_url'] == 'None':
+                                blog_img_url = '#'
+                            else:
+                                blog_img_url = blog_info[0]['profile_image_url']
                             bloger_name = blog_info[0]['name']
                             blog_reposts_count = blog_info[0]['repostsCount']
                             blog_comments_count = blog_info[0]['commentsCount']
@@ -797,7 +749,10 @@ def single_analysis():
                             blog_text = blog_info[0]['text']
                         else:
                             blog_info = readPropagateSinglePart(mid)
-                            blog_img_url = blog_info[0]['profile_image_url']
+                            if blog_info[0]['profile_image_url'] == 'None':
+                                blog_img_url = '#'
+                            else:
+                                blog_img_url = blog_info[0]['profile_image_url']
                             bloger_name = blog_info[0]['name']
                             blog_reposts_count = blog_info[0]['repostsCount']
                             blog_comments_count = blog_info[0]['commentsCount']
@@ -830,14 +785,9 @@ def single_ajax_trend():
                 mid = request.args.get('mid')
                 return render_template('propagate/ajax/single_trend.html', mid=mid)
             else:
-                mid = str(request.form.get('mid', ""))  
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                if retweeted_mid:
-                    blog_info = readPropagateTrendSingle(retweeted_mid)
-                else:
-                    blog_info = readPropagateTrendSingle(mid)
+                mid = str(request.form.get('mid', ""))
+                blog_info = readPropagateTrendSingle(mid)
 
-                #print blog_info
                 if blog_info:
                     perday_repost_count = blog_info['perday_count']
                     blog_date_list = blog_info['date_list']
@@ -851,11 +801,10 @@ def single_ajax_trend():
                     perday_repost_count_part = blog_info_part['perday_count']
                     blog_date_list_part = blog_info_part['date_list']
                     date_list_part = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list_part]
-                    date_list_part = []
                 else:
                     perday_repost_count_part = [1]
                     date_list_part = []
-                
+
                 return json.dumps({'perday_blog_count': zip(date_list, perday_repost_count),'perday_blog_count_part': zip(date_list_part, perday_repost_count_part)})
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -864,19 +813,19 @@ def single_ajax_trend():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            return render_template('propagate/ajax/single_trend.html')
+                            mid = request.args.get('mid')
+                            return render_template('propagate/ajax/single_trend.html', mid=mid)
                         else:
                             mid = str(request.form.get('mid', ""))
-                            post_time = request.form.get('post_time', "")
-            
                             blog_info = readPropagateTrendSingle(mid)
+
                             if blog_info:
                                 perday_repost_count = blog_info['perday_count']
                                 blog_date_list = blog_info['date_list']
                                 date_list = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list]
                             else:
-                                perday_repost_count = [1]                    
-                                date_list = [int(datetime2ts(post_time)+24*3600)*1000]
+                                perday_repost_count = [1]
+                                date_list = []
 
                             blog_info_part = readPropagateTrendSinglePart(mid)
                             if blog_info_part:
@@ -885,8 +834,8 @@ def single_ajax_trend():
                                 date_list_part = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in blog_date_list_part]
                             else:
                                 perday_repost_count_part = [1]
-                                date_list_part = [int(datetime2ts(post_time)+24*3600)*1000]
-                
+                                date_list_part = []
+
                             return json.dumps({'perday_blog_count': zip(date_list, perday_repost_count),'perday_blog_count_part': zip(date_list_part, perday_repost_count_part)})
                     else:
                         return redirect('/')
@@ -900,13 +849,7 @@ def single_ajax_weibos():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-
-                if retweeted_mid:
-                    blog_info = readPropagateWeiboSingle(retweeted_mid)
-                else:
-                    blog_info = readPropagateWeiboSingle(mid)
-
+                blog_info = readPropagateWeiboSingle(mid)
                 blog_info_part = readPropagateWeiboSinglePart(mid)
 
                 return render_template('propagate/ajax/single_weibos.html', 
@@ -922,9 +865,9 @@ def single_ajax_weibos():
                     if identy == 1:
                         if request.method == "GET":
                             mid = str(request.args.get('mid', ""))
-
                             blog_info = readPropagateWeiboSingle(mid)
                             blog_info_part = readPropagateWeiboSinglePart(mid)
+
                             return render_template('propagate/ajax/single_weibos.html', 
                                                    blog_info = blog_info,
                                                    blog_info_part = blog_info_part,
@@ -945,13 +888,7 @@ def single_ajax_spatial():
                 return render_template('propagate/ajax/single_spatial.html', mid=mid)
             else:
                 mid = str(request.form.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                print retweeted_mid
-                if retweeted_mid:
-                    area_list = readPropagateSpatialSingle(retweeted_mid)
-                else:
-                    area_list = readPropagateSpatialSingle(mid)
-
+                area_list = readPropagateSpatialSingle(mid)
                 area_list_part = readPropagateSpatialSinglePart(mid)
                 return json.dumps({'map_data': area_list,'map_data_part': area_list_part})
         else:
@@ -961,7 +898,8 @@ def single_ajax_spatial():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            return render_template('propagate/ajax/single_spatial.html')
+                            mid = request.args.get('mid')
+                            return render_template('propagate/ajax/single_spatial.html', mid=mid)
                         else:
                             mid = str(request.form.get('mid', ""))
                             area_list = readPropagateSpatialSingle(mid)
@@ -979,11 +917,7 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                if retweeted_mid:
-                    blog_info = readIndexSingle(retweeted_mid)
-                else:
-                    blog_info = readIndexSingle(mid)
+                blog_info = readIndexSingle(mid)
                 if blog_info: 
                     tar_persistent_count = blog_info['persistent_index']
                     tar_sudden_count = blog_info['sudden_index']
@@ -1031,12 +965,7 @@ def single_ajax_stat():
                     if identy == 1:
                         if request.method == 'GET':
                             mid = int(request.args.get('mid', ""))
-                            retweeted_mid = getWeiboRetweetedStatus(mid)
-                            if retweeted_mid:
-                                blog_info = readIndexSingle(retweeted_mid)
-                            else:
-                                blog_info = readIndexSingle(mid)
-
+                            blog_info = readIndexSingle(mid)
                             if blog_info: 
                                 tar_persistent_count = blog_info['persistent_index']
                                 tar_sudden_count = blog_info['sudden_index']
@@ -1082,31 +1011,6 @@ def single_ajax_stat():
     else:
         return redirect('/')
 
-@mod.route("/single_ajax_path/", methods=['GET', 'POST'])
-def single_ajax_path():
-    if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin':
-            if request.method == "GET":
-                mid = int(request.args.get('mid', ""))
-                beg_ts = float(request.args.get('beg_ts', ""))
-                end_ts = float(request.args.get('end_ts', ""))
-                flag = tree_main(mid,beg_ts,end_ts)
-                return render_template('propagate/ajax/single_retweetpath.html',mid = mid,flag = flag)
-        else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.propagate
-                    if identy == 1:
-                        if request.method == "GET":
-                            mid = int(request.args.get('mid', ""))
-                            flag = tree_main(mid)
-                            return render_template('propagate/ajax/single_retweetpath.html',mid = mid,flag = flag)
-                    else:
-                        return redirect('/')
-            return redirect('/')
-    else:
-        return redirect('/')
 
 @mod.route("/single_ajax_userfield/", methods=['GET', 'POST'])
 def single_ajax_userfield():
@@ -1114,11 +1018,7 @@ def single_ajax_userfield():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
-                retweeted_mid = getWeiboRetweetedStatus(mid)
-                if retweeted_mid:
-                    blog_key_user_list = readPropagateUserSingle(retweeted_mid)
-                else:
-                    blog_key_user_list = readPropagateUserSingle(mid)
+                blog_key_user_list = readPropagateUserSingle(mid)
 
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
                 for result in blog_key_user_list:                    
@@ -1204,11 +1104,7 @@ def single_ajax_userfield():
                     if identy == 1:
                         if request.method == "GET":
                             mid = str(request.args.get('mid', ""))
-                            retweeted_mid = getWeiboRetweetedStatus(mid)
-                            if retweeted_mid:
-                                blog_key_user_list = readPropagateUserSingle(retweeted_mid)
-                            else:
-                                blog_key_user_list = readPropagateUserSingle(mid)
+                            blog_key_user_list = readPropagateUserSingle(mid)
 
                             domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
                             for result in blog_key_user_list:                    

@@ -2,6 +2,7 @@
 	<div id="count_chart" style="height: 500px;width: 900px; margin: 0px auto auto 200px;"></div>
 </div>
 <script>
+  var request_data_dict = {'topic_id': '{{topic_id}}'};
   $.ajax({
 	url:"/propagate/topic_ajax_trend/",
 	dataType:"json",

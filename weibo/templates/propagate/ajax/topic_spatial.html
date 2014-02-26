@@ -76,6 +76,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/raphael.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/chinamap_topic.js') }}"></script>
 <script>
+  var request_data_dict = {'topic_id': '{{topic_id}}'};
   $.ajax({
 	url:"/propagate/topic_ajax_spatial/",
 	dataType:"json",

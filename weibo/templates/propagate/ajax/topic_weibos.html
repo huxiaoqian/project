@@ -1,3 +1,11 @@
+{% extends "propagate/base.html" %}
+{% block title %}话题传播分析{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="/static/css/jquery-ui.css" />
+<script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
 <link href="{{ url_for('static', filename='css/propagate/microblog.css') }}" rel="stylesheet">
 <style>
   .WB_feed_datail, .WB_feed_type {
@@ -10,59 +18,118 @@
     margin-left: 50px;
   }
 </style>
-<div class="well">
-{% for status in topic_info %}
-  <div class="WB_feed_type SW_fun  S_line2">
-    <div class="WB_feed_datail S_line2 clearfix">
-      <div class="WB_face">
-      <a class="W_face_radius"><img alt="" width="50" height="50" src="{{ status['user']['profile_image_url'] }}"></a>
+{% endblock %}
+    
+{% block content %}
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div class="span12">
+        <div class="caption" style="float:left">
+          <div style="float:left">
+            {% if topic_profile_image_url %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="{{ topic_profile_image_url }}" media="screen" />
+            {% else %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="/static/img/topic_none.png" media="screen" />
+            {% endif %}
+          </div>
+          <div style="float:left;padding-left:50px;">
+            <h3>话题传播分析:&nbsp&nbsp&nbsp{{ keyword }}</h3>
+            <div style="float:left;padding-top:10px;">
+              <label style="font-size:18px">开始时间：<span class="badge badge-success" style="font-size:18px"> {{ return_beg_str }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">截止时间：<span class="badge badge-success" style="font-size:18px"> {{ return_end_str }} </span></label>
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">
+              <label style="font-size:18px">发起人：<span class="badge badge-info" style="font-size:18px"> {{ topic_ori_screen_name }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">发起时间：<span class="badge badge-info" style="font-size:18px">{{ topic_ori_date }} </span></label>
+              
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">                
+                <label class="appendedInput" style="font-size:18px">原创微博条数：<span class="badge badge-warning" style="font-size:18px"> {{ blog_ori_count }} </span></label>
+                <label class="appendedInput" style="font-size:18px;padding-top:10px;">相关微博条数：<span class="badge badge-warning" style="font-size:18px"> {{ blog_rel_count }} </span></label>                
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">
+              <label class="appendedInput" style="font-size:18px">原创微博比例：{{ blog_ori_account }}</label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">领袖人数：{{ topic_leader_count }} </label>
+            </div>
+          </div>
+        </div>
       </div>
-    <div class="WB_detail">
-      <div class="WB_info"><a class="WB_name S_func1"> {{ status['user']['name'] }} </a>
+    </div><!--上侧基本信息-->
+          
+    <div class="row-fluid" style="padding-top:20px;">
+      <div class="span12" id="index-tabs">
+        <ul class="nav nav-pills tab_container">
+          <li class="btn span2 btn-primary" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_weibos/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关联微博</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_trend/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播数量走势</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_spatial/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">地理分布</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_stat/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播指标</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_userfield/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关键人员统计</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/gexf/show_forest/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径</a></li>          
+        </ul>
+        <div id="content_container">
+          <div class="well">
+            {% for status in topic_info %}
+            <div class="WB_feed_type SW_fun  S_line2">
+              <div class="WB_feed_datail S_line2 clearfix">
+                <div class="WB_face">
+                  <a class="W_face_radius"><img alt="" width="50" height="50" src="{{ status['user']['profile_image_url'] }}"></a>
+                </div>
+                <div class="WB_detail">
+                  <div class="WB_info"><a class="WB_name S_func1"> {{ status['user']['name'] }} </a>
+                  </div>
+                  <div class="WB_text" node-type="feed_list_content">{{ status['status']['text'] }}</div>
+                  <div class="WB_func clearfix">
+                    <div class="WB_handle">
+                      <a><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
+                      <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
+                      <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
+                      <a href="/propagate/?mid={{ status['status']['_id'] }}&time={{ status['status']['created_at'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
+                      <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
+                      <script>
+                        $("#ma{{ status['status']['_id'] }}").click(function () {
+                          var id=this.getAttribute("name");
+                          var topic_id='{{topic_id}}';
+                          $.ajax({   
+                              type:"POST",  
+                              url:"/propagate/add_material_topic",
+                              dataType: "json",
+                              async:false,
+                              data:{mid : id, topic_id : topic_id},
+                              success: function(data){
+                                  if(data == 'Right') {
+                                      alert("导入成功！");
+                                  }
+                                  else{
+                                    if(data == 'Wrong'){
+                                      alert("该微博已在素材库中！");
+                                    }
+                                    else{
+                                      alert("未找到该微博！");
+                                    }
+                                  } 
+                              }              
+                          });
+                        });
+                      </script>
+                    </div>
+                    <div class="WB_from">
+                      <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a> 
+                      <em class="S_txt2">来自</em><a class="S_link2" >{{ status['status']['source'] }}</a>                           
+                    </div>
+                  </div>
+                  <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
       </div>
-      <div class="WB_text" node-type="feed_list_content">{{ status['status']['text'] }}</div>
-    <div class="WB_func clearfix">
-      <div class="WB_handle">
-        <a><em class="W_ico20 icon_praised_b"></em>赞:{{ status['status']['attitudes_count'] }}</a><i class="S_txt3">|</i>
-        <a>转发:{{ status['status']['reposts_count'] }}</a><i class="S_txt3">|</i>
-        <a>评论:{{ status['status']['comments_count'] }}</a><i class="S_txt3">|</i>
-        <a href="/propagate/?mid={{ status['status']['_id'] }}&time={{ status['status']['created_at'] }}" style="color:#FF8000;" target='_blank'>分析</a><i class="S_txt3">|</i>
-        <a id="ma{{ status['status']['_id'] }}" name ="{{ status['status']['_id'] }}" style="color:red;">导入素材库</a>
-        <script>
-            $("#ma{{ status['status']['_id'] }}").click(function () {
-                var id=this.getAttribute("name");
-                var topic_id='{{topic_id}}';
-                $.ajax({   
-                    type:"POST",  
-                    url:"/propagate/add_material_topic",
-                    dataType: "json",
-                    async:false,
-                    data:{mid : id, topic_id : topic_id},
-                    success: function(data){
-                        if(data == 'Right') {
-                            alert("导入成功！");
-                        }
-                        else{
-                          if(data == 'Wrong'){
-                            alert("该微博已在素材库中！");
-                          }
-                          else{
-                            alert("未找到该微博！");
-                          }
-                        } 
-                    }              
-                });
-            });
-        </script>
-      </div>
-      <div class="WB_from">
-        <a class="S_link2 WB_time" id="weibo_time{{ status['status']['_id'] }}">{{ status['status']['created_at'] }}</a> 
-        <em class="S_txt2">来自</em><a class="S_link2" >{{ status['status']['source'] }}</a>                           
-      </div>
-    </div>
-    <div node-type="feed_list_repeat" class="WB_media_expand repeat S_line1 S_bg4" style="display:none;"></div>
-    </div>
     </div>
   </div>
-{% endfor %}
-</div>
+{% endblock %}
+{% block script %}
+<script src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
+{% endblock script %}

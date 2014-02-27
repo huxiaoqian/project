@@ -1,3 +1,6 @@
+{% extends "propagate/base.html" %}
+{% block title %}单条微博传播分析{% endblock %}
+{% block head %}
 <style>
   #count_chart_first {
     float:left;
@@ -10,10 +13,62 @@
     width: 49%;
   }
 </style>
-<div class="container">
-	<div id="count_chart_first"></div>
-  <div id="count_chart_second"></div>
+{% endblock %}
+{% block content %}
+  <div class="container-fluid">
+    <div class="row-fluid">        
+      <div class="span12">
+        <div class="caption" style="float:left">
+          <div style="float:left">
+            {% if tar_profile_image_url %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="{{ tar_profile_image_url }}" media="screen" >
+            {% else %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="/static/img/topic_none.png" media="screen" />
+            {% endif %}
+          </div>
+          <div style="float:left;padding-left:50px;">
+            <h3>单条微博传播分析</h3>
+          <div style="float:left;padding-top:10px;">
+            <label style="font-size:18px">发起人：<span class="badge badge-success" style="font-size:18px"> {{ tar_screen_name }} </span> </label>
+            <label class="appendedInput" style="font-size:18px">转发数：<span class="badge badge-info" style="font-size:18px">{{ tar_repost_count }}</span></label>
+          </div>
+          <div style="float:left;padding-top:10px;padding-left:30px;">
+            <label class="appendedInput" style="font-size:18px">评论数：<span class="badge badge-warning" style="font-size:18px">{{ tar_comments_count }}</span></label>
+            <label class="appendedInput" style="font-size:18px">赞数：<span class="badge badge-warning" style="font-size:18px">{{ tar_attitudes_count }}</span></label>
+          </div>
+          <div style="float:left;padding-top:10px;padding-left:30px;">            
+            <label class="appendedInput" style="font-size:18px">发布时间：{{ tar_post_date }} </label>
+            <!--<label class="appendedInput" style="font-size:18px">内容：{{ tar_text }} </label>-->
+          </div>
+        </div>
+      </div>
+    </div><!--上侧信息-->
+
+    <div class="row-fluid" style="padding-top:20px;">
+      <div class="span12" id="index-tabs" style="padding-top:20px;">
+        <ul class="nav nav-pills tab_container">
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_weibos/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关联微博</a></li>
+          <li class="btn span2 btn-primary" style="width:150px;height:20px;"><a href="/propagate/single_ajax_trend/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播数量走势</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_spatial/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">地理分布</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_stat/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播指标</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_userfield/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关键人员统计</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/gexf/show_graph/{{mid}}/sub" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径(子树)</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/gexf/show_graph/{{mid}}/whole" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径(全树)</a></li>          
+        </ul>
+        <div id="content_container">
+            <div class="container">
+	            <div id="count_chart_first"></div>
+              <div id="count_chart_second"></div>
+            </div>
+        </div>
+    </div>
+  </div>
 </div>
+{% endblock %}
+{% block script %}
+<script src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
 <script>
   var len = $('script').filter(function () {
     return ($(this).attr('src') == '/static/js/highstock.js');
@@ -86,3 +141,4 @@
     });
   }
 </script>
+{% endblock script %}

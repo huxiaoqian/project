@@ -167,7 +167,7 @@ function get_and_show_history_msg(){
           $('#show_history_msg').empty();
           var html = "";
           for(idx in data){
-            html += "<li><a target='_blank' href=\"/propagate/showresult/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
+            html += "<li><a target='_blank' href=\"/propagate/topic_ajax_weibos/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
           }
           $('#show_history_msg').append(html);
         }
@@ -246,7 +246,7 @@ function get_and_show_history_msg(){
           var html = "<div  class=\"inline\"><font color=\"#003366\" face=\"Georgia, Times New Roman, Times, serif\"><b>您的历史记录相关选项:</b></font></div><div  class=\"well\">";
           if(data.length > 0){
             for(idx in data){
-              html += "<li><a target='_blank' href=\"/propagate/showresult/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
+              html += "<li><a target='_blank' href=\"/propagate/topic_ajax_weibos/?keyword=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
             }
             html = html + "</div>";
           }
@@ -293,7 +293,7 @@ function get_and_show_history_msg(){
           $('#show_history_msg_single').empty();
           var html = "";
           for(idx in data){
-            html += "<li><a target='_blank' href=\"/propagate/showresult_single/?mid=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
+            html += "<li><a target='_blank' href=\"/propagate/single_ajax_weibos/?mid=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
           }
           $('#show_history_msg_single').append(html);
         }
@@ -390,7 +390,7 @@ function get_and_show_history_msg(){
           var html = "<div  class=\"inline\"><font color=\"#003366\" face=\"Georgia, Times New Roman, Times, serif\"><b>您的历史记录相关选项:</b></font></div><div  class=\"well\">";
           if(data.length > 0){
             for(idx in data){
-              html += "<li><a target='_blank' href=\"/propagate/showresult_single/?mid=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
+              html += "<li><a target='_blank' href=\"/propagate/single_ajax_weibos/?mid=" + data[idx][0] + "&time=" + data[idx][1] + "\">" + data[idx] + "</a></li>";
             }
             html = html + "</div>";
           }

@@ -1,3 +1,11 @@
+{% extends "propagate/base.html" %}
+{% block title %}话题传播分析{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="/static/css/jquery-ui.css" />
+<script src="{{ url_for('static', filename='js/jquery-1.8.3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
 <style>
 /* china map style*/
   #main{
@@ -63,20 +71,78 @@
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
   }
 </style>
-<div id="main">
-  <div id="Summary"></div>
-  <div class="harmonies gradient" id="gradient_bar">
-    <ul>
-      <li style="background-color:#ffffff;"><a href="#ffffff" class="txtb">#ffffff</a></li><li style="background-color:#ffebeb;"><a href="#ffebeb" class="txtb">#ffebeb</a></li><li style="background-color:#ffd8d8;"><a href="#ffd8d8" class="txtb">#ffd8d8</a></li><li style="background-color:#ffc4c4;"><a href="#ffc4c4" class="txtb">#ffc4c4</a></li><li style="background-color:#ffb1b1;"><a href="#ffb1b1" class="txtb">#ffb1b1</a></li><li style="background-color:#ff9d9d;"><a href="#ff9d9d" class="txtb">#ff9d9d</a></li><li style="background-color:#ff8989;"><a href="#ff8989" class="txtb">#ff8989</a></li><li style="background-color:#ff7676;"><a href="#ff7676" class="txtb">#ff7676</a></li><li style="background-color:#ff6262;"><a href="#ff6262" class="txtb">#ff6262</a></li><li style="background-color:#ff4e4e;"><a href="#ff4e4e" class="txtb">#ff4e4e</a></li><li style="background-color:#ff3b3b;"><a href="#ff3b3b" class="txtw">#ff3b3b</a></li><li style="background-color:#ff2727;"><a href="#ff2727" class="txtw">#ff2727</a></li><li style="background-color:#ff1414;"><a href="#ff1414" class="txtw">#ff1414</a></li><li style="background-color:#ff0000;"><a href="#ff0000" class="txtw">#ff0000</a></li>
-    </ul>
+{% endblock %}
+    
+{% block content %}
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div class="span12">
+        <div class="caption" style="float:left">
+          <div style="float:left">
+            {% if topic_profile_image_url %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="{{ topic_profile_image_url }}" media="screen" />
+            {% else %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="/static/img/topic_none.png" media="screen" />
+            {% endif %}
+          </div>
+          <div style="float:left;padding-left:50px;">
+            <h3>话题传播分析:&nbsp&nbsp&nbsp{{ keyword }}</h3>
+            <div style="float:left;padding-top:10px;">
+              <label style="font-size:18px">开始时间：<span class="badge badge-success" style="font-size:18px"> {{ return_beg_str }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">截止时间：<span class="badge badge-success" style="font-size:18px"> {{ return_end_str }} </span></label>
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">
+              <label style="font-size:18px">发起人：<span class="badge badge-info" style="font-size:18px"> {{ topic_ori_screen_name }} </span> </label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">发起时间：<span class="badge badge-info" style="font-size:18px">{{ topic_ori_date }} </span></label>
+              
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">                
+                <label class="appendedInput" style="font-size:18px">原创微博条数：<span class="badge badge-warning" style="font-size:18px"> {{ blog_ori_count }} </span></label>
+                <label class="appendedInput" style="font-size:18px;padding-top:10px;">相关微博条数：<span class="badge badge-warning" style="font-size:18px"> {{ blog_rel_count }} </span></label>                
+            </div>
+            <div style="float:left;padding-top:10px;padding-left:30px;">
+              <label class="appendedInput" style="font-size:18px">原创微博比例：{{ blog_ori_account }}</label>
+              <label class="appendedInput" style="font-size:18px;padding-top:10px;">领袖人数：{{ topic_leader_count }} </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!--上侧基本信息-->
+          
+    <div class="row-fluid" style="padding-top:20px;">
+      <div class="span12" id="index-tabs">
+        <ul class="nav nav-pills tab_container">
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_weibos/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关联微博</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_trend/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播数量走势</a></li>
+          <li class="btn span2 btn-primary" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_spatial/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">地理分布</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_stat/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播指标</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/topic_ajax_userfield/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关键人员统计</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/gexf/show_forest/?keyword={{keyword}}&time={{dur_time}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径</a></li>         
+        </ul>
+        <div id="content_container">
+          <div id="main">
+            <div id="Summary"></div>
+            <div class="harmonies gradient" id="gradient_bar">
+              <ul>
+                <li style="background-color:#ffffff;"><a href="#ffffff" class="txtb">#ffffff</a></li><li style="background-color:#ffebeb;"><a href="#ffebeb" class="txtb">#ffebeb</a></li><li style="background-color:#ffd8d8;"><a href="#ffd8d8" class="txtb">#ffd8d8</a></li><li style="background-color:#ffc4c4;"><a href="#ffc4c4" class="txtb">#ffc4c4</a></li><li style="background-color:#ffb1b1;"><a href="#ffb1b1" class="txtb">#ffb1b1</a></li><li style="background-color:#ff9d9d;"><a href="#ff9d9d" class="txtb">#ff9d9d</a></li><li style="background-color:#ff8989;"><a href="#ff8989" class="txtb">#ff8989</a></li><li style="background-color:#ff7676;"><a href="#ff7676" class="txtb">#ff7676</a></li><li style="background-color:#ff6262;"><a href="#ff6262" class="txtb">#ff6262</a></li><li style="background-color:#ff4e4e;"><a href="#ff4e4e" class="txtb">#ff4e4e</a></li><li style="background-color:#ff3b3b;"><a href="#ff3b3b" class="txtw">#ff3b3b</a></li><li style="background-color:#ff2727;"><a href="#ff2727" class="txtw">#ff2727</a></li><li style="background-color:#ff1414;"><a href="#ff1414" class="txtw">#ff1414</a></li><li style="background-color:#ff0000;"><a href="#ff0000" class="txtw">#ff0000</a></li>
+              </ul>
+            </div>
+            <div id="Map"><div id="ChinaMap"></div></div>
+            <div class="clear-float"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div id="Map"><div id="ChinaMap"></div></div>
-  <div class="clear-float"></div>
-</div>
+{% endblock %}
+{% block script %}
+<script src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/raphael.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/chinamap_topic.js') }}"></script>
 <script>
-  var request_data_dict = {'topic_id': '{{topic_id}}'};
+  var request_data_dict = {'keyword':'{{keyword}}','time':'{{dur_time}}'};
   $.ajax({
 	url:"/propagate/topic_ajax_spatial/",
 	dataType:"json",
@@ -88,3 +154,4 @@
 	}
   });
 </script>
+{% endblock script %}

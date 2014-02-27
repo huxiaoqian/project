@@ -1,5 +1,17 @@
-{% extends "graph/master.html" %}
+{% extends "graph/base.html" %}
+{% block title %}单条微博传播分析{% endblock %}
 {% block head %}
+    <meta charset="utf-8">
+    <title>锐推图谱</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='ico/favicon.ico')}}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-responsive.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+        <script src="{{ url_for('static', filename='js/jquery.min.js') }}" type="text/javascript"></script>
+        <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
     <style type="text/css">
         /* sigma.js context : */
         .sigma-parent {
@@ -25,42 +37,95 @@
         }*/
     </style>
 {% endblock %}
-{% block body %}
-    <div class="row">
-        <div class="span2">
-            <h5>转发数(包括但不限于下图)</h5><h5 id="reposts-count"></h5>
+{% block content %}
+  <div class="container-fluid">
+    <div class="row-fluid">        
+      <div class="span12">
+        <div class="caption" style="float:left">
+          <div style="float:left">
+            {% if tar_profile_image_url %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="{{ tar_profile_image_url }}" media="screen" >
+            {% else %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="/static/img/topic_none.png" media="screen" />
+            {% endif %}
+          </div>
+          <div style="float:left;padding-left:50px;">
+            <h3>单条微博传播分析</h3>
+          <div style="float:left;padding-top:10px;">
+            <label style="font-size:18px">发起人：<span class="badge badge-success" style="font-size:18px"> {{ tar_screen_name }} </span> </label>
+            <label class="appendedInput" style="font-size:18px">转发数：<span class="badge badge-info" style="font-size:18px">{{ tar_repost_count }}</span></label>
+          </div>
+          <div style="float:left;padding-top:10px;padding-left:30px;">
+            <label class="appendedInput" style="font-size:18px">评论数：<span class="badge badge-warning" style="font-size:18px">{{ tar_comments_count }}</span></label>
+            <label class="appendedInput" style="font-size:18px">赞数：<span class="badge badge-warning" style="font-size:18px">{{ tar_attitudes_count }}</span></label>
+          </div>
+          <div style="float:left;padding-top:10px;padding-left:30px;">            
+            <label class="appendedInput" style="font-size:18px">发布时间：{{ tar_post_date }} </label>
+            <!--<label class="appendedInput" style="font-size:18px">内容：{{ tar_text }} </label>-->
+          </div>
         </div>
-        <div class="span1">
-            <h5>|<h5><h5>|<h5>
-        </div>
-        <div class="span1">
-            <h5>参与人数</h5><h5 id="repost-people-count"></h5>
-        </div>
-         <div class="span1">
-            <h5>宽度</h5><h5 id="max-width"></h5>
-        </div>
-        <div class="span1">
-            <h5>深度</h5><h5 id="max-depth"></h5>
-        </div>
-        <div class="span2">
-            <h5>开始时间</h5><h5 id="spread-begin"></h5>
-        </div>
-        <div class="span2">
-            <h5>截止时间</h5><h5 id="spread-end"></h5>
-        </div>
-    </div>
-    {%- if page > 1 %}
-        <a href="{{ url_for('graph.show_graph_index', mid=mid, page=page-1) }}">更多&rarr;</a>
-    {%- endif %}
-    <div class="sigma-parent">
-        <div class="sigma-expand" id="sigma">
-        </div>
-    </div>
+      </div>
+    </div><!--上侧信息-->
 
-    <script src="{{ url_for('static', filename='js/sigma.min.js') }}" type="text/javascript"></script>
-    <script src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}" type="text/javascript"></script>
+    <div class="row-fluid" style="padding-top:20px;">
+      <div class="span12" id="index-tabs" style="padding-top:20px;">
+        <ul class="nav nav-pills tab_container">
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_weibos/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关联微博</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_trend/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播数量走势</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_spatial/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">地理分布</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_stat/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播指标</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_userfield/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关键人员统计</a></li>
+          <li class="btn span2 btn-primary" style="width:150px;height:20px;"><a href="/gexf/show_graph/{{mid}}/sub" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径(子树)</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/gexf/show_graph/{{mid}}/whole" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径(全树)</a></li>          
+        </ul>
+        <div id="content_container">
+            <div class="container-fluid">
+                <div class="masthead">
+                </div>
+                <div class="row">
+                    <div class="span2">
+                        <h5>转发数(包括但不限于下图)</h5><h5 id="reposts-count"></h5>
+                    </div>
+                    <div class="span1">
+                        <h5>|<h5><h5>|<h5>
+                    </div>
+                    <div class="span1">
+                        <h5>参与人数</h5><h5 id="repost-people-count"></h5>
+                    </div>
+                    <div class="span1">
+                        <h5>宽度</h5><h5 id="max-width"></h5>
+                    </div>
+                    <div class="span1">
+                        <h5>深度</h5><h5 id="max-depth"></h5>
+                    </div>
+                    <div class="span2">
+                        <h5>开始时间</h5><h5 id="spread-begin"></h5>
+                    </div>
+                    <div class="span2">
+                        <h5>截止时间</h5><h5 id="spread-end"></h5>
+                    </div>
+                </div>
+                {%- if page > 1 %}
+                    <a href="{{ url_for('graph.show_graph_index', mid=mid, page=page-1) }}">更多&rarr;</a>
+                {%- endif %}
+                <div class="sigma-parent">
+                    <div class="sigma-expand" id="sigma">
+                    </div>
+                </div>
+        </div>
+      </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block script %}
+  <script src="/static/js/jquery-ui.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/sigma.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/identify/sigma.parseGexf.js') }}"></script>
 
-    <script>
+    <script type="text/javascript">
         var sigInst;
         function graph_request_callback(data){
             sigInst = sigma.init($('#sigma')[0]).drawingProperties({
@@ -165,54 +230,6 @@
                 }
             });
         }
-        function load_whole_tree(){
-            if(sigInst){
-                $('#sigma').remove();
-                $('#sigma').html();
-            }
-            $.ajax({
-                url: "/gexf/graph/{{mid}}/{{page}}/?module=whole",
-                dataType: 'xml',
-                type: "GET",
-                success: function (data) {
-                    // (requires "sigma.parseGexf.js" to be executed)
-                    console.log(data);
-                    graph_request_callback(data);
-                },
-                error: function(result) {
-                    console.log(result);
-                    //$("#loading_network_data").text("暂无结果!");
-                    console.log("Status: " + result.status);
-                    console.log("Status: " + result.textStatus);
-                    console.log("Error: " + result.errorThrown); 
-              }
-            })
-            $.ajax({
-                url: "/gexf/tree_stats/{{mid}}/{{page}}/?module=whole",
-                success: function(data) {
-                    var stats = data["stats"];
-                    $( "#reposts-count" ).html( stats['reposts_count'] );
-                    $( "#repost-people-count" ).html( stats['repost_people_count'] );
-                    $( "#max-width" ).html( stats['max_width'] );
-                    $( "#max-depth" ).html( stats['max_depth'] );
-                    $( "#spread-begin" ).html( stats['spread_begin'] );
-                    $( "#spread-end" ).html( stats['spread_end'] );
-                }
-            });
-        }
-        var module = '{{module}}';
-        console.log(module);
-        if(module =='sub'){
-            console.log('yuan');
-            load_sub_tree();
-        }
-        else{
-            console.log('shi');
-            load_whole_tree();
-        }
+        load_sub_tree();
     </script>
-{% endblock %}
-
-{% block script %}
-
-{% endblock %}
+{% endblock script %}

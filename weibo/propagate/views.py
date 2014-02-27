@@ -106,8 +106,9 @@ def _default_time_zone():
 
     end_ts = time.time()
     start_ts = end_ts - 7 * 24 * 3600
-
-    return start_ts, end_ts
+    end_date = ts2datetime(end_ts)
+    start_date = ts2datetime(start_ts)
+    return start_date, end_date
 
 
 def _time_zone(stri):
@@ -277,164 +278,122 @@ def index():
     else:
         return redirect('/')
 
-@mod.route("/showresult/", methods = ["GET","POST"])
-def showresult_by_topic():
-    if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin':
-    # get the input context
-            keyword = request.args.get('keyword', '')
-            dur_time = request.args.get('time', '')
-
-            dur_time = _utf_encode(dur_time)
-            if not dur_time or dur_time == '':
-                beg_time, end_time = _default_time_zone()
-            else:
-                dur_time = _utf_encode(dur_time)
-                beg_time, end_time = _time_yuan(dur_time)
-
-            return_beg_str = beg_time
-            return_end_str = end_time
-
-            if beg_time == "":
-                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
-                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
-            else:
-                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
-                beg_time_year = int(beg_time.year)
-                beg_time_month = int(beg_time.month)
-                beg_time_day = int(beg_time.day)
-                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
-            if end_time == "":
-                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
-                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
-            else:
-                end_time = datetime.strptime(end_time,"%Y-%m-%d")
-                end_time_year = int(end_time.year)
-                end_time_month = int(end_time.month)
-                end_time_day = int(end_time.day)
-                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
-
-            beg_date = ts2datetime(beg_time)
-            end_date = ts2datetime(end_time)
-
-            topic_info = readPropagateTopic(keyword,beg_date,end_date)
-            
-            if not topic_info:
-                flash(u'您搜索的话题结果为空')
-                return redirect('/propagate/')
-            else:
-
-                topic_ori_screen_name = topic_info['topic_poster']
-                topic_img_url = topic_info['topic_url']
-                topic_blog_count = topic_info['blogs_sum']
-                topic_blog_ori_count = topic_info['topic_ori_blog_count']
-                blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
-                topic_leader_count = topic_info['leader_index']
-                topic_ori_date = topic_info['topic_post_date']
-                topic_id = topic_info['id']
-                if len(topic_img_url):
-                    topic_profile_image_url = topic_img_url[0]
-                else:
-                    topic_profile_image_url = '#'
-                return render_template('propagate/showResult.html',
-                                        topic_profile_image_url = topic_profile_image_url,
-                                        topic_ori_screen_name = topic_ori_screen_name,
-                                        blog_rel_count = topic_blog_count,
-                                        blog_ori_count = topic_blog_ori_count,
-                                        blog_ori_account = blog_ori_account,
-                                        topic_leader_count = topic_leader_count,
-                                        topic_ori_date = topic_ori_date,
-                                        keyword=keyword, topic_id=topic_id, beg_time=beg_time, end_time=end_time,
-                                        return_beg_str=return_beg_str, return_end_str=return_end_str
-                )
-        else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.propagate
-                    if identy == 1:
-                        keyword = request.args.get('keyword', '')
-                        dur_time = request.args.get('time', '')
-
-                        dur_time = _utf_encode(dur_time)
-                        if not dur_time or dur_time == '':
-                            beg_time, end_time = _default_time_zone()
-                        else:
-                            dur_time = _utf_encode(dur_time)
-                            beg_time, end_time = _time_yuan(dur_time)
-
-                        return_beg_str = beg_time
-                        return_end_str = end_time
-
-                        if beg_time == "":
-                            beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
-                            return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
-                        else:
-                            beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
-                            beg_time_year = int(beg_time.year)
-                            beg_time_month = int(beg_time.month)
-                            beg_time_day = int(beg_time.day)
-                            beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
-                        if end_time == "":
-                            end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
-                            return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
-                        else:
-                            end_time = datetime.strptime(end_time,"%Y-%m-%d")
-                            end_time_year = int(end_time.year)
-                            end_time_month = int(end_time.month)
-                            end_time_day = int(end_time.day)
-                            end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
-
-                        beg_date = ts2datetime(beg_time)
-                        end_date = ts2datetime(end_time)
-
-                        topic_info = readPropagateTopic(keyword,beg_date,end_date)
-            
-                        if not topic_info:
-                            flash(u'您搜索的话题结果为空')
-                            return redirect('/propagate/')
-                        else:
-
-                            topic_ori_screen_name = topic_info['topic_poster']
-                            topic_img_url = topic_info['topic_url']
-                            topic_blog_count = topic_info['blogs_sum']
-                            topic_blog_ori_count = topic_info['topic_ori_blog_count']
-                            blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
-                            topic_leader_count = topic_info['leader_index']
-                            topic_ori_date = topic_info['topic_post_date']
-                            topic_id = topic_info['id']
-                            if len(topic_img_url):
-                                topic_profile_image_url = topic_img_url[0]
-                            else:
-                                topic_profile_image_url = '#'
-                            return render_template('propagate/showResult.html',
-                                                    topic_profile_image_url = topic_profile_image_url,
-                                                    topic_ori_screen_name = topic_ori_screen_name,
-                                                    blog_rel_count = topic_blog_count,
-                                                    blog_ori_count = topic_blog_ori_count,
-                                                    blog_ori_account = blog_ori_account,
-                                                    topic_leader_count = topic_leader_count,
-                                                    topic_ori_date = topic_ori_date,
-                                                    keyword=keyword, topic_id=topic_id, beg_time=beg_time, end_time=end_time,
-                                                    return_beg_str=return_beg_str, return_end_str=return_end_str
-                            )
-                    else:
-                        return redirect('/')
-            return redirect('/')
-    else:
-        return redirect('/')
 
 @mod.route("/topic_ajax_trend/", methods = ["GET","POST"])
 def topic_ajax_trend():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                topic_id = request.args.get('topic_id')
-                return render_template('propagate/ajax/topic_trend.html',topic_id=topic_id)
-            else:
-                keyword = request.form.get('topic_id', "")              
+                keyword = request.args.get('keyword', '')
+                dur_time = request.args.get('time', '')
+        
+                dur_time = _utf_encode(dur_time)
+                if not dur_time or dur_time == '':
+                    beg_time, end_time = _default_time_zone()
+                else:
+                    dur_time = _utf_encode(dur_time)
+                    beg_time, end_time = _time_yuan(dur_time)
 
-                topic_info = readPropagateTrend(keyword)
+                return_beg_str = beg_time
+                return_end_str = end_time
+                
+                if beg_time == "":
+                    beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                    return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                else:
+                    beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                    beg_time_year = int(beg_time.year)
+                    beg_time_month = int(beg_time.month)
+                    beg_time_day = int(beg_time.day)
+                    beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                if end_time == "":
+                    end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                    return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                else:
+                    end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                    end_time_year = int(end_time.year)
+                    end_time_month = int(end_time.month)
+                    end_time_day = int(end_time.day)
+                    end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                beg_date = ts2datetime(beg_time)
+                end_date = ts2datetime(end_time)
+
+                topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                if not topic_info:
+                    flash(u'您搜索的话题结果为空')
+                    return redirect('/propagate/')
+                else:
+
+                    topic_ori_screen_name = topic_info['topic_poster']
+                    topic_img_url = topic_info['topic_url']
+                    topic_blog_count = topic_info['blogs_sum']
+                    topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                    blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                    topic_leader_count = topic_info['leader_index']
+                    topic_ori_date = topic_info['topic_post_date']
+                    topic_id = topic_info['id']
+                    if topic_img_url == 'None':
+                        topic_profile_image_url = ''
+                    else:
+                        topic_profile_image_url = topic_img_url
+                dur_time = _utf_decode(dur_time)
+                return render_template('propagate/ajax/topic_trend.html',
+                                       topic_profile_image_url = topic_profile_image_url,
+                                       topic_ori_screen_name = topic_ori_screen_name,
+                                       blog_rel_count = topic_blog_count,
+                                       blog_ori_count = topic_blog_ori_count,
+                                       blog_ori_account = blog_ori_account,
+                                       topic_leader_count = topic_leader_count,
+                                       topic_ori_date = topic_ori_date,
+                                       keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                       return_beg_str=return_beg_str, return_end_str=return_end_str)
+            else:
+                keyword = request.form.get('keyword', '')
+                dur_time = request.form.get('time', '')
+
+                dur_time = _utf_encode(dur_time)
+                if not dur_time or dur_time == '':
+                    beg_time, end_time = _default_time_zone()
+                else:
+                    dur_time = _utf_encode(dur_time)
+                    beg_time, end_time = _time_yuan(dur_time)
+
+                return_beg_str = beg_time
+                return_end_str = end_time
+
+                if beg_time == "":
+                    beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                    return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                else:
+                    beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                    beg_time_year = int(beg_time.year)
+                    beg_time_month = int(beg_time.month)
+                    beg_time_day = int(beg_time.day)
+                    beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                if end_time == "":
+                    end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                    return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                else:
+                    end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                    end_time_year = int(end_time.year)
+                    end_time_month = int(end_time.month)
+                    end_time_day = int(end_time.day)
+                    end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                beg_date = ts2datetime(beg_time)
+                end_date = ts2datetime(end_time)
+
+                topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                if not topic_info:
+                    flash(u'您搜索的话题结果为空')
+                    return redirect('/propagate/')
+                else:
+                    topic_id = topic_info['id']            
+
+                topic_info = readPropagateTrend(topic_id)
                 perday_blog_count = topic_info['perday_count_list']
                 date_list = topic_info['date_list']
                 date_list = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in date_list]
@@ -446,11 +405,116 @@ def topic_ajax_trend():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            return render_template('propagate/ajax/topic_trend.html')
-                        else:
-                            keyword = request.form.get('topic_id', "")              
+                            keyword = request.args.get('keyword', '')
+                            dur_time = request.args.get('time', '')
+        
+                            dur_time = _utf_encode(dur_time)
+                            if not dur_time or dur_time == '':
+                                beg_time, end_time = _default_time_zone()
+                            else:
+                                dur_time = _utf_encode(dur_time)
+                                beg_time, end_time = _time_yuan(dur_time)
 
-                            topic_info = readPropagateTrend(keyword)
+                            return_beg_str = beg_time
+                            return_end_str = end_time
+                
+                            if beg_time == "":
+                                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                            else:
+                                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                                beg_time_year = int(beg_time.year)
+                                beg_time_month = int(beg_time.month)
+                                beg_time_day = int(beg_time.day)
+                                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                            if end_time == "":
+                                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                            else:
+                                end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                                end_time_year = int(end_time.year)
+                                end_time_month = int(end_time.month)
+                                end_time_day = int(end_time.day)
+                                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                            beg_date = ts2datetime(beg_time)
+                            end_date = ts2datetime(end_time)
+
+                            topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                            if not topic_info:
+                                flash(u'您搜索的话题结果为空')
+                                return redirect('/propagate/')
+                            else:
+
+                                topic_ori_screen_name = topic_info['topic_poster']
+                                topic_img_url = topic_info['topic_url']
+                                topic_blog_count = topic_info['blogs_sum']
+                                topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                                blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                                topic_leader_count = topic_info['leader_index']
+                                topic_ori_date = topic_info['topic_post_date']
+                                topic_id = topic_info['id']
+                                if topic_img_url == 'None':
+                                    topic_profile_image_url = ''
+                                else:
+                                    topic_profile_image_url = topic_img_url
+                            dur_time = _utf_decode(dur_time)
+                            return render_template('propagate/ajax/topic_trend.html',
+                                                   topic_profile_image_url = topic_profile_image_url,
+                                                   topic_ori_screen_name = topic_ori_screen_name,
+                                                   blog_rel_count = topic_blog_count,
+                                                   blog_ori_count = topic_blog_ori_count,
+                                                   blog_ori_account = blog_ori_account,
+                                                   topic_leader_count = topic_leader_count,
+                                                   topic_ori_date = topic_ori_date,
+                                                   keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                                   return_beg_str=return_beg_str, return_end_str=return_end_str)
+                        else:
+                            keyword = request.form.get('keyword', '')
+                            dur_time = request.form.get('time', '')
+
+                            dur_time = _utf_encode(dur_time)
+                            if not dur_time or dur_time == '':
+                                beg_time, end_time = _default_time_zone()
+                            else:
+                                dur_time = _utf_encode(dur_time)
+                                beg_time, end_time = _time_yuan(dur_time)
+
+                            return_beg_str = beg_time
+                            return_end_str = end_time
+
+                            if beg_time == "":
+                                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                            else:
+                                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                                beg_time_year = int(beg_time.year)
+                                beg_time_month = int(beg_time.month)
+                                beg_time_day = int(beg_time.day)
+                                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                            if end_time == "":
+                                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                            else:
+                                end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                                end_time_year = int(end_time.year)
+                                end_time_month = int(end_time.month)
+                                end_time_day = int(end_time.day)
+                                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                            beg_date = ts2datetime(beg_time)
+                            end_date = ts2datetime(end_time)
+
+                            topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                            if not topic_info:
+                                flash(u'您搜索的话题结果为空')
+                                return redirect('/propagate/')
+                            else:
+                                topic_id = topic_info['id']            
+
+                            topic_info = readPropagateTrend(topic_id)
                             perday_blog_count = topic_info['perday_count_list']
                             date_list = topic_info['date_list']
                             date_list = [int(time.mktime(d.timetuple())+24*3600)*1000 for d in date_list]
@@ -466,12 +530,74 @@ def topic_ajax_weibos():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                keyword = request.args.get('topic_id', "")
-                beg_time = int(request.args.get('beg_time', ""))
-                end_time = int(request.args.get('end_time', ""))
-                topic_info = readPropagateWeibo(keyword)
+                keyword = request.args.get('keyword', '')
+                dur_time = request.args.get('time', '')
 
-                return render_template('propagate/ajax/topic_weibos.html', topic_info = topic_info, beg_time = beg_time, end_time = end_time, topic_id = keyword)
+                dur_time = _utf_encode(dur_time)
+                if not dur_time or dur_time == '':
+                    beg_time, end_time = _default_time_zone()
+                else:
+                    dur_time = _utf_encode(dur_time)
+                    beg_time, end_time = _time_yuan(dur_time)
+
+                return_beg_str = beg_time
+                return_end_str = end_time
+
+                if beg_time == "":
+                    beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                    return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                else:
+                    beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                    beg_time_year = int(beg_time.year)
+                    beg_time_month = int(beg_time.month)
+                    beg_time_day = int(beg_time.day)
+                    beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                if end_time == "":
+                    end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                    return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                else:
+                    end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                    end_time_year = int(end_time.year)
+                    end_time_month = int(end_time.month)
+                    end_time_day = int(end_time.day)
+                    end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                beg_date = ts2datetime(beg_time)
+                end_date = ts2datetime(end_time)
+
+                topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                if not topic_info:
+                    flash(u'您搜索的话题结果为空')
+                    return redirect('/propagate/')
+                else:
+
+                    topic_ori_screen_name = topic_info['topic_poster']
+                    topic_img_url = topic_info['topic_url']
+                    topic_blog_count = topic_info['blogs_sum']
+                    topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                    blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                    topic_leader_count = topic_info['leader_index']
+                    topic_ori_date = topic_info['topic_post_date']
+                    topic_id = topic_info['id']
+                    if topic_img_url == 'None':
+                        topic_profile_image_url = ''
+                    else:
+                        topic_profile_image_url = topic_img_url
+
+                topic_weibo = readPropagateWeibo(topic_id)
+                dur_time = _utf_decode(dur_time)
+                return render_template('propagate/ajax/topic_weibos.html',
+                                       topic_info = topic_weibo,
+                                       topic_profile_image_url = topic_profile_image_url,
+                                       topic_ori_screen_name = topic_ori_screen_name,
+                                       blog_rel_count = topic_blog_count,
+                                       blog_ori_count = topic_blog_ori_count,
+                                       blog_ori_account = blog_ori_account,
+                                       topic_leader_count = topic_leader_count,
+                                       topic_ori_date = topic_ori_date,
+                                       keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                       return_beg_str=return_beg_str, return_end_str=return_end_str)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -479,12 +605,74 @@ def topic_ajax_weibos():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            keyword = request.args.get('topic_id', "")
-                            beg_time = int(request.args.get('beg_time', ""))
-                            end_time = int(request.args.get('end_time', ""))
-                            topic_info = readPropagateWeibo(keyword)
+                            keyword = request.args.get('keyword', '')
+                            dur_time = request.args.get('time', '')
 
-                            return render_template('propagate/ajax/topic_weibos.html', topic_info = topic_info, beg_time = beg_time, end_time = end_time, topic_id = keyword)
+                            dur_time = _utf_encode(dur_time)
+                            if not dur_time or dur_time == '':
+                                beg_time, end_time = _default_time_zone()
+                            else:
+                                dur_time = _utf_encode(dur_time)
+                                beg_time, end_time = _time_yuan(dur_time)
+
+                            return_beg_str = beg_time
+                            return_end_str = end_time
+
+                            if beg_time == "":
+                                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                            else:
+                                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                                beg_time_year = int(beg_time.year)
+                                beg_time_month = int(beg_time.month)
+                                beg_time_day = int(beg_time.day)
+                                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                            if end_time == "":
+                                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                            else:
+                                end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                                end_time_year = int(end_time.year)
+                                end_time_month = int(end_time.month)
+                                end_time_day = int(end_time.day)
+                                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                            beg_date = ts2datetime(beg_time)
+                            end_date = ts2datetime(end_time)
+
+                            topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                            if not topic_info:
+                                flash(u'您搜索的话题结果为空')
+                                return redirect('/propagate/')
+                            else:
+
+                                topic_ori_screen_name = topic_info['topic_poster']
+                                topic_img_url = topic_info['topic_url']
+                                topic_blog_count = topic_info['blogs_sum']
+                                topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                                blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                                topic_leader_count = topic_info['leader_index']
+                                topic_ori_date = topic_info['topic_post_date']
+                                topic_id = topic_info['id']
+                                if topic_img_url == 'None':
+                                    topic_profile_image_url = ''
+                                else:
+                                    topic_profile_image_url = topic_img_url
+
+                            topic_weibo = readPropagateWeibo(topic_id)
+                            dur_time = _utf_decode(dur_time)
+                            return render_template('propagate/ajax/topic_weibos.html',
+                                                   topic_info = topic_weibo,
+                                                   topic_profile_image_url = topic_profile_image_url,
+                                                   topic_ori_screen_name = topic_ori_screen_name,
+                                                   blog_rel_count = topic_blog_count,
+                                                   blog_ori_count = topic_blog_ori_count,
+                                                   blog_ori_account = blog_ori_account,
+                                                   topic_leader_count = topic_leader_count,
+                                                   topic_ori_date = topic_ori_date,
+                                                   keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                                   return_beg_str=return_beg_str, return_end_str=return_end_str)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -496,12 +684,116 @@ def topic_ajax_spatial():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                topic_id = request.args.get('topic_id')
-                return render_template('propagate/ajax/topic_spatial.html',topic_id=topic_id)
-            else:
-                keyword = request.form.get('topic_id', "")
+                keyword = request.args.get('keyword', '')
+                dur_time = request.args.get('time', '')
 
-                topic_info = readPropagateSpatial(keyword)
+                dur_time = _utf_encode(dur_time)
+                if not dur_time or dur_time == '':
+                    beg_time, end_time = _default_time_zone()
+                else:
+                    dur_time = _utf_encode(dur_time)
+                    beg_time, end_time = _time_yuan(dur_time)
+
+                return_beg_str = beg_time
+                return_end_str = end_time
+
+                if beg_time == "":
+                    beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                    return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                else:
+                    beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                    beg_time_year = int(beg_time.year)
+                    beg_time_month = int(beg_time.month)
+                    beg_time_day = int(beg_time.day)
+                    beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                if end_time == "":
+                    end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                    return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                else:
+                    end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                    end_time_year = int(end_time.year)
+                    end_time_month = int(end_time.month)
+                    end_time_day = int(end_time.day)
+                    end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                beg_date = ts2datetime(beg_time)
+                end_date = ts2datetime(end_time)
+
+                topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                if not topic_info:
+                    flash(u'您搜索的话题结果为空')
+                    return redirect('/propagate/')
+                else:
+
+                    topic_ori_screen_name = topic_info['topic_poster']
+                    topic_img_url = topic_info['topic_url']
+                    topic_blog_count = topic_info['blogs_sum']
+                    topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                    blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                    topic_leader_count = topic_info['leader_index']
+                    topic_ori_date = topic_info['topic_post_date']
+                    topic_id = topic_info['id']
+                    if topic_img_url == 'None':
+                        topic_profile_image_url = ''
+                    else:
+                        topic_profile_image_url = topic_img_url
+                dur_time = _utf_decode(dur_time)
+                return render_template('propagate/ajax/topic_spatial.html',
+                                       topic_profile_image_url = topic_profile_image_url,
+                                       topic_ori_screen_name = topic_ori_screen_name,
+                                       blog_rel_count = topic_blog_count,
+                                       blog_ori_count = topic_blog_ori_count,
+                                       blog_ori_account = blog_ori_account,
+                                       topic_leader_count = topic_leader_count,
+                                       topic_ori_date = topic_ori_date,
+                                       keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                       return_beg_str=return_beg_str, return_end_str=return_end_str)
+            else:
+                keyword = request.form.get('keyword', '')
+                dur_time = request.form.get('time', '')
+
+                dur_time = _utf_encode(dur_time)
+                if not dur_time or dur_time == '':
+                    beg_time, end_time = _default_time_zone()
+                else:
+                    dur_time = _utf_encode(dur_time)
+                    beg_time, end_time = _time_yuan(dur_time)
+
+                return_beg_str = beg_time
+                return_end_str = end_time
+
+                if beg_time == "":
+                    beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                    return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                else:
+                    beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                    beg_time_year = int(beg_time.year)
+                    beg_time_month = int(beg_time.month)
+                    beg_time_day = int(beg_time.day)
+                    beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                if end_time == "":
+                    end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                    return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                else:
+                    end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                    end_time_year = int(end_time.year)
+                    end_time_month = int(end_time.month)
+                    end_time_day = int(end_time.day)
+                    end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                beg_date = ts2datetime(beg_time)
+                end_date = ts2datetime(end_time)
+
+                topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                if not topic_info:
+                    flash(u'您搜索的话题结果为空')
+                    return redirect('/propagate/')
+                else:
+                    topic_id = topic_info['id'] 
+
+                topic_info = readPropagateSpatial(topic_id)
 
                 return json.dumps({'map_data': topic_info})
         else:
@@ -511,11 +803,116 @@ def topic_ajax_spatial():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            return render_template('propagate/ajax/topic_spatial.html')
-                        else:
-                            keyword = request.form.get('topic_id', "")
+                            keyword = request.args.get('keyword', '')
+                            dur_time = request.args.get('time', '')
 
-                            topic_info = readPropagateSpatial(keyword)
+                            dur_time = _utf_encode(dur_time)
+                            if not dur_time or dur_time == '':
+                                beg_time, end_time = _default_time_zone()
+                            else:
+                                dur_time = _utf_encode(dur_time)
+                                beg_time, end_time = _time_yuan(dur_time)
+
+                            return_beg_str = beg_time
+                            return_end_str = end_time
+
+                            if beg_time == "":
+                                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                            else:
+                                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                                beg_time_year = int(beg_time.year)
+                                beg_time_month = int(beg_time.month)
+                                beg_time_day = int(beg_time.day)
+                                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                            if end_time == "":
+                                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                            else:
+                                end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                                end_time_year = int(end_time.year)
+                                end_time_month = int(end_time.month)
+                                end_time_day = int(end_time.day)
+                                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                            beg_date = ts2datetime(beg_time)
+                            end_date = ts2datetime(end_time)
+
+                            topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                            if not topic_info:
+                                flash(u'您搜索的话题结果为空')
+                                return redirect('/propagate/')
+                            else:
+
+                                topic_ori_screen_name = topic_info['topic_poster']
+                                topic_img_url = topic_info['topic_url']
+                                topic_blog_count = topic_info['blogs_sum']
+                                topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                                blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                                topic_leader_count = topic_info['leader_index']
+                                topic_ori_date = topic_info['topic_post_date']
+                                topic_id = topic_info['id']
+                                if topic_img_url == 'None':
+                                    topic_profile_image_url = ''
+                                else:
+                                    topic_profile_image_url = topic_img_url
+                            dur_time = _utf_decode(dur_time)
+                            return render_template('propagate/ajax/topic_spatial.html',
+                                                   topic_profile_image_url = topic_profile_image_url,
+                                                   topic_ori_screen_name = topic_ori_screen_name,
+                                                   blog_rel_count = topic_blog_count,
+                                                   blog_ori_count = topic_blog_ori_count,
+                                                   blog_ori_account = blog_ori_account,
+                                                   topic_leader_count = topic_leader_count,
+                                                   topic_ori_date = topic_ori_date,
+                                                   keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                                   return_beg_str=return_beg_str, return_end_str=return_end_str)
+                        else:
+                            keyword = request.form.get('keyword', '')
+                            dur_time = request.form.get('time', '')
+
+                            dur_time = _utf_encode(dur_time)
+                            if not dur_time or dur_time == '':
+                                beg_time, end_time = _default_time_zone()
+                            else:
+                                dur_time = _utf_encode(dur_time)
+                                beg_time, end_time = _time_yuan(dur_time)
+
+                            return_beg_str = beg_time
+                            return_end_str = end_time
+
+                            if beg_time == "":
+                                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                            else:
+                                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                                beg_time_year = int(beg_time.year)
+                                beg_time_month = int(beg_time.month)
+                                beg_time_day = int(beg_time.day)
+                                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                            if end_time == "":
+                                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                            else:
+                                end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                                end_time_year = int(end_time.year)
+                                end_time_month = int(end_time.month)
+                                end_time_day = int(end_time.day)
+                                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                            beg_date = ts2datetime(beg_time)
+                            end_date = ts2datetime(end_time)
+
+                            topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                            if not topic_info:
+                                flash(u'您搜索的话题结果为空')
+                                return redirect('/propagate/')
+                            else:
+                                topic_id = topic_info['id'] 
+
+                            topic_info = readPropagateSpatial(topic_id)
 
                             return json.dumps({'map_data': topic_info})
                     else:
@@ -529,22 +926,83 @@ def topic_ajax_stat():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == 'GET':
-                keyword = request.args.get('topic_id', "")
+                keyword = request.args.get('keyword', '')
+                dur_time = request.args.get('time', '')
 
-                topic_info = readIndex(keyword)
+                dur_time = _utf_encode(dur_time)
+                if not dur_time or dur_time == '':
+                    beg_time, end_time = _default_time_zone()
+                else:
+                    dur_time = _utf_encode(dur_time)
+                    beg_time, end_time = _time_yuan(dur_time)
+
+                return_beg_str = beg_time
+                return_end_str = end_time
+
+                if beg_time == "":
+                    beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                    return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                else:
+                    beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                    beg_time_year = int(beg_time.year)
+                    beg_time_month = int(beg_time.month)
+                    beg_time_day = int(beg_time.day)
+                    beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                if end_time == "":
+                    end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                    return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                else:
+                    end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                    end_time_year = int(end_time.year)
+                    end_time_month = int(end_time.month)
+                    end_time_day = int(end_time.day)
+                    end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                beg_date = ts2datetime(beg_time)
+                end_date = ts2datetime(end_time)
+
+                topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                if not topic_info:
+                    flash(u'您搜索的话题结果为空')
+                    return redirect('/propagate/')
+                else:
+
+                    topic_ori_screen_name = topic_info['topic_poster']
+                    topic_img_url = topic_info['topic_url']
+                    topic_blog_count = topic_info['blogs_sum']
+                    topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                    blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                    topic_leader_count = topic_info['leader_index']
+                    topic_ori_date = topic_info['topic_post_date']
+                    topic_id = topic_info['id']
+                    if topic_img_url == 'None':
+                        topic_profile_image_url = ''
+                    else:
+                        topic_profile_image_url = topic_img_url
+
+                topic_info = readIndex(topic_id)
 
                 topic_persistent_count = topic_info['persistent_index']
                 topic_sudden_count = topic_info['sudden_index']
                 topic_coverage_count = topic_info['coverage_index']
                 topic_media_count = topic_info['media_index']
-                topic_leader_count = topic_info['leader_index']
 
+                dur_time = _utf_decode(dur_time)
                 return render_template('propagate/ajax/topic_stat.html',
                                         topic_persistent_count = topic_persistent_count,
                                         topic_sudden_count = topic_sudden_count,
                                         topic_coverage_count = topic_coverage_count,
                                         topic_media_count = topic_media_count,
-                                        topic_leader_count = topic_leader_count
+                                        topic_profile_image_url = topic_profile_image_url,
+                                        topic_ori_screen_name = topic_ori_screen_name,
+                                        blog_rel_count = topic_blog_count,
+                                        blog_ori_count = topic_blog_ori_count,
+                                        blog_ori_account = blog_ori_account,
+                                        topic_leader_count = topic_leader_count,
+                                        topic_ori_date = topic_ori_date,
+                                        keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                        return_beg_str=return_beg_str, return_end_str=return_end_str
                 )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -553,22 +1011,83 @@ def topic_ajax_stat():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == 'GET':
-                            keyword = request.args.get('topic_id', "")
+                            keyword = request.args.get('keyword', '')
+                            dur_time = request.args.get('time', '')
 
-                            topic_info = readIndex(keyword)
+                            dur_time = _utf_encode(dur_time)
+                            if not dur_time or dur_time == '':
+                                beg_time, end_time = _default_time_zone()
+                            else:
+                                dur_time = _utf_encode(dur_time)
+                                beg_time, end_time = _time_yuan(dur_time)
+
+                            return_beg_str = beg_time
+                            return_end_str = end_time
+
+                            if beg_time == "":
+                                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                            else:
+                                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                                beg_time_year = int(beg_time.year)
+                                beg_time_month = int(beg_time.month)
+                                beg_time_day = int(beg_time.day)
+                                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                            if end_time == "":
+                                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                            else:
+                                end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                                end_time_year = int(end_time.year)
+                                end_time_month = int(end_time.month)
+                                end_time_day = int(end_time.day)
+                                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                            beg_date = ts2datetime(beg_time)
+                            end_date = ts2datetime(end_time)
+
+                            topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                            if not topic_info:
+                                flash(u'您搜索的话题结果为空')
+                                return redirect('/propagate/')
+                            else:
+
+                                topic_ori_screen_name = topic_info['topic_poster']
+                                topic_img_url = topic_info['topic_url']
+                                topic_blog_count = topic_info['blogs_sum']
+                                topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                                blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                                topic_leader_count = topic_info['leader_index']
+                                topic_ori_date = topic_info['topic_post_date']
+                                topic_id = topic_info['id']
+                                if topic_img_url == 'None':
+                                    topic_profile_image_url = ''
+                                else:
+                                    topic_profile_image_url = topic_img_url
+
+                            topic_info = readIndex(topic_id)
 
                             topic_persistent_count = topic_info['persistent_index']
                             topic_sudden_count = topic_info['sudden_index']
                             topic_coverage_count = topic_info['coverage_index']
                             topic_media_count = topic_info['media_index']
-                            topic_leader_count = topic_info['leader_index']
 
+                            dur_time = _utf_decode(dur_time)
                             return render_template('propagate/ajax/topic_stat.html',
                                                     topic_persistent_count = topic_persistent_count,
                                                     topic_sudden_count = topic_sudden_count,
                                                     topic_coverage_count = topic_coverage_count,
                                                     topic_media_count = topic_media_count,
-                                                    topic_leader_count = topic_leader_count
+                                                    topic_profile_image_url = topic_profile_image_url,
+                                                    topic_ori_screen_name = topic_ori_screen_name,
+                                                    blog_rel_count = topic_blog_count,
+                                                    blog_ori_count = topic_blog_ori_count,
+                                                    blog_ori_account = blog_ori_account,
+                                                    topic_leader_count = topic_leader_count,
+                                                    topic_ori_date = topic_ori_date,
+                                                    keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                                    return_beg_str=return_beg_str, return_end_str=return_end_str
                             )
                     else:
                         return redirect('/')
@@ -581,9 +1100,63 @@ def topic_ajax_userfield():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == "GET":
-                keyword = request.args.get('topic_id', "")
-                
-                topic_info = readPropagateUser(keyword)
+                keyword = request.args.get('keyword', '')
+                dur_time = request.args.get('time', '')
+
+                dur_time = _utf_encode(dur_time)
+                if not dur_time or dur_time == '':
+                    beg_time, end_time = _default_time_zone()
+                else:
+                    dur_time = _utf_encode(dur_time)
+                    beg_time, end_time = _time_yuan(dur_time)
+
+                return_beg_str = beg_time
+                return_end_str = end_time
+
+                if beg_time == "":
+                    beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                    return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                else:
+                    beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                    beg_time_year = int(beg_time.year)
+                    beg_time_month = int(beg_time.month)
+                    beg_time_day = int(beg_time.day)
+                    beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                if end_time == "":
+                    end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                    return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                else:
+                    end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                    end_time_year = int(end_time.year)
+                    end_time_month = int(end_time.month)
+                    end_time_day = int(end_time.day)
+                    end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                beg_date = ts2datetime(beg_time)
+                end_date = ts2datetime(end_time)
+
+                topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                if not topic_info:
+                    flash(u'您搜索的话题结果为空')
+                    return redirect('/propagate/')
+                else:
+
+                    topic_ori_screen_name = topic_info['topic_poster']
+                    topic_img_url = topic_info['topic_url']
+                    topic_blog_count = topic_info['blogs_sum']
+                    topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                    blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                    topic_leader_count = topic_info['leader_index']
+                    topic_ori_date = topic_info['topic_post_date']
+                    topic_id = topic_info['id']
+                    if topic_img_url == 'None':
+                        topic_profile_image_url = ''
+                    else:
+                        topic_profile_image_url = topic_img_url
+
+                dur_time = _utf_decode(dur_time)
+                topic_info = readPropagateUser(topic_id)
                 topic_key_user_list = []
 
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
@@ -622,7 +1195,17 @@ def topic_ajax_userfield():
                     data2.append({'unknown':domain['其他']})
 
                 topic_key_user_list = topic_key_user_list[:100]
-                return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, topic_id=keyword, data2=data2)
+                return render_template('propagate/ajax/topic_userfield.html',
+                                       topic_key_user_list= topic_key_user_list, data2=data2,
+                                       topic_profile_image_url = topic_profile_image_url,
+                                       topic_ori_screen_name = topic_ori_screen_name,
+                                       blog_rel_count = topic_blog_count,
+                                       blog_ori_count = topic_blog_ori_count,
+                                       blog_ori_account = blog_ori_account,
+                                       topic_leader_count = topic_leader_count,
+                                       topic_ori_date = topic_ori_date,
+                                       keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                       return_beg_str=return_beg_str, return_end_str=return_end_str)
 
             else:
                 pass
@@ -633,9 +1216,63 @@ def topic_ajax_userfield():
                     identy = pa.propagate
                     if identy == 1:
                         if request.method == "GET":
-                            keyword = request.args.get('topic_id', "")
-                
-                            topic_info = readPropagateUser(keyword)
+                            keyword = request.args.get('keyword', '')
+                            dur_time = request.args.get('time', '')
+
+                            dur_time = _utf_encode(dur_time)
+                            if not dur_time or dur_time == '':
+                                beg_time, end_time = _default_time_zone()
+                            else:
+                                dur_time = _utf_encode(dur_time)
+                                beg_time, end_time = _time_yuan(dur_time)
+
+                            return_beg_str = beg_time
+                            return_end_str = end_time
+
+                            if beg_time == "":
+                                beg_time = calendar.timegm(datetime(beg_y, beg_m, beg_d).timetuple())
+                                return_beg_str = str(beg_y)+'-'+str(beg_m)+'-'+str(beg_d)
+                            else:
+                                beg_time = datetime.strptime(beg_time,"%Y-%m-%d")
+                                beg_time_year = int(beg_time.year)
+                                beg_time_month = int(beg_time.month)
+                                beg_time_day = int(beg_time.day)
+                                beg_time = calendar.timegm(datetime(beg_time_year,beg_time_month,beg_time_day).timetuple())
+                            if end_time == "":
+                                end_time = calendar.timegm(datetime(end_y, end_m, end_d).timetuple())
+                                return_end_str = str(end_y)+'-'+str(end_m)+'-'+str(end_d)
+                            else:
+                                end_time = datetime.strptime(end_time,"%Y-%m-%d")
+                                end_time_year = int(end_time.year)
+                                end_time_month = int(end_time.month)
+                                end_time_day = int(end_time.day)
+                                end_time = calendar.timegm(datetime(end_time_year,end_time_month,end_time_day).timetuple())
+
+                            beg_date = ts2datetime(beg_time)
+                            end_date = ts2datetime(end_time)
+
+                            topic_info = readPropagateTopic(keyword,beg_date,end_date)
+            
+                            if not topic_info:
+                                flash(u'您搜索的话题结果为空')
+                                return redirect('/propagate/')
+                            else:
+
+                                topic_ori_screen_name = topic_info['topic_poster']
+                                topic_img_url = topic_info['topic_url']
+                                topic_blog_count = topic_info['blogs_sum']
+                                topic_blog_ori_count = topic_info['topic_ori_blog_count']
+                                blog_ori_account = '%10.2f'%(float(topic_blog_ori_count)/topic_blog_count)
+                                topic_leader_count = topic_info['leader_index']
+                                topic_ori_date = topic_info['topic_post_date']
+                                topic_id = topic_info['id']
+                                if topic_img_url == 'None':
+                                    topic_profile_image_url = ''
+                                else:
+                                    topic_profile_image_url = topic_img_url
+
+                            dur_time = _utf_decode(dur_time)
+                            topic_info = readPropagateUser(topic_id)
                             topic_key_user_list = []
 
                             domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
@@ -674,7 +1311,17 @@ def topic_ajax_userfield():
                                 data2.append({'unknown':domain['其他']})
 
                             topic_key_user_list = topic_key_user_list[:100]
-                            return render_template('propagate/ajax/topic_userfield.html',  topic_key_user_list= topic_key_user_list, topic_id=keyword, data2=data2)
+                            return render_template('propagate/ajax/topic_userfield.html',
+                                       topic_key_user_list= topic_key_user_list, data2=data2,
+                                       topic_profile_image_url = topic_profile_image_url,
+                                       topic_ori_screen_name = topic_ori_screen_name,
+                                       blog_rel_count = topic_blog_count,
+                                       blog_ori_count = topic_blog_ori_count,
+                                       blog_ori_account = blog_ori_account,
+                                       topic_leader_count = topic_leader_count,
+                                       topic_ori_date = topic_ori_date,
+                                       keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                                       return_beg_str=return_beg_str, return_end_str=return_end_str)
                         else:
                             pass
                     else:
@@ -683,99 +1330,6 @@ def topic_ajax_userfield():
     else:
         return redirect('/')
     
-@mod.route("/showresult_single/", methods = ["GET","POST"])
-def single_analysis():
-    post_time = request.args.get('time', '')
-    mid = request.args.get('mid', '')
-
-    if 'logged_in' in session and session['logged_in']:
-        if session['user'] == 'admin': 
-                
-            blog_info = readPropagateSingle(mid)#返回整个树的统计
-
-            if blog_info:
-                if blog_info[0]['profile_image_url'] == 'None':
-                    blog_img_url = '#'
-                else:
-                    blog_img_url = blog_info[0]['profile_image_url']
-                bloger_name = blog_info[0]['name']
-                blog_reposts_count = blog_info[0]['repostsCount']
-                blog_comments_count = blog_info[0]['commentsCount']
-                blog_attitudes_count = blog_info[0]['attitudesCount']
-                blog_time = blog_info[0]['postDate']
-                blog_text = blog_info[0]['text']
-            else:
-                blog_info = readPropagateSinglePart(mid)
-                if blog_info[0]['profile_image_url'] == 'None':
-                    blog_img_url = '#'
-                else:
-                    blog_img_url = blog_info[0]['profile_image_url']
-                bloger_name = blog_info[0]['name']
-                blog_reposts_count = blog_info[0]['repostsCount']
-                blog_comments_count = blog_info[0]['commentsCount']
-                blog_attitudes_count = blog_info[0]['attitudesCount']
-                blog_time = blog_info[0]['postDate']
-                blog_text = blog_info[0]['text']
-
-            return render_template('propagate/showResult_single.html', 
-                                   mid=mid,
-                                   tar_profile_image_url = blog_img_url,
-                                   tar_screen_name = bloger_name,
-                                   tar_repost_count = blog_reposts_count,
-                                   tar_comments_count = blog_comments_count,
-                                   tar_attitudes_count = blog_attitudes_count,
-                                   tar_post_date = blog_time,
-                                   post_time = post_time,
-                                   tar_text = blog_text
-                                   )
-        else:
-            pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
-            if pas != []:
-                for pa in pas:
-                    identy = pa.propagate
-                    if identy == 1:
-                        blog_info = readPropagateSingle(mid)#返回整个树的统计
-
-                        if blog_info:
-                            if blog_info[0]['profile_image_url'] == 'None':
-                                blog_img_url = '#'
-                            else:
-                                blog_img_url = blog_info[0]['profile_image_url']
-                            bloger_name = blog_info[0]['name']
-                            blog_reposts_count = blog_info[0]['repostsCount']
-                            blog_comments_count = blog_info[0]['commentsCount']
-                            blog_attitudes_count = blog_info[0]['attitudesCount']
-                            blog_time = blog_info[0]['postDate']
-                            blog_text = blog_info[0]['text']
-                        else:
-                            blog_info = readPropagateSinglePart(mid)
-                            if blog_info[0]['profile_image_url'] == 'None':
-                                blog_img_url = '#'
-                            else:
-                                blog_img_url = blog_info[0]['profile_image_url']
-                            bloger_name = blog_info[0]['name']
-                            blog_reposts_count = blog_info[0]['repostsCount']
-                            blog_comments_count = blog_info[0]['commentsCount']
-                            blog_attitudes_count = blog_info[0]['attitudesCount']
-                            blog_time = blog_info[0]['postDate']
-                            blog_text = blog_info[0]['text']
-
-                        return render_template('propagate/showResult_single.html', 
-                                               mid=mid,
-                                               tar_profile_image_url = blog_img_url,
-                                               tar_screen_name = bloger_name,
-                                               tar_repost_count = blog_reposts_count,
-                                               tar_comments_count = blog_comments_count,
-                                               tar_attitudes_count = blog_attitudes_count,
-                                               tar_post_date = blog_time,
-                                               post_time = post_time,
-                                               tar_text = blog_text
-                                               )
-                    else:
-                        return redirect('/')
-            return redirect('/')
-    else:
-        return redirect('/')
 
 @mod.route("/single_ajax_trend/", methods = ["GET","POST"])
 def single_ajax_trend():
@@ -783,7 +1337,41 @@ def single_ajax_trend():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = request.args.get('mid')
-                return render_template('propagate/ajax/single_trend.html', mid=mid)
+                blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                if blog_info:
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                else:
+                    blog_info = readPropagateSinglePart(mid)
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                return render_template('propagate/ajax/single_trend.html',
+                                        mid=mid,
+                                        tar_profile_image_url = blog_img_url,
+                                        tar_screen_name = bloger_name,
+                                        tar_repost_count = blog_reposts_count,
+                                        tar_comments_count = blog_comments_count,
+                                        tar_attitudes_count = blog_attitudes_count,
+                                        tar_post_date = blog_time,
+                                        tar_text = blog_text
+                                        )
             else:
                 mid = str(request.form.get('mid', ""))
                 blog_info = readPropagateTrendSingle(mid)
@@ -814,7 +1402,41 @@ def single_ajax_trend():
                     if identy == 1:
                         if request.method == "GET":
                             mid = request.args.get('mid')
-                            return render_template('propagate/ajax/single_trend.html', mid=mid)
+                            blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                            if blog_info:
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                            else:
+                                blog_info = readPropagateSinglePart(mid)
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                            return render_template('propagate/ajax/single_trend.html',
+                                                    mid=mid,
+                                                    tar_profile_image_url = blog_img_url,
+                                                    tar_screen_name = bloger_name,
+                                                    tar_repost_count = blog_reposts_count,
+                                                    tar_comments_count = blog_comments_count,
+                                                    tar_attitudes_count = blog_attitudes_count,
+                                                    tar_post_date = blog_time,
+                                                    tar_text = blog_text
+                                                    )
                         else:
                             mid = str(request.form.get('mid', ""))
                             blog_info = readPropagateTrendSingle(mid)
@@ -849,12 +1471,44 @@ def single_ajax_weibos():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
-                blog_info = readPropagateWeiboSingle(mid)
+                blog_info_weibo = readPropagateWeiboSingle(mid)
                 blog_info_part = readPropagateWeiboSinglePart(mid)
 
+                blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                if blog_info:
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                else:
+                    blog_info = readPropagateSinglePart(mid)
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
                 return render_template('propagate/ajax/single_weibos.html', 
-                                       blog_info = blog_info,
+                                       blog_info = blog_info_weibo,
                                        blog_info_part = blog_info_part,
+                                       tar_profile_image_url = blog_img_url,
+                                       tar_screen_name = bloger_name,
+                                       tar_repost_count = blog_reposts_count,
+                                       tar_comments_count = blog_comments_count,
+                                       tar_attitudes_count = blog_attitudes_count,
+                                       tar_post_date = blog_time,
+                                       tar_text = blog_text,
                                        mid = mid
                                       )
         else:
@@ -865,12 +1519,44 @@ def single_ajax_weibos():
                     if identy == 1:
                         if request.method == "GET":
                             mid = str(request.args.get('mid', ""))
-                            blog_info = readPropagateWeiboSingle(mid)
+                            blog_info_weibo = readPropagateWeiboSingle(mid)
                             blog_info_part = readPropagateWeiboSinglePart(mid)
 
+                            blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                            if blog_info:
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                            else:
+                                blog_info = readPropagateSinglePart(mid)
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
                             return render_template('propagate/ajax/single_weibos.html', 
-                                                   blog_info = blog_info,
+                                                   blog_info = blog_info_weibo,
                                                    blog_info_part = blog_info_part,
+                                                   tar_profile_image_url = blog_img_url,
+                                                   tar_screen_name = bloger_name,
+                                                   tar_repost_count = blog_reposts_count,
+                                                   tar_comments_count = blog_comments_count,
+                                                   tar_attitudes_count = blog_attitudes_count,
+                                                   tar_post_date = blog_time,
+                                                   tar_text = blog_text,
                                                    mid = mid
                                                   )
                     else:
@@ -885,7 +1571,40 @@ def single_ajax_spatial():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = request.args.get('mid')
-                return render_template('propagate/ajax/single_spatial.html', mid=mid)
+                blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                if blog_info:
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                else:
+                    blog_info = readPropagateSinglePart(mid)
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                return render_template('propagate/ajax/single_spatial.html',
+                                       tar_profile_image_url = blog_img_url,
+                                       tar_screen_name = bloger_name,
+                                       tar_repost_count = blog_reposts_count,
+                                       tar_comments_count = blog_comments_count,
+                                       tar_attitudes_count = blog_attitudes_count,
+                                       tar_post_date = blog_time,
+                                       tar_text = blog_text,
+                                       mid=mid)
             else:
                 mid = str(request.form.get('mid', ""))
                 area_list = readPropagateSpatialSingle(mid)
@@ -899,7 +1618,40 @@ def single_ajax_spatial():
                     if identy == 1:
                         if request.method == "GET":
                             mid = request.args.get('mid')
-                            return render_template('propagate/ajax/single_spatial.html', mid=mid)
+                            blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                            if blog_info:
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                            else:
+                                blog_info = readPropagateSinglePart(mid)
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                            return render_template('propagate/ajax/single_spatial.html',
+                                                   tar_profile_image_url = blog_img_url,
+                                                   tar_screen_name = bloger_name,
+                                                   tar_repost_count = blog_reposts_count,
+                                                   tar_comments_count = blog_comments_count,
+                                                   tar_attitudes_count = blog_attitudes_count,
+                                                   tar_post_date = blog_time,
+                                                   tar_text = blog_text,
+                                                   mid=mid)
                         else:
                             mid = str(request.form.get('mid', ""))
                             area_list = readPropagateSpatialSingle(mid)
@@ -917,6 +1669,32 @@ def single_ajax_stat():
         if session['user'] == 'admin':
             if request.method == 'GET':
                 mid = int(request.args.get('mid', ""))
+                blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                if blog_info:
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                else:
+                    blog_info = readPropagateSinglePart(mid)
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                
                 blog_info = readIndexSingle(mid)
                 if blog_info: 
                     tar_persistent_count = blog_info['persistent_index']
@@ -955,7 +1733,15 @@ def single_ajax_stat():
                                         tar_sudden_count_part = tar_sudden_count_part,
                                         tar_coverage_count_part = tar_coverage_count_part,
                                         tar_media_count_part = tar_media_count_part,
-                                        tar_leader_count_part = tar_leader_count_part
+                                        tar_leader_count_part = tar_leader_count_part,
+                                        tar_profile_image_url = blog_img_url,
+                                        tar_screen_name = bloger_name,
+                                        tar_repost_count = blog_reposts_count,
+                                        tar_comments_count = blog_comments_count,
+                                        tar_attitudes_count = blog_attitudes_count,
+                                        tar_post_date = blog_time,
+                                        tar_text = blog_text,
+                                        mid = mid
                 )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -965,6 +1751,32 @@ def single_ajax_stat():
                     if identy == 1:
                         if request.method == 'GET':
                             mid = int(request.args.get('mid', ""))
+                            blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                            if blog_info:
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                            else:
+                                blog_info = readPropagateSinglePart(mid)
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                
                             blog_info = readIndexSingle(mid)
                             if blog_info: 
                                 tar_persistent_count = blog_info['persistent_index']
@@ -1003,7 +1815,15 @@ def single_ajax_stat():
                                                     tar_sudden_count_part = tar_sudden_count_part,
                                                     tar_coverage_count_part = tar_coverage_count_part,
                                                     tar_media_count_part = tar_media_count_part,
-                                                    tar_leader_count_part = tar_leader_count_part
+                                                    tar_leader_count_part = tar_leader_count_part,
+                                                    tar_profile_image_url = blog_img_url,
+                                                    tar_screen_name = bloger_name,
+                                                    tar_repost_count = blog_reposts_count,
+                                                    tar_comments_count = blog_comments_count,
+                                                    tar_attitudes_count = blog_attitudes_count,
+                                                    tar_post_date = blog_time,
+                                                    tar_text = blog_text,
+                                                    mid = mid
                             )
                     else:
                         return redirect('/')
@@ -1018,6 +1838,32 @@ def single_ajax_userfield():
         if session['user'] == 'admin':
             if request.method == "GET":
                 mid = str(request.args.get('mid', ""))
+                blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                if blog_info:
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                else:
+                    blog_info = readPropagateSinglePart(mid)
+                    if blog_info[0]['profile_image_url'] == 'None':
+                        blog_img_url = ''
+                    else:
+                        blog_img_url = blog_info[0]['profile_image_url']
+                    bloger_name = blog_info[0]['name']
+                    blog_reposts_count = blog_info[0]['repostsCount']
+                    blog_comments_count = blog_info[0]['commentsCount']
+                    blog_attitudes_count = blog_info[0]['attitudesCount']
+                    blog_time = blog_info[0]['postDate']
+                    blog_text = blog_info[0]['text']
+                    
                 blog_key_user_list = readPropagateUserSingle(mid)
 
                 domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
@@ -1093,7 +1939,15 @@ def single_ajax_userfield():
                     data_part.append({'unknown':domain['其他']})
 
                 blog_key_user_list_part = blog_key_user_list_part[:100]
-                return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data2=data2, blog_key_user_list_part=blog_key_user_list_part, data_part=data_part)
+                return render_template('propagate/ajax/single_userfield.html',
+                                       tar_profile_image_url = blog_img_url,
+                                       tar_screen_name = bloger_name,
+                                       tar_repost_count = blog_reposts_count,
+                                       tar_comments_count = blog_comments_count,
+                                       tar_attitudes_count = blog_attitudes_count,
+                                       tar_post_date = blog_time,
+                                       tar_text = blog_text,
+                                       mid=mid, blog_key_user_list=blog_key_user_list, data2=data2, blog_key_user_list_part=blog_key_user_list_part, data_part=data_part)
             else:
                 pass
         else:
@@ -1104,6 +1958,31 @@ def single_ajax_userfield():
                     if identy == 1:
                         if request.method == "GET":
                             mid = str(request.args.get('mid', ""))
+                            blog_info = readPropagateSingle(mid)#返回整个树的统计
+
+                            if blog_info:
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
+                            else:
+                                blog_info = readPropagateSinglePart(mid)
+                                if blog_info[0]['profile_image_url'] == 'None':
+                                    blog_img_url = ''
+                                else:
+                                    blog_img_url = blog_info[0]['profile_image_url']
+                                bloger_name = blog_info[0]['name']
+                                blog_reposts_count = blog_info[0]['repostsCount']
+                                blog_comments_count = blog_info[0]['commentsCount']
+                                blog_attitudes_count = blog_info[0]['attitudesCount']
+                                blog_time = blog_info[0]['postDate']
+                                blog_text = blog_info[0]['text']
                             blog_key_user_list = readPropagateUserSingle(mid)
 
                             domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
@@ -1179,7 +2058,15 @@ def single_ajax_userfield():
                                 data_part.append({'unknown':domain['其他']})
 
                             blog_key_user_list_part = blog_key_user_list_part[:100]
-                            return render_template('propagate/ajax/single_userfield.html',  mid=mid, blog_key_user_list=blog_key_user_list, data2=data2, blog_key_user_list_part=blog_key_user_list_part, data_part=data_part)
+                            return render_template('propagate/ajax/single_userfield.html',
+                                                   tar_profile_image_url = blog_img_url,
+                                                   tar_screen_name = bloger_name,
+                                                   tar_repost_count = blog_reposts_count,
+                                                   tar_comments_count = blog_comments_count,
+                                                   tar_attitudes_count = blog_attitudes_count,
+                                                   tar_post_date = blog_time,
+                                                   tar_text = blog_text,
+                                                   mid=mid, blog_key_user_list=blog_key_user_list, data2=data2, blog_key_user_list_part=blog_key_user_list_part, data_part=data_part)
                         else:
                             pass
                     else:

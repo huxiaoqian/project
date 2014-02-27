@@ -1,3 +1,6 @@
+{% extends "propagate/base.html" %}
+{% block title %}单条微博传播分析{% endblock %}
+{% block head %}
 <style>
   .descriptions {
   font-family: "Trebuchet MS", Helvetica, Arial;
@@ -63,133 +66,186 @@
     width: 49%;
   }
 </style>
-<div>
-<div id="main_first">
-<legend style="text-align:center;">整个转发树的结果</legend>
-<div id="container" style="height: 500px;">
-  <div id="working_count_second"></div>
-</div>
-<div class="well">
-  <legend>次级传播用户</legend>
-  <div>
-    <p>
-      <a class="btn btn-small btn-success" href="#" id="out"><i class="icon-download-alt"></i> 导出</a>
-      <a id="add_kd" class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
-      <a id="remove_kd" class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
-      <a id="add_trash" class="btn btn-small btn-danger" href="#" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
-    </p>
-  </div>
-  <div>
-    <table class="table table-bordered" id="single_table">
-      <thead>
-        <tr>
-          <th style="text-align:center;display:none;">博主ID</th>
-          <th style="text-align:center;">博主昵称</th>
-          <th style="text-align:center;">博主地域</th>
-          <th style="text-align:center;">粉丝数</th>
-          <th style="text-align:center;">关注数</th>
-          <th style="text-align:center;">微博数</th>
-          <th style="text-align:center;">所属领域</th>
-          <th style="text-align:center;">敏感状态</th>
-          <th><input id="select_all" type="checkbox" />全选</th>
-        </tr>
-      </thead>
-      <div id="users_area">
-        <tbody id="word_table">
-        </tbody>
+{% endblock %}
+{% block content %}
+  <div class="container-fluid">
+    <div class="row-fluid">        
+      <div class="span12">
+        <div class="caption" style="float:left">
+          <div style="float:left">
+            {% if tar_profile_image_url %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="{{ tar_profile_image_url }}" media="screen" >
+            {% else %}
+            <img style="width: 150px; height: 140px;" type="image/jpg" src="/static/img/topic_none.png" media="screen" />
+            {% endif %}
+          </div>
+          <div style="float:left;padding-left:50px;">
+            <h3>单条微博传播分析</h3>
+          <div style="float:left;padding-top:10px;">
+            <label style="font-size:18px">发起人：<span class="badge badge-success" style="font-size:18px"> {{ tar_screen_name }} </span> </label>
+            <label class="appendedInput" style="font-size:18px">转发数：<span class="badge badge-info" style="font-size:18px">{{ tar_repost_count }}</span></label>
+          </div>
+          <div style="float:left;padding-top:10px;padding-left:30px;">
+            <label class="appendedInput" style="font-size:18px">评论数：<span class="badge badge-warning" style="font-size:18px">{{ tar_comments_count }}</span></label>
+            <label class="appendedInput" style="font-size:18px">赞数：<span class="badge badge-warning" style="font-size:18px">{{ tar_attitudes_count }}</span></label>
+          </div>
+          <div style="float:left;padding-top:10px;padding-left:30px;">            
+            <label class="appendedInput" style="font-size:18px">发布时间：{{ tar_post_date }} </label>
+            <!--<label class="appendedInput" style="font-size:18px">内容：{{ tar_text }} </label>-->
+          </div>
+        </div>
       </div>
-    </table>
-    <div id="page-selection" class="pagination pagination-centered"></div>
-    <script src="/static/js/profile/jquery.bootpag.min.js"></script>
-  </div>
-</div>
-<div class = "span12" >
-  <legend>关键传播用户</legend>
-  <div id="thumbnail">
-    {% if not blog_key_user_list %}
-    <p>计算结果为空</p>
-    {% endif %}
-    {% for u in blog_key_user_list %}
-      <div class="grid">
-        <div id="imgholder"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
-        <strong class="yuan">{{ u.name }}</strong>
-        <p>微博数：{{ u.statuses_count }}</p>
-        <p>关注数：{{ u.bi_followers_count }}</p>
-        <p>粉丝数：{{ u.followers_count }}</p>
-        <p>个人描述：{{ u.description }}</p>
-        <div class="meta">{{u.url}}</div>
+    </div><!--上侧信息-->
+
+    <div class="row-fluid" style="padding-top:20px;">
+      <div class="span12" id="index-tabs" style="padding-top:20px;">
+        <ul class="nav nav-pills tab_container">
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_weibos/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关联微博</a></li>
+          <li class="btn span2" style="width:150px;height:20px"><a href="/propagate/single_ajax_trend/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播数量走势</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_spatial/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">地理分布</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/propagate/single_ajax_stat/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播指标</a></li>
+          <li class="btn span2 btn-primary" style="width:150px;height:20px;"><a href="/propagate/single_ajax_userfield/?mid={{mid}}" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">关键人员统计</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/gexf/show_graph/{{mid}}/sub" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径(子树)</a></li>
+          <li class="btn span2" style="width:150px;height:20px;"><a href="/gexf/show_graph/{{mid}}/whole" align="center" style="padding-top: 2px;padding-bottom: 2px;color:black;">传播路径(全树)</a></li>          
+        </ul>
+        <div id="content_container">
+          <div>
+            <div id="main_first">
+              <legend style="text-align:center;">整个转发树的结果</legend>
+              <div id="container" style="height: 500px;">
+                <div id="working_count_second"></div>
+              </div>
+              <div class="well">
+                <legend>次级传播用户</legend>
+                <div>
+                  <p>
+                    <a class="btn btn-small btn-success" href="#" id="out"><i class="icon-download-alt"></i> 导出</a>
+                    <a id="add_kd" class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
+                    <a id="remove_kd" class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+                    <a id="add_trash" class="btn btn-small btn-danger" href="#" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
+                  </p>
+                </div>
+                <div>
+                  <table class="table table-bordered" id="single_table">
+                    <thead>
+                      <tr>
+                        <th style="text-align:center;display:none;">博主ID</th>
+                        <th style="text-align:center;">博主昵称</th>
+                        <th style="text-align:center;">博主地域</th>
+                        <th style="text-align:center;">粉丝数</th>
+                        <th style="text-align:center;">关注数</th>
+                        <th style="text-align:center;">微博数</th>
+                        <th style="text-align:center;">所属领域</th>
+                        <th style="text-align:center;">敏感状态</th>
+                        <th><input id="select_all" type="checkbox" />全选</th>
+                      </tr>
+                    </thead>
+                    <div id="users_area">
+                      <tbody id="word_table">
+                      </tbody>
+                    </div>
+                  </table>
+                  <div id="page-selection" class="pagination pagination-centered"></div>
+                  <script src="/static/js/profile/jquery.bootpag.min.js"></script>
+                </div>
+              </div>
+              <div class = "span12" >
+                <legend>关键传播用户</legend>
+                <div id="thumbnail">
+                  {% if not blog_key_user_list %}
+                  <p>计算结果为空</p>
+                  {% endif %}
+                  {% for u in blog_key_user_list %}
+                  <div class="grid">
+                    <div id="imgholder"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
+                    <strong class="yuan">{{ u.name }}</strong>
+                    <p>微博数：{{ u.statuses_count }}</p>
+                    <p>关注数：{{ u.bi_followers_count }}</p>
+                    <p>粉丝数：{{ u.followers_count }}</p>
+                    <p>个人描述：{{ u.description }}</p>
+                    <div class="meta">{{u.url}}</div>
+                  </div>
+                  {% endfor %}
+                </div>
+                <div id="loader">
+                  <div id="loaderCircle" style="display: none;"></div>
+                </div>
+              </div>
+            </div>
+            <div id="main_second">
+              <legend style="text-align:center;">以该微博为顶点的转发树的计算结果</legend>
+              <div id="container_part" style="height: 500px;">
+                <div id="working_count_second_part"></div>
+              </div>
+              <div class="well">
+                <legend>次级传播用户</legend>
+                <div>
+                  <p>
+                    <a class="btn btn-small btn-success" href="#" id="out_part"><i class="icon-download-alt"></i> 导出</a>
+                    <a id="add_kd_part" class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
+                    <a id="remove_kd_part" class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
+                    <a id="add_trash_part" class="btn btn-small btn-danger" href="#" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
+                  </p>
+                </div>
+                <div>
+                  <table class="table table-bordered" id="single_table_part">
+                    <thead>
+                      <tr>
+                        <th style="text-align:center;display:none;">博主ID</th>
+                        <th style="text-align:center;">博主昵称</th>
+                        <th style="text-align:center;">博主地域</th>
+                        <th style="text-align:center;">粉丝数</th>
+                        <th style="text-align:center;">关注数</th>
+                        <th style="text-align:center;">微博数</th>
+                        <th style="text-align:center;">所属领域</th>
+                        <th style="text-align:center;">敏感状态</th>
+                        <th><input id="select_all_part" type="checkbox" />全选</th>
+                      </tr>
+                    </thead>
+                    <div id="users_area_part">
+                      <tbody id="word_table_part">
+                      </tbody>
+                    </div>
+                  </table>
+                  <div id="page-selection_part" class="pagination pagination-centered"></div>
+                  <script src="/static/js/profile/jquery.bootpag.min.js"></script>
+                </div>
+              </div>
+              <div class = "span12" >
+                <legend>关键传播用户</legend>
+                <div id="thumbnail_part">
+                  {% for u in blog_key_user_list_part %}
+                    <div class="grid">
+                      <div id="imgholder_part"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
+                      <strong class="yuan">{{ u.name }}</strong>
+                      <p>微博数：{{ u.statuses_count }}</p>
+                      <p>关注数：{{ u.bi_followers_count }}</p>
+                      <p>粉丝数：{{ u.followers_count }}</p>
+                      <p>个人描述：{{ u.description }}</p>
+                      <div class="meta">{{u.url}}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+                <div id="loader_part">
+                    <div id="loaderCircle_part" style="display: none;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    {% endfor %}
-  </div>
-  <div id="loader">
-      <div id="loaderCircle" style="display: none;"></div>
-  </div>
+    </div>
 </div>
-</div>
-<div id="main_second">
-<legend style="text-align:center;">以该微博为顶点的转发树的计算结果</legend>
-<div id="container_part" style="height: 500px;">
-  <div id="working_count_second_part"></div>
-</div>
-<div class="well">
-  <legend>次级传播用户</legend>
-  <div>
-    <p>
-      <a class="btn btn-small btn-success" href="#" id="out_part"><i class="icon-download-alt"></i> 导出</a>
-      <a id="add_kd_part" class="btn btn-small btn-info" href="#" title="将勾选的人加入知识库"><i class="icon-file"></i> 加入知识库</a>
-      <a id="remove_kd_part" class="btn btn-small btn-info" href="#" title="将勾选的人移出知识库"><i class="icon-file"></i> 移出知识库</a>
-      <a id="add_trash_part" class="btn btn-small btn-danger" href="#" title="将勾选的人加入垃圾名单"><i class="icon-ban-circle"></i> 加入垃圾名单</a>
-    </p>
-  </div>
-  <div>
-    <table class="table table-bordered" id="single_table_part">
-      <thead>
-        <tr>
-          <th style="text-align:center;display:none;">博主ID</th>
-          <th style="text-align:center;">博主昵称</th>
-          <th style="text-align:center;">博主地域</th>
-          <th style="text-align:center;">粉丝数</th>
-          <th style="text-align:center;">关注数</th>
-          <th style="text-align:center;">微博数</th>
-          <th style="text-align:center;">所属领域</th>
-          <th style="text-align:center;">敏感状态</th>
-          <th><input id="select_all_part" type="checkbox" />全选</th>
-        </tr>
-      </thead>
-      <div id="users_area_part">
-        <tbody id="word_table_part">
-        </tbody>
-      </div>
-    </table>
-    <div id="page-selection_part" class="pagination pagination-centered"></div>
-    <script src="/static/js/profile/jquery.bootpag.min.js"></script>
-  </div>
-</div>
-<div class = "span12" >
-  <legend>关键传播用户</legend>
-  <div id="thumbnail_part">
-    {% for u in blog_key_user_list_part %}
-      <div class="grid">
-        <div id="imgholder_part"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
-        <strong class="yuan">{{ u.name }}</strong>
-        <p>微博数：{{ u.statuses_count }}</p>
-        <p>关注数：{{ u.bi_followers_count }}</p>
-        <p>粉丝数：{{ u.followers_count }}</p>
-        <p>个人描述：{{ u.description }}</p>
-        <div class="meta">{{u.url}}</div>
-      </div>
-    {% endfor %}
-  </div>
-  <div id="loader_part">
-      <div id="loaderCircle_part" style="display: none;"></div>
-  </div>
-</div>
-</div>
-</div>
+{% endblock %}
+{% block script %}
+<script src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/exporting.js') }}"></script>
 <script src="/static/js/profile/bootstrap.min.js"></script>
 <script src="/static/js/profile/jquery.bootpag.min.js"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/jquery.wookmark.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/propagate/blocksit.min.js') }}"></script>
+
 <script>
   var len = $('script').filter(function () {
     return ($(this).attr('src') == '/static/js/highstock.js');
@@ -875,3 +931,4 @@ function exportTableToCSV_part($table, filename) {
         location.reload();
     });
 </script>
+{% endblock script %}

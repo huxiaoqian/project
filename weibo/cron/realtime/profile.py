@@ -1,105 +1,132 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import time
-import redis
+import json
+import leveldb
 import datetime
-from config import REDIS_HOST, REDIS_PORT, GLOBAL_ACTIVE_COUNT, GLOBAL_IMPORTANT_COUNT, \
-                   LEVELDBPATH
+from config import LEVELDBPATH, DOMAIN_LIST
+from dynamic_xapian_weibo import getXapianWeiboByDate
 
 
-def _default_redis(host=REDIS_HOST, port=REDIS_PORT, db=0):
-    return redis.StrictRedis(host, port, db)
+def calc_person_basic():
+    # todo
+    pass
 
 
-def get_daily_airoeik_db_by_date(datestr):
-    # datestr '20140105'
-    db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_airoeik_%s' % datestr),
-                         block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    return db
+def calc_domain_vg():
+    # todo
+    pass
 
 
-def get_now_datestr():
-    return datetime.datetime.now().strftime("%Y%m%d")
+def user2domain(uid, updatetime='20131220'):
+    try:
+        v = domain_leveldb.Get(str(uid) + '_' + str(updatetime))
+        domainid = DOMAIN_LIST.index(v)
+    except KeyError:
+        domainid = 20
+
+    return domainid
 
 
-def get_before_datestr():
-    now_ts = time.time() - 24 * 3600
-    datestr = datetime.date.fromtimestamp(now_ts).isoformat().replace('-', '')
-    return datestr
-
-
-def active_redis2leveldb(batch_scan_count=10000):
-    next_cursor, result_dicts = global_r0.hscan(GLOBAL_ACTIVE_COUNT % now_datestr, cursor=0, count=batch_scan_count)
+def calc_domain_airo_keywords():
     count = 0
     ts = te = time.time()
-    while next_cursor != '0':
-        batch = leveldb.WriteBatch()
-        important = 0
-        reposts = 0
-        original = 0
-        emoticon = 0
-        interact_dict = {}
-        keywords_dict = {}
-        for uid, active in result_dicts.iteritems():
-            key = str(uid)
-            value = str(active) + '_' + str(important) + '_' + str(reposts) + '_' + str(original) + '_' + str(emoticon) + '_' + \
-                    str(interact_dict) + '_' + str(keywords_dict)
-            batch.Put(key, value)
-
-        global_airoeik_leveldb.Write(batch, sync=True)
-        next_cursor, result_dicts = global_r0.hscan(GLOBAL_ACTIVE_COUNT % now_datestr, cursor=next_cursor, count=batch_scan_count)
-        
-        count += batch_scan_count
+    for k, v in daily_profile_airoeik_bucket.RangeIter():
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), ' active redis 2 leveldb'
+            print count, '%s sec' % (te - ts), ' %s daily calc_domain_airo_keywords' % now_datestr
             ts = te
 
+        uid = str(k)
+        active, important, reposts, original, emoticon, interact_dict, keywords_dict = v.split('_\/')
+        active = int(active)
+        important = int(important)
+        reposts = int(reposts)
+        original = int(original)
 
-def important_redis2leveldb(batch_scan_count=10000):
-    next_cursor, result_dicts = global_r0.hscan(GLOBAL_IMPORTANT_COUNT % now_datestr, cursor=0, count=batch_scan_count)
-    count = 0
-    ts = te = time.time()
-    while next_cursor != '0':
-        batch = leveldb.WriteBatch()
-        for uid, important in result_dicts.iteritems():
-            key = str(uid)
+        domain = user2domain(uid)
+
+        try:
+            _active, _important, _reposts, _original = daily_profile_domain_airo_bucket.Get(uid).split('_\/')
+            _active = int(_active)
+            _important = int(_important)
+            _reposts = int(_reposts)
+            _original = int(_original)
+        except KeyError:
+            _active = 0
+            _important = 0
+            _reposts = 0
+            _original = 0
+
+        _active += active
+        _important += important
+        _reposts += reposts
+        _original += original
+        
+        key = str(domain)
+        value = '_\/'.join([str(_active), str(_important), str(_reposts), str(_original)])
+        daily_profile_domain_airo_bucket.Put(key, value)
+
+        keywords_dict = json.loads(keywords_dict)
+        keywords_leveldb = daily_profile_domain_keywords_bucket[int(domain)]
+        for k, v in keywords_dict.iteritems():
             try:
-                active, _important, reposts, original, emoticon, interact_dict, keywords_dict = global_airoeik_leveldb.Get(key).split('_')
+                kcount = int(keywords_leveldb.Get(str(k.encode('utf-8'))))
+                kcount += int(v)
             except KeyError:
-            	active = 0
-            	reposts = 0
-            	original = 0
-            	emoticon = 0
-            	interact_dict = {}
-            	keywords_dict = {}
-            value = str(active) + '_' + str(important) + '_' + str(reposts) + '_' + str(original) + '_' + str(emoticon) + '_' + \
-                    str(interact_dict) + '_' + str(keywords_dict)
-            batch.Put(key, value)
+                kcount = int(v)
 
-        global_airoeik_leveldb.Write(batch, sync=True)
-        next_cursor, result_dicts = global_r0.hscan(GLOBAL_IMPORTANT_COUNT % now_datestr, cursor=next_cursor, count=batch_scan_count)
-        
-        count += batch_scan_count
-        if count % 10000 == 0:
-            te = time.time()
-            print count, '%s sec' % (te - ts), ' important redis 2 leveldb'
-            ts = te
+            keywords_leveldb.Put(str(k.encode('utf-8')), str(kcount))
+
+        count += 1
 
 
-def roeik_xapian2leveldb():
-	  
+def batch_sort_domain_keywords(topk=50):    
+    for domainid in range(9, 21):
+        print '-----', domainid, ' batch sort domain keywords'
+
+        keywords_th = TopkHeap(topk)
+        db = daily_profile_domain_keywords_bucket[domainid]
+
+        for k, v in db.RangeIter():
+            v = int(v)
+            keywords_th.Push((v, k))
+
+        top_keywords = keywords_th.TopK()
+        top_keywords_dict = {}
+
+        for count, keywords in top_keywords:
+            top_keywords_dict[keywords] = count
+
+        daily_profile_domain_topk_keywords_bucket[domainid].Put(str(domainid), json.dumps(top_keywords_dict))
 
 
 if __name__ == '__main__':
-	  # get datestr
-    now_datestr = get_now_datestr()
+	# get datestr
+    now_datestr = '20130901' #get_now_datestr()
 
-	  # init xapian weibo
+	# init xapian weibo
     xapian_search_weibo = getXapianWeiboByDate(now_datestr)
 
-	  global_r0 = _default_redis()
-	  global_airoeik_leveldb = get_daily_airoeik_db_by_date(now_datestr)
-		active_redis2leveldb()
+    # init leveldb
+    daily_profile_airoeik_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % now_datestr),
+                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    domain_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_profile'),
+                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    daily_profile_domain_airo_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % now_datestr),
+                                                       block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    daily_profile_domain_keywords_bucket = {}
+    for i in range(9, 21):
+        daily_profile_domain_keywords_bucket[i] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_keywords_%s_%s' % (now_datestr, i)),
+                                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
+    # calculate
+    calc_domain_airo_keywords()
+
+    # sort domain keywords, get topk
+    for i in range(9, 21):
+        daily_profile_domain_topk_keywords_bucket[i] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_topk_keywords_%s_%s' % (now_datestr, i)),
+                                                                       block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    batch_sort_domain_keywords()

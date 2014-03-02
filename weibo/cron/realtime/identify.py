@@ -1,34 +1,47 @@
 # -*- coding: utf-8 -*-
 
+import os
+import re
 import sys
 import time
+import json
 import redis
+import leveldb
 import datetime
 from xapian_weibo.utils import load_scws, cut
 from dynamic_xapian_weibo import getXapianWeiboByDate
 from config import LEVELDBPATH, DOMAIN_LIST, xapian_search_user
 
+# init scws
+scws = load_scws()
 
-def get_official_seed_set():
-    seed_set = set([])
-    with open('official_emoticons.txt') as f:
-        for l in f:
-            seed_set.add(l.rstrip())
-    return seed_set
+# init seed_set
+seed_set = set([])
+with open('official_emoticons.txt') as f:
+    for l in f:
+        seed_set.add(l.rstrip())
 
 
 def emoticon_find(text):
     emotion_pattern = r'\[(\S+?)\]'
-    seed_set = get_official_seed_set()
     remotions = re.findall(emotion_pattern, text)
 
     emoticons = []
+    haveEmoticon = False
     if remotions:
         for e in remotions:
             if e in seed_set:
-                emoticons.append(e.decode('utf-8'))
+                haveEmoticon = True
+                break
+    
+    return haveEmoticon
 
-    return emoticons
+
+def _utf_encode(s):
+    if isinstance(s, unicode):
+        return s.encode('utf-8', 'ignore')
+    else:
+        return s
 
 
 def calc_roeik(retweeted_mid, retweeted_uid, text, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict):
@@ -38,7 +51,7 @@ def calc_roeik(retweeted_mid, retweeted_uid, text, reposts, original, emoticon, 
         original += 1
 
     _emoticons = emoticon_find(text)
-    if _emoticons and len(_emoticons):
+    if _emoticons:
         emoticon += 1
     
     if isinstance(text, str):
@@ -46,7 +59,7 @@ def calc_roeik(retweeted_mid, retweeted_uid, text, reposts, original, emoticon, 
 
     RE = re.compile(u'//@([a-zA-Z-_⺀-⺙⺛-⻳⼀-⿕々〇〡-〩〸-〺〻㐀-䶵一-鿃豈-鶴侮-頻並-龎]+):', re.UNICODE)
     repost_users = RE.findall(text)
-
+    
     if len(repost_users):
         repost_user = repost_users[0]
         try:
@@ -61,7 +74,7 @@ def calc_roeik(retweeted_mid, retweeted_uid, text, reposts, original, emoticon, 
             retweeted_interact[retweeted_uid] = 1
 
     interact_dict = {'direct': direct_interact, 'retweeted': retweeted_interact}
-
+    
     terms = cut(scws, _utf_encode(text), f='n')
     for term in terms:
         try:
@@ -72,7 +85,7 @@ def calc_roeik(retweeted_mid, retweeted_uid, text, reposts, original, emoticon, 
     return reposts, original, emoticon, interact_dict, keywords_dict
 
 
-def calc_ai(active, important):
+def calc_ai(active, important, reposts_count):
     # 更新该条微博发布者的重要度、活跃度
     active += 1
     important += reposts_count
@@ -115,13 +128,16 @@ def get_airoeik(uid):
         retweeted_interact = {}
         keywords_dict = {}
 
-    return active, important, reposts, original, emoticon, direct_interact, \
+    return reposts, original, emoticon, direct_interact, \
            retweeted_interact, keywords_dict
 
 
 def get_aifd(uid):
     try:
         active, important, follower, domain = daily_identify_aifd_bucket.Get(str(uid)).split('_')
+        active = int(active)
+        important = int(important)
+        follower = int(follower)
     except KeyError:
         active = 0
         important = 0
@@ -141,19 +157,13 @@ def username2uid(name):
 
 
 def ai_xapian2leveldb():
-    weibos = xapian_search_weibo.iter_all_docs(fields=['user', 'text', 'retweeted_uid', \
-                                                       'retweeted_mid', 'reposts_count', 'comments_count', 'text'])
+    weibos = xapian_search_weibo.iter_all_docs(fields=['user', 'text', 'retweeted_uid', 'retweeted_mid', \
+                                                       'reposts_count', 'comments_count'])
     count = 0
     ts = te = time.time()
-    aifd_batch = leveldb.WriteBatch()
-    airoeik_batch = leveld.WriteBatch()
     for weibo in weibos:
         if count % 10000 == 0:
             te = time.time()
-            daily_identify_aifd_bucket.Write(batch, sync=True)
-            daily_profile_airoeik_bucket.Write(batch, sync=True)
-            aifd_batch = leveldb.WriteBatch()
-            airoeik_batch = leveld.WriteBatch()
             print count, '%s sec' % (te - ts), 'ai xapian to leveldb', now_datestr
             ts = te
         count += 1
@@ -171,14 +181,14 @@ def ai_xapian2leveldb():
 
         #
         active, important, follower, domain = get_aifd(uid)
-        active, important = calc_ai(active, important)
+        active, important = calc_ai(active, important, reposts_count)
         
         #
         value = '_'.join([str(active), str(important), str(follower), str(domain)])
-        aifd_batch.Put(str(uid), value)
+        daily_identify_aifd_bucket.Put(str(uid), value)
         value = '_\/'.join([str(active), str(important), str(reposts), str(original), str(emoticon), json.dumps(interact_dict), json.dumps(keywords_dict)])
-        airoeik_batch.Put(str(uid), value)
-        
+        daily_profile_airoeik_bucket.Put(str(uid), value)
+
         # 更新直接转发或原创用户的重要度 + 1，活跃度不变
         retweeted_uid = calc_retweeted_important(retweeted_uid, text)
         if retweeted_uid:
@@ -187,13 +197,10 @@ def ai_xapian2leveldb():
             important += 1
 
             value = '_'.join([str(active), str(important), str(follower), str(domain)])
-            aifd_batch.Put(str(retweeted_uid), value)
-            
-            value = '_\/'.join([str(active), str(important), str(reposts), str(original), str(emoticon), json.dumps(interact_dict), json.dumps(keywords_dict)])
-            airoeik_batch.Put(str(retweeted_uid), value)
+            daily_identify_aifd_bucket.Put(str(retweeted_uid), value)
 
-    daily_identify_aifd_bucket.Write(batch, sync=True)
-    daily_profile_airoeik_bucket.Write(batch, sync=True)
+            value = '_\/'.join([str(active), str(important), str(reposts), str(original), str(emoticon), json.dumps(interact_dict), json.dumps(keywords_dict)])
+            daily_profile_airoeik_bucket.Put(str(retweeted_uid), value)
 
 
 def update_follower_xapian2leveldb():
@@ -251,23 +258,28 @@ def update_domain2leveldb():
         count += 1
 
 
-if __name__ == '__main__':
-	# get datestr
-    now_datestr = get_now_datestr()
+def get_now_datestr():
+    return datetime.datetime.now().strftime("%Y%m%d")
 
-	# init xapian weibo
+
+if __name__ == '__main__':
+    # get datestr
+    now_datestr = '20130921'# get_now_datestr()
+
+    # init xapian weibo
     xapian_search_weibo = getXapianWeiboByDate(now_datestr)
 
-	# init leveldb
+    # init leveldb
     daily_identify_aifd_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr),
                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-	daily_profile_airoeik_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % now_datestr),
+    daily_profile_airoeik_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % now_datestr),
                                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    domain_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'spiedusers_%s' % '1'),
+    domain_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify'),
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    username_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'user2domain_%s' % '1'),
+    username_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user_name_identify'),
                                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    
+    # calculate
     ai_xapian2leveldb()
     update_follower_xapian2leveldb()
     update_domain2leveldb()
-

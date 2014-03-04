@@ -11,9 +11,10 @@ import shutil
 import leveldb
 import datetime
 from dynamic_xapian_weibo import getXapianWeiboByDate
-from model import WholeIdentification, AreaIdentification
 from config import LEVELDBPATH, DOMAIN_LIST, xapian_search_user, db
+from model import WholeIdentification, AreaIdentification, BurstIdentification
 
+#
 TOPK = 1000
 
 
@@ -22,23 +23,6 @@ def calc_ai(active, important, reposts_count):
     active += 1
     important += reposts_count
     return active, important
-
-
-def calc_retweeted_important(retweeted_uid, text):
-    # 更新直接转发或原创用户的重要度 + 1，活跃度不变
-    if retweeted_uid != 0:
-        # 该条微博为转发微博
-        repost_user = re.search('//@([a-zA-Z-_\u0391-\uFFE5]+)', text)
-        if repost_user:
-            direct_uid = username2uid(repost_user)
-
-            if direct_uid:
-                retweeted_uid = direct_uid
-
-        return retweeted_uid
-    else:
-        # 该条微博为原创微博
-        return None
 
 
 def get_aifd(uid):
@@ -66,8 +50,8 @@ def username2uid(name):
 
 
 def ai_xapian2leveldb():
-    # test 0.8 seconds per 10000 weibos, 100000000 weibos, total time 2.2 h
-    weibos = xapian_search_weibo.iter_all_docs(fields=['user', 'retweeted_uid', 'reposts_count', 'text'])
+    # test 0.5 seconds per 10000 weibos, 100000000 weibos, total time 1.4 h
+    weibos = xapian_search_weibo.iter_all_docs(fields=['user', 'reposts_count'])
     count = 0
     ts = te = time.time()
     for weibo in weibos:
@@ -80,8 +64,6 @@ def ai_xapian2leveldb():
         #
         uid = weibo['user']
         reposts_count = weibo['reposts_count']
-        retweeted_uid = weibo['retweeted_uid']
-        text = weibo['text']
 
         #
         active, important, follower, domain = get_aifd(uid)
@@ -91,19 +73,10 @@ def ai_xapian2leveldb():
         value = '_'.join([str(active), str(important), str(follower), str(domain)])
         daily_identify_aifd_bucket.Put(str(uid), value)
 
-        # 更新直接转发或原创用户的重要度 + 1，活跃度不变
-        retweeted_uid = calc_retweeted_important(retweeted_uid, text)
-        if retweeted_uid:
-            active, important, follower, domain = get_aifd(retweeted_uid)
-            important += 1
-
-            value = '_'.join([str(active), str(important), str(follower), str(domain)])
-            daily_identify_aifd_bucket.Put(str(retweeted_uid), value)
-
 
 def update_follower2leveldb():
     # 从leveldb更新leveldb的用户粉丝数数据
-    # test 0.15 seconds per 10000 users, total 22670000 users, 0.1 h
+    # test 0.15 seconds per 10000 users, total 22670000 users, 0.09 h
     users = xapian_search_user.iter_all_docs(fields=['user', 'followers_count'])
     
     count = 0
@@ -136,7 +109,6 @@ def update_domain2leveldb():
     ts = te = time.time()
     for k, v in domain_leveldb.RangeIter():
         uid, datestr = k.split('_')
-        uid = int(uid)
         domainid = DOMAIN_LIST.index(v)
 
         try:
@@ -155,20 +127,6 @@ def update_domain2leveldb():
             print count, '%s sec' % (te - ts), ' identify person domain', now_datestr
             ts = te
         count += 1
-
-
-def copytree(src, dst, symlinks=False, ignore=None):
-    for item in os.listdir(src):
-        s = os.path.join(src, item)
-        d = os.path.join(dst, item)
-        if os.path.isdir(s):
-            shutil.copytree(s, d, symlinks, ignore)
-        else:
-            shutil.copy2(s, d)
-
-
-def get_now_datestr():
-    return datetime.datetime.now().strftime("%Y%m%d")
 
 
 class TopkHeap(object):
@@ -201,7 +159,6 @@ def void_leveldb(ldb):
 
 def whole_domain_rank(topk=TOPK, identifyWindow=1):
     # 全网 领域 排序
-    # test 30000000 users, about 30 minutes
     print 'whole domain rank'
     if void_leveldb(global_leveldb):
         return
@@ -226,11 +183,7 @@ def whole_domain_rank(topk=TOPK, identifyWindow=1):
     ts = te = time.time() 
     for key, value in global_leveldb.RangeIter():
         active, important, follower, domain = value.split('_')
-        try:
-            uid = int(key)
-        except:
-            count += 1
-            continue
+        uid = int(key)
         active = int(active)
         important = int(important)
         follower = int(follower)
@@ -246,7 +199,7 @@ def whole_domain_rank(topk=TOPK, identifyWindow=1):
             domain_active_th[domain].Push((active, important, follower, uid))
             domain_important_th[domain].Push((important, active, follower, uid))
             domain_follower_th[domain].Push((follower, active, important, uid))
-
+        
         if count % 10000 == 0:
             te = time.time()
             print 'iter rank ', count, '%s sec' % (te - ts), now_datestr
@@ -295,7 +248,7 @@ def save(data, method='active', module='whole', identifyWindow=1, domain=None):
                                            AreaIdentification.topicId==domain).all()
             for exist_item in exist_items:
                 db.session.delete(exist_item)
-            db.session.commit()
+            db.session.commit()       
 
     # add new data
     for i, tuples in enumerate(data):
@@ -328,56 +281,56 @@ def saveDomain2mysql(uid, active, important, followers, domain, rank, identifyWi
 
 if __name__ == '__main__':
     # get datestr
-    now_datestr = '20130921' # get_now_datestr()
+    now_datestr = sys.argv[1] # '20130901'
 
     # init xapian weibo
     xapian_search_weibo = getXapianWeiboByDate(now_datestr)
 
     # init leveldb
-    # try:
-    #    shutil.rmtree(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr))
-    # except:
-    #    pass
+    try:
+        shutil.rmtree(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr))
+    except:
+        pass
     daily_identify_aifd_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr),
                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    '''
+    
     try:
-        os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_r_%s' % now_datestr))
+        os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_%s' % now_datestr))
     except:
         pass
     copytree(os.path.join(LEVELDBPATH, 'yuanshi_daily_user_followers'), \
-             os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_r_%s' % now_datestr))
-    user_followers_count_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_r_%s' % now_datestr),
+             os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_%s' % now_datestr))
+    user_followers_count_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_%s' % now_datestr),
                                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     
     try:
-        os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_r_%s' % now_datestr))
+        os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_%s' % now_datestr))
     except:
         pass
     copytree(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify'), \
-             os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_r_%s' % now_datestr))
-    domain_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_r_%s' % now_datestr),
+             os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_%s' % now_datestr))
+    domain_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_%s' % now_datestr),
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     
     try:
-        os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_r_%s' % now_datestr))
+        os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_%s' % now_datestr))
     except:
         pass
     copytree(os.path.join(LEVELDBPATH, 'linhao_user_name_identify'), \
-             os.path.join(LEVELDBPATH, 'linhao_user_name_identify_r_%s' % now_datestr))
-    username_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_r_%s' % now_datestr),
+             os.path.join(LEVELDBPATH, 'linhao_user_name_identify_%s' % now_datestr))
+    username_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_%s' % now_datestr),
                                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     
     # calculate
     ai_xapian2leveldb()
     update_follower2leveldb()
     update_domain2leveldb()
-
+    
     # remove leveldb
-    shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_r_%s' % now_datestr))
-    shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_r_%s' % now_datestr))
-    shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_r_%s' % now_datestr))
-    '''
+    shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_%s' % now_datestr))
+    shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_%s' % now_datestr))
+    shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_%s' % now_datestr))
+
     # identify rank
     global_leveldb = daily_identify_aifd_bucket
     whole_domain_rank()

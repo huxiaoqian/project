@@ -288,7 +288,7 @@ def personTopic2leveldb(keyword_limit=50):
         
         if len(ori_dict) >= 50:
             # 只更新已有词的词频
-            _terms = set(terms) & set(ori_dict.keys())
+            _terms = (set(terms) & set(ori_dict.keys())
             for t in _terms:
                 ori_dict[t] += 1
         else:

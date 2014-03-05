@@ -10,6 +10,7 @@ import os
 import time
 from xapian_weibo.xapian_backend import XapianSearch
 from weibo.global_config import xapian_search_user
+from read_log import *
 #xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
 mod = Blueprint('sysadmin', __name__, url_prefix='/sysadmin')
@@ -99,6 +100,13 @@ def help_topic():
 def help_history():
     if 'logged_in' in session and session['logged_in']:
         return render_template('admin/para_history.html') 
+    else:
+        return redirect('/sysadmin/')
+
+@mod.route('/paraset/log/')
+def help_log():
+    if 'logged_in' in session and session['logged_in']:
+        return render_template('admin/para_log.html') 
     else:
         return redirect('/sysadmin/')
 
@@ -697,3 +705,36 @@ def history_new():#添加历史话题
         db.session.add(new_item)
         db.session.commit()
     return json.dumps(result)
+
+@mod.route('/check_log', methods=['GET','POST'])
+def check_log():
+    filename = request.form['file']
+    top = request.form['top']
+
+    if filename == '_sentiment_redis2mysql':
+        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
+    elif filename == 'identify':
+        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
+    elif filename == 'identify_burst':
+        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
+    else:
+        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
+
+    logs = read_log(str(path),str(filename),top)
+
+    if len(logs) == 0:
+        return json.dumps('Right')
+
+    return json.dumps(logs)
+    
+
+
+
+
+
+
+
+
+
+    
+    

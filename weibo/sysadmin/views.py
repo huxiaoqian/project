@@ -717,6 +717,8 @@ def check_log():
         path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
     elif filename == 'identify_burst':
         path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
+    elif filename == 'xapian_zmq_work':
+        path = '/home/ubuntu12/linhao/xapian_weibo/zmq_workspace/'
     else:
         path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
 

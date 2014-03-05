@@ -73,7 +73,7 @@ def ai_xapian2leveldb():
     for weibo in weibos:
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), 'identify ai xapian to leveldb', now_datestr
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), 'identify ai xapian to leveldb', now_datestr
             ts = te
         count += 1
 
@@ -124,7 +124,7 @@ def update_follower2leveldb():
 
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), ' identify person follower', now_datestr
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), ' identify person follower', now_datestr
             ts = te
         count += 1
 
@@ -152,7 +152,7 @@ def update_domain2leveldb():
 
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), ' identify person domain', now_datestr
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), ' identify person domain', now_datestr
             ts = te
         count += 1
 
@@ -202,7 +202,7 @@ def void_leveldb(ldb):
 def whole_domain_rank(topk=TOPK, identifyWindow=1):
     # 全网 领域 排序
     # test 30000000 users, about 30 minutes
-    print 'whole domain rank'
+    print '%s whole domain rank' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     if void_leveldb(global_leveldb):
         return
 
@@ -249,7 +249,7 @@ def whole_domain_rank(topk=TOPK, identifyWindow=1):
 
         if count % 10000 == 0:
             te = time.time()
-            print 'iter rank ', count, '%s sec' % (te - ts), now_datestr
+            print '%s iter rank ' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), now_datestr
             ts = te
         count += 1
 
@@ -313,20 +313,22 @@ def save(data, method='active', module='whole', identifyWindow=1, domain=None):
 
 
 def saveWhole2mysql(uid, active, important, followers, rank, identifyWindow, identifyMethod):
-    print 'whole save: ', rank, uid, followers, active, important, now_datestr, identifyWindow, identifyMethod
+    print '%s whole save: ' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))#, rank, uid, followers, active, important, now_datestr, identifyWindow, identifyMethod
     new_item = WholeIdentification(rank, uid, followers, active, important, now_datestr, identifyWindow, identifyMethod)
     db.session.add(new_item)
     db.session.commit()
 
 
 def saveDomain2mysql(uid, active, important, followers, domain, rank, identifyWindow, identifyMethod):
-    print 'domain save: ', domain, rank, uid, followers, active, important, now_datestr, identifyWindow, identifyMethod
+    print '%s domain save: ' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))#, domain, rank, uid, followers, active, important, now_datestr, identifyWindow, identifyMethod
     new_item = AreaIdentification(domain, rank, uid, followers, active, important, now_datestr, identifyWindow, identifyMethod)
     db.session.add(new_item)
     db.session.commit()
 
 
 if __name__ == '__main__':
+
+    print "%s start" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     # get datestr
     now_datestr = '20130921' # get_now_datestr()
 
@@ -381,3 +383,5 @@ if __name__ == '__main__':
     # identify rank
     global_leveldb = daily_identify_aifd_bucket
     whole_domain_rank()
+
+    print "%s end" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))

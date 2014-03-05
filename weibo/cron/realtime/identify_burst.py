@@ -35,7 +35,7 @@ def void_leveldb(ldb):
 
 def burst_rank(topk=TOPK, identifyWindow=1):
     # 突发排序
-    print 'burst rank'
+    print '%s burst rank' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     previous_exist = True
     if void_leveldb(global_leveldb):
         return
@@ -71,7 +71,7 @@ def burst_rank(topk=TOPK, identifyWindow=1):
 
         if count % 10000 == 0:
             te = time.time()
-            print 'iter rank ', count, '%s sec' % (te - ts)
+            print '%s iter rank ' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts)
             ts = te
         count += 1
 
@@ -98,12 +98,14 @@ def save_burst(data, method="active", identifyWindow=1):
         elif method == 'important':
             diff_important, diff_active, active, important, follower, uid = tuples
 
-        print 'burst save: ', rank, diff_active, diff_important, follower, active, important, now_datestr, identifyWindow, method
+        print '%s burst save: ' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))#, rank, diff_active, diff_important, follower, active, important, now_datestr, identifyWindow, method
         new_item = BurstIdentification(rank, uid, follower, active, important, diff_active, diff_important, now_datestr, identifyWindow, method)
         db.session.add(new_item)
         db.session.commit()
 
 if __name__ == '__main__':
+
+    print "%s start" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 	# get datestr
     now_datestr = sys.argv[1] # '20130901'
     before_datestr = sys.argv[2] # '20130830'
@@ -114,3 +116,5 @@ if __name__ == '__main__':
     global_previous_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % before_datestr),
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     burst_rank()
+
+    print "%s end" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))

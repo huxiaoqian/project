@@ -29,10 +29,10 @@ if IS_PROD:
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
-    COBAR_HOST = '192.168.2.11'
+    COBAR_HOST = '192.168.2.31'
     COBAR_PORT = 8066
     COBAR_USER = 'cobar'
-    REDIS_HOST = '192.168.2.11'
+    REDIS_HOST = '192.168.2.31'
     REDIS_PORT = 6379
 else:
     XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'

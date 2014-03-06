@@ -26,10 +26,10 @@ if IS_PROD:
     XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
-    COBAR_HOST = '192.168.2.11'
+    COBAR_HOST = '192.168.2.31'
     COBAR_PORT = 8066
     COBAR_USER = 'cobar'
-    REDIS_HOST = '192.168.2.11'
+    REDIS_HOST = '192.168.2.31'
     REDIS_PORT = 6379
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
     DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'

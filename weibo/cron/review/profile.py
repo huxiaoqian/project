@@ -279,8 +279,16 @@ def personTopic2leveldb(keyword_limit=50):
         uid = weibo['user']
         
         text = _utf_encode(weibo['text'])
-        terms = cut(scws, text, f='n')
+        # terms = cut(scws, text, f='n')
 
+        try:
+            term_text = daily_profile_person_topic_db.Get(str(uid))
+        except KeyError:
+            term_text = ''
+
+        term_text += text
+
+        '''
         try:
             ori_dict = json.loads(daily_profile_person_topic_db.Get(str(uid)))
         except KeyError:
@@ -298,8 +306,9 @@ def personTopic2leveldb(keyword_limit=50):
                     ori_dict[t] += 1
                 except KeyError:
                     ori_dict[t] = 1
+        '''
 
-        daily_profile_person_topic_db.Put(str(uid), json.dumps(ori_dict))
+        daily_profile_person_topic_db.Put(str(uid), term_text)
 
         count += 1
 
@@ -413,10 +422,10 @@ if __name__ == '__main__':
     # init xapian weibo
     xapian_search_weibo = getXapianWeiboByDate(now_datestr)
 
-    daily_profile_person_topic_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_topic_%s_update' % now_datestr),
+    daily_profile_person_topic_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_topic_%s_text' % now_datestr),
                                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    daily_profile_person_interact_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_interact_%s_update' % now_datestr),
-                                                       block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    #daily_profile_person_interact_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_interact_%s_text' % now_datestr),
+    #                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     
     # personInteract2leveldb()
     personTopic2leveldb()

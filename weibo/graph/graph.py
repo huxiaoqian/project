@@ -306,7 +306,7 @@ def graph(mid, page=1, per_page=1000):
     return {'graph': graph, 'stats': tree_stats}
 
 def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
     return db
     
 

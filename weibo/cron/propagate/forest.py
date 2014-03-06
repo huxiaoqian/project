@@ -37,7 +37,7 @@ except:
     print 'not in web environment'
 
 def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
     return db
 
 
@@ -415,7 +415,7 @@ def forest_main(keyword,topic_id):
 if __name__ == "__main__":
 
 ##    init_db()
-##    v = get_weibo_tree('7')
-##    print v
-    result = forest_main('日本',7)
-    print result
+    v = get_weibo_tree('7')
+    print v
+##    result = forest_main('日本',7)
+##    print result

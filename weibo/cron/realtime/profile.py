@@ -45,7 +45,7 @@ def calc_domain_airo_keywords():
     for k, v in daily_profile_airoeik_bucket.RangeIter():
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), ' %s daily calc_domain_airo_keywords' % now_datestr
+            print  time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), ' %s daily calc_domain_airo_keywords' % now_datestr
             ts = te
 
         uid = str(k)
@@ -94,7 +94,7 @@ def calc_domain_airo_keywords():
 
 def batch_sort_domain_keywords(topk=50):    
     for domainid in range(9, 21):
-        print '-----', domainid, ' batch sort domain keywords'
+        print '%s-----' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), domainid, ' batch sort domain keywords'
 
         keywords_th = TopkHeap(topk)
         db = daily_profile_domain_keywords_bucket[domainid]
@@ -113,6 +113,8 @@ def batch_sort_domain_keywords(topk=50):
 
 
 if __name__ == '__main__':
+
+    print "%s start" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 	# get datestr
     now_datestr = '20130901' #get_now_datestr()
     
@@ -140,3 +142,5 @@ if __name__ == '__main__':
         daily_profile_domain_topk_keywords_bucket[i] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_topk_keywords_%s_%s' % (now_datestr, i)),
                                                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     batch_sort_domain_keywords()
+
+    print "%s end" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))

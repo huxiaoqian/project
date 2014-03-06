@@ -52,7 +52,7 @@ fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'financ
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
 USER_DOMAIN = "user_domain"
-REDIS_HOST = '192.168.2.11'
+REDIS_HOST = '192.168.2.31'
 REDIS_PORT = 6379
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')

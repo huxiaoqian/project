@@ -256,8 +256,8 @@ def show_forest_index():
                            blog_ori_account = blog_ori_account,
                            topic_leader_count = topic_leader_count,
                            topic_ori_date = topic_ori_date,
-                           keyword=keyword, topic_id=topic_id, dur_time=dur_time
-                           )
+                           keyword=keyword, topic_id=topic_id, dur_time=dur_time,
+                           return_beg_str=return_beg_str, return_end_str=return_end_str)
 
 @mod.route('/forest/<int:topic_id>/')
 def forest_index(topic_id):

@@ -71,7 +71,7 @@ def getNone():
     return user
 
 def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
     return db
 
 

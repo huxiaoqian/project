@@ -12,7 +12,7 @@ from weibo.model import TopicIdentification, KnowledgeList, TopicGexf
 from time_utils import ts2datetime, datetime2ts, window2time
 from pyelevator import WriteBatch, Elevator
 
-from weibo.global_config import xapian_search_weibo as status_search, xapian_search_user as user_search
+# from weibo.global_config import xapian_search_weibo as status_search, xapian_search_user as user_search
 
 def _default_elevator(db_name='default'):
     db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
@@ -35,6 +35,8 @@ def acquire_topic_name(tid):
     return item.topicName
 
 def acquire_user_by_id(identifyRange, uid):
+    return None
+    '''
     count, get_results = user_search.search(query={'_id': uid})
     # assert count==1, 'UID duplicated?'
     user = {}
@@ -49,14 +51,18 @@ def acquire_user_by_id(identifyRange, uid):
             user['count1'] = r['followers_count']
             user['count2'] = r['friends_count']
     return user
+    '''
 
 def acquire_status_by_id(mid):
+    return None
+    '''
     count, get_results = status_search.search(query={'_id': mid})
     # assert count==1, 'MID duplicated?'
     status = None
     for r in get_results():
         status = r
     return status
+    '''
 
 def user_status(uid):
     old_items = db.session.query(KnowledgeList).filter(KnowledgeList.kID==uid).all()
@@ -192,6 +198,8 @@ def read_topic_rank_results(topic, top_n, method, date, window):
     return data
 
 def acquire_user_by_id_v2(uid):
+    return None
+    '''
     result = user_search.search_by_id(int(uid), fields=['name', 'location', 'followers_count', 'friends_count'])
     user = {}
     if result:
@@ -201,6 +209,7 @@ def acquire_user_by_id_v2(uid):
         user['count2'] = result['friends_count']
             
     return user
+    '''
 
 
 def read_topic_gexf_results(topic, identifyDate, identifyWindow):

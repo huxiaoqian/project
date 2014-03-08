@@ -17,14 +17,6 @@ import json
 
 from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
 
-import whole as wholeModule
-
-import area as areaModule
-
-import burst as burstModule
-
-import burst_monitor as burstRealtimeModule
-
 from show_user_statuses import user_statuses
 
 from utils import acquire_topic_id, acquire_topic_name, read_rank_results, read_topic_rank_results, read_topic_gexf_results
@@ -32,7 +24,7 @@ from time_utils import ts2datetime, datetime2ts, window2time
 
 from hadoop_utils import monitor
 
-from weibo.global_config import xapian_search_domain, fields_id, xapian_search_user
+from weibo.global_config import fields_id, xapian_search_user
 
 from whole_result import whole_caculate
 from area_result import area_caculate

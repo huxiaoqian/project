@@ -1,49 +1,41 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import time
 try:
     import simplejosn as json
 except ImportError:
     import json
-    
+import os
+import sys
+import time   
 import re
-import calendar
-import time
-from datetime import date
-from datetime import datetime
+import json
 import redis
-
-from xapian_weibo.xapian_backend import XapianSearch
-from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
-                                fields_value, fields_id, emotions_zh_kv, emotions_kv
-from xapian_config import beg_y,beg_m,beg_d,end_y,end_m,end_d
-
-from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
-
+import calendar
+import weibo.model
 from weibo.model import *
 from weibo.extensions import db
-import weibo.model
-import json
-
-from autocalculate import calculate
-from calculate_single import calculate_single,get_user
-from calculatetopic import calculate_topic
+from url2mid import get_mid
+from datetime import datetime, date
+from xapian_weibo.xapian_backend import XapianSearch
 from history import _all_history, _add_history, _search_history
 from history_weibo import _all_history_weibo, _add_history_weibo, _search_history_weibo
-from get_result import *
-from xapian_weibo.xapian_backend import XapianSearch
+from xapian_config import beg_y,beg_m,beg_d,end_y,end_m,end_d
+from flask import Blueprint, url_for, render_template, request, abort, flash, make_response, session, redirect
+from weibo.global_config import xapian_search_user, LEVELDBPATH, REDIS_HOST, REDIS_PORT, \
+                                fields_value, fields_id, emotions_zh_kv, emotions_kv
+from get_result import readPropagateTopic, readPropagateTrend, readPropagateWeibo, \
+                       readPropagateSpatial, readIndex, readPropagateUser, readPropagateSingle, \
+                       readPropagateTrendSingle, readPropagateWeiboSingle, readPropagateSpatialSingle, \
+                       readIndexSingle, readPropagateUserSingle, readPropagateSinglePart, \
+                       readPropagateTrendSinglePart, readPropagateWeiboSinglePart, \
+                       readPropagateSpatialSinglePart, readIndexSinglePart, \
+                       readPropagateUserSinglePart, getMaterial, getMaterialTopic
 
 XAPIAN_FIRST_DATE = '20130901'
 XAPIAN_LAST_DATE = '20130930'
 
-sys.path.append('./weibo/propagate/graph')
-from tree import *
-from forest import *
-from url2mid import *
-sys.path.append('./weibo/profile')
-from utils import *
+#sys.path.append('./weibo/profile')
+#from utils import *
 
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
@@ -52,8 +44,6 @@ fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'financ
 month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
 
 USER_DOMAIN = "user_domain"
-REDIS_HOST = '192.168.2.31'
-REDIS_PORT = 6379
 
 mod = Blueprint('propagate', __name__, url_prefix='/propagate')
 

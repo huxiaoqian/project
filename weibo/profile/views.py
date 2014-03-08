@@ -20,12 +20,11 @@ from operator import itemgetter
 from flask.ext import admin
 from flask import Flask, url_for, render_template, request, make_response, \
                   flash, abort, Blueprint, session, redirect
-from utils import acquire_topic_id, weiboinfo2url, getFieldUsersByScores, \
-                  getUserNameById, getUserIdByName, merge, \
+from utils import getUserNameById, getUserIdByName, merge, \
                   getUsersInfoByUidInteract, user2domain, getFriendship, \
                   yymInfo, _utf_8_decode, getUserInfoById, _utf_8_encode
 from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts, ts2datetime
-from weibo.global_config import xapian_search_user, xapian_search_weibo, xapian_search_domain, LEVELDBPATH, \
+from weibo.global_config import xapian_search_user, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv, LATEST_DATE, DOMAIN_LIST, \
                                 DOMAIN_ZH_LIST
 #from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData

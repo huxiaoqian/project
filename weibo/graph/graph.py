@@ -12,7 +12,7 @@ from gen_weibospread import Tree
 from gexf import Gexf
 from lxml import etree
 from pyelevator import WriteBatch, Elevator
-from weibo.global_config import LEVELDBPATH
+from weibo.global_config import LEVELDBPATH, xapian_search_user
 from xapian_weibo.xapian_backend import XapianSearch
 from flask import Blueprint, session, redirect, url_for
 
@@ -187,9 +187,6 @@ def target_whole_xapian_weibo():
 
 
 def target_whole_xapian_user():
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
-    xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
-    
     return xapian_search_user
 
 

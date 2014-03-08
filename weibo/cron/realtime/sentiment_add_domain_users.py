@@ -11,7 +11,7 @@ from config import DOMAIN_LIST, REDIS_HOST, REDIS_PORT, LEVELDBPATH
 USER_DOMAIN = "user_domain" # user domain hash
 UPDATE_TIME = '20131220'
 
-spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'spiedusers'),
+spieduser_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_sentiment'),
                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
 

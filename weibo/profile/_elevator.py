@@ -25,10 +25,6 @@ def init_db(datestr):
     except Exception, e:
         print e
     try:
-        E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s_test' % datestr))
-    except Exception, e:
-        print e
-    try:
         E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr))
     except Exception, e:
         print e

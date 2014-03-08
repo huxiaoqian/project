@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, date
 from weibo.model import *
 from weibo.extensions import db
 from time_utils import datetimestr2ts, ts2datetimestr, datetime2ts
-from weibo.global_config import xapian_search_user, xapian_search_domain, fields_id, LEVELDBPATH, \
+from weibo.global_config import xapian_search_user, fields_id, LEVELDBPATH, \
                                 REDIS_HOST, REDIS_PORT, DOMAIN_ZH_LIST, USER_DOMAIN
 
 
@@ -479,7 +479,7 @@ def get_person_important(uidToFind,date):
             return important
     return 0
 
-
+'''
 def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='20130430'):
     if fieldName == 'oversea':
         count, get_results = xapian_search_user.search(query={'location': '海外'}, sort_by=['followers_count'], max_offset=10000, fields=['_id'])
@@ -494,6 +494,7 @@ def getFieldUsersByScores(fieldName, start_offset, end_offset, update_date='2013
     count, get_results = xapian_search_domain.search(query=query_dict, sort_by =['-followers_count'], fields=['_id'], max_offset=10000)
     fields_list = [user['_id'] for user in get_results()]
     return fields_list[start_offset:end_offset]
+'''
 
 def timeit(method):
     def timed(*args, **kw):

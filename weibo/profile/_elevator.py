@@ -6,24 +6,22 @@ import json
 import pyelevator
 from pyelevator import WriteBatch, Elevator
 try:
-    from weibo.global_config import LEVELDBPATH
+    from weibo.global_config import LEVELDBPATH, ELEVATOR_HOST, ELEVATOR_PORT
 except:
     LEVELDBPATH = '/home/mirage/leveldb'
+    ELEVATOR_HOST = '192.168.2.31'
+    ELEVATOR_PORT = 4141
     print 'not in web environment'
 
 
 def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    db = Elevator(db_name, transport='tcp', endpoint='%s:%s' % (ELEVATOR_HOST, ELEVATOR_PORT))
     return db
 
 
 def init_db(datestr):
     try:
         E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % datestr))
-    except Exception, e:
-        print e
-    try:
-        E.createdb(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s_test' % datestr))
     except Exception, e:
         print e
     try:

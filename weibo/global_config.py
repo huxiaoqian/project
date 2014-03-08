@@ -37,6 +37,8 @@ if IS_PROD:
     MYSQL_HOST = '192.168.2.30'
     MYSQL_USER = 'root'
     MYSQL_DB = 'weibo'
+    ELEVATOR_HOST = '192.168.2.31'
+    ELEVATOR_PORT = 4141
 else:
     # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'

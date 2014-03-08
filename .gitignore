@@ -20,6 +20,7 @@ lib
 lib64
 weibo/cron/moodlens/logs
 weibo/cron/identify/logs
+weibo/cron/realtime/logs
 
 # Installer logs
 pip-log.txt

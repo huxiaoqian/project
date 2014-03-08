@@ -12,7 +12,6 @@ __all__ = ['Field', 'Topic', \
            'TopicStatus', 'WholeIdentification', 'AreaIdentification', 'BurstIdentification', \
            'TopicIdentification', 'TopicGexf']
 
-
 class Field(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fieldName = db.Column(db.String(20), unique=True)
@@ -456,8 +455,8 @@ class Topics(db.Model):
     topic = db.Column(db.Text)
     iscustom = db.Column(db.Boolean)
     expire_date = db.Column(db.BigInteger(10, unsigned=True))
-    db_date = db.Column(db.BigInteger(10, unsigned=True))#入库时间
-    status = db.Column(db.Integer)#0:完全删除 1:过期不删除 -1:未删除
+    db_date = db.Column(db.BigInteger(10, unsigned=True)) # 入库时间
+    status = db.Column(db.Integer)# 0:完全删除 1:过期不删除 -1:未删除
 
     def __init__(self, user, topic, iscustom, expire_date, db_date, status):
         self.user = user

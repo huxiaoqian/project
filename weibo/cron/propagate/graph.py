@@ -187,7 +187,7 @@ def target_whole_xapian_weibo(start_date=XAPIAN_FIRST_DATE, end_date=XAPIAN_LAST
 
 
 def target_whole_xapian_user():
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
+    XAPIAN_USER_DATA_PATH = '/media/data/'
     xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
     
     return xapian_search_user

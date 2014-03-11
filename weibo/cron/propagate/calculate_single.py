@@ -23,7 +23,7 @@ path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 try:
     from weibo.global_config import LEVELDBPATH
 except:
-    LEVELDBPATH = '/home/mirage/leveldb'
+    LEVELDBPATH = '/media/data/leveldb/'
     print 'not in web environment'
 
 
@@ -858,7 +858,7 @@ def save_weibo(ori_id,mid,image_url,text,sourcePlatform,postDate,uid,user_name,r
     db.session.commit()
 
 if __name__ == "__main__":
-    #init_db()
+    init_db()
 
     # topic_info = calculate_part(3617839380294898, 1377964800, 1378224000,[3617782506173763,3618043278635735,3618455003121922,3618481590955662,3618479728507301])
     # print topic_info
@@ -869,5 +869,5 @@ if __name__ == "__main__":
     # topic_info = calculate_single(3618201981966170)
     # print topic_info
 
-    topic_info = calculate_single(3618204893345603)
-    print topic_info
+##    topic_info = calculate_single(3618204893345603)
+##    print topic_info

@@ -25,10 +25,10 @@ IS_PROD = 1
 
 if IS_PROD:
     # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
-    XAPIAN_USER_DATA_PATH = '/media/sdh/data/'
+    XAPIAN_USER_DATA_PATH = '/media/data/'
     # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     # MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
-    LEVELDBPATH = '/home/mirage/leveldb'
+    LEVELDBPATH = '/media/data/leveldb'
     COBAR_HOST = '192.168.2.31'
     COBAR_PORT = 8066
     COBAR_USER = 'cobar'

@@ -61,7 +61,7 @@ def _update_single_status2Computing(mid, postDate, db_date, module='propagate'):
 def _update_single_status2Completed(mid, postDate, db_date, module='propagate'):
     item = WeiboStatus(module, COMPLETED_STATUS, mid, postDate, db_date)
     item_exist = db.session.query(WeiboStatus).filter(WeiboStatus.module==module, \
-                                                      WeiboStatus.status==NOT_CALC_STATUS, \
+                                                      WeiboStatus.status==IN_CALC_STATUS, \
                                                       WeiboStatus.mid==mid, \
                                                       WeiboStatus.postDate==postDate, \
                                                       WeiboStatus.db_date==db_date).first()

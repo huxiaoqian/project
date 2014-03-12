@@ -63,7 +63,7 @@ def _update_topic_status2Computing(topic, start, end, db_date, range=Fifteenminu
 def _update_topic_status2Completed(topic, start, end, db_date, range=Fifteenminutes, module='identify'):
     item = TopicStatus(module, COMPLETED_STATUS, topic, start, end, range, db_date)
     item_exist = db.session.query(TopicStatus).filter(TopicStatus.module==module, \
-                                                      TopicStatus.status==NOT_CALC_STATUS, \
+                                                      TopicStatus.status==IN_CALC_STATUS, \
                                                       TopicStatus.topic==topic, \
                                                       TopicStatus.start==start, \
                                                       TopicStatus.end==end, \

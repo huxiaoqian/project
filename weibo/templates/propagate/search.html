@@ -35,11 +35,11 @@
     	</div>
     <div id="show_search_msg"></div>
     <div id="search_on" class="inline">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>可查看历史任务:</b></font>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>可查看任务:</b></font>
     </div>
     <div id="show_history_msg" class="well"></div>
     <div id="search_now" class="inline">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>正在进行中历史任务:</b></font>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>正在进行中任务:</b></font>
     </div>
     <div id="show_history_now" class="well"></div>
     </div>
@@ -57,8 +57,8 @@
           <ul>
             <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博MID:</b></font>
             <input type="text" class="span2" placeholder="请输入微博ID" value="" role="textbox" name="weibo_mid" id="weibo_mid" style="margin-bottom: 0px;">
-            <!--<font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>-->
-            <div id="reportrange_singlebyid" class="btn dropdown-toggle"  style="display:none;">
+            <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
+            <div id="reportrange_singlebyid" class="btn dropdown-toggle">
               <i class="icon-calendar icon-large"></i>
               <span id="weibo_time_id">{% if time_str %}{{time_str}}{% else %}9月 1,2013 - 9月 3,2013{% endif %}</span> 
               <b class="caret"></b>
@@ -87,11 +87,11 @@
       </div>
       <div id="show_search_msg_single"></div>
     <div id="search_on" class="inline">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>可查看历史任务:</b></font>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>可查看任务:</b></font>
     </div>
     <div id="show_history_msg_single" class="well"></div>
     <div id="search_now" class="inline">
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>正在进行中历史任务:</b></font>
+      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>正在进行中任务:</b></font>
     </div>
     <div id="show_history_now_single" class="well"></div>
     </div>
@@ -208,7 +208,7 @@ function get_and_show_history_msg(){
             max += 1;
           }
           if (max > 5){
-            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中历史任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
             $('#show_search_msg').empty();
             $('#show_search_msg').append(search_html);
             $('#search_topic').val('搜索');
@@ -339,7 +339,7 @@ function get_and_show_history_msg(){
             max += 1;
           }
           if (max > 5){
-            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中历史任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
             $('#show_search_msg_single').empty();
             $('#show_search_msg_single').append(search_html);
             if(flag == 0){
@@ -369,7 +369,15 @@ function get_and_show_history_msg(){
                 dataType: 'json',   
                 type: "GET",   
                 success: function (data) {
-                  check_status();
+                  if(data=='wrong'){
+                    var search_html = "<div class=\"well\"><li>您输入的时间范围有误</li></div>";
+                    $('#show_search_msg_single').empty();
+                    $('#show_search_msg_single').append(search_html);
+                  }
+                  else{
+                    check_status();
+                  }
+                  
                 }
               });
               get_and_show_history_now_single();

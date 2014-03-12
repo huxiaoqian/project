@@ -2433,6 +2433,8 @@ def weibo_submit():
     end_ts = date2ts(end_ts)
     statuses_search = getXapianweiboByTs(start_ts, end_ts)
     count,get_results = statuses_search.search(query={'_id': mid},fields=['timestamp'])
+    if count == 0:
+        return 'wrong'
     for r in get_results():
         postDate = datetime.fromtimestamp(r['timestamp'])
     status , item = _add_history_weibo(-1, mid, postDate, timestamp)

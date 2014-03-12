@@ -16,18 +16,36 @@ fields_id = {'culture': 1, 'education': 2, 'entertainment': 3, 'fashion': 4, 'fi
 IS_PROD = 1
 
 if IS_PROD:
-    XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
-    XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
-    MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
-    LEVELDBPATH = '/home/mirage/leveldb'
+    # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
+    XAPIAN_USER_DATA_PATH = '/media/data/'
+    # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
+    # MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
+    LEVELDBPATH = '/media/data/leveldb'
+    COBAR_HOST = '192.168.2.31'
+    COBAR_PORT = 8066
+    COBAR_USER = 'cobar'
+    REDIS_HOST = '192.168.2.31'
+    REDIS_PORT = 6379
+    MYSQL_HOST = '192.168.2.30'
+    MYSQL_USER = 'root'
+    MYSQL_DB = 'weibo'
+    ELEVATOR_HOST = '192.168.2.31'
+    ELEVATOR_PORT = 4141
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
 else:
-    XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
+    # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
-    XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
-    MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
+    # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
+    # MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
+    COBAR_HOST = '219.224.135.61'
+    COBAR_PORT = 8066
+    COBAR_USER = 'cobar'
+    REDIS_HOST = '219.224.135.60'
+    REDIS_PORT = 6379
+    MYSQL_HOST = '219.224.135.60'
+    MYSQL_USER = 'root'
+    MYSQL_DB = 'weibo'
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
 
 READ_FROM_STUB = 1
@@ -37,7 +55,7 @@ READ_FROM_STUB = 1
 ##else:
 ##	xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo', schema_version=4)
 
-xapian_search_domain  = XapianSearch(path=XAPIAN_DOMAIN_DATA_PATH, name='master_timeline_domain', schema_version=4)
+#xapian_search_domain  = XapianSearch(path=XAPIAN_DOMAIN_DATA_PATH, name='master_timeline_domain', schema_version=4)
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
 
 FOLLOWERS_MIN_SUPPORT = 500

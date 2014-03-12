@@ -34,7 +34,7 @@ if IS_PROD:
     COBAR_USER = 'cobar'
     REDIS_HOST = '192.168.2.31'
     REDIS_PORT = 6379
-    MYSQL_HOST = '192.168.2.30'
+    MYSQL_HOST = '192.168.2.31'
     MYSQL_USER = 'root'
     MYSQL_DB = 'weibo'
     ELEVATOR_HOST = '192.168.2.31'

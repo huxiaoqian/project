@@ -338,7 +338,7 @@ def calculate(keyword, beg_time, end_time):
     topic_info['topic_participents'] = user_data
     topic_info['blogs_sum'] = blogs_sum
     topic_info['topic_ori_blog_count'] = len(topic_ori_blog)#int(len(topic_ori_blog)*(total_number/10000.0))
-    topic_info['topic_url'] = topic_url
+    topic_info['topic_url'] = topic_url[0]
     topic_info['perday_count_list'] = perday_count_list
     topic_info['date_list'] = date_list
     topic_info['topic_rel_blog'] = topic_rel_blog
@@ -384,7 +384,7 @@ def save_base_infor(keyword,topic_poster,topic_url,blogs_sum,topic_ori_blog_coun
 
     if not topic_url:
         topic_url = 'None'
-    #print topic_poster
+    #print keyword,topic_url,beg_date,end_date
     new_item = PropagateTopic(keyword,topic_url,beg_date,end_date,topic_poster,blogs_sum,topic_ori_blog_count,topic_post_date,persistent,sudden,coverage,media,leader)
     db.session.add(new_item)
     db.session.commit()
@@ -443,7 +443,7 @@ def save_weibo(wordid,weibo):#话题id、微博
 
 if __name__ == "__main__":
 
-    topic_info = calculate('日本', '2013-09-01', '2013-09-04')
+    topic_info = calculate('钓鱼岛', '2013-09-01', '2013-09-04')
     print topic_info
 ##    print 'weibo:'
 ##    weibo = topic_info['topic_rel_blog'][:5]

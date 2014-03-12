@@ -20,13 +20,13 @@ if IS_PROD:
     XAPIAN_USER_DATA_PATH = '/media/data/'
     # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     # MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
-    LEVELDBPATH = '/media/data/leveldb'
+    LEVELDBPATH = '/media/data/leveldb/'
     COBAR_HOST = '192.168.2.31'
     COBAR_PORT = 8066
     COBAR_USER = 'cobar'
     REDIS_HOST = '192.168.2.31'
     REDIS_PORT = 6379
-    MYSQL_HOST = '192.168.2.30'
+    MYSQL_HOST = '192.168.2.31'
     MYSQL_USER = 'root'
     MYSQL_DB = 'weibo'
     ELEVATOR_HOST = '192.168.2.31'

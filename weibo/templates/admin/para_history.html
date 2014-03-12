@@ -56,6 +56,7 @@ function add_field(){<!-- 添加按钮 -->
     var fl=prompt("请输入要添加的话题","");
     var f2=prompt("请输入起始时间（如：2013-9-1）","");
     var f3=prompt("请输入结束时间（如：2020-12-31）","");
+    var f4=prompt("请输入话题模块，1表示敏感博主识别，2表示情绪分析，3表示传播分析","");
     if(fl)
     {
         if(!f2){
@@ -64,12 +65,15 @@ function add_field(){<!-- 添加按钮 -->
         if(!f3){
           f3 = '2020-12-31';
         }
+        if(!f4){
+          f4 = 1;
+        }
         $.ajax({   
           type:"POST",  
           url:"/sysadmin/history_new",
           dataType: "json",
           async:false,
-          data:{topic : fl,start: f2,end: f3},
+          data:{topic : fl,start: f2,end: f3,module: f4},
           success: function(data){
               if(data == 'outindex'){
                 alert("添加失败，历史话题已达上限！");
@@ -247,10 +251,10 @@ function declear_re(){<!-- 反选 -->
                             html += "<td style='text-align:center'>" + user['start'] + "</td>";
                             html += "<td style='text-align:center'>" + user['end'] + "</td>";
                             if(user['status']==0){
-                              html += "<td style='text-align:center'>计算完成</td>";
+                              html += "<td style='text-align:center'>计算中</td>";
                             }
                             if(user['status']==1){
-                              html += "<td style='text-align:center'>计算中</td>";
+                              html += "<td style='text-align:center'>计算完成</td>";
                             }
                             if(user['status']==-1){
                               html += "<td style='text-align:center'>等待计算</td>";

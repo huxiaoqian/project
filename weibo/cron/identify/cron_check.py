@@ -24,6 +24,7 @@ def main():
         db_date = topic.db_date
         topicname = topic.topic
 
+        _update_topic_status2Computing(topicname, start_ts, end_ts, db_date)
         topic_id = acquire_topic_id(topicname, start_ts, end_ts)
         windowsize = (end_ts - start_ts) / Day
         date = ts2datetime(end_ts)

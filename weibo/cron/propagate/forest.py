@@ -415,7 +415,7 @@ def forest_main(keyword,topic_id):
 if __name__ == "__main__":
 
 ##    init_db()
-    v = get_weibo_tree('7')
-    print v
-##    result = forest_main('日本',7)
-##    print result
+####    v = get_weibo_tree('7')
+####    print v
+    result = forest_main('日本',7)
+    print result

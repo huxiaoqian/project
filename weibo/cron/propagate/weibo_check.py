@@ -25,12 +25,7 @@ def main():
         time_ts = datetime2ts(postDate)
         end_ts = time_ts + 24*3600
 
-##        result  = calculate_single(mid,time_ts,end_ts)#计算整个转发树结构
-##        print result
-##        idlist = [3617782506173763,3618043278635735,3618455003121922,3618481590955662,3618479728507301]
-##        #idlist表示以mid为顶点的子树结构中，包含的微博id（mid除外）
-##        #idlist必须要先构建整个转发树才能得到
-##        result  = calculate_part(mid,time_ts,end_ts,idlist)#计算整个子树结构
+        _update_single_status2Computing(mid, postDate, db_date)
         result  = calculate_single(mid)
         print result
         _update_single_status2Completed(mid, postDate, db_date)

@@ -15,7 +15,7 @@ from pyelevator import WriteBatch, Elevator
 # from weibo.global_config import xapian_search_weibo as status_search, xapian_search_user as user_search
 
 def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
     return db
 
 def acquire_topic_id(name):
@@ -180,6 +180,7 @@ def read_topic_rank_results(topic, top_n, method, date, window):
     data = []
     items = db.session.query(TopicIdentification).filter_by(topic=topic, identifyMethod=method, \
                                                             identifyWindow=window, identifyDate=date).order_by(TopicIdentification.rank.asc()).limit(top_n)
+    print items.count()
     if items.count():
         for item in items:
             rank = item.rank

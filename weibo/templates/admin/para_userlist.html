@@ -227,8 +227,10 @@ ul{
                         {
                               var fa = $(this).parent();
                               var ne = $(fa).prev().prev().prev().prev().prev();
-                              var uname = $(ne).html();                  
-                              var f_id = $(uname).html();
+                              var uname = $(ne).html(); 
+                              var user = $(ne).prev();                
+                              var f_id = $(user).html();
+
                               if(confirm("您要修改的是"+uname+"用户？")){
                                 var identify=prompt("请输入敏感博主识别的权限\n注：1表示有权限，0表示没权限","");
                                 var moodlens=prompt("请输入网民情绪监控与预警的权限\n注：1表示有权限，0表示没权限","");

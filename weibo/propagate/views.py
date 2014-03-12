@@ -2286,7 +2286,10 @@ def search_history():
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
                     time_pass = timestamp_end - timestamp_start
+                    time_pass_hour = int(time_pass) / 3600
+                    time_pass_day = int(time_pass) / ( 24 * 3600 )
                     time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = str(time_pass_day) + '天' + str(time_pass_hour) + '小时' + time_pass
                     time_pass = '       已计算时长： ' + str(time_pass)
                     db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
                     db_date = '     提交时间： ' + str(db_date)
@@ -2301,7 +2304,10 @@ def search_history():
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
                     time_pass = timestamp_end - timestamp_start
+                    time_pass_hour = int(time_pass) / 3600
+                    time_pass_day = int(time_pass) / ( 24 * 3600 )
                     time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = str(time_pass_day) + '天' + str(time_pass_hour) + '小时' + time_pass
                     time_pass = '       已计算时长： ' + str(time_pass)
                     db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
                     db_date = '     提交时间： ' + str(db_date)
@@ -2381,7 +2387,10 @@ def search_history_id():
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
                     time_pass = timestamp_end - timestamp_start
+                    time_pass_hour = int(time_pass) / 3600
+                    time_pass_day = int(time_pass) / ( 24 * 3600 )
                     time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = str(time_pass_day) + '天' + str(time_pass_hour) + '小时' + time_pass
                     time_pass = '       已计算时长： ' + str(time_pass)
                     db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
                     db_date = '     提交时间： ' + str(db_date)
@@ -2394,7 +2403,10 @@ def search_history_id():
                 if(timestamp_end):
                     timestamp_start = int(history.db_date)
                     time_pass = timestamp_end - timestamp_start
+                    time_pass_hour = int(time_pass) / 3600
+                    time_pass_day = int(time_pass) / ( 24 * 3600 )
                     time_pass = time.strftime("%M分钟 %S秒 ", time.localtime(time_pass))
+                    time_pass = str(time_pass_day) + '天' + str(time_pass_hour) + '小时' + time_pass
                     time_pass = '       已计算时长： ' + str(time_pass)
                     db_date = time.strftime("%m月 %d日, %Y %H:%M:%S", time.localtime(history.db_date))
                     db_date = '     提交时间： ' + str(db_date)

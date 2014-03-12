@@ -408,8 +408,7 @@ def forest_main(keyword,topic_id):
 
     graph = etree.tostring(gexf.getXML(), pretty_print=False, encoding='utf-8', xml_declaration=True)
 
-    print 'yuan'
-    #save_weibo_tree(str(topic_id), graph)
+    save_weibo_tree(str(topic_id), graph)
 
     return 1
 

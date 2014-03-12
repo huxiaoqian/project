@@ -13,6 +13,8 @@ from weibo.global_config import xapian_search_user
 from read_log import *
 #xapian_search_user = XapianSearch(path='/opt/xapian_weibo/data/', name='master_timeline_user', schema_version=1)
 
+module_char = ['identify','sentiment','propagate']
+
 mod = Blueprint('sysadmin', __name__, url_prefix='/sysadmin')
 
 @mod.route('/')
@@ -665,9 +667,10 @@ def history_de():#删除历史话题
             start = old_item.start
             end = old_item.end
             local = old_item.db_date
+            module = old_item.module
             db.session.delete(old_item)
             db.session.commit()
-            new_item = TopicStatus(module='Sentiment',status=-2,topic=topic,start=start,end=end,range=900,db_date=local)
+            new_item = TopicStatus(module=module,status=-2,topic=topic,start=start,end=end,range=900,db_date=local)
             db.session.add(new_item)
             db.session.commit()
     else:
@@ -680,6 +683,8 @@ def history_new():#添加历史话题
     new_field = request.form['topic']
     start = request.form['start']
     end = request.form['end']
+    module_index = int(request.form['module'])
+    module = module_char[module_index-1]
     start_time = time.mktime(time.strptime(start, '%Y-%m-%d'))
     start_time = int(start_time)
     end_time = time.mktime(time.strptime(end, '%Y-%m-%d'))
@@ -688,20 +693,20 @@ def history_new():#添加历史话题
     topics = db.session.query(TopicStatus).filter(TopicStatus.status==-1).all()
     if len(topics)>10:
         return json.dumps('outindex')
-    old_items = db.session.query(TopicStatus).filter(TopicStatus.topic==new_field).all()
+    old_items = db.session.query(TopicStatus).filter((TopicStatus.topic==new_field)&(TopicStatus.module==module)).all()
     if len(old_items):
         for old_item in old_items:
             if old_item.status == -2:
                 topic = old_item.topic.encode('utf-8')
                 db.session.delete(old_item)
                 db.session.commit()
-                new_item = TopicStatus(module='Sentiment',status=-1,topic=topic,start=start_time,end=end_time,range=900,db_date=local)
+                new_item = TopicStatus(module=module,status=-1,topic=topic,start=start_time,end=end_time,range=900,db_date=local)
                 db.session.add(new_item)
                 db.session.commit()                
             else:
                 result = 'Wrong'
     else:
-	new_item = TopicStatus(module='Sentiment',status=-1,topic=new_field,start=start_time,end=end_time,range=900,db_date=local)
+	new_item = TopicStatus(module=module,status=-1,topic=new_field,start=start_time,end=end_time,range=900,db_date=local)
         db.session.add(new_item)
         db.session.commit()
     return json.dumps(result)

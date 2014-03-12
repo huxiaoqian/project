@@ -13,6 +13,8 @@ COBAR_USER = 'cobar'
 
 LEVELDBPATH = "/media/data/leveldb"
 
+emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
+
 DOMAIN_LIST = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', \
                'technology', 'oversea', 'university', 'homeadmin', 'abroadadmin', 'homemedia', \
                'abroadmedia', 'folkorg', 'lawyer', 'politician', 'mediaworker', 'activer', \
@@ -24,7 +26,7 @@ xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timel
 DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 MYSQL_USER = 'root'
-MYSQL_HOST = '192.168.2.30'
+MYSQL_HOST = '192.168.2.31'
 MYSQL_DB = 'weibo'
 SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://%s:@%s/%s?charset=utf8' % (MYSQL_USER, MYSQL_HOST, MYSQL_DB)
 

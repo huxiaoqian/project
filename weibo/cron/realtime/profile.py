@@ -112,6 +112,16 @@ def batch_sort_domain_keywords(topk=50):
         daily_profile_domain_topk_keywords_bucket[domainid].Put(str(domainid), json.dumps(top_keywords_dict))
 
 
+def get_now_datestr():
+    return datetime.datetime.now().strftime("%Y%m%d")
+
+
+def get_before_datestr():
+    now_ts = time.time() - 24 * 3600
+    datestr = datetime.date.fromtimestamp(now_ts).isoformat().replace('-', '')
+    return datestr
+
+
 if __name__ == '__main__':
 
     print "%s start" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))

@@ -13,7 +13,7 @@ from xapian_weibo.utils import get_now_db_no
 
 USER_KEYWORDS = "user_keywords_%s" # user keywords sorted set, uid,
 USER_SET = "user_profile" # user set,
-LEVELDB_CONF_MAX_DB_NO = 96
+
 
 def _default_redis(host=REDIS_HOST, port=REDIS_PORT, db=0):
     return redis.StrictRedis(host, port, db)
@@ -38,12 +38,9 @@ def profile_keywords_redis2leveldb():
         cursor, members = r.sscan(USER_SET, cursor=cursor, count=10000)
 
 
-def ts_div_fifteen_m():
-    return int(time.time()) / (15 * 60)
-
-
 def get_now_leveldb_no():
-    return ts_div_fifteen_m() % LEVELDB_CONF_MAX_DB_NO + 1
+    local_ts = time.time() - time.timezone
+    return int(local_ts) % (24 * 60 * 60) / (15 * 60)  + 1
 
 
 def get_now_datestr():

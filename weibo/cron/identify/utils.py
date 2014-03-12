@@ -4,7 +4,7 @@ import os
 import time
 import random
 
-from config import db
+from config import db, ELEVATOR_HOST, ELEVATOR_PORT
 from model import TopicStatus, TopicIdentification, TopicGexf
 
 from time_utils import ts2datetime, datetime2ts, window2time
@@ -14,7 +14,7 @@ from config import xapian_search_user as user_search
 from pyelevator import WriteBatch, Elevator
 
 def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.11:4141')
+    db = Elevator(db_name, transport='tcp', endpoint='%s:%s' % (ELEVATOR_HOST, ELEVATOR_PORT))
     return db
 
 def init_db():

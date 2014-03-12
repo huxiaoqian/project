@@ -22,19 +22,24 @@ DOMAIN_LIST = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'm
 IS_PROD = 1
 
 if IS_PROD:
-    XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
-    XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
+    # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
+    XAPIAN_USER_DATA_PATH = '/media/data/'
+    # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
-    LEVELDBPATH = '/home/mirage/leveldb'
+    LEVELDBPATH = '/media/data/leveldb'
     REDIS_HOST = '192.168.2.31'
     REDIS_PORT = 6379
-    SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
+    MYSQL_DB = 'weibo'
+    MYSQL_HOST = '192.168.2.31'
+    MYSQL_USER = 'root'
+    ELEVATOR_HOST = '192.168.2.31'
+    ELEVATOR_PORT = 4141
+    SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://%s:@%s/%s?charset=utf8' % (MYSQL_USER, MYSQL_HOST, MYSQL_DB)
     DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 else:
-    XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
-    XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
+    # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
+    XAPIAN_USER_DATA_PATH = '/media/data/'
+    # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
     MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
     REDIS_HOST = '219.224.135.60'
@@ -42,19 +47,7 @@ else:
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
     DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/mirage/dev/data/stub/master_timeline_weibo_'
 
-READ_FROM_STUB = 1
-READ_FROM_ARTHAS = 0
-
-if not READ_FROM_ARTHAS:
-    if READ_FROM_STUB:
-        xapian_search_weibo = XapianSearch(stub=MASTER_TIMELINE_STUB, schema_version=5)
-    else:
-        xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo_csv', schema_version=5)
-
-    xapian_search_domain  = XapianSearch(path=XAPIAN_DOMAIN_DATA_PATH, name='master_timeline_domain', schema_version=4)
-    xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
-else:
-    LEVELDBPATH = '/home/arthas/leveldb'
+xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
 
 # Create application
 app = Flask('xxx')

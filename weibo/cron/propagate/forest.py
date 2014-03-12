@@ -13,7 +13,7 @@ from collections import defaultdict
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
-from global_config import xapian_search_user,xapian_search_weibo
+from global_config import xapian_search_user
 from get_result import *
 from pyelevator import WriteBatch, Elevator
 
@@ -33,7 +33,7 @@ user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
 try:
     from weibo.global_config import LEVELDBPATH
 except:
-    LEVELDBPATH = '/home/mirage/leveldb'
+    LEVELDBPATH = '/media/data/leveldb/'
     print 'not in web environment'
 
 def _default_elevator(db_name='default'):
@@ -100,7 +100,7 @@ def target_whole_xapian_weibo():
     return xapian_weibo
 
 def target_whole_xapian_user():
-    XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
+    XAPIAN_USER_DATA_PATH = '/media/data/'
     xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
     
     return xapian_search_user

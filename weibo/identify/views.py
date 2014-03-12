@@ -19,7 +19,7 @@ from flask import Blueprint, url_for, render_template, request, abort, flash, ma
 
 from show_user_statuses import user_statuses
 
-from utils import acquire_topic_id, acquire_topic_name, read_rank_results, read_topic_rank_results, read_topic_gexf_results
+from utils import acquire_topic_name, read_rank_results, read_topic_rank_results, read_topic_gexf_results
 from time_utils import ts2datetime, datetime2ts, window2time
 
 from hadoop_utils import monitor

@@ -159,7 +159,12 @@ def _multi_search(query_dict, sharding=True):
         person_dict['profile_image_url'] = profileImageUrl
         person_dict['_id'] = userId
         person_dict['location'] = location
-        person_dict['gender'] = u'男' if gender == 'f' else u'女'
+        if gender == 'f':
+            person_dict['gender'] = u'女'
+        elif gender == 'm':
+            person_dict['gender'] = u'男'
+        else:
+            person_dict['gender'] = u'未知'
         person_dict['verifiedType'] = verifiedType
         person_dict['verified'] = u'是' if verified else u'否'
         person_dict['created_at'] = ts2HMS(created_at)

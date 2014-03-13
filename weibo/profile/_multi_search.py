@@ -26,7 +26,12 @@ def thumbnail_user_info(uid):
 								except:
 										user[f] = ''
 						elif f == 'gender':
-								user[f] = u'男' if item[f] == 'f' else u'女'
+							  if item[f] == 'f':
+                    user[f] = u'女'
+                elif item[f] == 'm':
+                    user[f] = u'男'
+                else:
+                    user[f] = u'未知'
 						else:
 								user[f] = item[f]
 

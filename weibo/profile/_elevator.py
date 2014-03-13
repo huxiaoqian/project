@@ -8,7 +8,7 @@ from pyelevator import WriteBatch, Elevator
 try:
     from weibo.global_config import LEVELDBPATH, ELEVATOR_HOST, ELEVATOR_PORT
 except:
-    LEVELDBPATH = '/home/mirage/leveldb'
+    LEVELDBPATH = '/media/data/leveldb'
     ELEVATOR_HOST = '192.168.2.31'
     ELEVATOR_PORT = 4141
     print 'not in web environment'
@@ -148,7 +148,7 @@ def getDomainBasic(domain, datestr):
 
 if __name__ == '__main__':
     import sys
-    datestr = sys.argv[1] # '20130903'
+    datestr = sys.argv[1] # '20130901'
     E = _default_elevator()
     #E.connect(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % datestr))
     #E.repairdb()

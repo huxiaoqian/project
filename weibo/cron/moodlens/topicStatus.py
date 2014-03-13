@@ -100,7 +100,7 @@ def _drop_item(topic, start, end, db_date, status, range=Fifteenminutes, module=
 
 
 if __name__ == '__main__':
-    pass
+    _update_topic_status2Completed('加班', 1377964800, 1378396800, 1394632162)
     #_update_topic_status2Completed('高考', 1377964800, 1378051200)
     #_drop_item('日本', 1377964800, 1378310400, IN_CALC_STATUS)
     #_add_not_start_topic('开学')

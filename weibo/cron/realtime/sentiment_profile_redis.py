@@ -398,8 +398,6 @@ if __name__ == '__main__':
     # 执行计算的两个先决条件，其一是启动第一次执行计算任务时，需清空15个redis db；
     # 其二是数据可以分块到达，但是需要按照时间顺序，块与块之间需要保持顺序
     # 其三是NOW_DB_START_TS需要清空
-
-    # init_redis()
     
     global_r0 = _default_redis()
     now_db_start_ts = global_r0.get(NOW_DB_START_TS)

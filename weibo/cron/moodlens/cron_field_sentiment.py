@@ -3,7 +3,7 @@
 
 import json
 import MySQLdb
-from config import cron_start, cron_end, xapian_search_domain, \
+from config import cron_start, cron_end, \
                    xapian_search_user, emotions_kv, COBAR_HOST, \
                    COBAR_USER, COBAR_PORT
 from time_utils import datetime2ts, ts2HourlyTime
@@ -137,10 +137,6 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
 
 
 def sentiment_field(domain, xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
-    domain_uids = DomainUsersFromMysql(domain, TOP_DOMAIN_LIMIT)
-
-    print 'domain uid: ', len(domain_uids)
-
     if domain_uids != []:
         start_ts = int(start_ts)
         over_ts = int(over_ts)
@@ -198,29 +194,21 @@ def worker(domainid, datestr):
     cal_field_sentiment_by_date(domainid, datestr, Fifteenminutes)
 
 
-def test_domain():
-    users = xapian_search_domain.iter_all_docs(fields=['_id', 'domain'])
-    count = 0
-    domain_count = {}
-    for user in users:
-        try:
-            domain_count[user['domain']] += 1
-        except KeyError:
-            domain_count[user['domain']] = 1
-    print domain_count
-
-
 if __name__ == '__main__':
     # maintain domains
     # _maintain_domain()
 
-    #test_domain()
-
     # test mysql write
     import sys
-    domain = sys.argv[1]
-    date = sys.argv[2] # '2013-09-01'
-    worker(domain, date)
+    # domain = sys.argv[1]
+    # date = sys.argv[2] # '2013-09-01'
+    domain = 'other'
+    domain_uids = DomainUsersFromMysql(domain, TOP_DOMAIN_LIMIT)
+    print 'domain uid: ', len(domain_uids)
+    for date in ['2013-09-11', '2013-09-12', '2013-09-13', '2013-09-14', \
+                 '2013-09-15', '2013-09-16', '2013-09-17', '2013-09-18', \
+                 '2013-09-19', '2013-09-20', '2013-09-21']:
+        worker(domain, date)
 
     # test mysql read
     # start_range_ts = datetime2ts('2013-09-29')

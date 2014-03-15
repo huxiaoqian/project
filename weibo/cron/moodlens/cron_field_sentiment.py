@@ -202,12 +202,11 @@ if __name__ == '__main__':
     import sys
     # domain = sys.argv[1]
     # date = sys.argv[2] # '2013-09-01'
-    domain = 'other'
+    domain = 'mediaworker'
     domain_uids = DomainUsersFromMysql(domain, TOP_DOMAIN_LIMIT)
     print 'domain uid: ', len(domain_uids)
-    for date in ['2013-09-11', '2013-09-12', '2013-09-13', '2013-09-14', \
-                 '2013-09-15', '2013-09-16', '2013-09-17', '2013-09-18', \
-                 '2013-09-19', '2013-09-20', '2013-09-21']:
+    for date in ['2013-09-06', '2013-09-07', '2013-09-08', \
+                 '2013-09-09', '2013-09-10']:
         worker(domain, date)
 
     # test mysql read

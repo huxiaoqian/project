@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from config import db
+import os
+import sys
+import leveldb
+import time
+import heapq
+from config import db, LEVELDBPATH
 from model import BurstIdentification
 
 TOPK = 1000
@@ -80,17 +85,17 @@ def burst_rank(topk=TOPK, identifyWindow=1):
 
 
 def save_burst(data, method="active", identifyWindow=1):
-	# delete old data
-	if data and len(data):
-        exist_items = db.session.query(BurstIdentification).\
-                                filter(BurstIdentification.identifyDate == now_datestr, \
-                                       BurstIdentification.identifyWindow==identifyWindow, \
-                                       BurstIdentification.identifyMethod==method).all()
+    # delete old data
+    if data and len(data):
+        exist_items = db.session.query(BurstIdentification)\
+                                .filter(BurstIdentification.identifyDate==now_datestr, \
+                                        BurstIdentification.identifyWindow==identifyWindow, \
+                                        BurstIdentification.identifyMethod==method).all()
         for exist_item in exist_items:
             db.session.delete(exist_item)
         db.session.commit()
 
-	# add new data
+    # add new data
     for i, tuples in enumerate(data):
         rank = i + 1
         if method == 'active':
@@ -103,12 +108,13 @@ def save_burst(data, method="active", identifyWindow=1):
         db.session.add(new_item)
         db.session.commit()
 
+
 if __name__ == '__main__':
-	# get datestr
+    # get datestr
     now_datestr = sys.argv[1] # '20130901'
     before_datestr = sys.argv[2] # '20130830'
 
-	# identify rank
+    # identify rank
     global_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr),
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     global_previous_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % before_datestr),

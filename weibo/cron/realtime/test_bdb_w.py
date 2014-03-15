@@ -42,9 +42,9 @@ def write_from_whole_text():
     	uid = k
         active, important, reposts, original, emoticon, interact_dict, keywords_dict = v.split('_\/')
         profile_interact_hash_db.put(str(now_datestr) + '_' + k, str(interact_dict))
-        keywords_dict = json.loads(keywords_dict)
-        sorted_keywords = sorted(keywords_dict.iteritems(), key=operator.itemgetter(1), reverse=False)
-        keywords_dict = json.dumps(dict(sorted_keywords[len(sorted_keywords)-50:]))
+        #keywords_dict = json.loads(keywords_dict)
+        #sorted_keywords = sorted(keywords_dict.iteritems(), key=operator.itemgetter(1), reverse=False)
+        #keywords_dict = json.dumps(dict(sorted_keywords[len(sorted_keywords)-50:]))
         profile_keywords_hash_db.put(str(now_datestr) + '_' + k, str(keywords_dict))
         profile_counts_hash_db.put(str(now_datestr) + '_' + k, '_\/'.join([active, important, reposts, original, emoticon]))
 

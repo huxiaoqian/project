@@ -32,15 +32,13 @@ def thumbnail_user_info(uid):
                     user[f] = u'男'
                 else:
                     user[f] = u'未知'
-		else:
-		    user[f] = item[f]
-
-		return user
+		
+    return user
 
 
 def _hotest_users(limit=1000, date='2013-09-04'):
     users = []
-    items = db.session.query(WholeIdentification)\
+    items = db.session.query(WholeIdentification)\
                             .filter(WholeIdentification.identifyDate==date, \
                                     WholeIdentification.identifyWindow==1, \
                                     WholeIdentification.identifyMethod=='active')\
@@ -55,7 +53,8 @@ def _hotest_users(limit=1000, date='2013-09-04'):
 	thumbnail_user.update(row_user)
 	users.append(thumbnail_user)
 
-    return users
+
+    return users
 
 
 def _newest_users(limit=1000, date='2013-09-04'):

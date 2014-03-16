@@ -219,7 +219,8 @@ def calc_domain_airo_keywords():
         key = str(domain)
         value = '_\/'.join([str(_active), str(_important), str(_reposts), str(_original)])
         daily_profile_domain_airo_bucket.Put(key, value)
-
+        
+        '''
         keywords_dict = json.loads(keywords_dict)
         keywords_leveldb = daily_profile_domain_keywords_bucket[int(domain)]
         for k, v in keywords_dict.iteritems():
@@ -230,6 +231,7 @@ def calc_domain_airo_keywords():
                 kcount = int(v)
 
             keywords_leveldb.Put(str(k.encode('utf-8')), str(kcount))
+        '''
 
         count += 1
 
@@ -420,15 +422,15 @@ if __name__ == '__main__':
     now_datestr = sys.argv[1] # '20130901'
     
     # init xapian weibo
-    xapian_search_weibo = getXapianWeiboByDate(now_datestr)
+    #xapian_search_weibo = getXapianWeiboByDate(now_datestr)
 
-    daily_profile_person_topic_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_topic_%s_text' % now_datestr),
-                                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    #daily_profile_person_topic_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_topic_%s_text' % now_datestr),
+    #                                                block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     #daily_profile_person_interact_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_interact_%s_text' % now_datestr),
     #                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     
     # personInteract2leveldb()
-    personTopic2leveldb()
+    # personTopic2leveldb()
 
     # init leveldb
     '''
@@ -439,8 +441,7 @@ if __name__ == '__main__':
     
     daily_profile_airoeik_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s_test2' % now_datestr),
                                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    '''
-    '''
+
     daily_profile_domain_keywords_bucket = {}
     for i in range(9, 21):
         try:
@@ -449,7 +450,7 @@ if __name__ == '__main__':
             pass
         daily_profile_domain_keywords_bucket[i] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_keywords_%s_%s' % (now_datestr, i)),
                                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-
+    '''
     try:
         os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2domain_profile_%s' % now_datestr))
     except:
@@ -465,13 +466,14 @@ if __name__ == '__main__':
         pass
     daily_profile_domain_airo_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % now_datestr),
                                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    '''
+    daily_profile_airoeik_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % now_datestr),
+                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     # calculate
     # calc_person_airoeik_xapian2leveldb()
-    # calc_domain_airo_keywords()
+    calc_domain_airo_keywords()
 
     #
-    # shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2domain_profile_%s' % now_datestr))
+    shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2domain_profile_%s' % now_datestr))
 
     '''
     # sort domain keywords, get topk

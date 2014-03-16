@@ -15,7 +15,8 @@
     <div>
         <p><a class="btn btn-small btn-success" href="#" id="editor_save"><i class="icon-download-alt"></i> 导出</a></p>
     </div>
-    <div id='d3_cloud'></div>
+    <!-- <div id='d3_cloud style=" width:inherit; height:inherit;" '></div> -->
+    <div id='d3_cloud' style=" width:900px; height:400px;"></div>
     <canvas type="hidden" id="svgtoimg" width="100px" height="100px" style="display: none"></canvas>
 </div>
 
@@ -41,8 +42,11 @@
   }
 
   function display_d3_cloud(data){
-    var widthpixel = 936;
-    var heightpixel = 400;
+    // var widthpixel = 936;
+    // var heightpixel = 400;
+    var widthpixel = document.body.offsetWidth / (1.3);
+    var heightpixel = document.body.offsetHeight  / 2;
+
     var fill = d3.scale.category20();
     var FONT_STYLE = "SimHei";//Microsoft YaHei,SimSun,SimHei,STHeiti//Boopee";//"IMPACT"、"Lucida Sans"、"Loved by the King"
     var wordcounts = data;
@@ -126,6 +130,41 @@
         }
     });
   });
+
+
+
+ // 窗口大小改变时重新加载词云
+  $(window).resize(function() {
+    $("#topic_type").change(function(){  
+      changChild($(this).val());  
+    });
+    $.ajax({
+        url: "/profile/group_topic/{{field}}?interval=90&sort=prob&limit=200&topic_type=freq&start_ts=" + start_ts + "&end_ts=" + end_ts,
+        dataType: 'json',   
+        type: "GET",   
+        success: function (data) {
+          $('#d3_cloud').empty();
+          var status = data['status'];
+          var topic_data = data['data'];
+          if (status == 'current finished') {
+              $("#current_topic_bar").css('width', "100%")
+              $("#current_topic_process").removeClass("active");
+              $("#current_topic_process").removeClass("progress-striped");
+              if (topic_data.length) {
+                  $("#loading_current_topic").text("计算完成!");
+                  display_d3_cloud(topic_data);
+              }else{
+                   $("#loading_current_topic").text("很抱歉，计算结果为空!");
+              }
+          }
+          else
+              return
+        }
+    });
+  });
+
+
+
 
   $("#editor_save").click(function() {
      // Get the d3js SVG element

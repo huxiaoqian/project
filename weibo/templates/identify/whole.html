@@ -316,6 +316,7 @@
                 var fa = $(this).parent();
                 var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev().prev();
                 var f_id = $(ne).html();
+                
                 $.ajax({   
                     type:"POST",  
                     url:"/identify/add_trash/",
@@ -345,33 +346,28 @@
                 var fa = $(this).parent();
                 var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev().prev();
                 var f_id = $(ne).html();
-                $.ajax({   
+                var type = showModalDialog("/identify/page/",f_id,"DialogWidth:300px;dialogHeight=180px;status:no");
+                if((f_id)&&(type)){
+                  $.ajax({   
                     type:"POST",  
                     url:"/identify/add_kd/",
                     dataType: "json",
                     async:false,
-                    data:{f_id : f_id},
+                    data:{f_id : f_id,type : type},
                     success: function(data){
                         if( data =='Right'){
                             n = n + 1;
                         }
                     }           
-                });
+                  });
+                }
+                
             }   
         });
         if(n > 0){
             alert("添加成功！");
         }
-      /*$.ajax({   
-          type:"POST",  
-          url:"/identify/add_kd/",
-          dataType: "json",
-          async:false,
-          data:{action: 'run', rank_method: rank_method, window_size: window_size, top_n: top_n}
-           
-      });*/
-      //location.reload();
-      from.submit();
+
     });
 
     //移除知识库
@@ -401,7 +397,6 @@
         if(n > 0){
             alert("移除成功！");
         }
-        //location.reload();
     });
 	  </script>
     {% if not from_external %}

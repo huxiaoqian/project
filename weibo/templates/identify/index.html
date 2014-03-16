@@ -189,7 +189,6 @@
           <span id="topic_date">9月 1日,2013 - 9月 5日,2013</span>
           <b class="caret"></b>
         </div>
-
         <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
         <div class="btn dropdown-toggle" style="position:relative;">
           <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
@@ -412,6 +411,8 @@ function choose_window(range, window) {
       }, 
       function(start, end) {
         $('#topic_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+        /*
+        $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));*/
           var whole_time = $('#topic_date').html();
           document.getElementById('topic_window_size').value = whole_time;
       }

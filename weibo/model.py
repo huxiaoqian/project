@@ -253,6 +253,7 @@ class KnowledgeList(db.Model):
     id = db.Column(db.BigInteger(11, unsigned=True), primary_key=True)
     kID = db.Column(db.BigInteger(11, unsigned=True), unique=True)
     kName = db.Column(db.String(30), unique=True)
+    domain = db.Column(db.String(30))#人员类别
 
     @classmethod
     def _name(cls):

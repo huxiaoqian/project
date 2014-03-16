@@ -13,7 +13,8 @@ BDB_TMP_PATH = '/media/data/berkeley/tmp'
 
 def profile_domain_counts():
 	  for k, v in profile_domain_counts_leveldb.RangeIter():
-	      profile_domain_counts_hash_db.put(str(now_datestr) + '_' + k, v)
+	      print k, v
+              profile_domain_counts_hash_db.put(str(now_datestr) + '_' + k, v)
 
 
 if __name__ == '__main__':

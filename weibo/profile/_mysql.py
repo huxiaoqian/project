@@ -5,9 +5,9 @@ from time_utils import ts2HMS
 try:
     from weibo.extensions import db
     from weibo.model import ProfilePersonBasic, ProfilePersonWeiboCount
-    from weibo.global_config import COBAR_HOST, COBAR_PORT, COBAR_USER
-except:
-    print 'not in web environment'          
+    from weibo.global_config import COBAR_HOST, COBAR_PORT, COBAR_USER, MYSQL_HOST, MYSQL_USER, MYSQL_DB
+except Exception, e:
+    print e, 'not in web environment _mysql.py'          
 
 class Person():
     userId = None
@@ -190,7 +190,8 @@ def _search_order_by_created_at(limit=1000, sharding=True):
     try:
         cursor.execute(sql)
         results = cursor.fetchall()
-    except:
+    except Exception, e:
+        print e, 'search order by created at'
         return persons
 
     for person in results:
@@ -219,12 +220,14 @@ def _search_order_by_created_at(limit=1000, sharding=True):
 def _search_by_domain(domain, limit=1000, sharding=True):
     if sharding:
         cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
+        print 'sharding'
     else:
-        cobar_conn = MySQLdb.connect(host='192.168.2.11', user='root', db='weibo', charset='utf8')
+        cobar_conn = MySQLdb.connect(host=MSYQL_HOST, user=MYSQL_USER, db=MYSQL_DB, charset='utf8')
+        print 'single node'
 
     persons = []
     cursor = cobar_conn.cursor()
-
+    
     sql = "SELECT * from profile_person_basic where domain='%s' ORDER BY followersCount DESC LIMIT %d" % (domain, limit)
     
     try:

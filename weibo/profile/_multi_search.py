@@ -32,6 +32,8 @@ def thumbnail_user_info(uid):
                     user[f] = u'男'
                 else:
                     user[f] = u'未知'
+            else:
+                user[f] = item[f]
 		
     return user
 

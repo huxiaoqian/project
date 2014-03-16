@@ -13,6 +13,7 @@ BDB_TMP_PATH = '/media/data/berkeley/tmp'
 
 def profile_domain_keywords():
     for k, v in profile_domain_keywords_leveldb.RangeIter():
+        print k, v
         profile_domain_keywords_hash_db.put(str(now_datestr) + '_' + k, v)
 
 

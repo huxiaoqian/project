@@ -32,6 +32,7 @@ if IS_PROD:
     COBAR_HOST = '192.168.2.31'
     COBAR_PORT = 8066
     COBAR_USER = 'cobar'
+    COBAR_DB = 'cobar_db_weibo'
     REDIS_HOST = '192.168.2.31'
     REDIS_PORT = 6379
     MYSQL_HOST = '192.168.2.31'

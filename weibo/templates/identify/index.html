@@ -184,11 +184,13 @@
     <legend><strong>话题敏感博主识别</strong></legend>
     <div id="topic_identify" class="inline">
         <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>时间范围:</b></font>
-        <div id="reportrange_topic" class="btn dropdown-toggle">
+        <div id="topic_window_size_choosen" class="btn dropdown-toggle">
           <i class="icon-calendar icon-large"></i>
-          <span id="topic_time">9月 1日,2013 - 9月 5日,2013</span>
+          <span id="topic_date">9月 1日,2013 - 9月 5日,2013</span>
           <b class="caret"></b>
         </div>
+
+
         <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
         <div class="btn dropdown-toggle" style="position:relative;">
           <span style="position:relative;margin-left:100px;width:18px;overflow:hidden;">
@@ -392,10 +394,12 @@ function choose_window(range, window) {
     document.getElementById('area_window_size').value = whole_time;
     }
   );
-});
 
-    //topic_identify
-    $('#reportrange_topic').daterangepicker({
+  //topic_identify
+    var topic_time = $('#topic_date').html();
+    document.getElementById('topic_window_size').value = topic_time;
+
+    $('#topic_window_size_choosen').daterangepicker({
         ranges: {
            '今天': [moment(), moment()],
            '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
@@ -409,8 +413,13 @@ function choose_window(range, window) {
       }, 
       function(start, end) {
         $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+          var whole_time = $('#topic_date').html();
+          document.getElementById('topic_window_size').value = whole_time;
       }
     );
+});
+
+    
 
     function get_and_show_history_msg(){
       $.ajax({

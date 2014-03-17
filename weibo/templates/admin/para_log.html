@@ -134,12 +134,13 @@ function check(){<!-- 添加按钮 -->
                     <div class="btn dropdown-toggle" style="position:relative;width:200px;">
                         <span style="position:relative;margin-left:200px;width:18px;overflow:hidden;">
                         <select name="top_number" style="width:200px;margin-left:-200px" onchange="this.parentNode.nextSibling.value=this.value">
-                        <option value="_sentiment_redis2mysql"> _sentiment_redis2mysql </option>
-                        <option value="identify"> identify </option>
-                        <option value="identify_burst"> identify_burst </option>
-                        <option value="profile"> profile </option>
-                        <option value="xapian_zmq_work"> xapian_zmq_work </option>
-                        </select></span><input id="file" name="file" style="width:170px;position:absolute;left:15px;overflow:hidden;" value="_sentiment_redis2mysql" class="span1">
+                        <option value="sentiment_profile_redis"> sentiment_profile_redis </option>
+                        <option value="_check_add_sentiment_topic"> _check_add_sentiment_topic </option>
+                        <option value="_check_run_notcustomize_topic"> _check_run_notcustomize_topic </option>
+                        <option value="cron_check"> cron_check </option>
+                        <option value="cron_check_propagate"> cron_check_propagate </option>
+                        <option value="weibo_check_propagate"> weibo_check_propagate </option>
+                        </select></span><input id="file" name="file" style="width:170px;position:absolute;left:15px;overflow:hidden;" value="sentiment_profile_redis" class="span1">
                     </div>
                     <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>日志</b></font>
                     <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp显示前</b></font>

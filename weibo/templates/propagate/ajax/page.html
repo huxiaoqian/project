@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
+</head>
+<body>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="myModalLabel">请选择该用户类型</h4>
+      </div>
+      <div class="modal-body">
+        <select name="color" id="color" style="width:240px;">
+          <option value="university">高校微博</option>
+          <option value="homeadmin">境内机构</option>
+          <option value="abroadadmin">境外机构</option>
+          <option value="homemedia">境内媒体</option>
+          <option value="abroadadmin">境外媒体</option>
+          <option value="folkorg">民间组织</option> 
+          <option value="lawyer">律师</option> 
+          <option value="politician">政府官员</option> 
+          <option value="mediaworker">媒体人士</option> 
+          <option value="activer">活跃人士</option> 
+          <option value="grassroot">草根</option> 
+          <option value="other">其它</option> 
+        </select>  
+      </div>
+      <div class="modal-footer" style="padding-left:180px;padding-top:30px;">
+        <button id="submit" type="button" class="btn btn-primary">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+<script>
+
+$("#submit").click(function() {
+  var color = document.getElementById('color').value;
+  window.returnValue = color;
+  window.close();
+});
+</script>
+</html>

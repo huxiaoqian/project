@@ -225,6 +225,9 @@ def fieldsEn2Zh(name):
     if name == 'other':
         return '其他'
 
+@mod.route('/page/', methods=['GET','POST'])
+def page():
+    return render_template('propagate/ajax/page.html')
 
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
@@ -2212,10 +2215,11 @@ def topic_rank():
 def add_kd():
     result = 'Right'
     new_field = request.form['f_id']
+    t = request.form['type']
     count, get_results = xapian_search_user.search(query={'_id': new_field}, fields=['_id', 'name'])
     if count > 0:
         for get_result in get_results():
-            new_item = KnowledgeList(kID=get_result['_id'],kName=get_result['name'])
+            new_item = KnowledgeList(kID=get_result['_id'],kName=get_result['name'],domain=t)
             db.session.add(new_item)
             db.session.commit()
     else:

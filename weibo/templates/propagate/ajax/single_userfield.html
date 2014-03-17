@@ -548,13 +548,13 @@ function exportTableToCSV($table, filename) {
                 var fa = $(this).parent();
                 var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
                 var f_id = $(ne).html();
-                console.log(f_id);
+                var type = showModalDialog("/propagate/page/",f_id,"DialogWidth:300px;dialogHeight=180px;status:no");
                 $.ajax({   
                     type:"POST",  
                     url:"/propagate/add_kd/",
                     dataType: "json",
                     async:false,
-                    data:{f_id : f_id},
+                    data:{f_id : f_id,type : type},
                     success: function(data){
                         if( data =='Right'){
                             n = n + 1;
@@ -565,6 +565,9 @@ function exportTableToCSV($table, filename) {
         });
         if(n > 0){
             alert("添加成功！");
+        }
+        else{
+          alert("添加错误！");
         }
 
       location.reload();
@@ -879,13 +882,13 @@ function exportTableToCSV_part($table, filename) {
                 var fa = $(this).parent();
                 var ne = $(fa).prev().prev().prev().prev().prev().prev().prev().prev();
                 var f_id = $(ne).html();
-                console.log(f_id);
+                var type = showModalDialog("/propagate/page/",f_id,"DialogWidth:300px;dialogHeight=180px;status:no");
                 $.ajax({   
                     type:"POST",  
                     url:"/propagate/add_kd/",
                     dataType: "json",
                     async:false,
-                    data:{f_id : f_id},
+                    data:{f_id : f_id,type : type},
                     success: function(data){
                         if( data =='Right'){
                             n = n + 1;
@@ -896,6 +899,9 @@ function exportTableToCSV_part($table, filename) {
         });
         if(n > 0){
             alert("添加成功！");
+        }
+        else{
+          alert("添加错误！");
         }
 
       location.reload();

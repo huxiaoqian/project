@@ -716,16 +716,24 @@ def check_log():
     filename = request.form['file']
     top = request.form['top']
 
-    if filename == '_sentiment_redis2mysql':
-        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
-    elif filename == 'identify':
-        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
-    elif filename == 'identify_burst':
-        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
-    elif filename == 'xapian_zmq_work':
-        path = '/home/ubuntu12/linhao/xapian_weibo/zmq_workspace/'
+    if filename == 'sentiment_profile_redis':
+        path = '/opt/project/weibo/cron/realtime/logs'
+        filename = 'sentiment_profile_redis'
+    elif filename == '_check_add_sentiment_topic':
+        path = '/opt/project/weibo/cron/moodlens/logs'
+        filename = 'check_add_sentiment_topic'
+    elif filename == '_check_run_notcustomize_topic':
+        path = '/opt/project/weibo/cron/moodlens/logs'
+        filename = 'check_run_notcustomize_topic'
+    elif filename == 'cron_check':
+        path = '/opt/project/weibo/cron/identify/logs'
+        filename = 'cron_check'
+    elif filename == 'cron_check_propagate':
+        path = '/opt/project/weibo/cron/propagate/logs'
+        filename = 'cron_propagate_topic'
     else:
-        path = '/home/ubuntu12/yuanshi/project/weibo/cron/moodlens/logs/'
+        path = '/opt/project/weibo/cron/propagate/logs'
+        filename = 'cron_propagate_weibo'
 
     logs = read_log(str(path),str(filename),top)
 

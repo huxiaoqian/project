@@ -21,7 +21,7 @@ def _default_redis(host=REDIS_HOST, port=REDIS_PORT, db=0):
 
 def merge_keywords_leveldb():
     while 1:
-        print 'sleep 60 seconds'
+        print 'sleep 60 seconds %s' % now_datestr
         time.sleep(60)
         files_names_list = os.listdir(os.path.join(LEVELDBPATH, 'keywords'))
         for f in files_names_list:
@@ -62,11 +62,14 @@ def merge_keywords_leveldb():
                 daily_profile_keywords_bucket.Put(k, json.dumps(_kcount))
                 if count % 10000 == 0:
                     te = time.time()
-                    print count, '%s sec' % (te - ts)
+                    print count, '%s sec' % (te - ts), now_datestr, 'merge %s' % f
                     ts = te
                 count += 1
 
-            global_r0.sadd(KEYWORDS_DB_COMPLETED % now_datestr, f)             
+            global_r0.sadd(KEYWORDS_DB_COMPLETED % now_datestr, f)
+            
+            if f[33:] == '0':
+                sys.exit('complete today job %s' % now_datestr)        
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ except ImportError:
     import json
 import os
 import re
+import ast
 import sys
 import time
 import json
@@ -19,18 +20,18 @@ from city_color import province_color_map
 from operator import itemgetter
 from flask.ext import admin
 from flask import Flask, url_for, render_template, request, make_response, \
-                  flash, abort, Blueprint, session, redirect
+                  flash, abort, Blueprint, session, redirect, g
 from utils import getUserNameById, getUserIdByName, merge, \
                   getUsersInfoByUidInteract, user2domain, getFriendship, \
                   yymInfo, _utf_8_decode, getUserInfoById, _utf_8_encode
-from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts, ts2datetime
+from time_utils import ts2HMS, last_week_to_date, ts2date, datetimestr2ts, ts2datetime, ts2datetimestr
 from weibo.global_config import xapian_search_user, LEVELDBPATH, \
                                 fields_value, fields_id, emotions_zh_kv, emotions_kv, LATEST_DATE, DOMAIN_LIST, \
                                 DOMAIN_ZH_LIST
-#from _leveldb import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+
 from _multi_search import _hotest_users, _newest_users, _domain_users
-from _elevator import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
 from _mysql import _search_person_basic, _search_person_important_active, _multi_search
+#from _elevator import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
 
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
@@ -43,6 +44,194 @@ labels = ['university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 
 #DOMAIN_LIST = fields_value + labels
 DOMAIN_LIST = DOMAIN_LIST[9:]
 DOMAIN_ZH_LIST = DOMAIN_ZH_LIST[9:]
+BDB_DATA_PATH = '/media/data/berkeley/data'
+BDB_LOG_PATH = '/media/data/berkeley/log'
+BDB_TMP_PATH = '/media/data/berkeley/tmp'
+
+
+def connect_db():
+    from bsddb3 import db as bdb
+    db_env = bdb.DBEnv()
+    db_env.set_tmp_dir(BDB_TMP_PATH)
+    db_env.set_lg_dir(BDB_LOG_PATH)
+    db_env.set_cachesize(0, 8 * (2 << 25), 1)
+    db_env.open(BDB_DATA_PATH, bdb.DB_INIT_CDB | bdb.DB_INIT_MPOOL)
+
+    # init bdb
+    profile_interact_hash_db = bdb.DB(db_env)
+    profile_interact_hash_db.open('profile_person_interact_hash', None, bdb.DB_HASH)
+    
+    profile_keywords_hash_db = bdb.DB(db_env)
+    profile_keywords_hash_db.open('profile_person_keywords_hash', None, bdb.DB_HASH)
+    
+    profile_counts_hash_db = bdb.DB(db_env)
+    profile_counts_hash_db.open('profile_person_counts_hash', None, bdb.DB_HASH)
+    
+    profile_domain_basic_hash_db = bdb.DB(db_env)
+    profile_domain_basic_hash_db.open('profile_domain_basic_hash', None, bdb.DB_HASH)
+    
+    profile_domain_counts_hash_db = bdb.DB(db_env)
+    profile_domain_counts_hash_db.open('profile_domain_counts_hash', None, bdb.DB_HASH)
+
+    profile_domain_keywords_hash_db = bdb.DB(db_env)
+    profile_domain_keywords_hash_db.open('profile_domain_keywords_hash', None, bdb.DB_HASH)
+
+    return profile_interact_hash_db, profile_keywords_hash_db, profile_counts_hash_db, profile_domain_basic_hash_db, profile_domain_counts_hash_db, profile_domain_keywords_hash_db, db_env
+
+
+@mod.before_request
+def before_request():
+    print 'before_request'
+    profile_interact_hash_db, profile_keywords_hash_db, profile_counts_hash_db, profile_domain_basic_hash_db, profile_domain_counts_hash_db, profile_domain_keywords_hash_db, db_env = connect_db()
+    g.profile_interact_hash_db = profile_interact_hash_db
+    g.profile_keywords_hash_db = profile_keywords_hash_db
+    g.profile_counts_hash_db = profile_counts_hash_db
+    g.profile_domain_basic_hash_db = profile_domain_basic_hash_db
+    g.profile_domain_counts_hash_db = profile_domain_counts_hash_db
+    g.profile_domain_keywords_hash_db = profile_domain_keywords_hash_db
+    g.db_env = db_env
+
+
+@mod.teardown_request
+def teardown_request(exception):
+    print exception, 'teardown_request'
+    if hasattr(g, 'profile_interact_hash_db'):
+        g.profile_interact_hash_db.close()
+
+    if hasattr(g, 'profile_keywords_hash_db'):
+        g.profile_keywords_hash_db.close()
+
+    if hasattr(g, 'profile_counts_hash_db'):
+        g.profile_counts_hash_db.close()
+
+    if hasattr(g, 'profile_domain_basic_hash_db'):
+        g.profile_domain_basic_hash_db.close()
+
+    if hasattr(g, 'profile_domain_counts_hash_db'):
+        g.profile_domain_counts_hash_db.close()
+
+    if hasattr(g, 'profile_domain_keywords_hash_db'):
+        g.profile_domain_keywords_hash_db.close()
+
+    if hasattr(g, 'db_env'):
+        g.db_env.close()
+
+
+def getPersonData(uid, datestr):
+
+    active = important = reposts = original = emoticon = 0
+    direct_interact = {}
+    retweeted_interact = {}
+    keywords_dict = {}
+
+    if hasattr(g, 'profile_interact_hash_db'):
+        profile_interact_hash_db = g.profile_interact_hash_db
+        try:
+            result = profile_interact_hash_db.get(str(datestr) + '_' + str(uid))
+            interact_dict = json.loads(result)
+        except Exception, e:
+            print e, datestr, 'profile person interact'
+            interact_dict = {}
+        
+        if interact_dict != {}:
+            try:
+                if isinstance(interact_dict['direct'], unicode):
+                    direct_interact = interact_dict['direct'].split('\_/')[0]
+                    direct_interact = ast.literal_eval(direct_interact)
+                elif isinstance(interact_dict['direct'], dict):
+                    direct_interact = interact_dict['direct']
+                
+                if isinstance(interact_dict['retweeted'], unicode):
+                    retweeted_interact = interact_dict['retweeted'].split('\_/')[0]
+                    retweeted_interact = ast.literal_eval(retweeted_interact)
+                elif isinstance(interact_dict['retweeted'], dict):
+                    retweeted_interact = interact_dict['retweeted']
+            
+            except Exception, e:
+                print e, datestr, 'profile person interact'
+    
+    if hasattr(g, 'profile_keywords_hash_db'):
+        profile_keywords_hash_db = g.profile_keywords_hash_db
+        try:
+            #try:
+            result = profile_keywords_hash_db.get(str(datestr) + '_' + str(uid))
+            if result:
+                keywords_dict = json.loads(result)
+            '''
+            except:
+                result = profile_keywords_hash_db.get(str(datestr) + '_' + str(uid))
+                if result:
+                    keywords_str = result.split('\_/')[0]
+                    keywords_dict = ast.literal_eval(keywords_str)
+            '''
+        except Exception, e:
+            print e, datestr, 'profile person keywords'
+
+    if hasattr(g, 'profile_counts_hash_db'):
+        profile_counts_hash_db = g.profile_counts_hash_db
+        try:
+            result = profile_counts_hash_db.get(str(datestr) + '_' + str(uid))
+            active, important, reposts, original, emoticon = result.split('_\/')
+            active = int(active)
+            important = int(important)
+            reposts = int(reposts)
+            original = int(original)
+            emoticon = int(emoticon)
+        except Exception, e:
+            print e, datestr, 'profile person counts'
+
+    return active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict 
+
+
+def getDomainKeywordsData(domain, datestr):
+    keywords_dict = {}
+
+    if hasattr(g, 'profile_domain_keywords_hash_db'):
+        profile_domain_keywords_hash_db = g.profile_domain_keywords_hash_db
+    
+    try:
+        result = profile_domain_keywords_hash_db.get(str(datestr) + '_' + str(domain))
+        keywords_dict = json.loads(result)
+    except Exception, e:
+        print e, datestr, result, 'profile domain keywords'
+
+    return keywords_dict
+
+
+def getDomainBasic(domain, datestr):
+    verified_count = unverified_count = 0 
+    province_dict = {}
+
+    if hasattr(g, 'profile_domain_basic_hash_db'):
+        profile_domain_basic_hash_db = g.profile_domain_basic_hash_db
+
+    try:
+        result = profile_domain_basic_hash_db.get(str(domain))
+        verified_count, unverified_count, province_dict = result.split('_\/')
+        province_dict = json.loads(province_dict)
+    except Exception, e:
+        print e, datestr, 'profile domain basic'
+
+    return verified_count, unverified_count, province_dict
+
+
+def getDomainCountData(domain, datestr):
+    active = important = reposts = original = 0
+
+    if hasattr(g, 'profile_domain_counts_hash_db'):
+        profile_domain_counts_hash_db = g.profile_domain_counts_hash_db
+
+    try:
+        result = profile_domain_counts_hash_db.get(str(datestr) + '_' + str(domain))
+        active, important, reposts, original = result.split('_\/')
+        active = int(active)
+        important = int(important)
+        reposts = int(reposts)
+        original = int(original)
+    except Exception, e:
+        print e, datestr, 'profile domain counts'
+
+    return active, important, reposts, original
 
 
 def _time_zone(stri):
@@ -713,9 +902,10 @@ def personal_weibo_count(uid):
         end_ts = int(end_ts)
     
     try:
-        interval = (end_ts - start_ts) / (24 * 3600)
+        interval = (end_ts - start_ts) / (24 * 3600) + 1
         datestr = ts2datetimestr(end_ts) # '20130907'
-    except:
+    except Exception, e:
+        print e
         interval, datestr = _default_time()
 
     date_list = last_week_to_date(datestr, interval)
@@ -771,9 +961,9 @@ def profile_group_topic(fieldEnName):
             end_ts = int(end_ts)
         
         try:
-            interval = (end_ts - start_ts) / (24 * 3600)
+            interval = (end_ts - start_ts) / (24 * 3600) + 1
             datestr = ts2datetimestr(end_ts) # '20130907'
-        except:
+        except Exception, e:
             interval, datestr = _default_time()
 
         domainid = DOMAIN_LIST.index(fieldEnName) + 9
@@ -810,7 +1000,7 @@ def profile_group_status_count(fieldEnName):
         end_ts = int(end_ts)
     
     try:
-        interval = (end_ts - start_ts) / (24 * 3600)
+        interval = (end_ts - start_ts) / (24 * 3600) + 1
         datestr = ts2datetimestr(end_ts) # '20130907'
     except:
         interval, datestr = _default_time()
@@ -836,8 +1026,8 @@ def profile_group_status_count(fieldEnName):
 
 
 def _default_time():
-    interval = 5
-    datestr = '20130905'
+    interval = 7
+    datestr = '20130907'
     return interval, datestr
 
 @mod.route('/group_important/<fieldEnName>', methods=['GET', 'POST'])
@@ -852,7 +1042,7 @@ def group_active_count(fieldEnName):
         end_ts = int(end_ts)
     
     try:
-        interval = (end_ts - start_ts) / (24 * 3600)
+        interval = (end_ts - start_ts) / (24 * 3600) + 1
         datestr = ts2datetimestr(end_ts) # '20130907'
     except:
         interval, datestr = _default_time()

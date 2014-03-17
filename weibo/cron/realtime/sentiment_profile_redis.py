@@ -340,12 +340,17 @@ def get_efficient_db_end_ts(now_db_start_ts):
 
 
 def get_now_datestr(ts):
-    return datetime.datetime.fromtimestamp(int(ts)).strftime("%Y%m%d")
+    realtime = datetime.datetime.fromtimestamp(int(ts)).strftime("%Y%m%d")
+    zero_time = datetime.datetime.fromtimestamp(int(ts) - 1).strftime("%Y%m%d")
+    if zero_time != realtime:
+        return zero_time 
+    
+    return realtime
 
 
 def get_now_leveldb_no(ts):
     local_ts = int(ts) - time.timezone
-    return int(local_ts) % (24 * 60 * 60) / (15 * 60)  + 1
+    return int(local_ts) % (24 * 60 * 60) / (15 * 60)
     
 
 def profile_keywords_redis2leveldb(now_leveldb_no, now_datestr, daily_profile_keywords_bucket):
@@ -401,28 +406,48 @@ if __name__ == '__main__':
     
     global_r0 = _default_redis()
     now_db_start_ts = global_r0.get(NOW_DB_START_TS)
-
+    
     if now_db_start_ts:
+        now_db_start_ts = int(now_db_start_ts)
         print 'now_db_start_ts', now_db_start_ts
+        
         last_complete_start_ts = global_r0.get(LAST_COMPLETE_START_TS)
-        print 'last_complete_start_ts', last_complete_start_ts
+        
         if last_complete_start_ts:
             last_complete_start_ts = int(last_complete_start_ts)
-            now_db_no = get_efficient_db_no(now_db_start_ts)
-            r = _default_redis(db=now_db_no)
-            end_ts = get_efficient_db_end_ts(now_db_start_ts)
-            if end_ts > last_complete_start_ts + 60 * 15:
+            print 'last_complete_start_ts', last_complete_start_ts
+            
+            if last_complete_start_ts < now_db_start_ts - 60 * 15 * 2:
+                now_db_no = get_efficient_db_no(now_db_start_ts)
+                r = _default_redis(db=now_db_no)
+                end_ts = get_efficient_db_end_ts(now_db_start_ts)
+
+                if end_ts > last_complete_start_ts + 60 * 15:
+                    now_db_no = get_now_db_no(end_ts - 60 * 15)
+                    r = _default_redis(db=now_db_no)
+                    end_ts = last_complete_start_ts + 60 * 15 * 2
+                
+                global_r0.set(LAST_COMPLETE_START_TS, end_ts - 60 * 15)
+                calc_sentiment()
+                calc_profile()
+                clear_current_redis()
+
+            # 当last_complete_start_ts 达到 23:15时，把剩余的两段15分钟时间单元更新计算   
+            elif last_complete_start_ts < now_db_start_ts and (datetime.datetime.fromtimestamp(last_complete_start_ts).strftime("%H:%M:%S") ==  '23:15:00' or datetime.datetime.fromtimestamp(last_complete_start_ts).strftime("%H:%M:%S") == '23:30:00'):
+                end_ts = last_complete_start_ts + 60 * 15 * 2
                 now_db_no = get_now_db_no(end_ts - 60 * 15)
                 r = _default_redis(db=now_db_no)
-                end_ts = last_complete_start_ts + 60 * 15 * 2
-            
-            global_r0.set(LAST_COMPLETE_START_TS, end_ts - 60 * 15)
-	    calc_sentiment()
-	    calc_profile()
-	    clear_current_redis() 
-	    
+                
+                global_r0.set(LAST_COMPLETE_START_TS, end_ts - 60 * 15)
+                calc_sentiment()
+                calc_profile()
+                clear_current_redis()
+                
+            else:
+                print 'wait new data'
+
         else:
-	    # 前2个db开始计算，需要check redis中是否有-2 db开始出现数据
+            # 前2个db开始计算，需要check redis中是否有-2 db开始出现数据
             now_db_no = get_efficient_db_no(now_db_start_ts)
             r = _default_redis(db=now_db_no)
             if r.get(GLOBAL_SENTIMENT_COUNT % '1'):

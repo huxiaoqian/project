@@ -3,6 +3,7 @@
 import os
 import re
 import time
+import datetime
 import codecs
 import random
 import math
@@ -180,7 +181,7 @@ def load_data(keyword,topic_id):
     n = 0
     ts = []
     for status in blog_rel_list:
-        print status['status']['_id']                
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), status['status']['_id']                
         weibo = getWeiboByMid(status['status']['_id'])
         retweeted_mid = weibo['retweeted_mid']
         source_weibo = weibo
@@ -415,7 +416,7 @@ def forest_main(keyword,topic_id):
 if __name__ == "__main__":
 
 ##    init_db()
-####    v = get_weibo_tree('7')
-####    print v
-    result = forest_main('日本',7)
-    print result
+    v = get_weibo_tree('11')
+    print v
+##    result = forest_main('开学',11)
+##    print result

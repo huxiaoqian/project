@@ -99,13 +99,22 @@ def calculate_single(_id):
     whole_g_stats = whole_g['stats']
     whole_g_reposts = whole_g['reposts']
 
-    sub_g_graph = sub_g['graph']
-    sub_g_stats = sub_g['stats']
-    sub_g_reposts = sub_g['reposts']
+    if sub_g['ori']:#转发微博
+        sub_g_graph = sub_g['graph']
+        sub_g_stats = sub_g['stats']
+        sub_g_reposts = sub_g['reposts']
 
-    save_weibo_tree(str(_id), whole_g_graph, whole_g_stats, sub_g_graph, sub_g_stats)
-    calculate_single_whole(whole_g_reposts, whole_g['ori'], sub_g['ori'])
-    calculate_single_sub(sub_g_reposts, sub_g['ori'])
+        save_weibo_tree(str(_id), whole_g_graph, whole_g_stats, sub_g_graph, sub_g_stats)
+        calculate_single_whole(whole_g_reposts, whole_g['ori'], sub_g['ori'])
+        calculate_single_sub(sub_g_reposts, sub_g['ori'])
+    else:#原创微博
+        sub_g_graph = whole_g['graph']
+        sub_g_stats = whole_g['stats']
+        sub_g_reposts = whole_g['reposts']
+
+        save_weibo_tree(str(_id), whole_g_graph, whole_g_stats, whole_g_graph, whole_g_stats)
+        calculate_single_whole(whole_g_reposts, whole_g['ori'], whole_g['ori'])
+        calculate_single_sub(whole_g_reposts, whole_g['ori'])
     return 'Done'
 
 

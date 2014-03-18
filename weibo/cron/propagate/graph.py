@@ -355,7 +355,7 @@ def graph(mid):
     page_count = 10
     reposts = getWeiboRepostsByMid(source_weibo['id'], begin_ts, end_ts, per_page * page_count)
     print 'search source weibo reposts completely ', source_weibo['id'], 'total reposts count : ', len(reposts), \
-    ' source user name: ', source_weibo['user']['name'], source_weibo['user']['id']
+    ' source user name: ', source_weibo['user']['id']#source_weibo['user']['name'], source_weibo['user']['id']
 
     # 完整转发树绘制
     print 'start draw whole tree'
@@ -387,7 +387,7 @@ def graph(mid):
 
         reposts = getSubWeiboRepostsByMid(weibo['id'], weibo['user']['name'], source_weibo['id'], begin_ts, end_ts, per_page * page_count)
         print 'search sub weibo reposts completely ', weibo['id'], 'total reposts count : ', len(reposts), \
-        ' source user name: ', weibo['user']['name']
+        ' source user name: ', weibo['user']['id']# weibo['user']['name']
         
         # 子树转发树绘制
         tree, tree_stats = reposts2tree(weibo, reposts, per_page, page_count)

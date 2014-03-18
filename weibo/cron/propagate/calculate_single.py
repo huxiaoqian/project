@@ -302,7 +302,7 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori, mid_ori):
 
         iter_count = iter_count + 1
         if iter_count % 10000 == 0:
-            print iter_count
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),iter_count
     
     # totalRepost & avg
     totalRepost = reposts_sum + 1
@@ -582,7 +582,7 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
 
         iter_count = iter_count + 1
         if iter_count % 10000 == 0:
-            print iter_count
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),iter_count
     
     # totalRepost & avg
     totalRepost = reposts_sum + 1

@@ -6,6 +6,8 @@ import  calendar
 import re
 import os
 import heapq
+import time
+import datetime
 from datetime import datetime
 from datetime import date
 
@@ -48,7 +50,7 @@ def getXapianWeiboByDuration(datestr_list):
 
     for datestr in datestr_list:
         stub_file = path + datestr
-        print type(stub_file)
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),type(stub_file)
         if os.path.exists(stub_file):
             stub_file_list.append(stub_file)
     if len(stub_file_list):
@@ -67,7 +69,7 @@ def getXapianweiboByTs(start_time, end_time):
     for i in range(0, days):
         _ts = start_time + i * Day
         xapian_date_list.append(ts2datetimestr(_ts))
-    print xapian_date_list
+    print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),xapian_date_list
     statuses_search = getXapianWeiboByDuration(xapian_date_list)
     return statuses_search
 
@@ -234,14 +236,14 @@ def calculate(keyword, beg_time, end_time):
                         if uid not in topic_leader_uid:
                             topic_leader_uid.add(uid)
                             topic_leader.append(user)                  
-                if r['reposts_count'] > 1000:
-                    temp = {}
-                    temp['status'] = r
-                    temp['status']['created_at'] = datetime.fromtimestamp(r['timestamp'])
-                    temp['status']['text'] = r['text']
-                    temp['status']['source'] = 'None'
-                    temp['user'] = user
-                    topic_rel_blog.append(temp)
+                #if r['reposts_count'] > 1000:
+                temp = {}
+                temp['status'] = r
+                temp['status']['created_at'] = datetime.fromtimestamp(r['timestamp'])
+                temp['status']['text'] = r['text']
+                temp['status']['source'] = 'None'
+                temp['user'] = user
+                topic_rel_blog.append(temp)
                 if r['bmiddle_pic']:
                     topic_url.append(r['bmiddle_pic'])
                 if user['province'] != None:
@@ -263,7 +265,7 @@ def calculate(keyword, beg_time, end_time):
             comments_sum = comments_sum + 0
         blogs_sum += 1
         if blogs_sum % 100 == 0:
-            print blogs_sum
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), blogs_sum
 ##        if blogs_sum >= 10000:
 ##            break
 
@@ -443,7 +445,7 @@ def save_weibo(wordid,weibo):#话题id、微博
 
 if __name__ == "__main__":
 
-    topic_info = calculate('钓鱼岛', '2013-09-01', '2013-09-04')
+    topic_info = calculate('习近平', '2013-09-02', '2013-09-04')
     print topic_info
 ##    print 'weibo:'
 ##    weibo = topic_info['topic_rel_blog'][:5]

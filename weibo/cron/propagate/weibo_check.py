@@ -4,6 +4,8 @@ import time
 from time_utils import ts2datetime
 from calculate_single import calculate_single
 from weiboStatus import _single_not_calc, _update_single_status2Computing, _update_single_status2Completed
+import time
+import datetime
 
 TOPK = 1000
 Minute = 60
@@ -24,10 +26,10 @@ def main():
         db_date = weibo.db_date
         time_ts = datetime2ts(postDate)
         end_ts = time_ts + 24*3600
-
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),mid,'start'
         _update_single_status2Computing(mid, postDate, db_date)
         result  = calculate_single(mid)
-        print result
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),mid,result
         _update_single_status2Completed(mid, postDate, db_date)
 
 

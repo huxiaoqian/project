@@ -22,10 +22,10 @@ def main():
         end_ts = topic.end
         db_date = topic.db_date
         topicname = topic.topic
-        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),topicname,'start'
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), topicname.encode('utf-8'), 'start'
         _update_topic_status2Computing(topicname, start_ts, end_ts, db_date)
         result  = calculate(topicname,start_ts,end_ts)
-        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),topicname,result
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), topicname.encode('utf-8'), result
         _update_topic_status2Completed(topicname, start_ts, end_ts, db_date)
 
 

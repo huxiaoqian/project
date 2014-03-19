@@ -397,7 +397,7 @@ def forest_main(keyword,topic_id):
         
         root, start_ts, end_ts, count, counter = build_tree(reposts, counter)
         _color = random_color(colors)
-        print root, start_ts, end_ts, count, counter
+
         build_graph(graph, root, start_ts, end_ts, node_y_table, x_count, y_count, y_name, x=ts2x(start_ts-first_start_ts), y=height, color=_color)
         height += 1
 

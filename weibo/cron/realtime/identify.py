@@ -12,7 +12,8 @@ import leveldb
 import datetime
 from dynamic_xapian_weibo import getXapianWeiboByDate
 from model import WholeIdentification, AreaIdentification
-from config import LEVELDBPATH, DOMAIN_LIST, xapian_search_user, db
+from config import LEVELDBPATH, DOMAIN_LIST, xapian_search_user, \
+                   db, DYNAMIC_XAPIAN_WEIBO_STUB_PATH
 
 TOPK = 1000
 
@@ -327,22 +328,34 @@ def saveDomain2mysql(uid, active, important, followers, domain, rank, identifyWi
 
 
 if __name__ == '__main__':
-
     print "%s start" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-    # get datestr
-    now_datestr = '20130921' # get_now_datestr()
+    
+    # get now_datestr
+    now_datestr = sys.argv[1] # datestr as '20130921'
+    daily_identify_aifd_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr),
+                                                 block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+
+    # check if xapian data is ready
+    xapian_stub_file = '%s%s' % (DYNAMIC_XAPIAN_WEIBO_STUB_PATH, now_datestr)
+    while 1:
+        if os.path.isfile(xapian_stub_file):
+            print '%s xapian data stub file is prepared' % now_datestr
+            break
+        else:
+            print '%s xapian data stub file is not prepared' % now_datestr
+            time.sleep(60)
 
     # init xapian weibo
     xapian_search_weibo = getXapianWeiboByDate(now_datestr)
 
     # init leveldb
-    # try:
-    #    shutil.rmtree(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr))
-    # except:
-    #    pass
+    try:
+        shutil.rmtree(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr))
+    except:
+        pass
     daily_identify_aifd_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr),
                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    '''
+
     try:
         os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_r_%s' % now_datestr))
     except:
@@ -379,9 +392,18 @@ if __name__ == '__main__':
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_r_%s' % now_datestr))
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_r_%s' % now_datestr))
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_r_%s' % now_datestr))
-    '''
+
     # identify rank
     global_leveldb = daily_identify_aifd_bucket
-    whole_domain_rank()
+    #whole_domain_rank()
+
+    # identify burst rank
+    from identify_burst import get_before_datestr, burst_rank
+    before_datestr = get_before_datestr(now_datestr) # '20130830'
+
+    global_leveldb = daily_identify_aifd_bucket
+    global_previous_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % before_datestr),
+                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    burst_rank(now_datestr, before_datestr, global_leveldb, global_previous_leveldb)
 
     print "%s end" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))

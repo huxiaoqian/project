@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import time
 from config import db
 from model import BurstIdentification
 
@@ -33,7 +34,7 @@ def void_leveldb(ldb):
         return True
 
 
-def burst_rank(topk=TOPK, identifyWindow=1):
+def burst_rank(now_datestr, before_datestr, global_leveldb, global_previous_leveldb, topk=TOPK, identifyWindow=1):
     # 突发排序
     print '%s burst rank' % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     previous_exist = True
@@ -80,8 +81,8 @@ def burst_rank(topk=TOPK, identifyWindow=1):
 
 
 def save_burst(data, method="active", identifyWindow=1):
-	# delete old data
-	if data and len(data):
+    # delete old data
+    if data and len(data):
         exist_items = db.session.query(BurstIdentification).\
                                 filter(BurstIdentification.identifyDate == now_datestr, \
                                        BurstIdentification.identifyWindow==identifyWindow, \
@@ -90,7 +91,7 @@ def save_burst(data, method="active", identifyWindow=1):
             db.session.delete(exist_item)
         db.session.commit()
 
-	# add new data
+    # add new data
     for i, tuples in enumerate(data):
         rank = i + 1
         if method == 'active':
@@ -103,18 +104,24 @@ def save_burst(data, method="active", identifyWindow=1):
         db.session.add(new_item)
         db.session.commit()
 
+
+def get_before_datestr(now_datestr):
+    now_ts = int(time.mktime(time.strptime(now_datestr, '%Y%m%d')))
+    return time.strftime('%Y%m%d', time.localtime(now_ts - 24 * 3600))
+
+
 if __name__ == '__main__':
-
     print "%s start" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-	# get datestr
+	
+    # get datestr
     now_datestr = sys.argv[1] # '20130901'
-    before_datestr = sys.argv[2] # '20130830'
+    before_datestr = get_before_datestr(now_datestr) # '20130830'
 
-	# identify rank
+    # identify rank
     global_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr),
                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     global_previous_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % before_datestr),
                                               block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    burst_rank()
+    burst_rank(now_datestr, before_datestr, global_leveldb, global_previous_leveldb)
 
     print "%s end" % time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))

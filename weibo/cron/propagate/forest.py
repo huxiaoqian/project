@@ -20,7 +20,7 @@ from pyelevator import WriteBatch, Elevator
 
 MAX_COUNT = 15000
 START_DATE = '2013-9-1'
-END_DATE = '2013-9-5'
+END_DATE = '2013-9-21'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
@@ -87,8 +87,8 @@ def getXapianWeiboByDuration(datestr_list):
         return None
 
 def target_whole_xapian_weibo():
-    datestr = '20130904'
-    during = 4
+    datestr = '20130921'
+    during = 20
 
     ts = int(time.mktime(time.strptime(datestr, '%Y%m%d')))
     datelist = []
@@ -188,7 +188,7 @@ def load_data(keyword,topic_id):
         if retweeted_mid != 0:
             source_weibo = getWeiboByMid(retweeted_mid)
 
-        number,source = whole_xapian_weibo.search(query={'retweeted_mid': source_weibo['id']}, sort_by=['timestamp'],max_offset=5000)#查找热门微博的转发微博
+        number,source = whole_xapian_weibo.search(query={'retweeted_mid': source_weibo['id']}, sort_by=['-timestamp'],max_offset=5000)#查找热门微博的转发微博
         print number
         if not number:
             n = n + 1
@@ -397,7 +397,7 @@ def forest_main(keyword,topic_id):
         
         root, start_ts, end_ts, count, counter = build_tree(reposts, counter)
         _color = random_color(colors)
-
+        print root, start_ts, end_ts, count, counter
         build_graph(graph, root, start_ts, end_ts, node_y_table, x_count, y_count, y_name, x=ts2x(start_ts-first_start_ts), y=height, color=_color)
         height += 1
 
@@ -416,7 +416,7 @@ def forest_main(keyword,topic_id):
 if __name__ == "__main__":
 
 ##    init_db()
-    v = get_weibo_tree('11')
-    print v
-##    result = forest_main('开学',11)
-##    print result
+##    v = get_weibo_tree('14')
+##    print v
+    result = forest_main('九一八',14)
+    print result

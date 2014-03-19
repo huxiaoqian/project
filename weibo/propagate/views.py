@@ -10,6 +10,7 @@ import time
 import re
 import json
 import redis
+import base62
 import calendar
 import weibo.model
 from weibo.model import *
@@ -1343,6 +1344,7 @@ def single_ajax_trend():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 else:
                     blog_info = readPropagateSinglePart(mid)
                     if blog_info[0]['profile_image_url'] == 'None':
@@ -1355,6 +1357,7 @@ def single_ajax_trend():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 return render_template('propagate/ajax/single_trend.html',
                                         mid=mid,
                                         tar_profile_image_url = blog_img_url,
@@ -1363,7 +1366,8 @@ def single_ajax_trend():
                                         tar_comments_count = blog_comments_count,
                                         tar_attitudes_count = blog_attitudes_count,
                                         tar_post_date = blog_time,
-                                        tar_text = blog_text
+                                        tar_text = blog_text,
+                                        weibo_url = weibo_url
                                         )
             else:
                 mid = str(request.form.get('mid', ""))
@@ -1408,6 +1412,7 @@ def single_ajax_trend():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             else:
                                 blog_info = readPropagateSinglePart(mid)
                                 if blog_info[0]['profile_image_url'] == 'None':
@@ -1420,6 +1425,7 @@ def single_ajax_trend():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             return render_template('propagate/ajax/single_trend.html',
                                                     mid=mid,
                                                     tar_profile_image_url = blog_img_url,
@@ -1428,7 +1434,8 @@ def single_ajax_trend():
                                                     tar_comments_count = blog_comments_count,
                                                     tar_attitudes_count = blog_attitudes_count,
                                                     tar_post_date = blog_time,
-                                                    tar_text = blog_text
+                                                    tar_text = blog_text,
+                                                    weibo_url = weibo_url
                                                     )
                         else:
                             mid = str(request.form.get('mid', ""))
@@ -1480,6 +1487,7 @@ def single_ajax_weibos():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 else:
                     blog_info = readPropagateSinglePart(mid)
                     if blog_info[0]['profile_image_url'] == 'None':
@@ -1492,6 +1500,7 @@ def single_ajax_weibos():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 return render_template('propagate/ajax/single_weibos.html', 
                                        blog_info = blog_info_weibo,
                                        blog_info_part = blog_info_part,
@@ -1502,7 +1511,8 @@ def single_ajax_weibos():
                                        tar_attitudes_count = blog_attitudes_count,
                                        tar_post_date = blog_time,
                                        tar_text = blog_text,
-                                       mid = mid
+                                       mid = mid,
+                                       weibo_url = weibo_url
                                       )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -1528,6 +1538,7 @@ def single_ajax_weibos():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             else:
                                 blog_info = readPropagateSinglePart(mid)
                                 if blog_info[0]['profile_image_url'] == 'None':
@@ -1540,6 +1551,7 @@ def single_ajax_weibos():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             return render_template('propagate/ajax/single_weibos.html', 
                                                    blog_info = blog_info_weibo,
                                                    blog_info_part = blog_info_part,
@@ -1550,7 +1562,8 @@ def single_ajax_weibos():
                                                    tar_attitudes_count = blog_attitudes_count,
                                                    tar_post_date = blog_time,
                                                    tar_text = blog_text,
-                                                   mid = mid
+                                                   mid = mid,
+                                                   weibo_url = weibo_url
                                                   )
                     else:
                         return redirect('/')
@@ -1577,6 +1590,7 @@ def single_ajax_spatial():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 else:
                     blog_info = readPropagateSinglePart(mid)
                     if blog_info[0]['profile_image_url'] == 'None':
@@ -1589,6 +1603,7 @@ def single_ajax_spatial():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 return render_template('propagate/ajax/single_spatial.html',
                                        tar_profile_image_url = blog_img_url,
                                        tar_screen_name = bloger_name,
@@ -1597,7 +1612,7 @@ def single_ajax_spatial():
                                        tar_attitudes_count = blog_attitudes_count,
                                        tar_post_date = blog_time,
                                        tar_text = blog_text,
-                                       mid=mid)
+                                       mid=mid, weibo_url = weibo_url)
             else:
                 mid = str(request.form.get('mid', ""))
                 area_list = readPropagateSpatialSingle(mid)
@@ -1624,6 +1639,7 @@ def single_ajax_spatial():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             else:
                                 blog_info = readPropagateSinglePart(mid)
                                 if blog_info[0]['profile_image_url'] == 'None':
@@ -1636,6 +1652,7 @@ def single_ajax_spatial():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             return render_template('propagate/ajax/single_spatial.html',
                                                    tar_profile_image_url = blog_img_url,
                                                    tar_screen_name = bloger_name,
@@ -1644,7 +1661,7 @@ def single_ajax_spatial():
                                                    tar_attitudes_count = blog_attitudes_count,
                                                    tar_post_date = blog_time,
                                                    tar_text = blog_text,
-                                                   mid=mid)
+                                                   mid=mid, weibo_url = weibo_url)
                         else:
                             mid = str(request.form.get('mid', ""))
                             area_list = readPropagateSpatialSingle(mid)
@@ -1675,6 +1692,7 @@ def single_ajax_stat():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 else:
                     blog_info = readPropagateSinglePart(mid)
                     if blog_info[0]['profile_image_url'] == 'None':
@@ -1687,6 +1705,7 @@ def single_ajax_stat():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 
                 blog_info = readIndexSingle(mid)
                 if blog_info: 
@@ -1734,7 +1753,8 @@ def single_ajax_stat():
                                         tar_attitudes_count = blog_attitudes_count,
                                         tar_post_date = blog_time,
                                         tar_text = blog_text,
-                                        mid = mid
+                                        mid = mid,
+                                        weibo_url = weibo_url
                 )
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -1757,6 +1777,7 @@ def single_ajax_stat():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             else:
                                 blog_info = readPropagateSinglePart(mid)
                                 if blog_info[0]['profile_image_url'] == 'None':
@@ -1769,6 +1790,7 @@ def single_ajax_stat():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 
                             blog_info = readIndexSingle(mid)
                             if blog_info: 
@@ -1816,7 +1838,8 @@ def single_ajax_stat():
                                                     tar_attitudes_count = blog_attitudes_count,
                                                     tar_post_date = blog_time,
                                                     tar_text = blog_text,
-                                                    mid = mid
+                                                    mid = mid,
+                                                    weibo_url = weibo_url
                             )
                     else:
                         return redirect('/')
@@ -1844,6 +1867,7 @@ def single_ajax_userfield():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                 else:
                     blog_info = readPropagateSinglePart(mid)
                     if blog_info[0]['profile_image_url'] == 'None':
@@ -1856,6 +1880,7 @@ def single_ajax_userfield():
                     blog_attitudes_count = blog_info[0]['attitudesCount']
                     blog_time = blog_info[0]['postDate']
                     blog_text = blog_info[0]['text']
+                    weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                     
                 blog_key_user_list = readPropagateUserSingle(mid)
 
@@ -1940,6 +1965,7 @@ def single_ajax_userfield():
                                        tar_attitudes_count = blog_attitudes_count,
                                        tar_post_date = blog_time,
                                        tar_text = blog_text,
+                                       weibo_url = weibo_url,
                                        mid=mid, blog_key_user_list=blog_key_user_list, data2=data2, blog_key_user_list_part=blog_key_user_list_part, data_part=data_part)
             else:
                 pass
@@ -1964,6 +1990,7 @@ def single_ajax_userfield():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             else:
                                 blog_info = readPropagateSinglePart(mid)
                                 if blog_info[0]['profile_image_url'] == 'None':
@@ -1976,6 +2003,7 @@ def single_ajax_userfield():
                                 blog_attitudes_count = blog_info[0]['attitudesCount']
                                 blog_time = blog_info[0]['postDate']
                                 blog_text = blog_info[0]['text']
+                                weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
                             blog_key_user_list = readPropagateUserSingle(mid)
 
                             domain = {'财经':0,'媒体':0,'文化':0,'科技':0,'娱乐':0,'教育':0,'时尚':0,'体育':0,'境外':0,'高校微博':0,'境内机构':0,'境外机构':0,'境内媒体':0,'境外媒体':0,'民间组织':0,'律师':0,'政府官员':0,'媒体人士':0,'活跃人士':0,'草根':0,'其他':0}
@@ -2059,6 +2087,7 @@ def single_ajax_userfield():
                                                    tar_attitudes_count = blog_attitudes_count,
                                                    tar_post_date = blog_time,
                                                    tar_text = blog_text,
+                                                   weibo_url = weibo_url,
                                                    mid=mid, blog_key_user_list=blog_key_user_list, data2=data2, blog_key_user_list_part=blog_key_user_list_part, data_part=data_part)
                         else:
                             pass
@@ -2480,7 +2509,7 @@ def target_whole_xapian_weibo(start_date=XAPIAN_FIRST_DATE, end_date=XAPIAN_LAST
 
     return xapian_weibo
 
-whole_xapian_weibo = target_whole_xapian_weibo('20130901', '20130905')
+whole_xapian_weibo = target_whole_xapian_weibo('20130901', '20130921')
 
 
 def getWeiboRetweetedStatus(mid):

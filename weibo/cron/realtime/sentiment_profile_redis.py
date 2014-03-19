@@ -325,18 +325,6 @@ def sentiment_weibo_redis2mysql(end_ts, during=Fifteenminutes):
             domain_emotions_data[v] = [end_ts, weibos]
         print '%s domain %s saved weibos: %s' % (time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), fieldid, len(domain_emotions_data))
         save_domain_weibos(int(fieldid), domain_emotions_data, during, TOP_WEIBOS_LIMIT)
-    
-
-def get_efficient_db_no(ts):
-    db_no = get_now_db_no(ts) - 2
-    if db_no <= 0:
-        db_no += 15
-
-    return db_no
-
-
-def get_efficient_db_end_ts(now_db_start_ts):
-    return int(now_db_start_ts) - 15 * 60
 
 
 def get_now_datestr(ts):
@@ -403,42 +391,43 @@ if __name__ == '__main__':
     # 执行计算的两个先决条件，其一是启动第一次执行计算任务时，需清空15个redis db；
     # 其二是数据可以分块到达，但是需要按照时间顺序，块与块之间需要保持顺序
     # 其三是NOW_DB_START_TS需要清空
-    
     global_r0 = _default_redis()
     now_db_start_ts = global_r0.get(NOW_DB_START_TS)
     
     if now_db_start_ts:
         now_db_start_ts = int(now_db_start_ts)
         print 'now_db_start_ts', now_db_start_ts
-        
         last_complete_start_ts = global_r0.get(LAST_COMPLETE_START_TS)
         
         if last_complete_start_ts:
             last_complete_start_ts = int(last_complete_start_ts)
             print 'last_complete_start_ts', last_complete_start_ts
             
-            if last_complete_start_ts < now_db_start_ts - 60 * 15 * 2:
-                now_db_no = get_efficient_db_no(now_db_start_ts)
-                r = _default_redis(db=now_db_no)
-                end_ts = get_efficient_db_end_ts(now_db_start_ts)
+            # 正常应该更新的情况是，last_complete_start_ts是now_db-3甚至更早单元的起始时间，
+            # 所以应该去取last_complete_start_ts往后一个时间段的数据，每次挪一个时间单元
+            if last_complete_start_ts <= now_db_start_ts - 60 * 15 * 3:
+                # 更新last_complete_start_ts
+                last_complete_start_ts += 60 * 15
+                global_r0.set(LAST_COMPLETE_START_TS, last_complete_start_ts)
 
-                if end_ts > last_complete_start_ts + 60 * 15:
-                    now_db_no = get_now_db_no(end_ts - 60 * 15)
-                    r = _default_redis(db=now_db_no)
-                    end_ts = last_complete_start_ts + 60 * 15 * 2
-                
-                global_r0.set(LAST_COMPLETE_START_TS, end_ts - 60 * 15)
+                # 开始计算
+                end_ts = last_complete_start_ts + 60 * 15
+                now_db_no = get_now_db_no(last_complete_start_ts)
+                r = _default_redis(db=now_db_no)
                 calc_sentiment()
                 calc_profile()
-                clear_current_redis()
+                clear_current_redis()                
 
             # 当last_complete_start_ts 达到 23:15时，把剩余的两段15分钟时间单元更新计算   
             elif last_complete_start_ts < now_db_start_ts and (datetime.datetime.fromtimestamp(last_complete_start_ts).strftime("%H:%M:%S") ==  '23:15:00' or datetime.datetime.fromtimestamp(last_complete_start_ts).strftime("%H:%M:%S") == '23:30:00'):
-                end_ts = last_complete_start_ts + 60 * 15 * 2
-                now_db_no = get_now_db_no(end_ts - 60 * 15)
+                # 更新last_complete_start_ts
+                last_complete_start_ts += 60 * 15
+                global_r0.set(LAST_COMPLETE_START_TS, last_complete_start_ts)
+
+                # 开始计算
+                end_ts = last_complete_start_ts + 60 * 15
+                now_db_no = get_now_db_no(last_complete_start_ts)
                 r = _default_redis(db=now_db_no)
-                
-                global_r0.set(LAST_COMPLETE_START_TS, end_ts - 60 * 15)
                 calc_sentiment()
                 calc_profile()
                 clear_current_redis()
@@ -447,16 +436,18 @@ if __name__ == '__main__':
                 print 'wait new data'
 
         else:
-            # 前2个db开始计算，需要check redis中是否有-2 db开始出现数据
-            now_db_no = get_efficient_db_no(now_db_start_ts)
-            r = _default_redis(db=now_db_no)
+            # last_complete_start_ts不存在，前2个db开始计算，需要check redis中是否有-2 db开始出现数据
+            now_db_no = get_now_db_no(now_db_start_ts)
+            r = _default_redis(db=now_db_no-2)
             if r.get(GLOBAL_SENTIMENT_COUNT % '1'):
-                # 开始第一次计算
-                end_ts = get_efficient_db_end_ts(now_db_start_ts)
+                # 开始第一次计算, 更新last_complete_start_ts
+                last_complete_start_ts = now_db_start_ts - 60 * 15 * 2
+                global_r0.set(LAST_COMPLETE_START_TS, last_complete_start_ts)
 
-                # 遇到第一个有数据的区间，更新LAST_COMPLETE_START_TS
-                global_r0.set(LAST_COMPLETE_START_TS, end_ts - 15 * 60)
-
+                # 开始计算
+                end_ts = last_complete_start_ts + 60 * 15
+                now_db_no = get_now_db_no(last_complete_start_ts)
+                r = _default_redis(db=now_db_no)
                 calc_sentiment()
                 calc_profile()
                 clear_current_redis()

@@ -3,6 +3,7 @@
 import json
 import math
 import time
+import base62
 from datetime import date
 from datetime import datetime
 from graph import getWeiboByMid, graph_from_elevator, forest_from_elevator
@@ -89,6 +90,7 @@ def show_graph_index(mid, module, page=None):
         blog_attitudes_count = blog_info[0]['attitudesCount']
         blog_time = blog_info[0]['postDate']
         blog_text = blog_info[0]['text']
+        weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
     else:
         blog_info = readPropagateSinglePart(mid)
         if blog_info[0]['profile_image_url'] == 'None':
@@ -101,6 +103,7 @@ def show_graph_index(mid, module, page=None):
         blog_attitudes_count = blog_info[0]['attitudesCount']
         blog_time = blog_info[0]['postDate']
         blog_text = blog_info[0]['text']
+        weibo_url = base62.weiboinfo2url(blog_info[0]['id'], str(mid))
     
     if module == 'sub':
         return render_template('graph/graph.html', btnuserpicvisible='inline',
@@ -114,7 +117,8 @@ def show_graph_index(mid, module, page=None):
                                tar_post_date = blog_time,
                                tar_text = blog_text,
                                mid=mid,
-                               page=page)
+                               page=page,
+                               weibo_url=weibo_url)
     else:
         return render_template('graph/graph_whole.html', btnuserpicvisible='inline',
                                btnloginvisible='none',
@@ -127,7 +131,8 @@ def show_graph_index(mid, module, page=None):
                                tar_post_date = blog_time,
                                tar_text = blog_text,
                                mid=mid,
-                               page=page)
+                               page=page,
+                               weibo_url=weibo_url)
 
 @mod.route('/graph/<int:mid>/')
 @mod.route('/graph/<int:mid>/<int:page>/')

@@ -49,20 +49,12 @@
             <img style="width: 150px; height: 140px;" type="image/jpg" src="/static/img/topic_none.png" media="screen" />
             {% endif %}
           </div>
-          <div style="float:left;padding-left:50px;">
+          <div style="float:left;padding-left:50px;width:1000px;">
             <h3>单条微博传播分析</h3>
-          <div style="float:left;padding-top:10px;">
-            <label style="font-size:18px">发起人：<span class="badge badge-success" style="font-size:18px"> {{ tar_screen_name }} </span> </label>
-            <label class="appendedInput" style="font-size:18px">转发数：<span class="badge badge-info" style="font-size:18px">{{ tar_repost_count }}</span></label>
-          </div>
-          <div style="float:left;padding-top:10px;padding-left:30px;">
-            <label class="appendedInput" style="font-size:18px">评论数：<span class="badge badge-warning" style="font-size:18px">{{ tar_comments_count }}</span></label>
-            <label class="appendedInput" style="font-size:18px">赞数：<span class="badge badge-warning" style="font-size:18px">{{ tar_attitudes_count }}</span></label>
-          </div>
-          <div style="float:left;padding-top:10px;padding-left:30px;">            
-            <label class="appendedInput" style="font-size:18px">发布时间：{{ tar_post_date }} </label>
-            <!--<label class="appendedInput" style="font-size:18px">内容：{{ tar_text }} </label>-->
-          </div>
+            <label style="font-size:18px;float:left;">发起人：<span class="badge badge-success" style="font-size:18px"> {{ tar_screen_name }} </span> </label>
+            <label class="appendedInput" style="font-size:18px;padding-left:30px;float:left;">发布时间：{{ tar_post_date }} </label>
+            <label class="appendedInput" style="font-size:18px;padding-left:500px;">微博链接：<a href="{{weibo_url}}">{{ weibo_url }} </a></label>           
+            <label class="appendedInput" style="font-size:18px;padding-top:10px;">内容：{{ tar_text }} </label>
         </div>
       </div>
     </div><!--上侧信息-->

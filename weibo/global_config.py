@@ -16,7 +16,7 @@ DOMAIN_LIST = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'm
                'university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', \
                'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
 DOMAIN_ZH_LIST = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒体', u'体育', u'科技', u'境外', \
-                  u'高校微博', u'境内机构', u'境外机构', u'媒体', u'境外媒体', u'民间组织', u'律师', \
+                  u'高校微博', u'境内机构', u'境外机构', u'境内媒体', u'境外媒体', u'民间组织', u'律师', \
                   u'政府官员', u'媒体人士', u'活跃人士', u'草根', u'其它']
 
 LATEST_DATE = '20130904'

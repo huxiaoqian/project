@@ -2382,7 +2382,7 @@ def topic_submit():
     start_ts = date2ts(start_ts)
     end_ts = date2ts(end_ts)
     status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp)
-    return 'success'
+    return json.dumps('success')
 
 @mod.route('/history_id.json', methods=['GET','POST'])
 def search_history_id():
@@ -2473,17 +2473,19 @@ def weibo_submit():
     timestamp = request.args.get('timestamp', None)
     timestamp = int(timestamp)
     time = _utf_encode(time)
+
     start_ts, end_ts = _time_zone(time)
     start_ts = date2ts(start_ts)
     end_ts = date2ts(end_ts)
     statuses_search = getXapianweiboByTs(start_ts, end_ts)
     count,get_results = statuses_search.search(query={'_id': mid},fields=['timestamp'])
+
     if count == 0:
-        return 'wrong'
+        return json.dumps('wrong')
     for r in get_results():
         postDate = datetime.fromtimestamp(r['timestamp'])
     status , item = _add_history_weibo(-1, mid, postDate, timestamp)
-    return 'success'
+    return json.dumps('success')
 
 @mod.route('/url2mid', methods=['GET','POST'])
 def url_mid():
@@ -2491,7 +2493,7 @@ def url_mid():
     if url:
         mid = get_mid(url)
     else:
-        return 'Wrong'
+        return json.dumps('Wrong')
     return str(mid)
 
 

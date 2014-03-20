@@ -180,6 +180,8 @@ function declear_re(){<!-- 反选 -->
 
           <li  class="active" > <a id="Topic_history" href="/sysadmin/paraset/topic_history/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#58ACFA;width:200px;" >历史话题管理</a></li>
 
+          <li> <a id="Topic_history" href="/sysadmin/paraset/weibo_history/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >历史微博管理</a></li>
+
           <li> <a id="Topic_user" href="/sysadmin/paraset/log/" align="center" style="font-size:12pt;color:#000000;padding-left:15px;padding-top:10px;background:#D8D8D8;width:200px;" >后台日志管理</a></li>
         </ul>
     </div>
@@ -215,6 +217,7 @@ function declear_re(){<!-- 反选 -->
                         <th style="text-align:center">历史话题</th>
                         <th style="text-align:center">起始时间</th>
                         <th style="text-align:center">结束时间</th>
+                        <th style="text-align:center">所属模块</th>
                         <th style="text-align:center">状态</th>
                         <th style="text-align:center">入库时间</th>
                         <th style="text-align:center">选择</th>
@@ -250,6 +253,15 @@ function declear_re(){<!-- 反选 -->
                             html += "<td style='text-align:center'>" + user['topic'] + "</td>";
                             html += "<td style='text-align:center'>" + user['start'] + "</td>";
                             html += "<td style='text-align:center'>" + user['end'] + "</td>";
+                            if(user['module']=='identify'){
+                              html += "<td style='text-align:center'>敏感博主识别</td>";
+                            }
+                            if(user['module']=='sentiment'){
+                              html += "<td style='text-align:center'>网民情绪检测与预警</td>";
+                            }
+                            if(user['module']=='propagate'){
+                              html += "<td style='text-align:center'>微博信息传播</td>";
+                            }
                             if(user['status']==0){
                               html += "<td style='text-align:center'>计算中</td>";
                             }
@@ -281,10 +293,19 @@ function declear_re(){<!-- 反选 -->
                             html += "<td style='text-align:center'>" + user['topic'] + "</td>";
                             html += "<td style='text-align:center'>" + user['start'] + "</td>";
                             html += "<td style='text-align:center'>" + user['end'] + "</td>";
-                            if(user['status']==0){
-                              html += "<td style='text-align:center'>计算完成</td>";
+                            if(user['module']=='identify'){
+                              html += "<td style='text-align:center'>敏感博主识别</td>";
+                            }
+                            if(user['module']=='sentiment'){
+                              html += "<td style='text-align:center'>网民情绪检测与预警</td>";
+                            }
+                            if(user['module']=='propagate'){
+                              html += "<td style='text-align:center'>微博信息传播</td>";
                             }
                             if(user['status']==1){
+                              html += "<td style='text-align:center'>计算完成</td>";
+                            }
+                            if(user['status']==0){
                               html += "<td style='text-align:center'>计算中</td>";
                             }
                             if(user['status']==-1){

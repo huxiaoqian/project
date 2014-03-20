@@ -13,9 +13,7 @@ from gen_weibospread import Tree
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
-
-XAPIAN_FIRST_DATE = '20130901'
-XAPIAN_LAST_DATE = '20130930'
+from dynamic_xapian_weibo import target_whole_xapian_weibo, target_whole_xapian_user
 
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
                 'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
@@ -142,58 +140,7 @@ def tree2graph(tree_nodes):
     return etree.tostring(gexf.getXML(), pretty_print=False, encoding='utf-8', xml_declaration=True), max_depth, max_width
 
 
-def getXapianWeiboByDate(datestr):
-    # datestr: 20130908
-    path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
-    stub_file = path + datestr
-    
-    if os.path.exists(stub_file):
-        xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True, schema_version=5)
-        return xapian_search_weibo
-    else:
-        return None
-
-
-def getXapianWeiboByDuration(datestr_list):
-    path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
-    stub_file_list = []
-
-    for datestr in datestr_list:
-        stub_file = path + datestr
-        if os.path.exists(stub_file):
-            stub_file_list.append(stub_file)
-    print stub_file_list
-
-    if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, schema_version=5)
-        return xapian_search_weibo 
-    else:
-        return None
-
-
-def target_whole_xapian_weibo(start_date=XAPIAN_FIRST_DATE, end_date=XAPIAN_LAST_DATE):
-    datelist = []
-    start_ts = int(time.mktime(time.strptime(start_date, '%Y%m%d')))
-    end_ts = int(time.mktime(time.strptime(end_date, '%Y%m%d'))) + 24 * 3600
-
-    during = (end_ts - start_ts) / (24 * 3600)
-    for i in range(0, during):
-        now_date = time.strftime('%Y%m%d', time.localtime(start_ts + i * 24 * 3600))
-        datelist.append(now_date)
-
-    xapian_weibo = getXapianWeiboByDuration(datelist)
-
-    return xapian_weibo
-
-
-def target_whole_xapian_user():
-    XAPIAN_USER_DATA_PATH = '/media/data/'
-    xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
-    
-    return xapian_search_user
-
-
-whole_xapian_weibo = target_whole_xapian_weibo('20130901', '20130905')
+whole_xapian_weibo = target_whole_xapian_weibo()
 whole_xapian_user = target_whole_xapian_user()
 
 

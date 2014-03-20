@@ -353,7 +353,8 @@ function choose_window(range, window) {
   
   $('#burst_window_size_choosen').datepicker({
     format: "m月 d日,yyyy",
-    language: "zh-CN"
+    language: "zh-CN",
+    forceParse: false
   });
 
   $('#whole_window_size_choosen').daterangepicker({

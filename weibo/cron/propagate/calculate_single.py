@@ -21,7 +21,7 @@ from global_config import xapian_search_user as user_search
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 try:
-    from weibo.global_config import LEVELDBPATH
+    from config import LEVELDBPATH
 except:
     LEVELDBPATH = '/media/data/leveldb/'
     print 'not in web environment'

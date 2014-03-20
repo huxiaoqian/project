@@ -105,6 +105,13 @@ def help_history():
     else:
         return redirect('/sysadmin/')
 
+@mod.route('/paraset/weibo_history/')
+def help_weibo():
+    if 'logged_in' in session and session['logged_in']:
+        return render_template('admin/para_weibo.html') 
+    else:
+        return redirect('/sysadmin/')
+
 @mod.route('/paraset/log/')
 def help_log():
     if 'logged_in' in session and session['logged_in']:
@@ -532,7 +539,39 @@ def history_rank():
                 start = time.strftime('%Y-%m-%d', time.localtime(topic.start))
                 end = time.strftime('%Y-%m-%d', time.localtime(topic.end))
                 db_date = time.strftime('%Y-%m-%d', time.localtime(topic.db_date))
-                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'start':start,'end':end,'status':topic.status,'enter_data':db_date})
+                news.append({'id':topic.id,'topic':topic.topic.encode('utf-8'),'start':start,'end':end,'status':topic.status,'module':topic.module,'enter_data':db_date})
+    total_pages = limit / countperpage + 1
+    return json.dumps({'news': news, 'pages': total_pages})
+
+@mod.route('/history_weibo/')
+def history_weibo():
+    page = 1
+    countperpage = 5
+    limit = 1000000
+    if request.args.get('page'):
+        page = int(request.args.get('page'))
+    if request.args.get('countperpage'):
+        countperpage = int(request.args.get('countperpage'))
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    if page == 1:
+        startoffset = 0
+    else:
+        startoffset = (page - 1) * countperpage
+    endoffset = startoffset + countperpage
+    local = int(time.time())
+    topics = db.session.query(WeiboStatus).filter((WeiboStatus.status==0)|(WeiboStatus.status==1)|(WeiboStatus.status==-1)).all()
+    news=[]
+    n = 0
+    for topic in topics:
+        if topic:
+            n = n + 1
+            if n > startoffset:
+                if n > endoffset:
+                    break
+                postDate = str(topic.postDate)
+                db_date = time.strftime('%Y-%m-%d', time.localtime(topic.db_date))
+                news.append({'id':topic.id,'mid':topic.mid,'postDate':postDate,'status':topic.status,'enter_data':db_date})
     total_pages = limit / countperpage + 1
     return json.dumps({'news': news, 'pages': total_pages})
 
@@ -709,6 +748,70 @@ def history_new():#添加历史话题
 	new_item = TopicStatus(module=module,status=-1,topic=new_field,start=start_time,end=end_time,range=900,db_date=local)
         db.session.add(new_item)
         db.session.commit()
+    return json.dumps(result)
+
+@mod.route('/weibo_de', methods=['GET','POST'])#删除历史微博
+def weibo_de():
+    result = 'Right'
+    user_id = request.form['f_id']
+    old_items = db.session.query(WeiboStatus).filter(WeiboStatus.id==user_id).all()
+    if len(old_items):
+        for old_item in old_items:
+            mid = old_item.mid
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateSingle).filter(PropagateSingle.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateTrendSingle).filter(PropagateTrendSingle.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateSpatialSingle).filter(PropagateSpatialSingle.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateUserSingle).filter(PropagateUserSingle.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateWeiboSingle).filter(PropagateWeiboSingle.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateSinglePart).filter(PropagateSinglePart.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateTrendSinglePart).filter(PropagateTrendSinglePart.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateSpatialSinglePart).filter(PropagateSpatialSinglePart.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateUserSinglePart).filter(PropagateUserSinglePart.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+
+        old_items = db.session.query(PropagateWeiboSinglePart).filter(PropagateWeiboSinglePart.mid==mid).all()
+        for old_item in old_items:
+            db.session.delete(old_item)
+            db.session.commit()
+    else:
+        result = 'Wrong'
     return json.dumps(result)
 
 @mod.route('/check_log', methods=['GET','POST'])

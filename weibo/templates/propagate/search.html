@@ -208,13 +208,13 @@ function get_and_show_history_msg(){
             max += 1;
           }
           if (max > 5){
-            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中任务已经达到5条的限制，提交失败，请稍后提交！！</b></font></div>"
             $('#show_search_msg').empty();
             $('#show_search_msg').append(search_html);
             $('#search_topic').val('搜索');
           }
           else{
-            if(keyword.length < 2)
+            if(keyword.length < 1)
               var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
             else{
               $('#search_topic').val('搜索');
@@ -262,7 +262,7 @@ function get_and_show_history_msg(){
       var command = $('#search_topic').val();
       if (command == '搜索'){
         var keyword = document.getElementById("topic_keywords").value;
-        if(keyword.length < 2){
+        if(keyword.length < 1){
           var search_msg = "请从上方文本框中输入话题"
           var search_html = "<div class=\"well\"><li>" + search_msg + "</li></div>";
           $('#show_search_msg').empty();
@@ -273,6 +273,7 @@ function get_and_show_history_msg(){
           $('#search_topic').val('确认提交');
         }
       }else if (command == '确认提交'){
+        console.log('here');
         max_history_limit();
         
     }
@@ -339,7 +340,7 @@ function get_and_show_history_msg(){
             max += 1;
           }
           if (max > 5){
-            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中任务已经达到10条的限制，提交失败，请稍后提交！！</b></font></div>"
+            var search_html = "<div class=\"well\"><font color=\"#FF0033\" face=\"Georgia, Times New Roman, Times, serif\"><b>正在计算中任务已经达到5条的限制，提交失败，请稍后提交！！</b></font></div>"
             $('#show_search_msg_single').empty();
             $('#show_search_msg_single').append(search_html);
             if(flag == 0){

@@ -438,7 +438,10 @@ if __name__ == '__main__':
         else:
             # last_complete_start_ts不存在，前2个db开始计算，需要check redis中是否有-2 db开始出现数据
             now_db_no = get_now_db_no(now_db_start_ts)
-            r = _default_redis(db=now_db_no-2)
+            now_db_no = now_db_no - 2
+            if now_db_no <= 0:
+                now_db_no =+ 15
+            r = _default_redis(db=now_db_no)
             if r.get(GLOBAL_SENTIMENT_COUNT % '1'):
                 # 开始第一次计算, 更新last_complete_start_ts
                 last_complete_start_ts = now_db_start_ts - 60 * 15 * 2

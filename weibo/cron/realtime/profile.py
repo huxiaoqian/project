@@ -189,18 +189,18 @@ def calc_person_airoei_xapian2leveldb():
             daily_profile_airoe_bucket.Put(str(retweeted_uid), value)
 
 
-def calc_domain_airo_keywords():
-    # test 2 seconds per 10000 users, total users 20000000
+def calc_domain_airo():
+    # test 0.25 seconds per 10000 users, total users 20000000
     count = 0
     ts = te = time.time()
-    for k, v in daily_profile_airoeik_bucket.RangeIter():
+    for k, v in daily_profile_airoe_bucket.RangeIter():
         if count % 10000 == 0:
             te = time.time()
-            print  time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), ' %s daily calc_domain_airo_keywords' % now_datestr
+            print  time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), ' %s daily calc_domain_airo' % now_datestr
             ts = te
 
         uid = str(k)
-        active, important, reposts, original, emoticon, interact_dict, keywords_dict = v.split('_\/')
+        active, important, reposts, original, emoticon = v.split('_\/')
         active = int(active)
         important = int(important)
         reposts = int(reposts)
@@ -209,7 +209,7 @@ def calc_domain_airo_keywords():
         domain = user2domain(uid)
 
         try:
-            _active, _important, _reposts, _original = daily_profile_domain_airo_bucket.Get(uid).split('_\/')
+            _active, _important, _reposts, _original = daily_profile_domain_airo_bucket.Get(str(domain)).split('_\/')
             _active = int(_active)
             _important = int(_important)
             _reposts = int(_reposts)
@@ -228,17 +228,34 @@ def calc_domain_airo_keywords():
         key = str(domain)
         value = '_\/'.join([str(_active), str(_important), str(_reposts), str(_original)])
         daily_profile_domain_airo_bucket.Put(key, value)
+        
+        count += 1
 
-        keywords_dict = json.loads(keywords_dict)
+
+def calc_domain_keywords():
+    # test 1.5 seconds per 10000 users, total users 20000000
+    count = 0
+    ts = te = time.time()
+    for k, v in daily_profile_keywords_bucket.RangeIter():
+        if count % 10000 == 0:
+            te = time.time()
+            print  time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), count, '%s sec' % (te - ts), ' %s daily calc_domain_keywords' % now_datestr
+            ts = te
+
+        uid = str(k)
+        keywords_dict = json.loads(v)
+
+        domain = user2domain(uid)
+
         keywords_leveldb = daily_profile_domain_keywords_bucket[int(domain)]
-        for k, v in keywords_dict.iteritems():
+        for _k, _v in keywords_dict.iteritems():
             try:
-                kcount = int(keywords_leveldb.Get(str(k.encode('utf-8'))))
-                kcount += int(v)
+                kcount = int(keywords_leveldb.Get(str(_k.encode('utf-8'))))
+                kcount += int(_v)
             except KeyError:
-                kcount = int(v)
+                kcount = int(_v)
 
-            keywords_leveldb.Put(str(k.encode('utf-8')), str(kcount))
+            keywords_leveldb.Put(str(_k.encode('utf-8')), str(kcount))
 
         count += 1
 
@@ -297,7 +314,7 @@ if __name__ == '__main__':
                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     daily_profile_interact_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_interact_%s' % now_datestr),
                                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    
+    '''
     try:
         os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user_name_profile_%s' % now_datestr))
     except:
@@ -312,10 +329,12 @@ if __name__ == '__main__':
     
     # remove leveldb
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user_name_profile_%s' % now_datestr))
-
+    '''
     # init leveldb
+    daily_profile_keywords_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_keywords_%s' % now_datestr),
+                                                    block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     domain_leveldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_user2domain_profile'),
-                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+                                     block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     daily_profile_domain_airo_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_domain_%s' % now_datestr),
                                                        block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     daily_profile_domain_keywords_bucket = {}
@@ -324,7 +343,8 @@ if __name__ == '__main__':
                                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
     # calculate
-    calc_domain_airo_keywords()
+    # calc_domain_airo()
+    calc_domain_keywords()
 
     # sort domain keywords, get topk
     daily_profile_domain_topk_keywords_bucket = {}

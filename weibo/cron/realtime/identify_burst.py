@@ -57,6 +57,11 @@ def burst_rank(now_datestr, before_datestr, global_leveldb, global_previous_leve
         follower = int(follower)
         domain = int(domain)
 
+        # 将粉丝数为0，即不在xapian_user中的用户pass掉
+        if follower == 0:
+            count += 1
+            continue
+
         # 突发排序
         if previous_exist:
             try:

@@ -188,6 +188,11 @@ def whole_domain_rank(topk=TOPK, identifyWindow=1):
         important = int(important)
         follower = int(follower)
         domain = int(domain)
+        
+        # 将粉丝数为0，即不在xapian_user中的用户pass掉
+        if follower == 0:
+            count += 1
+            continue
 
         # 全网排序
         active_th.Push((active, important, follower, uid))
@@ -282,18 +287,21 @@ def saveDomain2mysql(uid, active, important, followers, domain, rank, identifyWi
 if __name__ == '__main__':
     # get datestr
     now_datestr = sys.argv[1] # '20130901'
-
+    '''
     # init xapian weibo
     xapian_search_weibo = getXapianWeiboByDate(now_datestr)
+    '''
 
     # init leveldb
+    '''
     try:
         shutil.rmtree(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr))
     except:
         pass
+    '''
     daily_identify_aifd_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'yuanshi_daily_count_%s' % now_datestr),
                                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    
+    '''
     try:
         os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_%s' % now_datestr))
     except:
@@ -330,7 +338,7 @@ if __name__ == '__main__':
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2followers_identify_%s' % now_datestr))
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2domain_identify_%s' % now_datestr))
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user_name_identify_%s' % now_datestr))
-
+    '''
     # identify rank
     global_leveldb = daily_identify_aifd_bucket
     whole_domain_rank()

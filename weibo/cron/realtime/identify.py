@@ -237,6 +237,11 @@ def whole_domain_rank(topk=TOPK, identifyWindow=1):
         follower = int(follower)
         domain = int(domain)
 
+        # 将粉丝数为0，即不在xapian_user中的用户pass掉
+        if follower == 0:
+            count += 1
+            continue
+
         # 全网排序
         active_th.Push((active, important, follower, uid))
         important_th.Push((important, active, follower, uid))

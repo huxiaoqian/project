@@ -37,6 +37,8 @@ if IS_PROD:
     MYSQL_DB = 'weibo'
     ELEVATOR_HOST = '192.168.2.31'
     ELEVATOR_PORT = 4141
+    SSDB_PORT = 8888
+    SSDB_HOST = '192.168.2.30'
 else:
     XAPIAN_USER_DATA_PATH = '/media/sdh/data/'
     LEVELDBPATH = '/media/data/leveldb'

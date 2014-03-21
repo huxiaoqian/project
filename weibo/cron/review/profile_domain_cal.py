@@ -38,13 +38,13 @@ def user2domain(uid, updatetime='20131220'):
 
 
 def calc_domain_airo():
-    # test 2 seconds per 10000 users, total users 20000000
+    # test 0.5 seconds per 10000 users, total users 20000000
     count = 0
     ts = te = time.time()
     for k, v in daily_profile_counts_db.RangeIter():
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), ' %s daily calc_domain_keywords' % now_datestr
+            print count, '%s sec' % (te - ts), ' %s daily calc_domain_airo' % now_datestr
             ts = te
 
         uid = str(k)

@@ -37,18 +37,18 @@ def user2domain(uid, updatetime='20131220'):
     return domainid
 
 
-def calc_domain_airo_keywords():
+def calc_domain_airo():
     # test 2 seconds per 10000 users, total users 20000000
     count = 0
     ts = te = time.time()
-    for k, v in daily_profile_airoeik_bucket.RangeIter():
+    for k, v in daily_profile_counts_db.RangeIter():
         if count % 10000 == 0:
             te = time.time()
-            print count, '%s sec' % (te - ts), ' %s daily calc_domain_airo_keywords' % now_datestr
+            print count, '%s sec' % (te - ts), ' %s daily calc_domain_keywords' % now_datestr
             ts = te
 
         uid = str(k)
-        active, important, reposts, original, emoticon, interact_dict, keywords_dict = v.split('_\/')
+        active, important, reposts, original, emoticon = v.split('_\/')
         active = int(active)
         important = int(important)
         reposts = int(reposts)
@@ -57,7 +57,7 @@ def calc_domain_airo_keywords():
         domain = user2domain(uid)
 
         try:
-            _active, _important, _reposts, _original = daily_profile_domain_airo_bucket.Get(uid).split('_\/')
+            _active, _important, _reposts, _original = daily_profile_domain_airo_bucket.Get(str(domain)).split('_\/')
             _active = int(_active)
             _important = int(_important)
             _reposts = int(_reposts)
@@ -72,14 +72,31 @@ def calc_domain_airo_keywords():
         _important += important
         _reposts += reposts
         _original += original
-        
+
         key = str(domain)
         value = '_\/'.join([str(_active), str(_important), str(_reposts), str(_original)])
         daily_profile_domain_airo_bucket.Put(key, value)
-        
+
+        count += 1
+
+
+def calc_domain_keywords():
+    # test 2 seconds per 10000 users, total users 20000000
+    count = 0
+    ts = te = time.time()
+    for k, v in daily_profile_keywords_db.RangeIter():
+        if count % 10000 == 0:
+            te = time.time()
+            print count, '%s sec' % (te - ts), ' %s daily calc_domain_keywords' % now_datestr
+            ts = te
+
+        uid = str(k)
+        domain = user2domain(uid)
+
         try:
-            keywords_dict = json.loads(keywords_dict)
+            keywords_dict = json.loads(v)
         except Exception, e:
+            print e
             count += 1
             continue
             
@@ -128,8 +145,11 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 if __name__ == '__main__':
     now_datestr = sys.argv[1]
-    daily_profile_airoeik_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_%s' % now_datestr),
-                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    daily_profile_keywords_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_keywords_%s' % now_datestr),
+                                                block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    daily_profile_counts_db = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_counts_%s' % now_datestr),
+                                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+
     try:
         os.mkdir(os.path.join(LEVELDBPATH, 'linhao_user2domain_profile_%s' % now_datestr))
     except:
@@ -155,10 +175,11 @@ if __name__ == '__main__':
             pass
         daily_profile_domain_keywords_bucket[i] = leveldb.LevelDB(os.path.join(LEVELDBPATH, './domain_keywords/linhao_profile_domain_keywords_%s_%s' % (now_datestr, i)),
                                                                   block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    calc_domain_airo_keywords()
+    calc_domain_airo()
+    calc_domain_keywords()
 
     shutil.rmtree(os.path.join(LEVELDBPATH, 'linhao_user2domain_profile_%s' % now_datestr))
-
+    
     # sort domain keywords, get topk
     daily_profile_domain_topk_keywords_bucket = {}
     for i in range(9, 21):

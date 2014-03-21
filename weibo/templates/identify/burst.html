@@ -125,6 +125,7 @@
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.zh-CN.js') }}"></script>
     <script>
     		function exportTableToCSV($table, filename) {
                 
@@ -290,6 +291,8 @@
         });
     $('#burst_window_size_choosen').datepicker({
     format: "m月 d日,yyyy",
+    language: "zh-CN",
+    forceParse: false
     });
 
     //添加垃圾名单

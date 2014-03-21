@@ -16,14 +16,15 @@ DOMAIN_LIST = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'm
                'university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', \
                'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
 DOMAIN_ZH_LIST = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒体', u'体育', u'科技', u'境外', \
-                  u'高校微博', u'境内机构', u'境外机构', u'媒体', u'境外媒体', u'民间组织', u'律师', \
+                  u'高校微博', u'境内机构', u'境外机构', u'境内媒体', u'境外媒体', u'民间组织', u'律师', \
                   u'政府官员', u'媒体人士', u'活跃人士', u'草根', u'其它']
 
-LATEST_DATE = '20130904'
+LATEST_DATE = '20130921'
 
 IS_PROD = 1
 
-if IS_PROD:
+if IS_PROD == 1:
+    # 192.168.2.31
     XAPIAN_USER_DATA_PATH = '/media/data/'
     LEVELDBPATH = '/media/data/leveldb'
     COBAR_HOST = '192.168.2.31'
@@ -37,7 +38,10 @@ if IS_PROD:
     MYSQL_DB = 'weibo'
     ELEVATOR_HOST = '192.168.2.31'
     ELEVATOR_PORT = 4141
-else:
+    SSDB_PORT = 8888
+    SSDB_HOST = '192.168.2.30'
+elif IS_PROD == 0:
+    # 192.168.2.30
     XAPIAN_USER_DATA_PATH = '/media/sdh/data/'
     LEVELDBPATH = '/media/data/leveldb'
     COBAR_HOST = '192.168.2.31'
@@ -51,5 +55,24 @@ else:
     MYSQL_DB = 'weibo'
     ELEVATOR_HOST = '192.168.2.31'
     ELEVATOR_PORT = 4141
+    SSDB_PORT = 8888
+    SSDB_HOST = '192.168.2.30'
+elif IS_PROD == -1:
+    # 192.168.2.32
+    XAPIAN_USER_DATA_PATH = '/home/ubuntu10/dev/data/'
+    LEVELDBPATH = '/home/ubuntu10/dev/leveldb/'
+    COBAR_HOST = '192.168.2.31'
+    COBAR_PORT = 8066
+    COBAR_USER = 'cobar'
+    COBAR_DB = 'cobar_db_weibo'
+    REDIS_HOST = '192.168.2.31'
+    REDIS_PORT = 6379
+    MYSQL_HOST = '192.168.2.31'
+    MYSQL_USER = 'root'
+    MYSQL_DB = 'weibo'
+    ELEVATOR_HOST = '192.168.2.31'
+    ELEVATOR_PORT = 4141
+    SSDB_PORT = 8888
+    SSDB_HOST = '192.168.2.30'
 
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)

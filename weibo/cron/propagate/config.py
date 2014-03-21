@@ -7,7 +7,8 @@ from xapian_weibo.xapian_backend import XapianSearch
 
 cron_start = '2013-9-1'
 cron_end = '2013-10-1' 
-
+XAPIAN_FIRST_DATE = '20130901'
+XAPIAN_LAST_DATE = '20130921'
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
 fields_value = {'culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology'}
@@ -16,10 +17,7 @@ fields_id = {'culture': 1, 'education': 2, 'entertainment': 3, 'fashion': 4, 'fi
 IS_PROD = 1
 
 if IS_PROD:
-    # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/media/data/'
-    # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
-    # MASTER_TIMELINE_STUB = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/media/data/leveldb/'
     COBAR_HOST = '192.168.2.31'
     COBAR_PORT = 8066
@@ -32,11 +30,10 @@ if IS_PROD:
     ELEVATOR_HOST = '192.168.2.31'
     ELEVATOR_PORT = 4141
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
+    DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
+    DYNAMIC_XAPIAN_WEIBO_STUB_FOLDER_PATH = '/home/ubuntu12/dev/data/stub/'
 else:
-    # XAPIAN_WEIBO_DATA_PATH = '/opt/xapian_weibo/data/20131210/'
     XAPIAN_USER_DATA_PATH = '/opt/xapian_weibo/data/20131221/'
-    # XAPIAN_DOMAIN_DATA_PATH = '/opt/xapian_weibo/data/20131130/'
-    # MASTER_TIMELINE_STUB = '/home/mirage/dev/data/stub/master_timeline_weibo_stub'
     LEVELDBPATH = '/home/mirage/leveldb'
     COBAR_HOST = '219.224.135.61'
     COBAR_PORT = 8066
@@ -48,14 +45,6 @@ else:
     MYSQL_DB = 'weibo'
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
 
-READ_FROM_STUB = 1
-
-##if READ_FROM_STUB:
-##    xapian_search_weibo = XapianSearch(stub=MASTER_TIMELINE_STUB)
-##else:
-##	xapian_search_weibo = XapianSearch(path=XAPIAN_WEIBO_DATA_PATH, name='master_timeline_weibo', schema_version=4)
-
-#xapian_search_domain  = XapianSearch(path=XAPIAN_DOMAIN_DATA_PATH, name='master_timeline_domain', schema_version=4)
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
 
 FOLLOWERS_MIN_SUPPORT = 500

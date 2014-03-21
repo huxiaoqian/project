@@ -36,7 +36,7 @@ def merge_keywords_leveldb():
           
             try:
     	        one_ldb = leveldb.LevelDB(os.path.join(LEVELDBPATH, './keywords/' + f),
-    	                              block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
+    	                                  block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
                 print os.path.join(LEVELDBPATH, './keywords/' + f)
             except Exception, e:
                 print e
@@ -75,7 +75,7 @@ def merge_keywords_leveldb():
 if __name__ == '__main__':
     now_datestr = sys.argv[1]
     try:
-        daily_profile_keywords_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_keywords_%s' % now_datestr),
+        daily_profile_keywords_bucket = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_keywords_%s' % now_datestr),
                                                         block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
     except:
         sys.exit('%s profile keywords cant merge now' % now_datestr)

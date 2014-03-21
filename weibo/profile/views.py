@@ -32,6 +32,7 @@ from weibo.global_config import xapian_search_user, LEVELDBPATH, \
 from _multi_search import _hotest_users, _newest_users, _domain_users
 from _mysql import _search_person_basic, _search_person_important_active, _multi_search
 #from _elevator import getPersonData, getDomainKeywordsData, getDomainBasic, getDomainCountData
+#from _ssdb import getPersonData
 
 buckets = {}
 mod = Blueprint('profile', __name__, url_prefix='/profile')
@@ -157,13 +158,12 @@ def getPersonData(uid, datestr):
             result = profile_keywords_hash_db.get(str(datestr) + '_' + str(uid))
             if result:
                 keywords_dict = json.loads(result)
-            '''
-            except:
-                result = profile_keywords_hash_db.get(str(datestr) + '_' + str(uid))
-                if result:
-                    keywords_str = result.split('\_/')[0]
-                    keywords_dict = ast.literal_eval(keywords_str)
-            '''
+            #except:
+            #    result = profile_keywords_hash_db.get(str(datestr) + '_' + str(uid))
+            #    if result:
+            #        keywords_str = result.split('\_/')[0]
+            #        keywords_dict = ast.literal_eval(keywords_str)
+            
         except Exception, e:
             print e, datestr, 'profile person keywords'
 

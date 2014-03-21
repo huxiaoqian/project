@@ -141,7 +141,7 @@
           <li><a href="#" onClick="choose_field('area', 'homeadmin');" data-toggle="tab">境内机构</a></li>
           <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外机构</a></li>
           <li><a href="#" onClick="choose_field('area', 'homemedia');" data-toggle="tab">境内媒体</a></li>
-          <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外媒体</a></li>
+          <li><a href="#" onClick="choose_field('area', 'abroadmedia');" data-toggle="tab">境外媒体</a></li>
           <li><a href="#" onClick="choose_field('area', 'folkorg');" data-toggle="tab">民间组织</a></li>
           <li><a href="#" onClick="choose_field('area', 'lawyer');" data-toggle="tab">律师</a></li>
           <li><a href="#" onClick="choose_field('area', 'politician');" data-toggle="tab">政府官员</a></li>
@@ -245,6 +245,7 @@
   <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.zh-CN.js') }}"></script>
   <script type="text/javascript" charset="utf-8">
   function choose_method(range, method) {
     $("#"+range+"_rank_method").val(method);
@@ -323,7 +324,7 @@ function choose_window(range, window) {
         cn_area = '境外机构';
     else if(area=='homemedia')
         cn_area = '境内媒体';
-    else if(area=='abroadadmin')
+    else if(area=='abroadmedia')
         cn_area = '境外媒体';
     else if(area=='folkorg')
         cn_area = '民间组织';
@@ -352,6 +353,8 @@ function choose_window(range, window) {
   
   $('#burst_window_size_choosen').datepicker({
     format: "m月 d日,yyyy",
+    language: "zh-CN",
+    forceParse: false
   });
 
   $('#whole_window_size_choosen').daterangepicker({
@@ -457,7 +460,7 @@ function choose_window(range, window) {
 
     function max_history_limit(){
       var max = 0;
-      var time = $("#topic_time").html();
+      var time = $("#topic_date").html();
       var keyword = document.getElementById("topic_keywords").value;
       var temp_time_in13 = new Date().getTime();
       var timestamp = temp_time_in13.toString().substr(0, 10);

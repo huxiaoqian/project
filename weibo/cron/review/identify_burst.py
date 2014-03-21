@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import leveldb
+
+import os
+
+import sys
+
+import leveldb
 import time
-import heapq
-from config import db, LEVELDBPATH
+
+import heapq
+
+
+from config import db, LEVELDBPATH
 from model import BurstIdentification
 
 TOPK = 1000
@@ -60,6 +66,11 @@ def burst_rank(topk=TOPK, identifyWindow=1):
         important = int(important)
         follower = int(follower)
         domain = int(domain)
+
+        # 将粉丝数为0，即不在xapian_user中的用户pass掉
+        if follower == 0:
+            count += 1
+            continue
 
         # 突发排序
         if previous_exist:

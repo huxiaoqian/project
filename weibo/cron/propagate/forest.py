@@ -3,6 +3,7 @@
 import os
 import re
 import time
+import datetime
 import codecs
 import random
 import math
@@ -13,13 +14,17 @@ from collections import defaultdict
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
-from global_config import xapian_search_user
 from get_result import *
 from pyelevator import WriteBatch, Elevator
+from dynamic_xapian_weibo import target_whole_xapian_weibo, target_whole_xapian_user
+from config import cron_start as START_DATE, cron_end as END_DATE
+try:
+    from config import LEVELDBPATH
+except:
+    LEVELDBPATH = '/media/data/leveldb/'
+    print 'not in web environment'
 
 MAX_COUNT = 15000
-START_DATE = '2013-9-1'
-END_DATE = '2013-9-5'
 FLOAT_FORMAT = '%.2f'
 SEG = 2
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
@@ -29,12 +34,6 @@ user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
                'gender', 'profile_image_url', 'verified_type', 'followers_count', \
                'followers', 'location', 'statuses_count', 'friends', 'description', \
                'created_at']
-
-try:
-    from weibo.global_config import LEVELDBPATH
-except:
-    LEVELDBPATH = '/media/data/leveldb/'
-    print 'not in web environment'
 
 def _default_elevator(db_name='default'):
     db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
@@ -69,41 +68,6 @@ def date2ts(date):
 
 def unix2local(ts):
     return time.strftime('%Y-%m-%d %H:00', time.localtime(ts))
-
-def getXapianWeiboByDuration(datestr_list):
-    path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
-    stub_file_list = []
-
-    for datestr in datestr_list:
-        stub_file = path + datestr
-        if os.path.exists(stub_file):
-            stub_file_list.append(stub_file)
-
-    if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
-        return xapian_search_weibo 
-    else:
-        return None
-
-def target_whole_xapian_weibo():
-    datestr = '20130904'
-    during = 4
-
-    ts = int(time.mktime(time.strptime(datestr, '%Y%m%d')))
-    datelist = []
-
-    for i in range(0, during):
-        now_date = time.strftime('%Y%m%d', time.localtime(ts - i * 24 * 3600))
-        datelist.append(now_date)
-        
-    xapian_weibo = getXapianWeiboByDuration(datelist)
-    return xapian_weibo
-
-def target_whole_xapian_user():
-    XAPIAN_USER_DATA_PATH = '/media/data/'
-    xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
-    
-    return xapian_search_user
 
 whole_xapian_weibo = target_whole_xapian_weibo()
 whole_xapian_user = target_whole_xapian_user()
@@ -180,14 +144,14 @@ def load_data(keyword,topic_id):
     n = 0
     ts = []
     for status in blog_rel_list:
-        print status['status']['_id']                
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), status['status']['_id']                
         weibo = getWeiboByMid(status['status']['_id'])
         retweeted_mid = weibo['retweeted_mid']
         source_weibo = weibo
         if retweeted_mid != 0:
             source_weibo = getWeiboByMid(retweeted_mid)
 
-        number,source = whole_xapian_weibo.search(query={'retweeted_mid': source_weibo['id']}, sort_by=['timestamp'],max_offset=5000)#查找热门微博的转发微博
+        number,source = whole_xapian_weibo.search(query={'retweeted_mid': source_weibo['id']}, sort_by=['-timestamp'],max_offset=5000)#查找热门微博的转发微博
         print number
         if not number:
             n = n + 1
@@ -195,7 +159,7 @@ def load_data(keyword,topic_id):
 
         reposts = []#存储转发微博的信息
         for sw in source():
-            number,get_users = xapian_search_user.search(query={'_id': sw['user']}, fields=['name'])
+            number,get_users = whole_xapian_user.search(query={'_id': sw['user']}, fields=['name'])
             ts.append(int(sw['timestamp']))
             for user in get_users():
                 line = user['name'] + '\t'+ sw['text'] + '\t' + source_weibo['user']['name'] +'\t'+ str(int(sw['timestamp']))
@@ -415,7 +379,7 @@ def forest_main(keyword,topic_id):
 if __name__ == "__main__":
 
 ##    init_db()
-####    v = get_weibo_tree('7')
-####    print v
-    result = forest_main('日本',7)
+##    v = get_weibo_tree('14')
+##    print v
+    result = forest_main('九一八',14)
     print result

@@ -36,6 +36,9 @@ def date2ts(date):
 def ts2datetime(ts):
     return time.strftime('%Y-%m-%d', time.localtime(ts))
 
+def ts2posttime(ts):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))
+
 class TopkHeap(object):
     def __init__(self, k):
         self.k = k
@@ -152,7 +155,7 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori, mid_ori):
     topic_user = dict()
     
     retweeted_timestamp = retweeted_ori['timestamp']
-    retweeted_ori['postDate'] = date.fromtimestamp(retweeted_timestamp)
+    retweeted_ori['postDate'] = ts2posttime(retweeted_timestamp)
     try:
         retweeted_ori['repostsCount'] = int(retweeted_ori['reposts_count'])
     except:
@@ -173,7 +176,7 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori, mid_ori):
     perday_repost_count.append(1)
     
     mid_timestamp = mid_ori['timestamp']
-    mid_ori['postDate'] = date.fromtimestamp(mid_timestamp)
+    mid_ori['postDate'] = ts2posttime(mid_timestamp)
     try:
         mid_ori['repostsCount'] = int(mid_ori['reposts_count'])
     except:
@@ -215,6 +218,7 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori, mid_ori):
             pass
         try:
             created_date = date.fromtimestamp(r['timestamp'])
+            created_post = ts2posttime(r['timestamp'])
         except:
             continue
         try:
@@ -267,8 +271,8 @@ def calculate_single_whole(whole_g_reposts, retweeted_ori, mid_ori):
             temp['status']['repostsCount'] = reposts_count
             temp['status']['commentsCount'] = comments_count
             temp['status']['attitudesCount'] = attitudes_count
-            temp['status']['created_at'] = created_date
-            temp['status']['postDate'] = created_date
+            temp['status']['created_at'] = created_post
+            temp['status']['postDate'] = created_post
             temp['status']['text'] = text
             temp['status']['source'] = 'unknown'
             temp['user'] = user
@@ -451,7 +455,7 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
     topic_user = dict()
     
     retweeted_timestamp = retweeted_ori['timestamp']
-    retweeted_ori['postDate'] = date.fromtimestamp(retweeted_timestamp)
+    retweeted_ori['postDate'] = ts2posttime(retweeted_timestamp)
     try:
         retweeted_ori['repostsCount'] = int(retweeted_ori['reposts_count'])
     except:
@@ -495,6 +499,7 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
             pass
         try:
             created_date = date.fromtimestamp(r['timestamp'])
+            created_post = ts2posttime(r['timestamp'])
         except:
             continue
         try:
@@ -547,8 +552,8 @@ def calculate_single_sub(sub_g_reposts, retweeted_ori):
             temp['status']['repostsCount'] = reposts_count
             temp['status']['commentsCount'] = comments_count
             temp['status']['attitudesCount'] = attitudes_count
-            temp['status']['created_at'] = created_date
-            temp['status']['postDate'] = created_date
+            temp['status']['created_at'] = created_post
+            temp['status']['postDate'] = created_post
             temp['status']['text'] = text
             temp['status']['source'] = 'unknown'
             temp['user'] = user

@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from xapian_weibo.utils import top_keywords, gen_mset_iter
 from model import SentimentKeywords, TopWeibos
 from dynamic_xapian_weibo import getXapianWeiboByDate
-from config import cron_start, cron_end, emotions_kv
+from config import emotions_kv
 
 
 Minute = 60
@@ -19,9 +19,6 @@ Day = Hour * 24
 
 TOP_KEYWORDS_LIMIT = 50
 TOP_WEIBOS_LIMIT = 50
-
-start_range_ts = datetime2ts(cron_start)
-end_range_ts = datetime2ts(cron_end)
 
 RESP_ITER_KEYS = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', 'reposts_count', 'bmiddle_pic', 'geo', 'comments_count', 'sentiment', 'terms']
 
@@ -66,7 +63,7 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
     return weibos
 
 
-def sentiment_keywords(xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
+def sentiment_keywords(xapian_search_weibo, start_ts, over_ts, during=Hour, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
     start_ts = int(start_ts)
     over_ts = int(over_ts)
 

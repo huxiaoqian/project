@@ -6,7 +6,7 @@ from topics import _all_topics
 from time_utils import datetime2ts, ts2HourlyTime
 from xapian_weibo.utils import top_keywords, gen_mset_iter
 from dynamic_xapian_weibo import getXapianWeiboByDate, getXapianWeiboByDuration
-from config import cron_start, cron_end, emotions_kv, db
+from config import emotions_kv, db
 from model import SentimentTopicCount, SentimentTopicKeywords, SentimentTopicTopWeibos
 
 
@@ -15,9 +15,6 @@ Fifteenminutes = 15 * 60
 Hour = 3600
 SixHour = Hour * 6
 Day = Hour * 24
-
-start_range_ts = datetime2ts(cron_start)
-end_range_ts = datetime2ts(cron_end)
 
 TOP_KEYWORDS_LIMIT = 50
 TOP_WEIBOS_LIMIT = 50
@@ -82,7 +79,7 @@ def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wli
         db.session.commit()
 
 
-def sentimentCronTopic(topic, xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field=SORT_FIELD, save_fields=RESP_ITER_KEYS, during=Fifteenminutes, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
+def sentimentCronTopic(topic, xapian_search_weibo, start_ts, over_ts, sort_field=SORT_FIELD, save_fields=RESP_ITER_KEYS, during=Fifteenminutes, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
     if topic and topic != '':
         start_ts = int(start_ts)
         over_ts = int(over_ts)

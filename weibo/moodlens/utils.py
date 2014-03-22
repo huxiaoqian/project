@@ -15,11 +15,10 @@ try:
                             SentimentTopicCount, SentimentTopicKeywords, \
                             SentimentTopicTopWeibos
     from weibo.global_config import xapian_search_weibo, xapian_search_user, \
-                                    cron_start, cron_end, emotions_kv
-    start_range_ts = datetime2ts(cron_start)
-    end_range_ts = datetime2ts(cron_end)
-except:
-    print 'warning:not in web environment'
+                                    emotions_kv
+except Exception, e:
+    print e
+    print 'warning:not in web environment, /moodlens/utils.py'
 
 
 Minute = 60

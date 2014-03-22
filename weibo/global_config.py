@@ -5,8 +5,6 @@ import redis
 from xapian_weibo.xapian_backend import XapianSearch
 
 
-cron_start = '2013-9-1'
-cron_end = '2013-10-2'
 emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3}
 emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤'}
 fields_value = {'culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea', 'university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', 'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other'}

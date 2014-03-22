@@ -2,7 +2,7 @@
 
 
 from dynamic_xapian_weibo import getXapianWeiboByDate
-from config import cron_start, cron_end, emotions_kv
+from config import emotions_kv
 from time_utils import datetime2ts, ts2HourlyTime
 from config import db
 from model import SentimentCount
@@ -14,9 +14,6 @@ Fifteenminutes = 15 * 60
 Hour = 3600
 SixHour = Hour * 6
 Day = Hour * 24
-
-start_range_ts = datetime2ts(cron_start)
-end_range_ts = datetime2ts(cron_end)
 
 
 def save_count_results(dic, during):
@@ -42,7 +39,7 @@ def read_count_results(ts, sentiment, range=Hour):
         return 0
 
 
-def sentiment_count(xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
+def sentiment_count(xapian_search_weibo, start_ts, over_ts, during=Hour):
     start_ts = int(start_ts)
     over_ts = int(over_ts)
 
@@ -69,22 +66,6 @@ def sentiment_count(xapian_search_weibo, start_ts=start_range_ts, over_ts=end_ra
         save_count_results(emotions_data, during)
 
 
-def test_read_count_results(start_ts=start_range_ts, over_ts=end_range_ts, during=Hour):
-    sentiment_results = {}
-    over_ts = ts2HourlyTime(over_ts, during)
-    interval = (over_ts - start_ts) / during
-
-    for i in range(0, interval):
-        end_ts = over_ts - during * i
-
-        for k, v in emotions_kv.iteritems():
-            count = read_count_results(end_ts, v, Hour)
-            sentiment_results[k] = [end_ts*1000, count]
-
-    print sentiment_results
-    return sentiment_results
-
-
 def cal_sentiment_count_by_date(datestr, duration):
     start_ts = datetime2ts(datestr)
     end_ts = start_ts + Day
@@ -98,10 +79,3 @@ if __name__ == '__main__':
     import sys
     date = sys.argv[1] # '2013-09-13'
     cal_sentiment_count_by_date(date, Fifteenminutes)
-
-
-    # test mysql read
-    '''
-    start_range_ts = datetime2ts('2013-09-29')
-    end_range_ts = datetime2ts('2013-10-03')
-    '''

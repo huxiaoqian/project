@@ -3,8 +3,7 @@
 
 import json
 import MySQLdb
-from config import cron_start, cron_end, \
-                   xapian_search_user, emotions_kv, COBAR_HOST, \
+from config import xapian_search_user, emotions_kv, COBAR_HOST, \
                    COBAR_USER, COBAR_PORT
 from time_utils import datetime2ts, ts2HourlyTime
 from xapian_weibo.utils import top_keywords, gen_mset_iter
@@ -24,9 +23,6 @@ Fifteenminutes = 15 * 60
 Hour = 3600
 SixHour = Hour * 6
 Day = Hour * 24
-
-start_range_ts = datetime2ts(cron_start)
-end_range_ts = datetime2ts(cron_end)
 
 TOP_KEYWORDS_LIMIT = 50
 TOP_WEIBOS_LIMIT = 50
@@ -136,7 +132,7 @@ def top_weibos(get_results, top=TOP_WEIBOS_LIMIT):
     return weibos
 
 
-def sentiment_field(domain, xapian_search_weibo, start_ts=start_range_ts, over_ts=end_range_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
+def sentiment_field(domain, xapian_search_weibo, start_ts, over_ts, sort_field='reposts_count', save_fields=RESP_ITER_KEYS, during=Hour, w_limit=TOP_WEIBOS_LIMIT, k_limit=TOP_KEYWORDS_LIMIT):
     if domain_uids != []:
         start_ts = int(start_ts)
         over_ts = int(over_ts)
@@ -207,8 +203,3 @@ if __name__ == '__main__':
     print 'domain uid: ', len(domain_uids)
     for date in ['2013-09-03']:
         worker(domain, date)
-
-    # test mysql read
-    # start_range_ts = datetime2ts('2013-09-29')
-    # end_range_ts = datetime2ts('2013-10-03')
-    # test_read_count_results(start_range_ts, end_range_ts)

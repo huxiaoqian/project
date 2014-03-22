@@ -14,6 +14,7 @@ except Exception , e:
 
 DOMAIN_TOPK_KEYWORDS_SSDB_HASH = 'domain_topk_keywords_hash:%s' # datestr as '20130901'
 DOMAIN_AIRO_SSDB_HASH = 'domain_airo_hash:%s' # datestr as '20130901'
+DOMAIN_BASIC_SSDB_HASH = 'domain_basic_hash:%s' # datestr as '20130901'
 
 
 def getPersonData(uid, datestr):
@@ -55,7 +56,17 @@ def getDomainKeywordsData(domain, datestr):
 
 
 def getDomainBasic(domain, datestr):
-    pass
+    verified_count = unverified_count = 0 
+    province_dict = {}
+
+    ssdb_resp = ssdb.request('hget', [DOMAIN_BASIC_SSDB_HASH % datestr, str(domain)])
+    if ssdb_resp.code == 'ok' and ssdb_resp.data:
+        verified_count, unverified_count, province_dict = ssdb_resp.data.split('_\/')
+        province_dict = json.loads(province_dict)
+        verified_count = int(verified_count)
+        unverified_count = int(unverified_count)
+        
+    return verified_count, unverified_count, province_dict
 
 
 def getDomainCountData(domain, datestr):
@@ -69,4 +80,3 @@ def getDomainCountData(domain, datestr):
         original = int(original)
 
     return active, important, reposts, original
-    

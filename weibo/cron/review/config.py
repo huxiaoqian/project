@@ -11,6 +11,9 @@ COBAR_HOST = '192.168.2.31'
 COBAR_PORT = 8066
 COBAR_USER = 'cobar'
 
+SSDB_HOST = '192.168.2.30'
+SSDB_PORT = 8888
+
 LEVELDBPATH = "/media/data/leveldb"
 
 DOMAIN_LIST = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', \

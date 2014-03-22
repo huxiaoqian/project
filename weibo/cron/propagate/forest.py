@@ -151,7 +151,7 @@ def load_data(keyword,topic_id):
         if retweeted_mid != 0:
             source_weibo = getWeiboByMid(retweeted_mid)
 
-        number,source = whole_xapian_weibo.search(query={'retweeted_mid': source_weibo['id']}, sort_by=['-timestamp'],max_offset=5000)#查找热门微博的转发微博
+        number,source = whole_xapian_weibo.search(query={'retweeted_mid': source_weibo['id']}, sort_by=['timestamp'],max_offset=5000)#查找热门微博的转发微博
         print number
         if not number:
             n = n + 1
@@ -381,5 +381,5 @@ if __name__ == "__main__":
 ##    init_db()
 ##    v = get_weibo_tree('14')
 ##    print v
-    result = forest_main('九一八',14)
+    result = forest_main('九一八',17)
     print result

@@ -160,7 +160,7 @@ def calculate(keyword, beg_time, end_time):
         return 'wrong'
 
     n = 0
-    topic_post_time = end_time
+    topic_post_time = end_time + 24*3600
     for r in get_results():
         # 获取时间与每天微博数量
         if not r['reposts_count']:
@@ -225,7 +225,7 @@ def calculate(keyword, beg_time, end_time):
                     pass
                 else:
                     user_infor[uid] = user
-                if r['retweeted_mid'] == None:
+                if r['retweeted_mid'] == 0:
                     temp_ori = {}
                     temp_ori['status'] = r
                     temp_ori['user'] = user

@@ -21,7 +21,7 @@ DOMAIN_LIST = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'm
                'abroadmedia', 'folkorg', 'lawyer', 'politician', 'mediaworker', 'activer', \
                'grassroot', 'other']
 
-XAPIAN_USER_DATA_PATH = '/media/data/'
+XAPIAN_USER_DATA_PATH = '/media/sdh/data/'
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
 
 DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'

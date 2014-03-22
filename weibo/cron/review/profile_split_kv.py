@@ -11,7 +11,7 @@ def split_keywords_db():
     count = 0
     ts = te = time.time()
     for k, v in daily_profile_keywords_db.RangeIter():
-        #daily_profile_kic_db.Put('k' + '_' + now_datestr + '_' + k, v)
+        daily_profile_kic_db.Put('k' + '_' + now_datestr + '_' + k, v)
 
         if count % 10000 == 0:
             te = time.time()

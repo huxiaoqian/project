@@ -10,7 +10,7 @@ import leveldb
 from xapian_weibo.utils import load_scws, cut
 from xapian_weibo.csv2json import itemLine2Dict
 
-LEVELDBPATH = '/home/mirage/leveldb_20140314/'
+LEVELDBPATH = '/media/sdh/leveldb/'
 
 # init scws
 scws = load_scws()
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     daily_profile_counts_db =  leveldb.LevelDB(os.path.join(LEVELDBPATH, 'linhao_profile_person_counts_%s' % now_datestr),
                                                block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
 
-    csv_dir_path = '/home/mirage/dev/original_data/csv/'
+    csv_dir_path = '/media/sdc/original_data/csv/'
     source_path = csv_dir_path + '%s/' % now_datestr
     source_files = os.listdir(source_path)
     
@@ -140,13 +140,16 @@ if __name__ == '__main__':
         print f
     	f = open(source_path + f, 'r')
     	for line in f:
-    	    itemdict = itemLine2Dict(line)
-            if itemdict:
-                profile_person_cal(itemdict)
+            try:
+    	        itemdict = itemLine2Dict(line)
+                if itemdict:
+                    profile_person_cal(itemdict)
             
-                if count % 10000 == 0:
-                    te = time.time()
-                    print count, '%s sec' % (te - ts), 'profile_person_cal', now_datestr
-                    ts = te
-                count += 1
+                    if count % 10000 == 0:
+                        te = time.time()
+                        print count, '%s sec' % (te - ts), 'profile_person_cal', now_datestr
+                        ts = te
+                    count += 1
+            except Exception, e:
+                print e
                 

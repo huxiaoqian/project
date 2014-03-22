@@ -11,14 +11,17 @@ COBAR_HOST = '192.168.2.31'
 COBAR_PORT = 8066
 COBAR_USER = 'cobar'
 
-LEVELDBPATH = "/media/data/leveldb"
+SSDB_HOST = '192.168.2.30'
+SSDB_PORT = 8888
+
+LEVELDBPATH = "/media/sdh/leveldb"
 
 DOMAIN_LIST = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', \
                'technology', 'oversea', 'university', 'homeadmin', 'abroadadmin', 'homemedia', \
                'abroadmedia', 'folkorg', 'lawyer', 'politician', 'mediaworker', 'activer', \
                'grassroot', 'other']
 
-XAPIAN_USER_DATA_PATH = '/media/data/'
+XAPIAN_USER_DATA_PATH = '/media/sdh/data/'
 xapian_search_user = XapianSearch(path=XAPIAN_USER_DATA_PATH, name='master_timeline_user', schema_version=1)
 
 DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'

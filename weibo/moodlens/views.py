@@ -5,7 +5,7 @@ from weibo.model import *
 from weibo.extensions import db
 from weibo.global_config import emotions_kv, LEVELDBPATH
 from flask import Blueprint, render_template, request, session, redirect
-from utils import getWeiboByMid, weiboinfo2url
+from utils import weiboinfo2url
 from peak_detection import detect_peaks
 from xapian_weibo.utils import top_keywords
 import keywords as keywordsModule

@@ -12,9 +12,13 @@ except Exception , e:
 	  print 'ssdb ', e 
 	  sys.exit(0)
 
-DOMAIN_TOPK_KEYWORDS_SSDB_HASH = 'domain_topk_keywords_hash:%s' # datestr as '20130901'
-DOMAIN_AIRO_SSDB_HASH = 'domain_airo_hash:%s' # datestr as '20130901'
-DOMAIN_BASIC_SSDB_HASH = 'domain_basic_hash:%s' # datestr as '20130901'
+PERSON_COUNTS_SSDB_KV = 'c_%s_%s' #  % datestr as '20130901', uid,
+PERSON_INTERACT_SSDB_KV = 'i_%s_%s' #  % datestr as '20130901', uid,
+PERSON_KEYWORDS_SSDB_KV = 'k_%s_%s' #  % datestr as '20130901', uid,
+
+DOMAIN_TOPK_KEYWORDS_SSDB_HASH = 'domain_topk_keywords_hash:%s' # datestr as '20130901',
+DOMAIN_AIRO_SSDB_HASH = 'domain_airo_hash:%s' # datestr as '20130901',
+DOMAIN_BASIC_SSDB_HASH = 'domain_basic_hash:%s' # datestr as '20130901',
 
 
 def getPersonData(uid, datestr):
@@ -23,9 +27,9 @@ def getPersonData(uid, datestr):
     retweeted_interact = {}
     keywords_dict = {}
 
-    c_ssdb_resp = ssdb.request('get', ['c_' + str(datestr) + '_' + str(uid)])
-    i_ssdb_resp = ssdb.request('get', ['i_' + str(datestr) + '_' + str(uid)])
-    k_ssdb_resp = ssdb.request('get', ['k_' + str(datestr) + '_' + str(uid)])
+    c_ssdb_resp = ssdb.request('get', [PERSON_COUNTS_SSDB_KV % (str(datestr), str(uid))])
+    i_ssdb_resp = ssdb.request('get', [PERSON_INTERACT_SSDB_KV % (str(datestr), str(uid))])
+    k_ssdb_resp = ssdb.request('get', [PERSON_KEYWORDS_SSDB_KV % (str(datestr), str(uid))])
 
     if c_ssdb_resp.code == 'ok' and c_ssdb_resp.data:
     	active, important, reposts, original, emoticon = c_ssdb_resp.data.split('_\/')

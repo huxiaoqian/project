@@ -145,7 +145,6 @@ def getXapianWeiboByDuration(datestr_list):
 
     for datestr in datestr_list:
         stub_file = path + datestr
-        print type(stub_file)
         if os.path.exists(stub_file):
             stub_file_list.append(stub_file)
 

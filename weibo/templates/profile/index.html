@@ -12,24 +12,21 @@
     <form id="profile_group" action="/profile/group/" class="form-inline" method="GET">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>领域:</b></font>
       <div class="btn-group">
-        <a id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
-          {% if fields[0] %}
-              {{ fields[0].fieldZhName }}<span class="caret"></span></a>
-          {% endif %}
+        <a id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">{{ field_zh }}<span class="caret"></span></a>
           <ul id="area_rank_method_dropdown_menu" class="dropdown-menu">
-            {% for f in fields %}
-                <li><a href="#" onClick="choose_field('area', '{{ f.fieldEnName }}');" data-toggle="tab">{{ f.fieldZhName }}</a></li>
+            {% for fielden, fieldzh in field_dict.iteritems() %}
+                <li><a href="#" onClick="choose_field('area', '{{ fielden }}');" data-toggle="tab">{{ fieldzh }}</a></li>
             {% endfor %}
           </ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
       <div id="field_window_size_choosen" class="btn dropdown-toggle" href="#">
         <i class="icon-calendar icon-large"></i>
-        <span id="field_date">9月 1日,2013 - 9月 5日,2013</span> 
+        <span id="field_date">{{ timerange }}</span> 
         <b class="caret"></b>
       </div> 
-      <input id="field_hidden" type="hidden" name="fieldEnName" value="{{ fields[0].fieldEnName }}">
-      <input id="during_time" type="hidden" name="during_time" value="9月 1日,2013 - 9月 5日,2013">
+      <input id="field_hidden" type="hidden" name="fieldEnName" value="{{ field_en }}">
+      <input id="during_time" type="hidden" name="during_time" value="{{ timerange }}">
       &nbsp&nbsp&nbsp
       <input type="submit" class="btn btn-primary" onclick="submit_search_profile_group();return false;" value="分析">
     </form>

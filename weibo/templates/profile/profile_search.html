@@ -296,6 +296,63 @@
     display: block;
     padding-bottom: 8px;
   }
+
+  /* ctx bar */
+  #ctx_bar {
+    position: relative;
+    min-height: 24px;
+    margin: 5px 0 15px;
+    padding: 10px 0 12px;
+    text-shadow: 0 1px rgba(255,255,255,.9);
+  }
+  #ctx_bar .p {
+    margin: 4px 0 0;
+    padding: 0;
+    font-size: 1.8em;
+    line-height: 1em;
+    font-weight: 300;
+    color: #211922;
+    border-width: 0;
+  }
+  #ctx_bar .p .pin-board-switcher {
+    vertical-align: middle;
+    margin-left: 20px;
+  }
+  .pin-board-switcher {
+    display: inline-block;
+  }
+  .pin-board-switcher li.first {
+    background-position: 0 -90px;
+  }
+  .pin-board-switcher li {
+    float: left;
+    font-size: 15px;
+    background: -1px -210px no-repeat;
+    border-right: 1px solid #CCC;
+    font-weight: 400;
+  }
+  li {
+    list-style: none;
+  }
+  #ctx_bar .right {
+    top: 16px;
+  }
+  #search_from_sites, #ctx_bar .right {
+    position: absolute;
+    right: 0;
+    top: 10px;
+  }
+  .btn.disabled {
+    background: #F2F2F2;
+    border: 1px solid #D9D9D9;
+    box-shadow: none;
+    color: #BBB;
+    text-shadow: none;
+    cursor: default;
+  }
+  #search_from_category, #ctx_bar .self-promote, #ctx_bar .promotion {
+    font-size: 14px;
+  }
 </style>
 {% endblock head %}
 {% block content %}
@@ -552,32 +609,69 @@
                 <li><a href="/profile/search/newest">最新</a></li>
               {% endif %}
             <li class="nav-header">领域</li>
-            {% if field %}
-              {% for f in field %}
-                {% if f.fieldEnName == model %}
-                  <li class="active"><a href="/profile/search/{{ f.fieldEnName }}">{{ f.fieldZhName }}</a></li>
+            {% for fielden, fieldzh in field_dict.iteritems() %}
+                {% if fielden == model %}
+                  <li class="active"><a href="/profile/search/{{ fielden }}">{{ fieldzh }}</a></li>
                 {% else %}
-                  <li><a href="/profile/search/{{ f.fieldEnName }}">{{ f.fieldZhName }}</a></li>
+                  <li><a href="/profile/search/{{ fielden }}">{{ fieldzh }}</a></li>
                 {% endif %}
-              {% endfor %}
-            {% endif %}
-            <!--<li><a href="/profile/search/oversea">境外</a></li>-->
-            <!--
-            <li class="nav-header">领域管理</li>
-              <li class=""><a href="#typeahead">增加或删除领域</a></li>
-            <li class="divider"></li>
-            <li><a href="#">帮助</a></li>-->
+            {% endfor %}
           </ul>
         </div>
         <div class="span9">
+          <div id="ctx_bar">
+            <!--
+              <ul class="pin-board-switcher clearfix">
+              <li class="first "><a href="/all/" class="pin-link">采集</a></li>
+              <li class=""><a href="/boards/favorite/">画板</a></li>
+              <li class="last selected"><a href="/users/all/" class="user-link">推荐用户</a></li>
+            </ul>-->
+            <div class="p">搜索结果
+              <span style="height: 26px;line-height: 26px;font-size: 18px;">
+                {% if model == 'hotest' %}
+                    全网敏感博主
+                {% elif model == 'newest' %}
+                    全网新注册博主
+                {% elif model in field_dict.keys() %}
+                    领域热门博主
+                {% elif model == 'person' %}
+                    单个博主
+                {% elif model == 'find' %}
+                    全网博主组合特征过滤
+                {% else %}
+                {% endif %}
+              </span>
+              
+              <div class="right">
+                <a href="#" onclick="return false;" class="self-promote btn wbtn"><strong>
+                  {% if model in ['hotest', 'newest', 'person', 'find'] %}
+                    2013-9-21
+                  {% elif model in field_dict.keys() %}
+                    2013-9-21
+                  {% else %}
+                    2013-9-21
+                  {% endif %}
+                </strong><span></span></a>
+                <a href="#" onclick="return false;" class="self-promote btn wbtn"><strong>
+                  {% if model == 'hotest' %}
+                    活跃度降序
+                  {% elif model == 'newest' %}
+                    注册时间降序
+                  {% elif model == 'find' %}
+                    粉丝数降序
+                  {% elif model in field_dict.keys() %}
+                    粉丝数降序
+                  {% else %}
+                    排序标准
+                  {% endif %}
+                </strong><span></span></a>
+              </div>
+            </div>
+          </div>
           <div id="thumbnail">
             {% if result %}
               {% for user in result %}
                 <div class="grid">
-                  <!--
-                    <div class="options">
-                      <div class="detail opt" title="特征详情"><a href="/profile/person/{{user.id}}" target="_blank"><em><i class="icon-search"></i></em><span>详情</span></a></div>
-                      <div class="add opt" title="添加到特征计算"><a href="#"><em><i class="icon-plus-sign"></i></em><span>关注</span></a></div>-->
                     </div>
                     <div class="imgholder">
                         <a href="/profile/person/{{user.id}}" target="_blank"><img src="{{user.profileImageUrl}}" /></a>

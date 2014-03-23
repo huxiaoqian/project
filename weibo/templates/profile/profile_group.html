@@ -23,12 +23,12 @@
     <div class="row-fluid">
       <div class="span2 well" style="padding: 8px 0;">
         <ul class="nav nav-list">
-          {% for f in field %}
-            {% if atfield == f.fieldZhName %}
-               <li class="active"><a href="/profile/group/?fieldEnName={{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
+          {% for fielden, fieldzh in field_dict.iteritems() %}
+            {% if atfield == fieldzh %}
+               <li class="active"><a href="/profile/group/?fieldEnName={{ fielden }}">{{ fieldzh }}</a></li>
             {% else %}
-               <li><a href="/profile/group/?fieldEnName={{f.fieldEnName}}">{{f.fieldZhName}}</a></li>
-            {% endif %}
+               <li><a href="/profile/group/?fieldEnName={{ fielden }}">{{ fieldzh }}</a></li>
+            {% endif %}            
           {% endfor %}
         </ul>
       </div>

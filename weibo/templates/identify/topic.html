@@ -29,6 +29,13 @@
 	      <div class="span9">
           <legend><strong><h3>话题敏感博主识别</h3></strong></legend>
         <div>
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
+          <div id="topic_window_size_choosen" class="btn dropdown-toggle" href="#"><i class="icon-calendar icon-large"></i><span id="topic_date">{% if dur_time %}{{dur_time}}{% endif %}</span></div>
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1" disabled>
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1" disabled>
+          <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
+
 	      <hr>
 
     	  <div class="well">

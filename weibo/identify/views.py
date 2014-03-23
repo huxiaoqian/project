@@ -24,7 +24,8 @@ from time_utils import ts2datetime, datetime2ts, window2time
 
 from hadoop_utils import monitor
 
-from weibo.global_config import fields_id, xapian_search_user
+from weibo.global_config import fields_id, xapian_search_user, DOMAIN_LIST, \
+                                DOMAIN_ZH_LIST
 
 from whole_result import whole_caculate
 from area_result import area_caculate
@@ -33,10 +34,6 @@ from history import _all_history, _add_history, _search_history
 
 import networkx as nx
 from lxml import etree
-
-#from weibo.cron_check import topic_network
-
-domain={'culture': 0, 'education': 1, 'entertainment': 2, 'fashion': 3, 'finance': 4, 'media': 5, 'sports': 6, 'technology': 7, 'oversea': 8, 'university': 9, 'homeadmin': 10, 'abroadadmin': 11, 'homemedia': 12, 'abroadadmin': 13, 'folkorg': 14, 'lawyer': 15, 'politician': 16, 'mediaworker': 17, 'activer': 18, 'grassroot': 19, 'other': 20}
 
 mod = Blueprint('identify', __name__, url_prefix='/identify')
 
@@ -87,6 +84,27 @@ def burst2ts(burst_time):
 
     return int(ts)
 
+
+def get_default_timerange():
+    return u'9月 21日,2013 - 9月 21日,2013'
+
+
+def get_default_burst_time():
+    return u'9月 21日,2013'
+
+
+def get_default_field_name():
+    return 'activer', u'活跃人士'
+
+
+def get_default_field_dict():
+    field_dict = {}
+    for idx, field_en in enumerate(DOMAIN_LIST[9:20]):
+        field_dict[field_en] = DOMAIN_ZH_LIST[idx+9]
+
+    return field_dict
+
+
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
     session['logged_in'] = request.form['log_in']
@@ -98,16 +116,25 @@ def log_in():
 
 @mod.route('/', methods=['GET','POST'])
 def index():
+    burst_time = get_default_burst_time()
+    default_timerange = get_default_timerange()
+    default_field_enname, default_field_zhname = get_default_field_name()
+    default_field_dict = get_default_field_dict()
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            return render_template('identify/index.html')
+            return render_template('identify/index.html', timerange=default_timerange, burst_time=burst_time, \
+                                   field_en=default_field_enname, field_zh=default_field_zhname, \
+                                   field_dict=default_field_dict)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.identify
+                    default_timerange = get_default_timerange()
                     if identy == 1:
-                        return render_template('identify/index.html')
+                        return render_template('identify/index.html', timerange=default_timerange, burst_time=burst_time, \
+                                               field_en=default_field_enname, field_zh=default_field_zhname, \
+                                               field_dict=default_field_dict)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -123,8 +150,9 @@ def whole():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             request_method = request.method
+            default_timerange = get_default_timerange()
             if request_method == 'GET':
-                return render_template('identify/whole.html', from_external=True)
+                return render_template('identify/whole.html', from_external=True, timerange=default_timerange)
             elif request_method == 'POST':
                 form = request.form
                 action = form.get('action', 'run')
@@ -135,8 +163,8 @@ def whole():
                     top_n = 500
 
                 page_num = int(form.get('page_num', 20))
-                rank_method = form.get('rank_method', 'followers')
-                during_date = form.get('window_size', '9月 1日,2013 - 9月 5日,2013')
+                rank_method = form.get('rank_method', 'important')
+                during_date = form.get('window_size', default_timerange)
                 during_date = _utf_encode(during_date)
                 start_ts,end_ts = _time_zone(during_date)
                 window_size = (end_ts - start_ts)/(24*3600)
@@ -166,11 +194,11 @@ def whole():
                             pass
                         else:
                             pre_data.append(previous_data[i])
-
                     return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
                 elif action == 'run':
-                    during_date = _utf_decode(during_date)
-                    return render_template('identify/whole.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num)
+                    during_date = _utf_decode(during_date.strip())
+                    return render_template('identify/whole.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, timerange=default_timerange)
+                    
                 else:
                    abort(404)
             else:
@@ -182,8 +210,9 @@ def whole():
                     identy = pa.identify
                     if identy == 1:
                         request_method = request.method
+                        default_timerange = get_default_timerange()
                         if request_method == 'GET':
-                            return render_template('identify/whole.html', from_external=True)
+                            return render_template('identify/whole.html', from_external=True, timerange=default_timerange)
                         elif request_method == 'POST':
                             form = request.form
                             action = form.get('action', 'run')
@@ -193,8 +222,8 @@ def whole():
                             if top_n > 500:
                                 top_n = 500
                             page_num = int(form.get('page_num', 20))
-                            rank_method = form.get('rank_method', 'followers')
-                            during_date = form.get('window_size', '9月 1日,2013 - 9月 5日,2013')
+                            rank_method = form.get('rank_method', 'important')
+                            during_date = form.get('window_size', default_timerange)
                             during_date = _utf_encode(during_date)
                             start_ts,end_ts = _time_zone(during_date)
                             window_size = (end_ts - start_ts)/(24*3600)
@@ -228,7 +257,7 @@ def whole():
                                 return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
                             elif action == 'run':
                                 during_date = _utf_decode(during_date)
-                                return render_template('identify/whole.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num)
+                                return render_template('identify/whole.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, timerange=default_timerange)
                             else:
                                abort(404)
                         else:
@@ -241,11 +270,12 @@ def whole():
 
 @mod.route("/burst/", methods=["GET", "POST"])
 def burst():
+    default_burst_time = get_default_burst_time()
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             request_method = request.method
             if request_method == 'GET':
-                return render_template('identify/burst.html', from_external=True)
+                return render_template('identify/burst.html', from_external=True, time=default_burst_time)
             elif request_method == 'POST':
                 form = request.form
                 action = form.get('action', 'run')
@@ -255,8 +285,8 @@ def burst():
                 if top_n > 500:
                     top_n = 500
                 page_num = int(form.get('page_num', 20))
-                rank_method = form.get('rank_method', 'active')
-                burst_time = form.get('burst_time', '9月 1日,2013')
+                rank_method = form.get('rank_method', 'important')
+                burst_time = form.get('burst_time', default_burst_time)
 
                 burst_time = _utf_encode(burst_time)
                 time_ts = burst2ts(burst_time)
@@ -289,8 +319,8 @@ def burst():
                     
                     return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data, 'method':rank_method, 'time': time_ts})
                 elif action == 'run':
-                    burst_time = _utf_decode(burst_time)
-                    return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num)
+                    burst_time = _utf_decode(burst_time.strip())
+                    return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num, time=default_burst_time)
                 else:
                    abort(404)
             else:
@@ -303,7 +333,7 @@ def burst():
                     if identy == 1:
                         request_method = request.method
                         if request_method == 'GET':
-                            return render_template('identify/burst.html', from_external=True)
+                            return render_template('identify/burst.html', from_external=True, time=default_burst_time)
                         elif request_method == 'POST':
                             form = request.form
                             action = form.get('action', 'run')
@@ -313,8 +343,8 @@ def burst():
                             if top_n > 500:
                                 top_n = 500
                             page_num = int(form.get('page_num', 20))
-                            rank_method = form.get('rank_method', 'active')
-                            burst_time = form.get('burst_time', '9月 1日,2013')
+                            rank_method = form.get('rank_method', 'important')
+                            burst_time = form.get('burst_time', default_burst_time)
 
                             burst_time = _utf_encode(burst_time)
                             time_ts = burst2ts(burst_time)
@@ -348,7 +378,7 @@ def burst():
                                 return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data, 'method':rank_method, 'time': time_ts})
                             elif action == 'run':
                                 burst_time = _utf_decode(burst_time)
-                                return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num)
+                                return render_template('identify/burst.html', rank_method=rank_method, burst_time=burst_time, top_n=top_n, page_num=page_num, time=default_burst_time)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -357,11 +387,14 @@ def burst():
 
 @mod.route("/area/", methods=["GET", "POST"])
 def area():
+    default_timerange = get_default_timerange()
+    default_field_enname, default_field_zhname = get_default_field_name()
+    default_field_dict = get_default_field_dict()
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             request_method = request.method
             if request_method == 'GET':
-                return render_template('identify/area.html', from_external=True, field='university')
+                return render_template('identify/area.html', from_external=True, timerange=default_timerange, field_dict=default_field_dict, default_field_zh=default_field_zhname, default_field_en=default_field_enname)
             elif request_method == 'POST':
                 form = request.form
                 action = form.get('action', 'run')
@@ -370,14 +403,14 @@ def area():
                     top_n = 500
 
                 page_num = int(form.get('page_num', 20))
-                rank_method = form.get('rank_method', 'followers')
-                during_date = form.get('window_size', '9月 1日,2013 - 9月 5日,2013')
+                rank_method = form.get('rank_method', 'important')
+                during_date = form.get('window_size', default_timerange)
                 during_date = _utf_encode(during_date)
                 start_ts,end_ts = _time_zone(during_date)
                 window_size = (end_ts - start_ts)/(24*3600)
 
-                field = form.get('field', 'university')
-                field_id = domain[field]
+                field = form.get('field', default_field_enname)
+                field_id = DOMAIN_LIST.index(field)
 
                 if action == 'previous_rank':
                     action = 'rank'
@@ -409,8 +442,8 @@ def area():
                             pre_data.append(previous_data[i])
                     return json.dumps({'status': 'current finished', 'data': data, 'pre_data': pre_data})
                 elif action == 'run':
-                    during_date = _utf_decode(during_date)
-                    return render_template('identify/area.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, field=field)
+                    during_date = _utf_decode(during_date.strip())
+                    return render_template('identify/area.html', rank_method=rank_method, during_date=during_date, top_n=top_n, page_num=page_num, field=field, timerange=default_timerange, field_dict=default_field_dict, default_field_zh=default_field_zhname, default_field_en=default_field_enname)
         else:
             return redirect('/')
     else:
@@ -435,12 +468,10 @@ def topic():
 
                 dur_time = _utf_encode(time)
                 start_ts, end_ts = _time_zone(dur_time)
-                print dur_time
-                print start_ts, end_ts
 
                 return render_template('identify/topic.html', topic=topic, start_ts=start_ts, \
                                        end_ts=end_ts, rank_method=rank_method, page_num=page_num, \
-                                       top_n=top_n, window_size=1)
+                                       top_n=top_n, window_size=1, dur_time=_utf_decode(dur_time))
 
             if request_method == 'POST':
                 form = request.form

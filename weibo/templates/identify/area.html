@@ -27,90 +27,55 @@
           </div>
         </div>
 	<div class="span9">
-      	  <legend><strong><h3>领域敏感博主识别</h3></strong></legend>
-	  <div>
-      	    <form id="area_identify" action="/identify/area/" class="form-inline" method="POST">
-
+    <legend><strong><h3>领域敏感博主识别</h3></strong></legend>
+	 <div>
+      <form id="area_identify" action="/identify/area/" class="form-inline" method="POST">
         <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>排序标准:</b></font>
-      <div class="btn-group">
-  <a id="area1_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        {% if rank_method == 'followers' %}粉丝数
-        {% elif rank_method == 'active' %}活跃度
-        {% elif rank_method == 'important' %}重要度
-        {% else %}粉丝数
-        {% endif %}
-    <span class="caret"></span>
-  </a>
-  <ul id="area1_rank_method_dropdown_menu" class="dropdown-menu">
-    <li><a href="#" onClick="choose_method('area1', 'followers');" data-toggle="tab">粉丝数</a></li>
-          <li><a href="#" onClick="choose_method('area1', 'active');" data-toggle="tab">活跃度</a></li>
-          <li><a href="#" onClick="choose_method('area1', 'important');" data-toggle="tab">重要度</a></li>
-  </ul>
-      </div>
+        <div class="btn-group">
+          <a id="area1_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            {% if rank_method == 'followers' %}粉丝数
+            {% elif rank_method == 'active' %}活跃度
+            {% elif rank_method == 'important' %}重要度
+            {% else %}重要度
+            {% endif %}
+            <span class="caret"></span>
+          </a>
+          <ul id="area1_rank_method_dropdown_menu" class="dropdown-menu">
+            <li><a href="#" onClick="choose_method('area1', 'followers');" data-toggle="tab">粉丝数</a></li>
+            <li><a href="#" onClick="choose_method('area1', 'active');" data-toggle="tab">活跃度</a></li>
+            <li><a href="#" onClick="choose_method('area1', 'important');" data-toggle="tab">重要度</a></li>
+          </ul>
+        </div>
 	      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp领域:</b></font>
-      <div class="btn-group">
-  <a  id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-              {% if field == 'university' %}高校微博
-              {% elif field == 'homeadmin' %}境内机构
-              {% elif field == 'abroadadmin' %}境外机构
-              {% elif field == 'homemedia' %}境内媒体
-              {% elif field == 'abroadadmin' %}境外媒体
-              {% elif field == 'folkorg' %}民间组织
-              {% elif field == 'lawyer' %}律师
-              {% elif field == 'politician' %}政府官员
-              {% elif field == 'mediaworker' %}媒体人士
-              {% elif field == 'activer' %}活跃人士
-              {% elif field == 'grassroot' %}草根
-              {% elif field == 'other' %}其它
-              {% endif %}
-    <span class="caret"></span>
-  </a>
-  <ul id="area_rank_method_dropdown_menu" class="dropdown-menu">
-    <!--<li><a href="#" onClick="choose_field('area', 'finance');" data-toggle="tab">财经</a></li>
-          <li><a href="#" onClick="choose_field('area', 'fashion');" data-toggle="tab">时尚</a></li>
-          <li><a href="#" onClick="choose_field('area', 'entertainment');" data-toggle="tab">娱乐</a></li>
-          <li><a href="#" onClick="choose_field('area', 'media');" data-toggle="tab">媒体</a></li>
-          <li><a href="#" onClick="choose_field('area', 'sports');" data-toggle="tab">体育</a></li>
-          <li><a href="#" onClick="choose_field('area', 'culture');" data-toggle="tab">文化</a></li>
-          <li><a href="#" onClick="choose_field('area', 'education');" data-toggle="tab">教育</a></li>
-          <li><a href="#" onClick="choose_field('area', 'technology');" data-toggle="tab">科技</a></li>
-          <li><a href="#" onClick="choose_field('area', 'abroad');" data-toggle="tab">境外</a></li>-->
-          <li><a href="#" onClick="choose_field('area', 'university');" data-toggle="tab">高校微博</a></li>
-          <li><a href="#" onClick="choose_field('area', 'homeadmin');" data-toggle="tab">境内机构</a></li>
-          <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外机构</a></li>
-          <li><a href="#" onClick="choose_field('area', 'homemedia');" data-toggle="tab">境内媒体</a></li>
-          <li><a href="#" onClick="choose_field('area', 'abroadadmin');" data-toggle="tab">境外媒体</a></li>
-          <li><a href="#" onClick="choose_field('area', 'folkorg');" data-toggle="tab">民间组织</a></li>
-          <li><a href="#" onClick="choose_field('area', 'lawyer');" data-toggle="tab">律师</a></li>
-          <li><a href="#" onClick="choose_field('area', 'politician');" data-toggle="tab">政府官员</a></li>
-          <li><a href="#" onClick="choose_field('area', 'mediaworker');" data-toggle="tab">媒体人士</a></li>
-          <li><a href="#" onClick="choose_field('area', 'activer');" data-toggle="tab">活跃人士</a></li>
-          <li><a href="#" onClick="choose_field('area', 'grassroot');" data-toggle="tab">草根</a></li>
-          <li><a href="#" onClick="choose_field('area', 'other');" data-toggle="tab">其它</a></li>
-  </ul>
-      </div>
-      <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp时间范围:</b></font>
-      <div id="area_window_size_choosen" class="btn dropdown-toggle" href="#">
-    <i class="icon-calendar icon-large"></i>
-    <span id="area_date">{% if during_date %}{{during_date}}{% else %}9月 1日,2013 - 9月 5日,2013{% endif %}</span> 
-    <b class="caret"></b>
-    </div>
+        <div class="btn-group">
+          <a id="area_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="javascript:void(0);">
+            {% if field %}
+              {{ field }}
+            {% else %}
+              {{ default_field_zh }}
+            {% endif %}
+            <span class="caret"></span>
+          </a>
+          <ul id="area_rank_method_dropdown_menu" class="dropdown-menu">
+            {% for fielden, fieldzh in field_dict.iteritems() %}
+                <li><a href="#" onClick="choose_field('area', '{{fielden}}');" data-toggle="tab">{{ fieldzh }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp时间范围:</b></font>
+        <div id="area_window_size_choosen" class="btn dropdown-toggle" href="#"><i class="icon-calendar icon-large"></i><span id="area_date">{% if during_date %}{{during_date}}{% else %}{{timerange}}{% endif %}</span><b class="caret"></b>
+        </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp前</b></font><input name="top_n" type="text" value="{% if top_n %}{{ top_n }}{% else %}500{% endif %}" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 	      <input type="submit" class="btn btn-primary" value="识别">
         <input type="hidden" name="action" value="run">
-        <input type="hidden" id="topic_hidden" name="field" value="finance">
-        <input id="area1_rank_method" type="hidden" name="rank_method" value="followers">
-        <input id="area_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
+        <input type="hidden" id="topic_hidden" name="field" value="{% if field %}{{ field }}{% else %}{{ default_field_zh }}{% endif %}">
+        <input id="area1_rank_method" type="hidden" name="rank_method" value="important">
+        <input id="area_window_size" type="hidden" name="window_size" value="{{timerange}}">
       	    </form>
-      	    
-      	    
-
 	  <hr>
-
-
 	  <div class="well">
 	    <legend><strong>本期排序结果</strong></legend>
 	    {% if not from_external %}
@@ -173,6 +138,7 @@
     </div>
 {% endblock %}
 {% block script %}
+
 	  <script src="/static/js/admin/jquery-1.9.1.min.js" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
@@ -386,16 +352,15 @@
         });
 
     $(document).ready(function() {
-  var area_time = $('#area_date').html();
-  document.getElementById('area_window_size').value = area_time;
-  var fi = '{{field}}'
-  if(fi){
-    choose_field('area', '{{field}}');
-  }
-  else{
-    choose_field('area', 'finance');
-  }
-  
+      var area_time = $('#area_date').html();
+      document.getElementById('area_window_size').value = area_time;
+      var fi = '{{field}}';
+      if(fi){
+        choose_field('area', '{{field}}');
+      }
+      else{
+        choose_field('area', '{{ default_field_en }}');
+      }
   
   $('#area_window_size_choosen').daterangepicker({
       ranges: {

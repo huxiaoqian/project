@@ -26,21 +26,21 @@
 	      {% if rank_method == 'followers' %}粉丝数
 	      {% elif rank_method == 'active' %}活跃度
 	      {% elif rank_method == 'important' %}重要度
-	      {% else %}粉丝数
+	      {% else %}重要度
 	      {% endif %}
 	      <span class="caret"></span>
 	    </a>
 	    <ul id="whole_rank_method_dropdown_menu" class="dropdown-menu">
 	      <li><a href="#" onclick="choose_method('whole', 'followers');" data-toggle="tab">粉丝数</a></li>
-      	      <li><a href="#" onclick="choose_method('whole', 'active');" data-toggle="tab">活跃度</a></li>
-      	      <li><a href="#" onclick="choose_method('whole', 'important');" data-toggle="tab">重要度</a></li>
+      	<li><a href="#" onclick="choose_method('whole', 'active');" data-toggle="tab">活跃度</a></li>
+      	<li><a href="#" onclick="choose_method('whole', 'important');" data-toggle="tab">重要度</a></li>
 	    </ul>
 	  </div>
 
       	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
     <div id="whole_window_size_choosen" class="btn dropdown-toggle" href="#">
     <i class="icon-calendar icon-large"></i>
-    <span id="whole_date">{% if during_date %}{{during_date}}{% else %}9月 1日,2013 - 9月 5日,2013{% endif %}</span> 
+    <span id="whole_date">{% if during_date %}{{during_date}}{% else %}{{timerange}}{% endif %}</span> 
   <b class="caret"></b>
   </div>
 
@@ -50,8 +50,8 @@
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp每页</b></font><input name="page_num" type="text" value="{% if page_num %}{{ page_num }}{% else %}20{% endif %}" class="span1">
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>
 	  <input type="hidden" name="action" value="run">
-	  <input id="whole_rank_method" type="hidden" name="rank_method" value="followers">
-	  <input id="whole_window_size" type="hidden" name="window_size" value="9月 1日,2013 - 9月 5日,2013">
+	  <input id="whole_rank_method" type="hidden" name="rank_method" value="important">
+	  <input id="whole_window_size" type="hidden" name="window_size" value="{% if during_date %}{{during_date}}{% else %}{{timerange}}{% endif %}">
     &nbsp&nbsp&nbsp
 	  <input type="submit" class="btn btn-primary" value="识别">
       	</form>
@@ -401,13 +401,12 @@
 	  </script>
     {% if not from_external %}
       <script>
-	//load parameters from previous page
-	var rank_method = '{{ rank_method }}';
-        var window_size = '{{ during_date }}';
-	var top_n = {{ top_n }};
-	var page_num = {{ page_num }};
+	     //load parameters from previous page
+	     var rank_method = '{{ rank_method }}';
+       var window_size = '{{ during_date }}';
+	     var top_n = {{ top_n }};
+	     var page_num = {{ page_num }};
       </script>
       <script src="{{ url_for('static', filename='js/identify/whole_identify.js') }}"></script>
-    
     {% endif %}
 {% endblock %}

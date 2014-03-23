@@ -230,7 +230,6 @@ function show_user_statuses(uid,time_ts) {
 	var table = '<table class="table table-bordered">';
 	var thead = '<thead><tr><th>排名</th><th  style="display:none">博主ID</th><th>博主昵称</th><th>博主地域</th><th>关注数</th><th>粉丝数</th><th>活跃度</th><th>重要度</th><th>重要度差值</th><th>敏感状态</th><th>环比</th><th>全选<input id="select_all" type="checkbox" /></th></tr></thead>';
 	var tbody = '<tbody>';
-	console.log(data);
 	for (var i = start_row;i < end_row;i++) {
         var tr = '<tr>';
  

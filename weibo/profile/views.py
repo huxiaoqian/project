@@ -59,6 +59,10 @@ def get_default_hotest_time():
     return ts2datetime(datetimestr2ts(LATEST_DATE) - 24 * 3600)
 
 
+def get_default_search_time():
+    return ts2datetime(datetimestr2ts(LATEST_DATE) - 24 * 3600)
+
+
 default_timerange = get_default_timerange()
 default_field_dict = get_default_field_dict()
 default_field_enname, default_field_zhname = get_default_field_name()
@@ -132,6 +136,7 @@ def index():
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
 def profile_search(model='hotest'):
+    default_search_time = get_default_search_time()
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == 'GET':
@@ -145,7 +150,7 @@ def profile_search(model='hotest'):
                     return render_template('profile/profile_search.html',statuscount=statuscount, \
                                            friendscount=friendscount, followerscount=followerscount, \
                                            location=province_str, model=model, result=None, nickname=nickname, \
-                                           field_dict=default_field_dict)
+                                           field_dict=default_field_dict, time=default_search_time)
                 elif model == 'find':
                     statuses_count_upBound = request.args.get('statuses_count_upBound',None)
                     friends_count_upBound = request.args.get('friends_count_upBound',None)
@@ -153,6 +158,15 @@ def profile_search(model='hotest'):
                     top_n = request.args.get('search_top_n',None)
                     province_str = request.args.get('province_str',None)
                     rank_str = request.args.get('rankcount',None)
+                    rank_str_zh = ''
+                    if rank_str == 'followers_count':
+                        rank_str_zh = u'粉丝数降序'
+                    elif rank_str == 'statuses_count':
+                        rank_str_zh = u'微博数降序'
+                    elif rank_str == 'friends_count':
+                        rank_str_zh = u'关注数降序'
+                    elif rank_str == 'created_at':
+                        rank_str_zh = u'注册时间降序'
                     if(top_n):
                         result_count = int(top_n)
                     else:
@@ -172,13 +186,15 @@ def profile_search(model='hotest'):
                     else:
                         followerscount_up = 6000000
 
-                    return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up,
-                                           friendscount_up = friendscount_up,followerscount_up = followerscount_up,
-                                           location = province_str, model = model,rankcount=rank_str, field_dict=default_field_dict)  
+                    return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up, \
+                                           friendscount_up = friendscount_up,followerscount_up = followerscount_up, \
+                                           location = province_str, model = model,rankcount=rank_str, field_dict=default_field_dict, \
+                                           time=default_search_time, sort=rank_str_zh)  
                 else:
-                    return render_template('profile/profile_search.html',statuscount=statuscount,
-                                           friendscount=friendscount, followerscount=followerscount,
-                                           location=province_str, model=model, result=None, field_dict=default_field_dict)
+                    return render_template('profile/profile_search.html',statuscount=statuscount, \
+                                           friendscount=friendscount, followerscount=followerscount, \
+                                           location=province_str, model=model, result=None, \
+                                           field_dict=default_field_dict, time=default_search_time)
             if request.method == 'POST' and request.form['page']:
                 if model == 'newest':
                     top_n = 1000
@@ -292,7 +308,7 @@ def profile_search(model='hotest'):
                             users.append({'id': uid, 'userName': userName, 'statusesCount': statusesCount, 'followersCount': followersCount, 'friendsCount': friendsCount,
                                       'description': description, 'profileImageUrl': profileImageUrl})
                     else:
-                        users = _multi_search(query_dict, sharding)
+                        users = _multi_search(query_dict, rankcount, result_count, sharding)
                     return json.dumps(users[startoffset:endoffset])
         else:
             return redirect('/')
@@ -895,19 +911,14 @@ def group_active_count(fieldEnName):
 
 @mod.route('/group_verify/<fieldEnName>')
 def profile_group_verify(fieldEnName):
-    interval, datestr = _default_time()
     domainid = DOMAIN_LIST.index(fieldEnName)
-    date_list = last_week_to_date(datestr, interval)
-    date_list.reverse()
+    datestr = '20130901'
 
     verified_count, unverified_count, province_dict = 0, 0, {}
-    for datestr in date_list:
-        _verified_count, _unverified_count, _province_dict = getDomainBasic(domainid, datestr)
-        verified_count = int(_verified_count)
-        unverified_count = int(_unverified_count)
-        province_dict = _province_dict
-        if verified_count != 0 or unverified_count != 0 or province_dict != {}:
-            break
+    _verified_count, _unverified_count, _province_dict = getDomainBasic(domainid, datestr)
+    verified_count = int(_verified_count)
+    unverified_count = int(_unverified_count)
+    province_dict = _province_dict
 
     result_list = ''
     if verified_count + unverified_count > 0:
@@ -918,19 +929,14 @@ def profile_group_verify(fieldEnName):
 
 @mod.route('/group_location/<fieldEnName>')
 def profile_group_location(fieldEnName):
-    interval, datestr = _default_time()
     domainid = DOMAIN_LIST.index(fieldEnName)
-    date_list = last_week_to_date(datestr, interval)
-    date_list.reverse()
+    datestr = '20130901'
 
     verified_count, unverified_count, province_dict = 0, 0, {}
-    for datestr in date_list:
-        _verified_count, _unverified_count, _province_dict = getDomainBasic(domainid, datestr)
-        verified_count = int(_verified_count)
-        unverified_count = int(_unverified_count)
-        province_dict = _province_dict
-        if verified_count != 0 or unverified_count != 0 or province_dict != {}:
-            break
+    _verified_count, _unverified_count, _province_dict = getDomainBasic(domainid, datestr)
+    verified_count = int(_verified_count)
+    unverified_count = int(_unverified_count)
+    province_dict = _province_dict
 
     city_count = province_dict
     results = province_color_map(city_count)

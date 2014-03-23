@@ -96,8 +96,17 @@ def _search_person_important_active(userId, sharding=False):
         return 'failed', None
 
 
-def _multi_search(query_dict, sharding=True):
+def _multi_search(query_dict, sort, top_n=1000, sharding=True):
     pros = []
+    if sort == 'followers_count':
+        sort = 'followersCount'
+    elif sort == 'statuses_count':
+        sort = 'statuseCount'
+    elif sort == 'friends_count':
+        sort = 'friendsCount'
+    elif sort == 'created_at':
+        sort = 'created_at'
+
     if '$and' in query_dict:
         and_querys = query_dict['$and']
         for q in and_querys:
@@ -123,7 +132,7 @@ def _multi_search(query_dict, sharding=True):
     if sharding:
         cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
     else:
-        cobar_conn = MySQLdb.connect(host='192.168.2.11', user='root', db='weibo', charset='utf8')
+        cobar_conn = MySQLdb.connect(host=MYSQL_HOST, user=MYSQL_USER, db=MYSQL_DB, charset='utf8')
 
     persons = []
     cursor = cobar_conn.cursor()
@@ -140,7 +149,7 @@ def _multi_search(query_dict, sharding=True):
 
     sql = "SELECT * from profile_person_basic where statuseCount > %d  and statuseCount < %d and followersCount > %d and \
           followersCount < %d and friendsCount > %d and friendsCount < %d " % (s_low, \
-          s_up, fol_low, fol_up, fri_low, fri_up) + location_query + "ORDER BY followersCount DESC LIMIT 100"
+          s_up, fol_low, fol_up, fri_low, fri_up) + location_query + "ORDER BY %s DESC LIMIT %d" % (sort, top_n) # followersCount, top_n
 
     try:
         cursor.execute(sql)
@@ -180,7 +189,7 @@ def _search_order_by_created_at(limit=1000, sharding=True):
     if sharding:
         cobar_conn = MySQLdb.connect(host=COBAR_HOST, user=COBAR_USER, db='cobar_db_weibo', port=COBAR_PORT, charset='utf8')
     else:
-        cobar_conn = MySQLdb.connect(host='192.168.2.11', user='root', db='weibo', charset='utf8')
+        cobar_conn = MySQLdb.connect(host=MYSQL_HOST, user=MYSQL_USER, db=MYSQL_DB, charset='utf8')
 
     persons = []
     cursor = cobar_conn.cursor()

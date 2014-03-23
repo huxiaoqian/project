@@ -627,7 +627,7 @@
               <li class="last selected"><a href="/users/all/" class="user-link">推荐用户</a></li>
             </ul>-->
             <div class="p">搜索结果
-              <span style="height: 26px;line-height: 26px;font-size: 18px;">
+              <span id='results_tips' style="height: 26px;line-height: 26px;font-size: 18px;">
                 {% if model == 'hotest' %}
                     全网敏感博主
                 {% elif model == 'newest' %}
@@ -644,13 +644,7 @@
               
               <div class="right">
                 <a href="#" onclick="return false;" class="self-promote btn wbtn"><strong>
-                  {% if model in ['hotest', 'newest', 'person', 'find'] %}
-                    2013-9-21
-                  {% elif model in field_dict.keys() %}
-                    2013-9-21
-                  {% else %}
-                    2013-9-21
-                  {% endif %}
+                  {{ time }}
                 </strong><span></span></a>
                 <a href="#" onclick="return false;" class="self-promote btn wbtn"><strong>
                   {% if model == 'hotest' %}
@@ -658,7 +652,7 @@
                   {% elif model == 'newest' %}
                     注册时间降序
                   {% elif model == 'find' %}
-                    粉丝数降序
+                    {{ sort }}
                   {% elif model in field_dict.keys() %}
                     粉丝数降序
                   {% else %}
@@ -816,6 +810,10 @@
       // Create HTML for the images.
       var html = '';
       var i=0, length=data.length, item;
+      if(length == 0){
+        $('#results_tips').empty();
+        $('#results_tips').append('结果为空');
+      }
       for(; i<length; i++) {
         item = data[i];
         html += "<div class=\"grid\">";

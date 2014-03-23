@@ -15,6 +15,7 @@ from pyelevator import WriteBatch, Elevator
 from weibo.global_config import LEVELDBPATH, xapian_search_user
 from xapian_weibo.xapian_backend import XapianSearch
 from flask import Blueprint, session, redirect, url_for
+from dynamic_xapian_weibo import target_whole_xapian_weibo,target_whole_xapian_user
 
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
                 'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
@@ -143,56 +144,8 @@ def tree2graph(tree_nodes):
     return etree.tostring(gexf.getXML(), pretty_print=False, encoding='utf-8', xml_declaration=True), max_depth, max_width
 
 
-def getXapianWeiboByDate(datestr):
-    # datestr: 20130908
-    path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
-    stub_file = path + datestr
-    
-    if os.path.exists(stub_file):
-        xapian_search_weibo = XapianSearch(stub=stub_file, include_remote=True, schema_version=5)
-        return xapian_search_weibo
-    else:
-        return None
-
-
-def getXapianWeiboByDuration(datestr_list):
-    path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
-    stub_file_list = []
-
-    for datestr in datestr_list:
-        stub_file = path + datestr
-        if os.path.exists(stub_file):
-            stub_file_list.append(stub_file)
-
-    if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
-        return xapian_search_weibo 
-    else:
-        return None
-
-
-def target_whole_xapian_weibo():
-    datestr = '20130904'
-    during = 4
-
-    ts = int(time.mktime(time.strptime(datestr, '%Y%m%d')))
-    datelist = []
-
-    for i in range(0, during):
-        now_date = time.strftime('%Y%m%d', time.localtime(ts - i * 24 * 3600))
-        datelist.append(now_date)
-        
-    xapian_weibo = getXapianWeiboByDuration(datelist)
-    return xapian_weibo
-
-
-def target_whole_xapian_user():
-    return xapian_search_user
-
-
 whole_xapian_weibo = target_whole_xapian_weibo()
 whole_xapian_user = target_whole_xapian_user()
-
 
 def getWeiboByMid(mid):
     weibo = whole_xapian_weibo.search_by_id(int(mid), fields=weibo_fields)
@@ -330,7 +283,7 @@ def forest_from_elevator(topic_id):
     return g
 
 if __name__ == '__main__':
-    whole_xapian_weibo = target_whole_xapian_weibo()
-    whole_xapian_user = target_whole_xapian_user()
+##    whole_xapian_weibo = target_whole_xapian_weibo()
+##    whole_xapian_user = target_whole_xapian_user()
     source_mid = 3618201981966170#3617726042418839
     graph(source_mid)

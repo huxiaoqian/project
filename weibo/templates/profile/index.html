@@ -37,18 +37,18 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博数:</b></font>
       <div class="btn-group">
         <a  id="statuses_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-          0-200万<span class="caret"></span></a>
+          0-1万<span class="caret"></span></a>
         <ul id="statuses_count_window_size_dropdown_menu" class="dropdown-menu">
-          <li><a href="#" onclick="choose_statuses_count('statuses_count', 200);" data-toggle="tab">0-200万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 400);" data-toggle="tab">200-400万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 600);" data-toggle="tab">400-600万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 800);" data-toggle="tab">600-800万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 1000);" data-toggle="tab">800-1000万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 1200);" data-toggle="tab">1000-1200万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 1400);" data-toggle="tab">1200-1400万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 1600);" data-toggle="tab">1400-1600万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 1800);" data-toggle="tab">1600-1800万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 2000);" data-toggle="tab">1800-2000万</a></li>
+          <li><a href="#" onclick="choose_statuses_count('statuses_count', 1);" data-toggle="tab">0-1万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 2);" data-toggle="tab">1-2万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 3);" data-toggle="tab">2-3万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 4);" data-toggle="tab">3-4万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 5);" data-toggle="tab">4-5万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 6);" data-toggle="tab">5-6万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 7);" data-toggle="tab">6-7万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 8);" data-toggle="tab">7-8万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 9);" data-toggle="tab">8-9万</a></li>
+                <li><a href="#" onclick="choose_statuses_count('statuses_count', 10);" data-toggle="tab">9-10万</a></li>
         </ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp粉丝数:</b></font>
@@ -64,8 +64,6 @@
                 <li><a href="#" onclick="choose_followers_count('followers_count', 3600);" data-toggle="tab">3000-3600万</a></li>
                 <li><a href="#" onclick="choose_followers_count('followers_count', 4200);" data-toggle="tab">3600-4200万</a></li>
                 <li><a href="#" onclick="choose_followers_count('followers_count', 4800);" data-toggle="tab">4200-4800万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 5400);" data-toggle="tab">4800-5400万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 6000);" data-toggle="tab">5400-6000万</a></li>
         </ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp关注数:</b></font>
@@ -106,7 +104,7 @@
         </select></span><input name="search_top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="100" class="span1">
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>  
-      <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="200">
+      <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="1">
       <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
       <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">
       <input id="rankcount_rank_method" type="hidden" name="rankcount" value="followers_count">
@@ -336,26 +334,26 @@
   function choose_statuses_count(range, window) {
       $("#"+range+"_window_size").val(window);
       cn_window = '';
-      if(window==200)
-          cn_window = '0-200万';
-      else if(window==400)
-    cn_window = '200-400万';
-      else if(window==600)
-    cn_window = '400-600万';
-      else if(window==800)
-    cn_window = '600-800万';
-      else if(window==1000)
-      cn_window = '800-1000万';
-      else if(window==1200)
-      cn_window = '1000-1200万';
-      else if(window==1400)
-      cn_window = '1200-1400万';
-      else if(window==1600)
-      cn_window = '1400-1600万';
-      else if(window==1800)
-      cn_window = '1600-1800万';
-      else if(window==2000)
-      cn_window = '1800-2000万';
+      if(window==1)
+          cn_window = '0-1万';
+      else if(window==2)
+    cn_window = '1-2万';
+      else if(window==3)
+    cn_window = '2-3万';
+      else if(window==4)
+    cn_window = '3-4万';
+      else if(window==5)
+      cn_window = '4-5万';
+      else if(window==6)
+      cn_window = '5-6万';
+      else if(window==7)
+      cn_window = '6-7万';
+      else if(window==8)
+      cn_window = '7-8万';
+      else if(window==9)
+      cn_window = '8-9万';
+      else if(window==10)
+      cn_window = '9-10万';
       $("#"+range+"_window_size_choosen").text(cn_window);
       $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
       //close dropdown

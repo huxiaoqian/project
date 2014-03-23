@@ -92,9 +92,9 @@ def _time_zone(stri):
 
 
 def getStaticInfo():
-    statuscount = [0, 2000000, 4000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000]
+    statuscount = [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
     friendscount = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
-    followerscount = [0, 6000000, 12000000, 18000000, 24000000, 30000000, 36000000, 42000000, 48000000, 54000000, 60000000]
+    followerscount = [0, 6000000, 12000000, 18000000, 24000000, 30000000, 36000000, 42000000, 48000000]
     province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外']
     statusRange = [{'lowBound': statuscount[i], 'upBound': statuscount[i+1]} for i in range(len(statuscount)-1)]
     friendsRange = [{'lowBound': friendscount[i], 'upBound': friendscount[i+1]} for i in range(len(friendscount)-1)]
@@ -174,7 +174,7 @@ def profile_search(model='hotest'):
                     if(statuses_count_upBound):
                         statusescount_up = (int(statuses_count_upBound))*10000
                     else:
-                        statusescount_up = 2000000
+                        statusescount_up = 100000
 
                     if(friends_count_upBound):
                         friendscount_up = int(friends_count_upBound)
@@ -282,7 +282,7 @@ def profile_search(model='hotest'):
 
                     query_dict = {}
                     query_dict['$and'] = []
-                    query_dict['$and'].append({'statuses_count':{'$gt': statusescount_up - 2000000,'$lt': statusescount_up }})
+                    query_dict['$and'].append({'statuses_count':{'$gt': statusescount_up - 10000,'$lt': statusescount_up }})
                     query_dict['$and'].append({'followers_count':{'$gt': followerscount_up - 6000000 ,'$lt': followerscount_up}})
                     query_dict['$and'].append({'friends_count':{'$gt': friendscount_up - 400 ,'$lt': friendscount_up}})
                     or_dict = {}
@@ -325,24 +325,52 @@ def profile_group():
                 during_time = request.args.get('during_time', None)
                 if during_time:
                     during_date = _utf_8_encode(during_time)
-                    start_ts, end_ts = _time_zone(during_date)
+                    start_ts, end_ts = _time_zone(_utf_encode(during_date))
                 else:
                     interval, datestr = _default_time()
                     end_ts = datetimestr2ts(datestr)
                     start_ts = end_ts - interval * 24 * 3600
+                    during_time = default_timerange
 
             return render_template('profile/profile_group.html', model=fieldEnName, \
                                    atfield=default_field_dict[fieldEnName], field_dict=default_field_dict, \
-                                   start_ts=start_ts, end_ts=end_ts)
+                                   start_ts=start_ts, end_ts=end_ts, field_zh=default_field_dict[fieldEnName], \
+                                   field_en=fieldEnName, timerange=during_time)
         else:
             return redirect('/')
     else:
         return redirect('/')
 
+
+@mod.route('/person.json', methods=['GET', 'POST'])
+def profile_person_json():
+    nickname = request.args.get('nickname', None)
+    if nickname:
+        uid = getUidByName(urllib2.unquote(nickname.strip()))
+        if uid:
+            return json.dumps({'status': 'success', 'uid': str(uid)})
+
+    return json.dumps({'status': 'failed'})
+
+
+def _utf_encode(s):
+    if isinstance(s, str):
+        return s
+    else:
+        return s.encode('utf-8')
+
+
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):
     read_from_xapian = 0
     sharding = False
+    timerange = request.args.get('during_time', None)
+    if not timerange:
+        timerange = default_timerange
+    else:
+        timerange = timerange.strip()
+
+    start_ts, end_ts = _time_zone(_utf_encode(timerange))
 
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
@@ -390,7 +418,7 @@ def profile_person(uid):
                     else:
                         return 'no such user'
 
-                return render_template('profile/profile_person.html', user=user)
+                return render_template('profile/profile_person.html', user=user, start_ts=start_ts, end_ts=end_ts, timerange=timerange)
             else:
                 return redirect('/')
     else:
@@ -409,6 +437,18 @@ def getUidByName(name):
 @mod.route('/person_interact_network/<uid>', methods=['GET', 'POST'])
 def profile_interact_network(uid):
     if request.method == 'GET':
+        start_ts = request.args.get('start_ts', None)
+        end_ts = request.args.get('end_ts', None)
+
+        if not start_ts or not end_ts:
+            start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
+
+        if start_ts:
+            start_ts = int(start_ts)
+
+        if end_ts:
+            end_ts = int(end_ts)
+
         uid = int(uid)
         center_uid = uid
 
@@ -421,15 +461,6 @@ def profile_interact_network(uid):
         followers = getFriendship(uid, 'followers')
         fri_fol.extend(friends)
         fri_fol.extend(followers)
-
-        start_ts = request.args.get('start_ts', None)
-        end_ts = request.args.get('end_ts', None)
-
-        if start_ts:
-            start_ts = int(start_ts)
-
-        if end_ts:
-            end_ts = int(end_ts)
 
         try:
             interval = (end_ts - start_ts) / (24 * 3600) + 1
@@ -575,17 +606,20 @@ def profile_person_tab_ajax(model, uid):
             start_ts = request.args.get('start_ts', None)
             end_ts = request.args.get('end_ts', None)
 
+            if not start_ts or not end_ts:
+                start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
+
             if model == 'personaltopic':
                 domain = user2domain(uid)
-                return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=domain)
+                return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=domain, start_ts=start_ts, end_ts=end_ts)
             elif model == 'personalweibocount':
-                return render_template('profile/ajax/personal_weibo_count.html', uid=uid)
+                return render_template('profile/ajax/personal_weibo_count.html', uid=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'personalnetwork':
-                return render_template('profile/ajax/personal_friends.html', uid=uid)
+                return render_template('profile/ajax/personal_friends.html', uid=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'personalnetwork_follow':       
-                return render_template('profile/ajax/personal_followers.html', uid=uid)
+                return render_template('profile/ajax/personal_followers.html', uid=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'personalinteractnetwork':
-                return render_template('profile/ajax/personal_interact.html', uid=uid)
+                return render_template('profile/ajax/personal_interact.html', uid=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'grouptopic':
                 return render_template('profile/ajax/group_word_cloud.html', field=uid, start_ts=start_ts, end_ts=end_ts)
             elif model == 'groupweibocount':
@@ -607,6 +641,9 @@ def profile_person_topic(uid):
 
         start_ts = request.args.get('start_ts', None)
         end_ts = request.args.get('end_ts', None)
+
+        if not start_ts or not end_ts:
+            start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
 
         if start_ts:
             start_ts = int(start_ts)
@@ -648,10 +685,20 @@ def profile_person_topic(uid):
 @mod.route('/person_network/<friendship>/<uid>', methods=['GET', 'POST'])
 def profile_network(friendship, uid):
     if request.method == 'GET':
+        start_ts = request.args.get('start_ts', None)
+        end_ts = request.args.get('end_ts', None)
+
+        if not start_ts or not end_ts:
+            start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
+
+        if start_ts:
+            start_ts = int(start_ts)
+
+        if end_ts:
+            end_ts = int(end_ts)
+
         limit = 10
-
         fri_fol = getFriendship(uid, friendship)
-
         direct_uid_interact_count = {}
         retweeted_uid_interact_count = {}
         retweeted_friends_interact_count = {}
@@ -666,15 +713,6 @@ def profile_network(friendship, uid):
                 domain_count[domain] = 1
 
         domain_count = [(k, v) for k, v in domain_count.iteritems()]
-
-        start_ts = request.args.get('start_ts', None)
-        end_ts = request.args.get('end_ts', None)
-
-        if start_ts:
-            start_ts = int(start_ts)
-
-        if end_ts:
-            end_ts = int(end_ts)
         
         try:
             interval = (end_ts - start_ts) / (24 * 3600) + 1
@@ -740,13 +778,14 @@ def profile_network(friendship, uid):
 def personal_weibo_count(uid):
     start_ts = request.args.get('start_ts', None)
     end_ts = request.args.get('end_ts', None)
+    if not start_ts or not end_ts:
+        start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
 
     if start_ts:
         start_ts = int(start_ts)
-
     if end_ts:
         end_ts = int(end_ts)
-    
+
     try:
         interval = (end_ts - start_ts) / (24 * 3600) + 1
         datestr = ts2datetimestr(end_ts) # '20130907'

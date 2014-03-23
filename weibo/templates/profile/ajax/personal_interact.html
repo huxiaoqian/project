@@ -188,7 +188,7 @@
 
   $(document).ready(function(){
     $.ajax({     
-      url:'/profile/person_interact_network/{{uid}}',
+      url:"/profile/person_interact_network/{{uid}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}",
       dataType: 'json', 
       success:function(data){
         var status = data['status'];

@@ -12,6 +12,11 @@
   <script src="/static/js/profile/rgbcolor.js"></script> 
   <script src="/static/js/profile/StackBlur.js"></script>
   <script src="/static/js/profile/canvg.js"></script>
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datarangepiker.css') }}">
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/datepicker.css') }}">
+  <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/datarangepiker.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
   
   <div class="container-fluid">
     <legend>{{ user['userName'] }}</legend>
@@ -29,8 +34,10 @@
                 <li class="">活跃度：{{ user['active_rank'] }}</li>
                 {% if user['gender'] == 'f' %}
                   <li class="">性别：女</li>
-                {% else %}
+                {% elif user['gender'] == 'm' %}
                   <li class="">性别：男</li>
+                {% else %}
+                  <li class="">性别：未知</li>
                 {% endif %}
                 {% if user['verified'] == False %}
                   <li class="">是否认证用户：否</li>
@@ -47,6 +54,18 @@
           </div>
         </div>
         <div class="span9" id="index-tabs">
+          <form id="profile_person_form" action="/profile/person/" class="form-inline" method="GET">
+            <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>博主昵称:</b><input id="input_nickname" name="nickname" type="text" class="search-query" value="{{ user['userName'] }}" placeholder="按博主昵称搜索"></font>
+            <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间范围:</b></font>
+            <div id="person_window_size_choosen" class="btn dropdown-toggle" href="#">
+              <i class="icon-calendar icon-large"></i>
+              <span id="person_date">{{ timerange }}</span> 
+              <b class="caret"></b>
+            </div>
+            <input id="during_time" type="hidden" name="during_time" value="{{ timerange }}">
+            &nbsp&nbsp&nbsp
+            <input type="submit" class="btn btn-primary" onclick="submit_search_profile_person();return false;" value="分析">
+          </form>
           <ul class="nav nav-pills tab_container">
             <li class="btn span2 btn-primary" id="tab2">兴趣偏好</li>
             <li class="btn span2" id="tab1">行为信息</li>
@@ -62,10 +81,10 @@
 {% block script %}
   <script>
     $('#content_container').empty();
-    $('#content_container').load("/profile/person_tab_ajax/personaltopic/{{user.id}}", function() {});
+    $('#content_container').load("/profile/person_tab_ajax/personaltopic/{{user.id}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}", function() {});
 
     tabIdArr = ['tab1', 'tab2', 'tab3', 'tab4', 'tab5'];
-    tabUrlArr = ["/profile/person_tab_ajax/personalweibocount/{{user.id}}", "/profile/person_tab_ajax/personaltopic/{{user.id}}", "/profile/person_tab_ajax/personalnetwork/{{user.id}}", "/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}", "/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}"];
+    tabUrlArr = ["/profile/person_tab_ajax/personalweibocount/{{user.id}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}", "/profile/person_tab_ajax/personaltopic/{{user.id}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}", "/profile/person_tab_ajax/personalnetwork/{{user.id}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}", "/profile/person_tab_ajax/personalnetwork_follow/{{user.id}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}", "/profile/person_tab_ajax/personalinteractnetwork/{{user.id}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}"];
     for (var i = 0, len = tabIdArr.length; i < len; i++) {
       document.getElementById(tabIdArr[i]).onclick = function(data) {
         var tabId = data.srcElement.id;
@@ -80,5 +99,43 @@
         $('#content_container').load(tabUrlArr[tabIdx - 1], function() {});
       }
     }
+
+    function submit_search_profile_person(){
+        var person_time = $('#person_date').html();
+        document.getElementById('during_time').value = person_time;
+        $.ajax({
+          url: "/profile/person.json?nickname=" + $('#input_nickname').val(),
+          type: 'GET',
+          dataType: 'json',
+          success: function(data){
+              if(data.status == 'success'){
+                var uid = data.uid;
+                window.location.href = '/profile/person/' + uid + '?during_time=' + person_time;
+              }else{
+                alert("您搜索的结果为空！");
+              }
+          }
+        })
+    }
+
+    $(document).ready(function() {
+      var person_time = $('#person_date').html();
+      document.getElementById('during_time').value = person_time;
+      $('#person_window_size_choosen').daterangepicker({
+        ranges: {
+           '1天': [moment(), moment()],
+           '1周': [moment().subtract('days', 6), moment()],
+           '1个月': [moment().startOf('month'), moment().endOf('month')],
+           '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+        },
+        startDate: moment().subtract('days', 29),
+        endDate: moment()
+      },  
+        function(start, end) {
+          $('#person_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
+        }
+      );
+    }
+    );
   </script>
 {% endblock script %}

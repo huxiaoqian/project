@@ -223,7 +223,7 @@
 
 	$(document).ready(function(){
 		$.ajax({
-        url: "/profile/person_network/followers/{{uid}}",
+        url: "/profile/person_network/followers/{{uid}}?start_ts={{ start_ts }}&end_ts={{ end_ts }}",
         dataType: 'json',   
         type: "GET",   
         success: function (data) {

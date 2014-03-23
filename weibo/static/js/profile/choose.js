@@ -70,26 +70,26 @@ function choose_window(range, window) {
 function choose_statuses_count(range, window) {
     $("#"+range+"_window_size").val(window);
     cn_window = '';
-    if(window==200)
-        cn_window = '0-200万';
-    else if(window==400)
-  cn_window = '200-400万';
-    else if(window==600)
-  cn_window = '400-600万';
-    else if(window==800)
-  cn_window = '600-800万';
-    else if(window==1000)
-    cn_window = '800-1000万';
-    else if(window==1200)
-    cn_window = '1000-1200万';
-    else if(window==1400)
-    cn_window = '1200-1400万';
-    else if(window==1600)
-    cn_window = '1400-1600万';
-    else if(window==1800)
-    cn_window = '1600-1800万';
-    else if(window==2000)
-    cn_window = '1800-2000万';
+    if(window==1)
+        cn_window = '0-1万';
+    else if(window==2)
+  cn_window = '1-2万';
+    else if(window==3)
+  cn_window = '2-3万';
+    else if(window==4)
+  cn_window = '3-4万';
+    else if(window==5)
+    cn_window = '4-5万';
+    else if(window==6)
+    cn_window = '5-6万';
+    else if(window==7)
+    cn_window = '6-7万';
+    else if(window==8)
+    cn_window = '7-8万';
+    else if(window==9)
+    cn_window = '8-9万';
+    else if(window==10)
+    cn_window = '9-10万';
     $("#"+range+"_window_size_choosen").text(cn_window);
     $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
     //close dropdown

@@ -1,39 +1,25 @@
 # -*- coding: utf-8 -*-
 
-
+import os
+import re
+import time
+import json
+import simplejson as json
+import counts as countsModule
+import weibos as weibosModule
+import keywords as keywordsModule
 from weibo.model import *
 from weibo.extensions import db
-from weibo.global_config import emotions_kv, LEVELDBPATH
-from flask import Blueprint, render_template, request, session, redirect
 from utils import weiboinfo2url
 from peak_detection import detect_peaks
+from datetime import date, datetime
 from xapian_weibo.utils import top_keywords
-import keywords as keywordsModule
-import weibos as weibosModule
-import counts as countsModule
-from topics import _all_topics, _add_topic, _drop_topic, _search_topic
 from history import _all_history, _add_history, _search_history
-import simplejson as json
-from datetime import date
-from datetime import datetime
-import time
-import leveldb
-import os
-import weibo.model
-import json
-import re
-
+from topics import _all_topics, _add_topic, _drop_topic, _search_topic
+from weibo.global_config import DOMAIN_LIST, DOMAIN_ZH_LIST, emotions_kv
+from flask import Blueprint, render_template, request, session, redirect
 
 mod = Blueprint('moodlens', __name__, url_prefix='/moodlens')
-
-#month_value = {'January':1, 'February':2, 'March':3, 'April':4, 'May':5, 'June':6, 'July':7, 'August':8, 'September':9, 'October':10, 'November':11, 'December':12}
-field_id = {u'文化':'culture', u'教育':'education', u'娱乐':'entertainment', u'时尚':'fashion', u'财经':'finance', u'媒体':'media', u'体育':'sports', u'科技':'technology'}
-FIELDS_VALUE = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology', 'oversea']
-FIELDS_ZH_NAME = [u'文化', u'教育', u'娱乐', u'时尚', u'财经', u'媒体', u'体育', u'科技', u'海外']
-FIELDS2ID = {}
-FIELDS2ZHNAME = {}
-
-from weibo.global_config import DOMAIN_LIST, DOMAIN_ZH_LIST
 
 Minute = 60
 Fifteenminutes = 15 * Minute
@@ -42,22 +28,29 @@ SixHour = Hour * 6
 Day = Hour * 24
 MinInterval = Fifteenminutes
 
+FIELDS2ID = {}
+FIELDS2ZHNAME = {}
 for key in DOMAIN_LIST:
     idx = DOMAIN_LIST.index(key)
     FIELDS2ID[key] = idx
     FIELDS2ZHNAME[key] = DOMAIN_ZH_LIST[idx]
 
 
-buckets = {}
-total_days = 90
+def get_default_timerange():
+    return u'9月 22日,2013 - 9月 22日,2013'
 
 
-def get_bucket(bucket):
-    if bucket in buckets:
-        return buckets[bucket]
-    buckets[bucket] = leveldb.LevelDB(os.path.join(LEVELDBPATH, 'lijun_' + bucket),
-                                      block_cache_size=8 * (2 << 25), write_buffer_size=8 * (2 << 25))
-    return buckets[bucket]
+def get_default_field_dict():
+    field_dict = {}
+    for idx, field_en in enumerate(DOMAIN_LIST[9:20]):
+        field_dict[field_en] = DOMAIN_ZH_LIST[idx+9]
+
+    return field_dict
+
+
+def get_default_field_name():
+    return 'activer', u'活跃人士'
+
 
 def _utf_encode(s):
     if isinstance(s, str):
@@ -100,16 +93,21 @@ def log_in():
 
 @mod.route('/', methods=['GET','POST'])
 def index():
+    default_timerange = get_default_timerange()
+    default_field_dict = get_default_field_dict()
+    default_field_enname, default_field_zhname = get_default_field_name()
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            return render_template('moodlens/index.html', active='moodlens')
+            return render_template('moodlens/index.html', time_range=default_timerange, field_en=default_field_enname, \
+                                   field_zh=default_field_zhname, field_dict=default_field_dict)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
                     if identy == 1:
-                        return render_template('moodlens/index.html', active='moodlens')
+                        return render_template('moodlens/index.html', time_range=default_timerange, field_en=default_field_enname, \
+                                               field_zh=default_field_zhname, field_dict=default_field_dict)
                     else:
                         return redirect('/')
             return redirect('/')
@@ -177,6 +175,9 @@ def all_emotion():
 
 @mod.route('/field/', methods=['GET','POST'])
 def field():
+    default_timerange = get_default_timerange()
+    default_field_dict = get_default_field_dict()
+    default_field_enname, default_field_zhname = get_default_field_name()
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             during = request.args.get('during', None)
@@ -194,7 +195,8 @@ def field():
 
             field_name = request.args.get('field_name', '')
             if field_name == '':
-                return render_template('moodlens/index.html', active='moodlens')
+                return render_template('moodlens/index.html', time_range=default_timerange, field_en=default_field_enname, \
+                                       field_zh=default_field_zhname, field_dict=default_field_dict)
             else:
                 field_en = DOMAIN_LIST[DOMAIN_ZH_LIST.index(field_name)]
 
@@ -208,6 +210,9 @@ def field():
 
 @mod.route('/topic/', methods=['GET','POST'])
 def topic():
+    default_timerange = get_default_timerange()
+    default_field_dict = get_default_field_dict()
+    default_field_enname, default_field_zhname = get_default_field_name()
     if 'logged_in' in session and session['logged_in']:        
         if session['user'] == 'admin':
             customized = request.args.get('customized', '1')
@@ -231,7 +236,8 @@ def topic():
                 keyword = _utf_decode(keyword)
                 return render_template('moodlens/topic_emotion.html', keyword=keyword, start_ts=start_ts, end_ts=end_ts, during=during, customized=customized)
             else:
-                return render_template('moodlens/index.html')
+                return render_template('moodlens/index.html', time_range=default_timerange, field_en=default_field_enname, \
+                                       field_zh=default_field_zhname, field_dict=default_field_dict)
 
         else:
             pass

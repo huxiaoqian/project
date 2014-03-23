@@ -63,9 +63,14 @@ def get_default_search_time():
     return ts2datetime(datetimestr2ts(LATEST_DATE) - 24 * 3600)
 
 
+def get_default_profile_person_time():
+    return ts2datetimestr(datetimestr2ts(LATEST_DATE) - 24 * 3600)
+
+
 default_timerange = get_default_timerange()
 default_field_dict = get_default_field_dict()
 default_field_enname, default_field_zhname = get_default_field_name()
+default_profile_person_time = get_default_profile_person_time()
 
 
 def _time_zone(stri):
@@ -360,6 +365,13 @@ def _utf_encode(s):
         return s.encode('utf-8')
 
 
+def _utf_decode(s):
+    if isinstance(s, str):
+        return s.decode('utf-8')
+    else:
+        return s
+
+
 @mod.route('/person/<uid>', methods=['GET', 'POST'])
 def profile_person(uid):
     read_from_xapian = 0
@@ -376,16 +388,12 @@ def profile_person(uid):
         if session['user'] == 'admin':
             if uid:
                 user = {}
-                datestr = LATEST_DATE
-                date_list = [datestr]
-                active = important = reposts = original = emoticon = 0
-                for current_time in date_list:
-                    _active, _important, _reposts, _original, _emoticon, _direct_interact, _retweeted_interact, _keywords_dict = getPersonData(uid, current_time)
-                    active += _active
-                    important += _important
 
-                user['active_rank'] = active
-                user['important_rank'] = important
+                _active, _important, _reposts, _original, _emoticon, _direct_interact, _retweeted_interact, _keywords_dict = getPersonData(uid, default_profile_person_time)
+                user['updatetime'] = default_profile_person_time
+                user['active_rank'] = _active
+                user['important_rank'] = _important
+
                 if read_from_xapian:
                     count, get_results = xapian_search_user.search(query={'_id': int(uid)}, fields=['profile_image_url', 'name', 'friends_count', \
                                                       'statuses_count', 'followers_count', 'gender', 'verified', 'created_at', 'location'])
@@ -505,7 +513,7 @@ def profile_interact_network(uid):
         third_circle_uid_counts = uid_sorted[-second_circle_limit-third_circle_limit-1:-second_circle_limit-1]
 
         third_circle_limit = len(third_circle_uid_counts) if len(third_circle_uid_counts) < third_circle_limit else third_circle_limit
-
+        
         def node(friendsCount, followersCount, statusesCount, gender, verified, profileImageUrl, count, uid, name):
             return {
                 "children": [],
@@ -559,7 +567,7 @@ def profile_interact_network(uid):
         # adjust residual weight to index 0 of list
         if second_circle_sum_counts:
             weight_list = [int(count * third_circle_limit / second_circle_sum_counts) if int(count * third_circle_limit / second_circle_sum_counts) >= 1 else 1 for uid, count in second_circle_uid_counts]
-            weight_list[0] += third_circle_limit - sum(weight_list)
+            weight_list[0] += second_circle_sum_counts - sum(weight_list)
 
             # second circle
             for uid, count in second_circle_uid_counts:
@@ -591,9 +599,9 @@ def profile_interact_network(uid):
             start_idx = 0
             if len(third_circle):
                 for i in range(0, len(second_circle)):
-                    for k in range(0, weight_list[i]):
-                        second_circle[i]['children'].append(third_circle[start_idx + k])
-                    start_idx += weight_list[i]
+                    #for k in range(0, weight_list[i]):
+                    if i < len(third_circle):
+                        second_circle[i]['children'].append(third_circle[i])
             
             first_cicle['children'] = second_circle
 
@@ -610,7 +618,7 @@ def profile_person_tab_ajax(model, uid):
                 start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
 
             if model == 'personaltopic':
-                domain = user2domain(uid)
+                domain = _utf_decode(user2domain(uid))
                 return render_template('profile/ajax/personal_word_cloud.html', uid=uid, fields=domain, start_ts=start_ts, end_ts=end_ts)
             elif model == 'personalweibocount':
                 return render_template('profile/ajax/personal_weibo_count.html', uid=uid, start_ts=start_ts, end_ts=end_ts)

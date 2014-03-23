@@ -16,18 +16,13 @@
     </div>
     <div class="container-fluid">
       <div class="row-fluid">
-        <div id="direct_interact_count_container" class="span5" style="width: 400px; height: 250px; margin: 0 5px 0 auto; display: none;"></div>
-        <div id="retweet_interact_count_container" class="span5" style="width: 400px; height: 250px; margin: 0 5px 0 auto; display: none;"></div>
-      </div>
-      <br>
-      <div class="row-fluid">
-        <div id="retweet_friends_interact_count_container" class="span5" style="width: 400px; height: 250px; margin: 0 5px 0 auto; display: none;"></div>
+        <div id="interact_count_container" class="span5" style="width: 400px; height: 250px; margin: 0 5px 0 auto; display: none;"></div>
         <div id="fields_dist_container" class="span5" style="width: 400px; height: 250px; margin: 0 auto; display: none;"></div>
       </div>
     </div>
 </div>
 <div class="well">
-    <legend><strong>关注者交互排序</strong></legend>
+    <legend><strong>关注者排序</strong></legend>
     <div>
         <div id="loading_interact_rank" class="alert alert-info">
             系统繁忙计算中，请稍后...
@@ -72,29 +67,22 @@
       head.appendChild(script);
     }
 
-	function display_interact_chart(retweeted_uid_data, retweeted_friends_data, direct_uid_data) {
-		var direct_uid_list = [];
-    var retweeted_uid_list = [];
-    var retweeted_friends_list = [];
+	function display_interact_chart(fri_fol_interact_data) {
+    var uid_list = [];
 
-		for(var i in retweeted_uid_data){
-			retweeted_uid_list.push([retweeted_uid_data[i][0].toString(), retweeted_uid_data[i][1]]);
+		for(var i in fri_fol_interact_data){
+			uid_list.push([fri_fol_interact_data[i][0].toString(), fri_fol_interact_data[i][1]]);
 		}
-    for(var i in retweeted_friends_data){
-      retweeted_friends_list.push([retweeted_friends_data[i][0].toString(), retweeted_friends_data[i][1]]);
-    }
-    for(var i in direct_uid_data){
-      direct_uid_list.push([direct_uid_data[i][0], direct_uid_data[i][1]]);
-    }
+    
     var chart = new Highcharts.Chart({
         chart: {
-            renderTo: 'direct_interact_count_container',
+            renderTo: 'interact_count_container',
             plotBackgroundColor: null,
             plotBorderWidth: null,
             plotShadow: false
         },
         title: {
-            text: '直接交互统计'
+            text: '转发关注者微博统计'
         },
         tooltip: {
     	    pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
@@ -114,71 +102,10 @@
         series: [{
             type: 'pie',
             name: '交互占比',
-            data: direct_uid_list
+            data: uid_list
         }]
     });
-    var chart2 = new Highcharts.Chart({
-        chart: {
-            renderTo: 'retweet_interact_count_container',
-            plotBackgroundColor: null,
-            plotBorderWidth: null,
-            plotShadow: false
-        },
-        title: {
-            text: '原创交互统计'
-        },
-        tooltip: {
-          pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
-        },
-        plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: true,
-                    color: '#000000',
-                    connectorColor: '#000000',
-                    format: '<b>{point.name}</b>: {point.y}'
-                }
-            }
-        },
-        series: [{
-            type: 'pie',
-            name: '交互占比',
-            data: retweeted_uid_list
-        }]
-    });
-    var chart2 = new Highcharts.Chart({
-        chart: {
-            renderTo: 'retweet_friends_interact_count_container',
-            plotBackgroundColor: null,
-            plotBorderWidth: null,
-            plotShadow: false
-        },
-        title: {
-            text: '原创交互统计（关注者）'
-        },
-        tooltip: {
-          pointFormat: '{series.name}: <b>{point.percentage:.1f} %</b>'
-        },
-        plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: true,
-                    color: '#000000',
-                    connectorColor: '#000000',
-                    format: '<b>{point.name}</b>: {point.y}'
-                }
-            }
-        },
-        series: [{
-            type: 'pie',
-            name: '交互占比',
-            data: retweeted_friends_list
-        }]
-    });
+    
 	}
 
 	function display_fields_chart(data){
@@ -238,28 +165,16 @@
               $("#interact_rank_process").removeClass("active");
               $("#interact_rank_process").removeClass("progress-striped");
 
-              if (data['retweeted_uid'] && data['retweeted_friends'] && data['direct_uid']) {
-                  var retweeted_uid_data = data['retweeted_uid'];
-                  var retweeted_friends_data = data['retweeted_friends'];
-                  var direct_uid_data = data['direct_uid'];
+              if (data['fri_fol_interact'] && data['users'] && data['domains']) {
+                  var fri_fol_interact_data = data['fri_fol_interact'];
                   var users = data['users'];
                   var domains = data['domains'];
                   var statistics_info = '';
 
-                  if(retweeted_uid_data.length){
-                      $("#retweet_interact_count_container").css("display", "block");
+                  if(fri_fol_interact_data.length){
+                      $("#interact_count_container").css("display", "block");
                   }else{
-                      statistics_info += '原创交互统计数据为空! ';
-                  }
-                  if(retweeted_friends_data.length){
-                      $("#retweet_friends_interact_count_container").css("display", "block");
-                  }else{
-                      statistics_info += '原创交互统计（关注者）数据为空! ';
-                  }
-                  if(direct_uid_data.length){
-                      $("#direct_interact_count_container").css("display", "block");
-                  }else{
-                      statistics_info += '直接交互统计数据为空! ';
+                      statistics_info += '转发关注者微博数据为空! ';
                   }
                   if( domains.length ){
                       $("#fields_dist_container").css("display", "block");
@@ -299,7 +214,7 @@
                       $("#loading_interact_rank").text("很抱歉，计算结果为空!");
                   }
                   $("#loading_interact_statistics").text("计算完成! " + statistics_info);
-                  display_interact_chart(retweeted_uid_data, retweeted_friends_data, direct_uid_data);
+                  display_interact_chart(fri_fol_interact_data);
                   display_fields_chart(domains);
               }else{
                   $("#loading_interact_statistics").text("很抱歉，计算结果为空!");

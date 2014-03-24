@@ -64,29 +64,6 @@
       <div class="row">
 
       <ul class="thumbnails child-sites">
-        {% if identy == '1' %}
-        <div class="col-md-4">
-        <li class="span3">
-          <a class="thumbnail" id="identify1" target="_blank">
-            <img src="/static/img/home_thumbnail/1.png" alt="敏感博主识别" width="260" height="200">
-          </a>
-          <h4 style="text-align:center;">敏感博主识别</h4>
-          <!--<p>该模块用于找到微博中给定话题或领域下的敏感用户，并将得到的敏感用户列表进行排 序、更新、跟踪以及可视化展示。</p>
-          <p><a class="btn" href="/identify/">查看详情 »</a></p>-->
-        </li>
-      </div>
-        {% else %}
-        <div class="col-md-4">
-        <li class="span3" style="display:none;">
-          <a class="thumbnail" href="/identify/" target="_blank">
-            <img src="/static/img/home_thumbnail/1.png" alt="敏感博主识别" width="260" height="200">
-          </a>
-          <h4 style="text-align:center;">敏感博主识别</h4>
-          <!--<p>该模块用于找到微博中给定话题或领域下的敏感用户，并将得到的敏感用户列表进行排 序、更新、跟踪以及可视化展示。</p>
-          <p><a class="btn" href="/identify/">查看详情 »</a></p>-->
-        </li>
-      </div>
-        {% endif %}
         {% if moodlens == '1' %}
         <div class="col-md-4">
         <li class="span3">
@@ -110,6 +87,31 @@
         </li>
       </div>
         {% endif %}
+        
+        {% if identy == '1' %}
+        <div class="col-md-4">
+        <li class="span3">
+          <a class="thumbnail" id="identify1" target="_blank">
+            <img src="/static/img/home_thumbnail/1.png" alt="敏感博主识别" width="260" height="200">
+          </a>
+          <h4 style="text-align:center;">敏感博主识别</h4>
+          <!--<p>该模块用于找到微博中给定话题或领域下的敏感用户，并将得到的敏感用户列表进行排 序、更新、跟踪以及可视化展示。</p>
+          <p><a class="btn" href="/identify/">查看详情 »</a></p>-->
+        </li>
+      </div>
+        {% else %}
+        <div class="col-md-4">
+        <li class="span3" style="display:none;">
+          <a class="thumbnail" href="/identify/" target="_blank">
+            <img src="/static/img/home_thumbnail/1.png" alt="敏感博主识别" width="260" height="200">
+          </a>
+          <h4 style="text-align:center;">敏感博主识别</h4>
+          <!--<p>该模块用于找到微博中给定话题或领域下的敏感用户，并将得到的敏感用户列表进行排 序、更新、跟踪以及可视化展示。</p>
+          <p><a class="btn" href="/identify/">查看详情 »</a></p>-->
+        </li>
+      </div>
+        {% endif %}
+        
 
         {% if profile == '1' %}
         <div class="col-md-4">

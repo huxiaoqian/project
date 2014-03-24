@@ -10,19 +10,25 @@ import math
 import sys
 
 from collections import defaultdict
-
+from SSDB import SSDB
 from gexf import Gexf
 from lxml import etree
 from xapian_weibo.xapian_backend import XapianSearch
 from get_result import *
 from pyelevator import WriteBatch, Elevator
 from dynamic_xapian_weibo import target_whole_xapian_weibo, target_whole_xapian_user
-from config import cron_start as START_DATE, cron_end as END_DATE
+from config import cron_start as START_DATE, cron_end as END_DATE, SSDB_PORT, SSDB_HOST
 try:
     from config import LEVELDBPATH
 except:
     LEVELDBPATH = '/media/data/leveldb/'
     print 'not in web environment'
+
+try:
+    ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+except Exception , e:
+    print 'ssdb ', e 
+    sys.exit(0)
 
 MAX_COUNT = 15000
 FLOAT_FORMAT = '%.2f'
@@ -35,30 +41,16 @@ user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
                'followers', 'location', 'statuses_count', 'friends', 'description', \
                'created_at']
 
-def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
-    return db
-
-
-def init_db():
-    E = _default_elevator()
-    E.createdb(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_forest'))
-
-    E.disconnect()
-
-
 def save_weibo_tree(_id, whole_g):
-    E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_forest'))
-    E.Put(str(_id), whole_g)
-    E.disconnect()
-#    print _id, whole_g
+
+    result = ssdb.request('set', ['topic_%s' % str(_id),whole_g])
+    if result.code == 'ok':
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), ' %s save into SSDB' % str(_id), result.code
 
 def get_weibo_tree(_id):
-    E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_forest'))
-    v = E.Get(str(_id))
-    E.disconnect()
-    return v
-#    print _id, whole_g
+    result = ssdb.request('get', ['topic_%s' % str(_id)])
+    if result.code == 'ok' and result.data:
+        return result.data
 
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))

@@ -11,11 +11,18 @@ import buchheim_weibospread
 from gen_weibospread import Tree
 from gexf import Gexf
 from lxml import etree
+from SSDB import SSDB
 from pyelevator import WriteBatch, Elevator
-from weibo.global_config import LEVELDBPATH, xapian_search_user
+from weibo.global_config import LEVELDBPATH, xapian_search_user, SSDB_PORT, SSDB_HOST
 from xapian_weibo.xapian_backend import XapianSearch
 from flask import Blueprint, session, redirect, url_for
 from dynamic_xapian_weibo import target_whole_xapian_weibo,target_whole_xapian_user
+
+try:
+    ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+except Exception , e:
+    print 'ssdb ', e 
+    sys.exit(0)
 
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
                 'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
@@ -253,34 +260,17 @@ def graph(mid, page=1, per_page=1000):
     tree_stats['max_depth'] = max_depth
     tree_stats['max_width'] = max_width
 
-    return {'graph': graph, 'stats': tree_stats}
-
-def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
-    return db
-    
+    return {'graph': graph, 'stats': tree_stats}    
 
 def graph_from_elevator(mid):
-    try:
-        E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
-        g = E.Get(str(mid))
-        E.disconnect()
-    except Exception, e:
-        print e
-        g = ''
-
-    return g
+    result = ssdb.request('get', ['weibo_%s' % str(mid)])
+    if result.code == 'ok' and result.data:
+        return result.data
 
 def forest_from_elevator(topic_id):
-    try:
-        E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_forest'))
-        g = E.Get(str(topic_id))
-        E.disconnect()
-    except Exception, e:
-        print e
-        g = ''
-
-    return g
+    result = ssdb.request('get', ['topic_%s' % str(topic_id)])
+    if result.code == 'ok' and result.data:
+        return result.data
 
 if __name__ == '__main__':
 ##    whole_xapian_weibo = target_whole_xapian_weibo()

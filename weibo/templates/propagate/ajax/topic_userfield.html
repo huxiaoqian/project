@@ -165,7 +165,11 @@
             <div id="thumbnail">
             {% for u in topic_key_user_list %}
               <div class="grid">
-                <div id="imgholder"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
+                <div id="imgholder">
+                  <a target="_blank" href="/profile/search/person?nickname={{ u.name }}">
+                    <img type="image/jpg" src="{{ u.profile_image_url }}" media="screen">
+                  </a>
+                </div>
                 <strong class="yuan">{{ u.name }}</strong>
                 <p>微博数：{{ u.statuses_count }}</p>
                 <p>关注数：{{ u.bi_followers_count }}</p>
@@ -315,7 +319,7 @@ function getRankData(countperpage_args, limit_arg){
             user = data['news'][i];
             console.log(user);
             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
-            html += "<td style='text-align:center'>" + user['name'] + "</td>";
+            html += "<td style='text-align:center'><a target=\"_blank\" href=\"/profile/search/person?nickname=" + user['name'] +  "\">" + user['name'] +"</td>";
             html += "<td style='text-align:center'>" + user['location'] + "</td>";
             html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
             html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
@@ -346,7 +350,7 @@ function getRankData(countperpage_args, limit_arg){
               for(var i=0;i < data['news'].length;i += 1){
                   user = data['news'][i];
                   html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
-                  html += "<td style='text-align:center'>" + user['name'] + "</td>";
+                  html += "<td style='text-align:center'><a target=\"_blank\" href=\"/profile/search/person?nickname=" + user['name'] +  "\">" + user['name'] +"</td>";
                   html += "<td style='text-align:center'>" + user['location'] + "</td>";
                   html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
                   html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";

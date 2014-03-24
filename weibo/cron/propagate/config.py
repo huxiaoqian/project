@@ -29,6 +29,8 @@ if IS_PROD:
     MYSQL_DB = 'weibo'
     ELEVATOR_HOST = '192.168.2.31'
     ELEVATOR_PORT = 4141
+    SSDB_PORT = 8888
+    SSDB_HOST = '192.168.2.30'
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqldb://root:@localhost/weibo?charset=utf8'
     DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
     DYNAMIC_XAPIAN_WEIBO_STUB_FOLDER_PATH = '/home/ubuntu12/dev/data/stub/'

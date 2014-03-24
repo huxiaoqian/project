@@ -17,13 +17,13 @@ from weibo.global_config import LEVELDBPATH, xapian_search_user, SSDB_PORT, SSDB
 from xapian_weibo.xapian_backend import XapianSearch
 from flask import Blueprint, session, redirect, url_for
 from dynamic_xapian_weibo import target_whole_xapian_weibo,target_whole_xapian_user
-
+'''
 try:
     ssdb = SSDB(SSDB_HOST, SSDB_PORT)
 except Exception , e:
     print 'ssdb ', e 
     sys.exit(0)
-
+'''
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
                 'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
                 'comments_count', 'sentiment']
@@ -263,14 +263,26 @@ def graph(mid, page=1, per_page=1000):
     return {'graph': graph, 'stats': tree_stats}    
 
 def graph_from_elevator(mid):
-    result = ssdb.request('get', ['weibo_%s' % str(mid)])
-    if result.code == 'ok' and result.data:
-        return result.data
+    try:
+        ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+        result = ssdb.request('get', ['weibo_%s' % str(mid)])
+        if result.code == 'ok' and result.data:
+            return result.data
+        return None
+    except Exception, e:
+        print e
+        return None
+
 
 def forest_from_elevator(topic_id):
-    result = ssdb.request('get', ['topic_%s' % str(topic_id)])
-    if result.code == 'ok' and result.data:
-        return result.data
+    try:
+        ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+        result = ssdb.request('get', ['topic_%s' % str(topic_id)])
+        if result.code == 'ok' and result.data:
+            return result.data
+    except Exception, e:
+        print e
+        return None
 
 if __name__ == '__main__':
 ##    whole_xapian_weibo = target_whole_xapian_weibo()

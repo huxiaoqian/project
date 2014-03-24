@@ -225,6 +225,12 @@ def fieldsEn2Zh(name):
     if name == 'other':
         return '其他'
 
+def topic_default_time():
+    return u'9月 21日,2013 - 9月 21日,2013'
+
+def weibo_default_time():
+    return u'9月 1日,2013 - 9月 21日,2013'
+
 @mod.route('/page/', methods=['GET','POST'])
 def page():
     return render_template('propagate/ajax/page.html')
@@ -244,12 +250,14 @@ def index():
         if session['user'] == 'admin':
             mid = request.args.get('mid', '')
             time = str(request.args.get('time', ''))
+            topic_time = topic_default_time()
+            weibo_time = weibo_default_time()
             if mid:
                 time_str = date2timestr(time)
                 time_str = _utf_decode(time_str)
-                return render_template('propagate/search.html',mid=mid,time_str=time_str)
+                return render_template('propagate/search.html',mid=mid,time_str=time_str,topic_time=topic_time,weibo_time=weibo_time)
             else:
-                return render_template('propagate/search.html')
+                return render_template('propagate/search.html',topic_time=topic_time,weibo_time=weibo_time)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -259,12 +267,14 @@ def index():
      
                         mid = request.args.get('mid', '')
                         time = str(request.args.get('time', ''))
+                        topic_time = topic_default_time()
+                        weibo_time = weibo_default_time()
                         if mid:
                             time_str = date2timestr(time)
                             time_str = _utf_decode(time_str)
-                            return render_template('propagate/search.html',mid=mid,time_str=time_str)
+                            return render_template('propagate/search.html',mid=mid,time_str=time_str,topic_time=topic_time,weibo_time=weibo_time)
                         else:
-                            return render_template('propagate/search.html')
+                            return render_template('propagate/search.html',topic_time=topic_time,weibo_time=weibo_time)
                     else:
                         return redirect('/')
             return redirect('/')

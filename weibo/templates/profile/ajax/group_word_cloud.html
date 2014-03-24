@@ -107,7 +107,7 @@
       changChild($(this).val());  
     });
     $.ajax({
-        url: "/profile/group_topic/{{field}}?interval=90&sort=prob&limit=200&topic_type=freq&start_ts=" + start_ts + "&end_ts=" + end_ts,
+        url: "/profile/group_topic/{{field}}?sort=prob&limit=50&topic_type=freq&start_ts=" + start_ts + "&end_ts=" + end_ts,
         dataType: 'json',   
         type: "GET",   
         success: function (data) {
@@ -139,7 +139,7 @@
       changChild($(this).val());  
     });
     $.ajax({
-        url: "/profile/group_topic/{{field}}?interval=90&sort=prob&limit=200&topic_type=freq&start_ts=" + start_ts + "&end_ts=" + end_ts,
+        url: "/profile/group_topic/{{field}}?sort=prob&limit=50&topic_type=freq&start_ts=" + start_ts + "&end_ts=" + end_ts,
         dataType: 'json',   
         type: "GET",   
         success: function (data) {

@@ -332,10 +332,8 @@ def profile_group():
                     during_date = _utf_8_encode(during_time)
                     start_ts, end_ts = _time_zone(_utf_encode(during_date))
                 else:
-                    interval, datestr = _default_time()
-                    end_ts = datetimestr2ts(datestr)
-                    start_ts = end_ts - interval * 24 * 3600
                     during_time = default_timerange
+                    start_ts, end_ts = _time_zone(_utf_encode(during_time))
 
             return render_template('profile/profile_group.html', model=fieldEnName, \
                                    atfield=default_field_dict[fieldEnName], field_dict=default_field_dict, \
@@ -880,13 +878,21 @@ def personal_weibo_count(uid):
 def profile_group_topic(fieldEnName):
     if request.method == 'GET' and fieldEnName:
         result_arr = []
-        interval = None
-        sort = None
-        topic_type = None
-        limit = 50
-        window_size = 24*60*60
+
+        sort = request.args.get('sort', 'prob')
+        topic_type = request.args.get('topic_type', 'freq')
+        limit = request.args.get('limit', 50)
+        if limit:
+            limit = int(limit)
+        window_size = request.args.get('window_size', 24 * 60 * 60)
+        if window_size:
+            window_size = int(window_size)
+        
         start_ts = request.args.get('start_ts', None)
         end_ts = request.args.get('end_ts', None)
+
+        if not start_ts or not end_ts:
+            start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
 
         if start_ts:
             start_ts = int(start_ts)
@@ -894,24 +900,21 @@ def profile_group_topic(fieldEnName):
         if end_ts:
             end_ts = int(end_ts)
         
-        try:
-            interval = (end_ts - start_ts) / (24 * 3600) + 1
-            datestr = ts2datetimestr(end_ts) # '20130907'
-        except Exception, e:
-            interval, datestr = _default_time()
+        interval = (end_ts - start_ts) / (24 * 3600) + 1
+        datestr = ts2datetimestr(end_ts) # '20130907'
 
         domainid = DOMAIN_LIST.index(fieldEnName)
         date_list = last_week_to_date(datestr, interval)
 
         keywords_dict = {}
         for datestr in date_list:
-            keywords_dict.update(getDomainKeywordsData(domainid, datestr))
+            _keywords_dict = getDomainKeywordsData(domainid, datestr)
+            for k, v in _keywords_dict.iteritems():
+                try:
+                    keywords_dict[k] += v
+                except KeyError:
+                    keywords_dict[k] = v
 
-        if request.args.get('interval') and request.args.get('sort') and request.args.get('limit') and request.args.get('topic_type'):
-            interval =  int(request.args.get('interval'))
-            sort =  request.args.get('sort')
-            limit = int(request.args.get('limit'))
-            topic_type = request.args.get('topic_type')
         if topic_type == 'freq':
             keywords_sorted = sorted(keywords_dict.iteritems(), key=lambda(k, v): v, reverse=False)
             top_keywords = keywords_sorted[len(keywords_sorted)-limit:]
@@ -927,17 +930,17 @@ def profile_group_status_count(fieldEnName):
     start_ts = request.args.get('start_ts', None)
     end_ts = request.args.get('end_ts', None)
 
+    if not start_ts or not end_ts:
+        start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
+
     if start_ts:
         start_ts = int(start_ts)
 
     if end_ts:
         end_ts = int(end_ts)
     
-    try:
-        interval = (end_ts - start_ts) / (24 * 3600) + 1
-        datestr = ts2datetimestr(end_ts) # '20130907'
-    except:
-        interval, datestr = _default_time()
+    interval = (end_ts - start_ts) / (24 * 3600) + 1
+    datestr = ts2datetimestr(end_ts) # '20130907'
 
     date_list = last_week_to_date(datestr, interval)
     domainid = DOMAIN_LIST.index(fieldEnName)
@@ -950,7 +953,6 @@ def profile_group_status_count(fieldEnName):
     for datestr in date_list:
         active, important, reposts, original = getDomainCountData(domainid, datestr)
         sumcount = reposts + original
-        #if sumcount > 0:
         time_arr.append(ts2date(datetimestr2ts(datestr)).isoformat())
         total_arr.append(sumcount)
         repost_arr.append(reposts)
@@ -965,9 +967,12 @@ def _default_time():
     return interval, datestr
 
 @mod.route('/group_important/<fieldEnName>', methods=['GET', 'POST'])
-def group_active_count(fieldEnName):
+def group_important_count(fieldEnName):
     start_ts = request.args.get('start_ts', None)
     end_ts = request.args.get('end_ts', None)
+
+    if not start_ts or not end_ts:
+        start_ts, end_ts = _time_zone(_utf_encode(default_timerange))
 
     if start_ts:
         start_ts = int(start_ts)
@@ -975,11 +980,8 @@ def group_active_count(fieldEnName):
     if end_ts:
         end_ts = int(end_ts)
     
-    try:
-        interval = (end_ts - start_ts) / (24 * 3600) + 1
-        datestr = ts2datetimestr(end_ts) # '20130907'
-    except:
-        interval, datestr = _default_time()
+    interval = (end_ts - start_ts) / (24 * 3600) + 1
+    datestr = ts2datetimestr(end_ts) # '20130907'
 
     date_list = last_week_to_date(datestr, interval)
     domainid = DOMAIN_LIST.index(fieldEnName)

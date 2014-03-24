@@ -17,7 +17,7 @@ def main():
     exist_items = db.session.query(SentimentCount)\
                             .filter(SentimentCount.range==Fifteenminutes, \
     	                                 SentimentCount.ts>=begin_ts, \
-    	                                 SentimentCount.ts<end_ts).all()
+    	                                 SentimentCount.ts<=end_ts).all()
     for exist_item in exist_items:
     	  db.session.delete(exist_item)
     db.session.commit()
@@ -25,7 +25,7 @@ def main():
     exist_items = db.session.query(SentimentKeywords)\
                             .filter(SentimentKeywords.range==Fifteenminutes, \
     	                                 SentimentKeywords.ts>=begin_ts, \
-    	                                 SentimentKeywords.ts<end_ts, \
+    	                                 SentimentKeywords.ts<=end_ts, \
     	                                 SentimentKeywords.limit==keywords_limit).all()
     for exist_item in exist_items:
     	  db.session.delete(exist_item)

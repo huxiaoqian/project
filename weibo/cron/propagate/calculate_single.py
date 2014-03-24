@@ -27,12 +27,6 @@ except:
     LEVELDBPATH = '/media/data/leveldb/'
     print 'not in web environment'
 
-try:
-    ssdb = SSDB(SSDB_HOST, SSDB_PORT)
-except Exception , e:
-    print 'ssdb ', e 
-    sys.exit(0)
-
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))
 
@@ -80,10 +74,15 @@ def getNone():
     return user
 
 def save_weibo_tree(mid, whole_g, whole_stats, sub_g, sub_stats):
-
-    result = ssdb.request('set', ['weibo_%s' % str(mid),whole_g + '_\/' + json.dumps(whole_stats) + '_\/' + sub_g + '_\/' + json.dumps(sub_stats)])
-    if result.code == 'ok':
-        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), ' %s save into SSDB' % str(mid), result.code
+    try:
+        ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+        result = ssdb.request('set', ['weibo_%s' % str(mid),whole_g + '_\/' + json.dumps(whole_stats) + '_\/' + sub_g + '_\/' + json.dumps(sub_stats)])
+        if result.code == 'ok':
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), 'weibo %s save into SSDB' % str(mid), result.code
+        else:
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), 'weibo %s save into SSDB failed' % str(mid)
+    except Exception, e:
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), 'SSDB ERROR : %s ' % str(e)
 
     
 def calculate_single(_id):

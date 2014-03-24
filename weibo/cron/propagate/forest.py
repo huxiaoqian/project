@@ -24,12 +24,6 @@ except:
     LEVELDBPATH = '/media/data/leveldb/'
     print 'not in web environment'
 
-try:
-    ssdb = SSDB(SSDB_HOST, SSDB_PORT)
-except Exception , e:
-    print 'ssdb ', e 
-    sys.exit(0)
-
 MAX_COUNT = 15000
 FLOAT_FORMAT = '%.2f'
 SEG = 2
@@ -42,15 +36,26 @@ user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
                'created_at']
 
 def save_weibo_tree(_id, whole_g):
-
-    result = ssdb.request('set', ['topic_%s' % str(_id),whole_g])
-    if result.code == 'ok':
-        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), ' %s save into SSDB' % str(_id), result.code
+    try:
+        ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+        result = ssdb.request('set', ['topic_%s' % str(_id),whole_g])
+        if result.code == 'ok':
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), ' topic %s save into SSDB' % str(_id), result.code
+        else:
+            print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), ' topic %s save into SSDB failed' % str(_id)
+    except Exception, e:
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), 'SSDB ERROR : %s ' % str(e)
 
 def get_weibo_tree(_id):
-    result = ssdb.request('get', ['topic_%s' % str(_id)])
-    if result.code == 'ok' and result.data:
-        return result.data
+    try:
+        ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+        result = ssdb.request('get', ['topic_%s' % str(_id)])
+        if result.code == 'ok' and result.data:
+            return result.data
+        return None
+    except Exception, e:
+        print e
+        return None
 
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))

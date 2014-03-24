@@ -280,6 +280,7 @@ def forest_from_elevator(topic_id):
         result = ssdb.request('get', ['topic_%s' % str(topic_id)])
         if result.code == 'ok' and result.data:
             return result.data
+        return None
     except Exception, e:
         print e
         return None

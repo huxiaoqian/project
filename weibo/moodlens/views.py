@@ -198,7 +198,9 @@ def field():
                 return render_template('moodlens/index.html', time_range=default_timerange, field_en=default_field_enname, \
                                        field_zh=default_field_zhname, field_dict=default_field_dict)
             else:
+                print field_name
                 field_en = DOMAIN_LIST[DOMAIN_ZH_LIST.index(field_name)]
+                print field_en
 
             return render_template('moodlens/field_emotion.html', start_ts=start_ts, end_ts=end_ts, during=during,field_en=field_en)
             
@@ -430,13 +432,13 @@ def getPeaks():
             end_ts = ts
 
             v = emotions_kv[emotion]
-            keywords_with_count = search_func(end_ts, during, v, query=query, domain=area, top=limit, customized=customized)
-            text = ','.join([k for k, v in keywords_with_count.iteritems()])
+            #keywords_with_count = search_func(end_ts, during, v, query=query, domain=area, top=limit, customized=customized)
+            #text = ','.join([k for k, v in keywords_with_count.iteritems()])
 
             time_lis[i] = {
                 'ts': end_ts * 1000,
                 'title': title[emotion] + str(new_zeros.index(i)),
-                'text': text
+                #'text': text
             }
         
     return json.dumps(time_lis)

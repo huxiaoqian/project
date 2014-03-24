@@ -11,7 +11,8 @@ import time
 from datetime import date
 from datetime import datetime
 from model import *
-from config import db
+from SSDB import SSDB
+from config import db, SSDB_PORT, SSDB_HOST
 from xapian_weibo.xapian_backend import XapianSearch
 from BeautifulSoup import BeautifulSoup
 from city_color import province_color_map
@@ -26,6 +27,11 @@ except:
     LEVELDBPATH = '/media/data/leveldb/'
     print 'not in web environment'
 
+try:
+    ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+except Exception , e:
+    print 'ssdb ', e 
+    sys.exit(0)
 
 def ts2datetimestr(ts):
     return time.strftime('%Y%m%d', time.localtime(ts))
@@ -73,23 +79,11 @@ def getNone():
     user['name'] = 'None'
     return user
 
-def _default_elevator(db_name='default'):
-    db = Elevator(db_name, transport='tcp', endpoint='192.168.2.31:4141')
-    return db
-
-
-def init_db():
-    E = _default_elevator()
-    E.createdb(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
-
-    E.disconnect()
-
-
 def save_weibo_tree(mid, whole_g, whole_stats, sub_g, sub_stats):
-    E = _default_elevator(os.path.join(LEVELDBPATH, 'linhao_weibo_gexf_tree'))
-    E.Put(str(mid), whole_g + '_\/' + json.dumps(whole_stats) + '_\/' + sub_g + '_\/' + json.dumps(sub_stats))
-    E.disconnect()
-#    print mid,whole_g,whole_stats,sub_g,sub_stats
+
+    result = ssdb.request('set', ['weibo_%s' % str(mid),whole_g + '_\/' + json.dumps(whole_stats) + '_\/' + sub_g + '_\/' + json.dumps(sub_stats)])
+    if result.code == 'ok':
+        print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), ' %s save into SSDB' % str(mid), result.code
 
     
 def calculate_single(_id):

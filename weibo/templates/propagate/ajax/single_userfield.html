@@ -149,7 +149,11 @@
                   {% endif %}
                   {% for u in blog_key_user_list %}
                   <div class="grid">
-                    <div id="imgholder"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
+                    <div id="imgholder">
+                      <a target="_blank" href="/profile/search/person?nickname={{ u.name }}">
+                        <img type="image/jpg" src="{{ u.profile_image_url }}" media="screen">
+                      </a>
+                    </div>
                     <strong class="yuan">{{ u.name }}</strong>
                     <p>微博数：{{ u.statuses_count }}</p>
                     <p>关注数：{{ u.bi_followers_count }}</p>
@@ -208,7 +212,11 @@
                 <div id="thumbnail_part">
                   {% for u in blog_key_user_list_part %}
                     <div class="grid">
-                      <div id="imgholder_part"><img type="image/jpg" src="{{ u.profile_image_url }}" media="screen"></div>
+                      <div id="imgholder_part">
+                        <a target="_blank" href="/profile/search/person?nickname={{ u.name }}">
+                          <img type="image/jpg" src="{{ u.profile_image_url }}" media="screen">
+                        </a>
+                      </div>
                       <strong class="yuan">{{ u.name }}</strong>
                       <p>微博数：{{ u.statuses_count }}</p>
                       <p>关注数：{{ u.bi_followers_count }}</p>
@@ -374,7 +382,7 @@ function getRankData(countperpage_args, limit_arg){
         for(var i=0;i < data['news'].length;i += 1){
             user = data['news'][i];
             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
-            html += "<td style='text-align:center'>" + user['name'] + "</td>";
+            html += "<td style='text-align:center'><a target=\"_blank\" href=\"/profile/search/person?nickname=" + user['name'] +  "\">"  + user['name'] + "</td>";
             html += "<td style='text-align:center'>" + user['location'] + "</td>";
             html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
             html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
@@ -405,7 +413,7 @@ function getRankData(countperpage_args, limit_arg){
                 user = data['news'][i];
                             //console.log(user['id'],user['wordsName'],user['seWeight']);
                 html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
-                html += "<td style='text-align:center'>" + user['name'] + "</td>";
+                html += "<td style='text-align:center'><a target=\"_blank\" href=\"/profile/search/person?nickname=" + user['name'] +  "\">"  + user['name'] + "</td>";
                 html += "<td style='text-align:center'>" + user['location'] + "</td>";
                 html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
                 html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
@@ -711,7 +719,7 @@ function getRankData_part(countperpage_args, limit_arg){
         for(var i=0;i < data['news'].length;i += 1){
             user = data['news'][i];
             html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
-            html += "<td style='text-align:center'>" + user['name'] + "</td>";
+            html += "<td style='text-align:center'><a target=\"_blank\" href=\"/profile/search/person?nickname=" + user['name'] +  "\">"  + user['name'] + "</td>";
             html += "<td style='text-align:center'>" + user['location'] + "</td>";
             html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
             html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";
@@ -742,7 +750,7 @@ function getRankData_part(countperpage_args, limit_arg){
                 user = data['news'][i];
                             //console.log(user['id'],user['wordsName'],user['seWeight']);
                 html += "<tr><td style='text-align:center;display:none;'>" + user['id'] + "</td>";
-                html += "<td style='text-align:center'>" + user['name'] + "</td>";
+                html += "<td style='text-align:center'><a target=\"_blank\" href=\"/profile/search/person?nickname=" + user['name'] +  "\">"  + user['name'] + "</td>";
                 html += "<td style='text-align:center'>" + user['location'] + "</td>";
                 html += "<td style='text-align:center'>" + user['followers_count'] + "</td>";
                 html += "<td style='text-align:center'>" + user['bi_followers_count'] + "</td>";

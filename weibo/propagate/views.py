@@ -226,10 +226,10 @@ def fieldsEn2Zh(name):
         return '其他'
 
 def topic_default_time():
-    return u'9月 21日,2013 - 9月 21日,2013'
+    return u'9月 21,2013 - 9月 21,2013'
 
 def weibo_default_time():
-    return u'9月 1日,2013 - 9月 21日,2013'
+    return u'9月 1,2013 - 9月 21,2013'
 
 @mod.route('/page/', methods=['GET','POST'])
 def page():

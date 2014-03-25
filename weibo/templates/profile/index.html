@@ -37,50 +37,31 @@
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>微博数:</b></font>
       <div class="btn-group">
         <a  id="statuses_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-          0-1万<span class="caret"></span></a>
+          {{ statuses_range[0][1] }} <span class="caret"></span></a>
         <ul id="statuses_count_window_size_dropdown_menu" class="dropdown-menu">
-          <li><a href="#" onclick="choose_statuses_count('statuses_count', 1);" data-toggle="tab">0-1万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 2);" data-toggle="tab">1-2万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 3);" data-toggle="tab">2-3万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 4);" data-toggle="tab">3-4万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 5);" data-toggle="tab">4-5万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 6);" data-toggle="tab">5-6万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 7);" data-toggle="tab">6-7万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 8);" data-toggle="tab">7-8万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 9);" data-toggle="tab">8-9万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 10);" data-toggle="tab">9-10万</a></li>
+          {% for k, v in statuses_range %}
+              <li><a href="#" onclick="choose_statuses_count('statuses_count', '{{ k }}');" data-toggle="tab">{{ v }}</a></li>
+          {% endfor %}
         </ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp粉丝数:</b></font>
       <div class="btn-group">
         <a  id="followers_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-        0-600万<span class="caret"></span></a>
+        {{ followers_range[0][1] }}<span class="caret"></span></a>
         <ul id="followers_count_window_size_dropdown_menu" class="dropdown-menu">
-          <li><a href="#" onclick="choose_followers_count('followers_count', 600);" data-toggle="tab">0-600万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 1200);" data-toggle="tab">600-1200万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 1800);" data-toggle="tab">1200-1800万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 2400);" data-toggle="tab">1800-2400万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 3000);" data-toggle="tab">2400-3000万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 3600);" data-toggle="tab">3000-3600万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 4200);" data-toggle="tab">3600-4200万</a></li>
-                <li><a href="#" onclick="choose_followers_count('followers_count', 4800);" data-toggle="tab">4200-4800万</a></li>
+          {% for k, v in followers_range %}
+              <li><a href="#" onclick="choose_followers_count('followers_count', '{{ k }}');" data-toggle="tab">{{ v }}</a></li>
+          {% endfor %}
         </ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp关注数:</b></font>
       <div class="btn-group">
         <a  id="friends_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-          0-400<span class="caret"></span></a>
+          {{ friends_range[0][1] }}<span class="caret"></span></a>
         <ul id="friends_count_window_size_dropdown_menu" class="dropdown-menu">
-          <li><a href="#" onclick="choose_friends_count('friends_count', 400);" data-toggle="tab">0-400</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 800);" data-toggle="tab">400-800</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 1200);" data-toggle="tab">800-1200</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 1600);" data-toggle="tab">1200-1600</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 2000);" data-toggle="tab">1600-2000</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 2400);" data-toggle="tab">2000-2400</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 2800);" data-toggle="tab">2400-2800</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 3200);" data-toggle="tab">2800-3200</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 3600);" data-toggle="tab">3200-3600</a></li>
-                <li><a href="#" onclick="choose_friends_count('friends_count', 4000);" data-toggle="tab">3600-4000</a></li>
+          {% for k, v in friends_range %}
+              <li><a href="#" onclick="choose_friends_count('friends_count', '{{ k }}');" data-toggle="tab">{{ v }}</a></li>
+          {% endfor %}
         </ul>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp排序标准:</b></font>
@@ -101,12 +82,13 @@
           <option value="100"> 100 </option>
           <option value="300"> 300 </option>
           <option value="500"> 500 </option>
+          <option value="1000"> 1000 </option>
         </select></span><input name="search_top_n" style="width:75px;position:absolute;left:15px;overflow:hidden;" value="100" class="span1">
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>条结果</b></font>  
-      <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="1">
-      <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
-      <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">
+      <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="{{ statuses_range[0][0] }}">
+      <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="{{ followers_range[0][0] }}">
+      <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="{{ friends_range[0][0] }}">
       <input id="rankcount_rank_method" type="hidden" name="rankcount" value="followers_count">
       <input id="topic_keywords" name="province_str" type="hidden" >
       &nbsp&nbsp&nbsp
@@ -331,30 +313,15 @@
       $("#"+range+"_window_size_choosen").parent().removeClass('open');
       $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
   }
+
   function choose_statuses_count(range, window) {
       $("#"+range+"_window_size").val(window);
-      cn_window = '';
-      if(window==1)
-          cn_window = '0-1万';
-      else if(window==2)
-    cn_window = '1-2万';
-      else if(window==3)
-    cn_window = '2-3万';
-      else if(window==4)
-    cn_window = '3-4万';
-      else if(window==5)
-      cn_window = '4-5万';
-      else if(window==6)
-      cn_window = '5-6万';
-      else if(window==7)
-      cn_window = '6-7万';
-      else if(window==8)
-      cn_window = '7-8万';
-      else if(window==9)
-      cn_window = '8-9万';
-      else if(window==10)
-      cn_window = '9-10万';
-      $("#"+range+"_window_size_choosen").text(cn_window);
+      var window_value2text = {};
+      {% for k, v in statuses_range %}
+          window_value2text['{{ k }}'] = '{{ v }}';
+      {% endfor %}
+
+      $("#"+range+"_window_size_choosen").text(window_value2text[window]);
       $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
       //close dropdown
       $("#"+range+"_window_size_choosen").parent().removeClass('open');
@@ -363,57 +330,24 @@
 
   function choose_followers_count(range, window) {
       $("#"+range+"_window_size").val(window);
-      cn_window = '';
-      if(window==600)
-          cn_window = '0-600万';
-      else if(window==1200)
-      cn_window = '600-1200万';
-      else if(window==1800)
-      cn_window = '1200-1800万';
-      else if(window==2400)
-      cn_window = '1800-2400万';
-      else if(window==3000)
-      cn_window = '2400-3000万';
-      else if(window==3600)
-      cn_window = '3000-3600万';
-      else if(window==4200)
-      cn_window = '3600-4200万';
-      else if(window==4800)
-      cn_window = '4200-4800万';
-      else if(window==5400)
-      cn_window = '4800-5400万';
-      else if(window==6000)
-      cn_window = '5400-6000万';
-      $("#"+range+"_window_size_choosen").text(cn_window);
+      var window_value2text = {};
+      {% for k, v in followers_range %}
+          window_value2text['{{ k }}'] = '{{ v }}';
+      {% endfor %}
+      $("#"+range+"_window_size_choosen").text(window_value2text[window]);
       $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
       //close dropdown
       $("#"+range+"_window_size_choosen").parent().removeClass('open');
       $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
   }
+
   function choose_friends_count(range, window) {
       $("#"+range+"_window_size").val(window);
-      cn_window = '';
-      if(window==400)
-          cn_window = '0-400';
-      else if(window==800)
-      cn_window = '400-800';
-      else if(window==1200)
-      cn_window = '800-1200';
-      else if(window==1600)
-      cn_window = '1200-1600';
-      else if(window==2000)
-      cn_window = '1600-2000';
-      else if(window==2400)
-      cn_window = '2000-2400';
-      else if(window==2800)
-      cn_window = '2400-2800';
-      else if(window==3200)
-      cn_window = '2800-3200';
-      else if(window==3600)
-      cn_window = '3200-3600';
-      else if(window==4000)
-      cn_window = '3600-4000';
-      $("#"+range+"_window_size_choosen").text(cn_window);
+      var window_value2text = {};
+      {% for k, v in friends_range %}
+          window_value2text['{{ k }}'] = '{{ v }}';
+      {% endfor %}
+      $("#"+range+"_window_size_choosen").text(window_value2text[window]);
       $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
       //close dropdown
       $("#"+range+"_window_size_choosen").parent().removeClass('open');

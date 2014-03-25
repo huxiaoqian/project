@@ -67,10 +67,61 @@ def get_default_profile_person_time():
     return ts2datetimestr(datetimestr2ts(LATEST_DATE) - 24 * 3600)
 
 
+def get_default_statuses_range():
+    max_statuses_count = 10000000
+    statuses_count_range = [('0-10000', u'0-1万'), ('10000-20000', u'1-2万'), ('20000-30000', u'2-3万'), \
+                            ('30000-40000', u'3-4万'), ('40000-50000', u'4-5万'), ('50000-60000', u'5-6万'), \
+                            ('60000-70000', u'6-7万'), ('70000-80000', u'7-8万'), ('80000-90000', u'8-9万'), \
+                            ('90000-100000', u'9-10万'), ('100000-%s' % max_statuses_count, u'10万以上')]
+    return statuses_count_range
+
+
+def get_default_followers_range():
+    max_followers_count = 100000000
+    followers_count_range = [('0-10', u'0-10'), ('10-100', u'10-100'), ('100-1000', u'100-1000'), \
+                             ('1000-10000', u'1000-1万'), ('10000-100000', u'1-10万'), \
+                             ('100000-1000000', u'10-100万'), ('1000000-10000000', u'100-1000万'), \
+                             ('10000000-%s' % max_followers_count, u'1000万以上')]
+    return followers_count_range
+
+
+def get_default_friends_range():
+    max_friends_count = 10000
+    friends_count_range = [('0-400', u'0-400'), ('400-800', u'400-800'), ('800-1200', u'800-1200'), \
+                           ('1200-1600', u'1200-1600'), ('1600-2000', u'1600-2000'), \
+                           ('2000-2400', u'2000-2400'), ('2400-2800', u'2400-2800'), \
+                           ('2800-3200', u'2800-3200'), ('3200-3600', u'3200-3600'), \
+                           ('3600-4000', u'3600-4000'), ('4000-%s' % max_friends_count, u'4000以上')]
+    return friends_count_range
+
+
+def get_default_province():
+    province = [u'北京', u'上海', u'香港', u'台湾', u'重庆', u'澳门', \
+                u'天津', u'江苏', u'浙江', u'四川', u'江西', u'福建', \
+                u'青海', u'吉林', u'贵州', u'陕西', u'山西', u'河北', \
+                u'湖北', u'辽宁', u'湖南', u'山东', u'云南', u'河南', \
+                u'广东', u'安徽', u'甘肃', u'海南', u'黑龙江', u'内蒙古', \
+                u'新疆', u'广西', u'宁夏', u'西藏', u'海外']
+    return province    
+
+
 default_timerange = get_default_timerange()
 default_field_dict = get_default_field_dict()
 default_field_enname, default_field_zhname = get_default_field_name()
 default_profile_person_time = get_default_profile_person_time()
+default_statuses_range = get_default_statuses_range()
+default_followers_range = get_default_followers_range()
+default_friends_range = get_default_friends_range()
+default_province = get_default_province()
+default_statuses_dict = {}
+default_followers_dict = {}
+default_friends_dict = {}
+for sk, sv in default_statuses_range:
+    default_statuses_dict[sk] = sv
+for sk, sv in default_followers_range:
+    default_followers_dict[sk] = sv 
+for sk, sv in default_friends_range:
+    default_friends_dict[sk] = sv
 
 
 def _time_zone(stri):
@@ -96,18 +147,6 @@ def _time_zone(stri):
     return int(start_ts), int(end_ts)
 
 
-def getStaticInfo():
-    statuscount = [0, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
-    friendscount = [0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000]
-    followerscount = [0, 6000000, 12000000, 18000000, 24000000, 30000000, 36000000, 42000000, 48000000]
-    province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外']
-    statusRange = [{'lowBound': statuscount[i], 'upBound': statuscount[i+1]} for i in range(len(statuscount)-1)]
-    friendsRange = [{'lowBound': friendscount[i], 'upBound': friendscount[i+1]} for i in range(len(friendscount)-1)]
-    followersRange = [{'lowBound': followerscount[i], 'upBound': followerscount[i+1]} for i in range(len(followerscount)-1)]
-    province = [{'province': unicode(i, 'utf-8')} for i in province]
-
-    return statusRange, friendsRange, followersRange, province
-
 @mod.route('/log_in', methods=['GET','POST'])
 def log_in():
     session['logged_in'] = request.form['log_in']
@@ -120,10 +159,11 @@ def log_in():
 @mod.route('/', methods=['GET','POST'])
 def index():
     if 'logged_in' in session and session['logged_in']:
-        statuscount, friendscount, followerscount, province = getStaticInfo()
         if session['user'] == 'admin':
             return render_template('profile/index.html', timerange=default_timerange, field_dict=default_field_dict, \
-                                   field_zh=default_field_zhname, field_en=default_field_enname)
+                                   field_zh=default_field_zhname, field_en=default_field_enname, \
+                                   statuses_range=default_statuses_range, followers_range=default_followers_range, \
+                                   friends_range=default_friends_range)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
@@ -131,38 +171,61 @@ def index():
                     identy = pa.identify
                     if identy == 1:
                         return render_template('profile/index.html', timerange=default_timerange, field_dict=default_field_dict, \
-                                   field_zh=default_field_zhname, field_en=default_field_enname)
+                                   field_zh=default_field_zhname, field_en=default_field_enname, \
+                                   statuses_range=default_statuses_range, followers_range=default_followers_range, \
+                                   friends_range=default_friends_range)
                     else:
                         return redirect('/')
             return redirect('/')
     else:
         return redirect('/')
 
+
+def parseRangePara(rangestr):
+    low, up = rangestr.strip().split('-')
+    return int(low), int(up)
+
+
 @mod.route('/search/', methods=['GET', 'POST'])
 @mod.route('/search/<model>', methods=['GET', 'POST'])
 def profile_search(model='hotest'):
     default_search_time = get_default_search_time()
+    statuses_count_upBound = default_statuses_range
+    friends_count_upBound = default_friends_range
+    followers_count_upBound = default_followers_range
+    local_statuses_range = statuses_count_upBound[0]
+    local_followers_range = followers_count_upBound[0]
+    local_friends_range = friends_count_upBound[0]
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
             if request.method == 'GET':
-                statuscount, friendscount, followerscount, province = getStaticInfo()
-                province_str = ''
-                province = ['北京',  '上海', '香港', '台湾', '重庆', '澳门', '天津', '江苏', '浙江', '四川', '江西', '福建', '青海', '吉林', '贵州', '陕西', '山西', '河北', '湖北', '辽宁', '湖南', '山东', '云南', '河南', '广东', '安徽', '甘肃', '海南', '黑龙江', '内蒙古', '新疆', '广西', '宁夏', '西藏', '海外'] 
-                for pro in province:
-                    province_str += unicode(pro, 'utf-8') + ','
+                province = default_province
+                province_str = ','.join(province)
+
                 if model == 'person':
                     nickname = urllib2.unquote(request.args.get('nickname'))
-                    return render_template('profile/profile_search.html',statuscount=statuscount, \
-                                           friendscount=friendscount, followerscount=followerscount, \
+                    return render_template('profile/profile_search.html', statusescount_up=statuses_count_upBound, \
+                                           friendscount_up=friends_count_upBound, followerscount_up=followers_count_upBound, \
                                            location=province_str, model=model, result=None, nickname=nickname, \
-                                           field_dict=default_field_dict, time=default_search_time)
+                                           field_dict=default_field_dict, time=default_search_time, \
+                                           local_statusescount_up=local_statuses_range, local_friendscount_up=local_friends_range, \
+                                           local_followerscount_up=local_followers_range)
                 elif model == 'find':
-                    statuses_count_upBound = request.args.get('statuses_count_upBound',None)
-                    friends_count_upBound = request.args.get('friends_count_upBound',None)
-                    followers_count_upBound = request.args.get('followers_count_upBound',None)
-                    top_n = request.args.get('search_top_n',None)
-                    province_str = request.args.get('province_str',None)
-                    rank_str = request.args.get('rankcount',None)
+                    if request.args.get('statuses_count_upBound', None):
+                        local_statuses_range = request.args.get('statuses_count_upBound', None)
+                        local_statuses_range = (local_statuses_range, default_statuses_dict[local_statuses_range])
+                    
+                    if request.args.get('friends_count_upBound',None):
+                        local_friends_range = request.args.get('friends_count_upBound',None)
+                        local_friends_range = (local_friends_range, default_friends_dict[local_friends_range])
+
+                    if request.args.get('followers_count_upBound',None):
+                        local_followers_range = request.args.get('followers_count_upBound',None)
+                        local_followers_range = (local_followers_range, default_followers_dict[local_followers_range])
+
+                    top_n = request.args.get('search_top_n', None)
+                    province_str = request.args.get('province_str', None)
+                    rank_str = request.args.get('rankcount', None)
                     rank_str_zh = ''
                     if rank_str == 'followers_count':
                         rank_str_zh = u'粉丝数降序'
@@ -176,30 +239,21 @@ def profile_search(model='hotest'):
                         result_count = int(top_n)
                     else:
                         result_count = 100
-                    if(statuses_count_upBound):
-                        statusescount_up = (int(statuses_count_upBound))*10000
-                    else:
-                        statusescount_up = 100000
 
-                    if(friends_count_upBound):
-                        friendscount_up = int(friends_count_upBound)
-                    else:
-                        friendscount_up = 400
-
-                    if(followers_count_upBound):
-                        followerscount_up = (int(followers_count_upBound))*10000
-                    else:
-                        followerscount_up = 6000000
-
-                    return render_template('profile/profile_search.html',result_count = result_count, statusescount_up = statusescount_up, \
-                                           friendscount_up = friendscount_up,followerscount_up = followerscount_up, \
-                                           location = province_str, model = model,rankcount=rank_str, field_dict=default_field_dict, \
-                                           time=default_search_time, sort=rank_str_zh)  
+                    return render_template('profile/profile_search.html',result_count=result_count, statusescount_up=statuses_count_upBound, \
+                                           friendscount_up=friends_count_upBound, followerscount_up=followers_count_upBound, \
+                                           location=province_str, model=model, rankcount=rank_str, field_dict=default_field_dict, \
+                                           time=default_search_time, sort=rank_str_zh, \
+                                           local_statusescount_up=local_statuses_range, local_friendscount_up=local_friends_range, \
+                                           local_followerscount_up=local_followers_range)  
                 else:
-                    return render_template('profile/profile_search.html',statuscount=statuscount, \
-                                           friendscount=friendscount, followerscount=followerscount, \
+                    return render_template('profile/profile_search.html', statusescount_up=statuses_count_upBound, \
+                                           friendscount_up=friends_count_upBound, followerscount_up=followers_count_upBound, \
                                            location=province_str, model=model, result=None, \
-                                           field_dict=default_field_dict, time=default_search_time)
+                                           field_dict=default_field_dict, time=default_search_time, \
+                                           local_statusescount_up=local_statuses_range, local_friendscount_up=local_friends_range, \
+                                           local_followerscount_up=local_followers_range)
+
             if request.method == 'POST' and request.form['page']:
                 if model == 'newest':
                     top_n = 1000
@@ -277,9 +331,9 @@ def profile_search(model='hotest'):
                         
                     endoffset = startoffset + COUNT_PER_PAGE - 1
                     result_count = int(request.form['result_count'])
-                    statusescount_up = int(request.form['statusescount_up'])
-                    friendscount_up = int(request.form['friendscount_up'])
-                    followerscount_up = int(request.form['followerscount_up'])
+                    statusescount_low, statusescount_up = parseRangePara(request.form['statusescount_up'])
+                    friendscount_low, friendscount_up = parseRangePara(request.form['friendscount_up'])
+                    followerscount_low, followerscount_up = parseRangePara(request.form['followerscount_up'])
                     province_str = request.form['province']
                     rankcount = request.form['rankcount']
                     province = province_str.split(',')
@@ -287,9 +341,9 @@ def profile_search(model='hotest'):
 
                     query_dict = {}
                     query_dict['$and'] = []
-                    query_dict['$and'].append({'statuses_count':{'$gt': statusescount_up - 10000,'$lt': statusescount_up }})
-                    query_dict['$and'].append({'followers_count':{'$gt': followerscount_up - 6000000 ,'$lt': followerscount_up}})
-                    query_dict['$and'].append({'friends_count':{'$gt': friendscount_up - 400 ,'$lt': friendscount_up}})
+                    query_dict['$and'].append({'statuses_count':{'$gt': statusescount_low, '$lt': statusescount_up }})
+                    query_dict['$and'].append({'followers_count':{'$gt': followerscount_low, '$lt': followerscount_up}})
+                    query_dict['$and'].append({'friends_count':{'$gt': friendscount_low, '$lt': friendscount_up}})
                     or_dict = {}
                     or_dict['$or'] = []
                     for pro in province:
@@ -324,7 +378,6 @@ def profile_search(model='hotest'):
 def profile_group():
     if 'logged_in' in session and session['logged_in']:
         if session['user'] == 'admin':
-            statuscount, friendscount, followerscount, province = getStaticInfo()
             if request.method == 'GET':
                 fieldEnName = request.args.get('fieldEnName', None)
                 during_time = request.args.get('during_time', None)
@@ -853,7 +906,6 @@ def personal_weibo_count(uid):
         post_arr.append(active)
         repost_arr.append(reposts)
         fipost_arr.append(original)
-        print important
         im_arr.append(important)
         emot_arr.append(emoticon)
         time_arr.append(datestr)

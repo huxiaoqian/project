@@ -6,12 +6,6 @@ from SSDB import SSDB
 from weibo.global_config import SSDB_PORT, SSDB_HOST
 
 
-try:
-	  ssdb = SSDB(SSDB_HOST, SSDB_PORT)
-except Exception , e:
-	  print 'ssdb ', e 
-	  sys.exit(0)
-
 PERSON_COUNTS_SSDB_KV = 'c_%s_%s' #  % datestr as '20130901', uid,
 PERSON_INTERACT_SSDB_KV = 'i_%s_%s' #  % datestr as '20130901', uid,
 PERSON_KEYWORDS_SSDB_KV = 'k_%s_%s' #  % datestr as '20130901', uid,
@@ -26,6 +20,12 @@ def getPersonData(uid, datestr):
     direct_interact = {}
     retweeted_interact = {}
     keywords_dict = {}
+
+    try:
+      ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+    except Exception , e:
+      print 'ssdb ', e
+      return active, important, reposts, original, emoticon, direct_interact, retweeted_interact, keywords_dict
 
     c_ssdb_resp = ssdb.request('get', [PERSON_COUNTS_SSDB_KV % (str(datestr), str(uid))])
     i_ssdb_resp = ssdb.request('get', [PERSON_INTERACT_SSDB_KV % (str(datestr), str(uid))])
@@ -52,6 +52,13 @@ def getPersonData(uid, datestr):
 
 def getDomainKeywordsData(domain, datestr):
     keywords_dict = {}
+
+    try:
+      ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+    except Exception , e:
+      print 'ssdb ', e
+      return keywords_dict
+
     ssdb_resp = ssdb.request('hget', [DOMAIN_TOPK_KEYWORDS_SSDB_HASH % datestr, str(domain)])
     if ssdb_resp.code == 'ok' and ssdb_resp.data:
         keywords_dict = json.loads(ssdb_resp.data)
@@ -62,6 +69,12 @@ def getDomainKeywordsData(domain, datestr):
 def getDomainBasic(domain, datestr):
     verified_count = unverified_count = 0 
     province_dict = {}
+
+    try:
+      ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+    except Exception , e:
+      print 'ssdb ', e
+      return verified_count, unverified_count, province_dict
 
     ssdb_resp = ssdb.request('hget', [DOMAIN_BASIC_SSDB_HASH % datestr, str(domain)])
     if ssdb_resp.code == 'ok' and ssdb_resp.data:
@@ -75,6 +88,13 @@ def getDomainBasic(domain, datestr):
 
 def getDomainCountData(domain, datestr):
     active = important = reposts = original = 0
+
+    try:
+      ssdb = SSDB(SSDB_HOST, SSDB_PORT)
+    except Exception , e:
+      print 'ssdb ', e
+      return active, important, reposts, original
+      
     ssdb_resp = ssdb.request('hget', [DOMAIN_AIRO_SSDB_HASH % datestr, str(domain)])
     if ssdb_resp.code == 'ok' and ssdb_resp.data:
         active, important, reposts, original = ssdb_resp.data.split('_\/')

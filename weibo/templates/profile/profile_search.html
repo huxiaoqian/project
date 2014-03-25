@@ -362,69 +362,41 @@
       <form id="profile_search" action="/profile/search/find" class="form-inline" method="GET">
         微博数:
         <div class="btn-group">
-          <a  id="statuses_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            {%if statusescount_up%}
-              {{(statusescount_up-10000) / 10000 }}万-{{statusescount_up  / 10000 }}万<span class="caret"></span></a>
-            {% else %}
-              0-1万<span class="caret"></span></a>
-            {% endif %}
+          <a id="statuses_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            {{ local_statusescount_up[1] }}
+            <span class="caret"></span></a>
           <ul id="statuses_count_window_size_dropdown_menu" class="dropdown-menu">
-            <li><a href="#" onclick="choose_statuses_count('statuses_count', 1);" data-toggle="tab">0-1万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 2);" data-toggle="tab">1-2万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 3);" data-toggle="tab">2-3万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 4);" data-toggle="tab">3-4万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 5);" data-toggle="tab">4-5万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 6);" data-toggle="tab">5-6万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 7);" data-toggle="tab">6-7万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 8);" data-toggle="tab">7-8万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 9);" data-toggle="tab">8-9万</a></li>
-                <li><a href="#" onclick="choose_statuses_count('statuses_count', 10);" data-toggle="tab">9-10万</a></li>
+            {% for k, v in statusescount_up %}
+              <li><a href="#" onclick="choose_statuses_count('statuses_count', '{{ k }}');" data-toggle="tab">{{ v }}</a></li>
+            {% endfor %}
           </ul>
         </div>
         粉丝数：
         <div class="btn-group">
           <a  id="followers_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            {%if followerscount_up%}
-              {{(followerscount_up-6000000) / 10000 }}万-{{followerscount_up  / 10000 }}万<span class="caret"></span></a>
-            {% else %}
-              0-600万<span class="caret"></span></a>
-            {% endif %}
+            {{ local_followerscount_up[1] }}
+            <span class="caret"></span></a>
           <ul id="followers_count_window_size_dropdown_menu" class="dropdown-menu">
-            <li><a href="#" onclick="choose_followers_count('followers_count', 600);" data-toggle="tab">0-600万</a></li>
-                  <li><a href="#" onclick="choose_followers_count('followers_count', 1200);" data-toggle="tab">600-1200万</a></li>
-                  <li><a href="#" onclick="choose_followers_count('followers_count', 1800);" data-toggle="tab">1200-1800万</a></li>
-                  <li><a href="#" onclick="choose_followers_count('followers_count', 2400);" data-toggle="tab">1800-2400万</a></li>
-                  <li><a href="#" onclick="choose_followers_count('followers_count', 3000);" data-toggle="tab">2400-3000万</a></li>
-                  <li><a href="#" onclick="choose_followers_count('followers_count', 3600);" data-toggle="tab">3000-3600万</a></li>
-                  <li><a href="#" onclick="choose_followers_count('followers_count', 4200);" data-toggle="tab">3600-4200万</a></li>
-                  <li><a href="#" onclick="choose_followers_count('followers_count', 4800);" data-toggle="tab">4200-4800万</a></li>
+            {% for k, v in followerscount_up %}
+              <li><a href="#" onclick="choose_followers_count('followers_count', '{{ k }}');" data-toggle="tab">{{ v }}</a></li>
+            {% endfor %}
           </ul>
         </div>
         关注数：
         <div class="btn-group">
           <a  id="friends_count_window_size_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            {%if friendscount_up%}
-              {{friendscount_up-400}}-{{friendscount_up}}<span class="caret"></span></a>
-            {% else %}
-              0-400<span class="caret"></span></a>
-            {% endif %}
+            {{ local_friendscount_up[1] }}
+            <span class="caret"></span></a>
           <ul id="friends_count_window_size_dropdown_menu" class="dropdown-menu">
-            <li><a href="#" onclick="choose_friends_count('friends_count', 400);" data-toggle="tab">0-400</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 800);" data-toggle="tab">400-800</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 1200);" data-toggle="tab">800-1200</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 1600);" data-toggle="tab">1200-1600</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 2000);" data-toggle="tab">1600-2000</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 2400);" data-toggle="tab">2000-2400</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 2800);" data-toggle="tab">2400-2800</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 3200);" data-toggle="tab">2800-3200</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 3600);" data-toggle="tab">3200-3600</a></li>
-                  <li><a href="#" onclick="choose_friends_count('friends_count', 4000);" data-toggle="tab">3600-4000</a></li>
+            {% for k, v in friendscount_up %}
+              <li><a href="#" onclick="choose_friends_count('friends_count', '{{ k }}');" data-toggle="tab">{{ v }}</a></li>
+            {% endfor %}
           </ul>
         </div>
         排序标准：
         <div class="btn-group">
           <a  id="rankcount_rank_method_choosen" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            {%if rankcount%}
+            {%if rankcount %}
               {%if rankcount=='followers_count'%}粉丝数{%endif%}
               {%if rankcount=='friends_count'%}关注数{%endif%}
               {%if rankcount=='statuses_count'%}微博数{%endif%}
@@ -441,10 +413,10 @@
         </div>
         前<input name="search_top_n" type="text" value="{%if result_count%}{{result_count}}{%else%}100{%endif%}" class="span1">条结果
         已查询地区<input name="select " type = "text" value = "{%if location%}{{location}}{%endif%}" class = "span2">
-        <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="200">
-        <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="600">
-        <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="400">
-        <input id="rankcount_rank_method" type="hidden" name="rankcount" value="followers_count">
+        <input id="statuses_count_window_size" type="hidden" name="statuses_count_upBound" value="{{ local_statusescount_up[0] }}">
+        <input id="followers_count_window_size" type="hidden" name="followers_count_upBound" value="{{ local_followerscount_up[0] }}">
+        <input id="friends_count_window_size" type="hidden" name="friends_count_upBound" value="{{ local_friendscount_up[0] }}">
+        <input id="rankcount_rank_method" type="hidden" name="rankcount" value="{{ rankcount }}">
         <input id="topic_keywords" name="province_str" type="hidden" >
         <input type="submit" class="btn btn-primary" onclick="choose_province()" value="分析">
       </form>
@@ -689,7 +661,7 @@
 {% block script %}
 <script type="text/javascript" src="/static/js/profile/jquery.wookmark.js"></script>
 <script type="text/javascript" src="/static/js/profile/blocksit.min.js"></script>
-<script type="text/javascript" src="/static/js/profile/choose.js"></script>
+<!--<script type="text/javascript" src="/static/js/profile/choose.js"></script>-->
 <script type="text/javascript" src="/static/js/identify/topic_selector.js"></script>
 <script>
   var options = {
@@ -781,7 +753,7 @@
         $(document).unbind('scroll');
         dataparams = {page: page, nickname: '{{nickname}}'};
       {% elif  model == 'find' %}  
-        dataparams = {result_count: '{{result_count}}',statusescount_up:'{{statusescount_up}}',friendscount_up:'{{friendscount_up}}', followerscount_up:'{{followerscount_up}}',province: '{{location}}',page: page,rankcount:'{{rankcount}}'};
+        dataparams = {result_count: '{{result_count}}',statusescount_up:'{{ local_statusescount_up[0] }}',friendscount_up:'{{ local_friendscount_up[0] }}', followerscount_up:'{{ local_followerscount_up[0] }}',province: '{{location}}',page: page,rankcount:'{{rankcount}}'};
       {% else %}  
         dataparams = {page: page};
       {% endif %}
@@ -937,6 +909,133 @@ $(document).ready(function(){
   loadData();
   backToTop();  
 });
+
+
+  function choose_field(prefix, area){
+    $("#topic_hidden").val(area)
+    cn_area = '';
+    if(area=='finance')
+        cn_area = '财经';
+    else if(area=='media')
+        cn_area = '媒体';
+    else if(area=='sports')
+        cn_area = '体育';
+    else if(area=='fashion')
+        cn_area = '时尚';
+    else if(area=='culture')
+        cn_area = '文化';
+    else if(area=='education')
+        cn_area = '教育';
+    else if(area=='technology')
+        cn_area = '科技';
+    else if(area=='abroad')
+        cn_area = '境外';
+    else if(area=='entertainment')
+        cn_area = '娱乐';
+    else if(area=='university')
+        cn_area = '高校微博';
+    else if(area=='homeadmin')
+        cn_area = '境内机构';
+    else if(area=='abroadadmin')
+        cn_area = '境外机构';
+    else if(area=='homemedia')
+        cn_area = '境内媒体';
+    else if(area=='abroadadmin')
+        cn_area = '境外媒体';
+    else if(area=='folkorg')
+        cn_area = '民间组织';
+    else if(area=='lawyer')
+        cn_area = '律师';
+    else if(area=='politician')
+        cn_area = '政府官员';
+    else if(area=='mediaworker')
+        cn_area = '媒体人士';
+    else if(area=='activer')
+        cn_area = '活跃人士';
+    else if(area=='grassroot')
+        cn_area = '草根';
+    else if(area=='other')
+        cn_area = '其它';
+    $("#area_rank_method_choosen").text(cn_area);
+    $("#area_rank_method_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#area_rank_method_choosen").parent().removeClass('open');
+    $("#area_rank_method_dropdown_menu").children().removeClass('active');
+  }
+
+function choose_window(range, window) {
+    $("#"+range+"_window_size").val(window);
+    cn_window = '';
+    if(window==1)
+        cn_window = '1天';
+    else if(window==7)
+  cn_window = '1周';
+    else if(window==30)
+  cn_window = '1个月';
+    else if(window==90)
+  cn_window = '3个月';
+    $("#"+range+"_window_size_choosen").text(cn_window);
+    $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_window_size_choosen").parent().removeClass('open');
+    $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+}
+function choose_statuses_count(range, window) {
+    $("#"+range+"_window_size").val(window);
+    var window_value2text = {};
+    {% for k, v in statusescount_up %}
+        window_value2text['{{ k }}'] = '{{ v }}';
+    {% endfor %}
+    
+    $("#"+range+"_window_size_choosen").text(window_value2text[window]);
+    $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_window_size_choosen").parent().removeClass('open');
+    $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+}
+
+function choose_followers_count(range, window) {
+    $("#"+range+"_window_size").val(window);
+    var window_value2text = {};
+      {% for k, v in followerscount_up %}
+          window_value2text['{{ k }}'] = '{{ v }}';
+      {% endfor %}
+    $("#"+range+"_window_size_choosen").text(window_value2text[window]);
+    $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_window_size_choosen").parent().removeClass('open');
+    $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+}
+function choose_friends_count(range, window) {
+    $("#"+range+"_window_size").val(window);
+    var window_value2text = {};
+      {% for k, v in friendscount_up %}
+          window_value2text['{{ k }}'] = '{{ v }}';
+      {% endfor %}
+    $("#"+range+"_window_size_choosen").text(window_value2text[window]);
+    $("#"+range+"_window_size_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_window_size_choosen").parent().removeClass('open');
+    $("#"+range+"_window_size_dropdown_menu").children().removeClass('active');
+}
+function choose_rankcount(range, method) {
+    $("#"+range+"_rank_method").val(method);
+    cn_method = '';
+    if(method=='followers_count')
+      cn_method = '粉丝数';
+    else if(method=='friends_count')
+      cn_method = '关注数';
+    else if(method=='statuses_count')
+      cn_method = '微博数';
+    else if(method=='created_at')
+      cn_method = '注册时间';
+    $("#"+range+"_rank_method_choosen").text(cn_method);
+    $("#"+range+"_rank_method_choosen").append(' <span class="caret"></span>');
+    //close dropdown
+    $("#"+range+"_rank_method_choosen").parent().removeClass('open');
+    $("#"+range+"_rank_method_dropdown_menu").children().removeClass('active');
+}
+
 </script>
 {% endblock script %}
 

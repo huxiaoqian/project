@@ -111,6 +111,7 @@ def _time_zone(stri):
         month, day = month_day.split('月 ')
         year = int(year)
         month = int(month)
+        day = filter(str.isdigit, day)#只保留数字，去掉“日”
         day = int(day)
         ts = str(year)+'-'+str(month)+'-'+str(day)
         tslist.append(ts)
@@ -169,7 +170,7 @@ def getXapianweiboByTs(start_time, end_time):
 
 def timechange(time_str):
     year,month,day = time_str.split('-')
-    return str(month)+'月 '+str(day)+','+str(year)
+    return str(month)+'月 '+str(day)+'日,'+str(year)
 
 def date2timestr(time):
     time_ts = datetime2ts(time)
@@ -226,10 +227,10 @@ def fieldsEn2Zh(name):
         return '其他'
 
 def topic_default_time():
-    return u'9月 21,2013 - 9月 21,2013'
+    return u'9月 21日,2013 - 9月 21日,2013'
 
 def weibo_default_time():
-    return u'9月 1,2013 - 9月 21,2013'
+    return u'9月 1日,2013 - 9月 21日,2013'
 
 @mod.route('/page/', methods=['GET','POST'])
 def page():

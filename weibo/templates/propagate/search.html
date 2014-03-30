@@ -120,7 +120,7 @@
       endDate: moment()
     }, 
     function(start, end) {
-  $('#reportrange_topic span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+  $('#reportrange_topic span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
     }
   );
   $('#reportrange_singlebyid').daterangepicker({
@@ -136,7 +136,7 @@
       endDate: moment()
     }, 
     function(start, end) {
-  $('#reportrange_singlebyid span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+  $('#reportrange_singlebyid span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
     }
   );
     $('#reportrange_singlebyurl').daterangepicker({
@@ -152,7 +152,7 @@
       endDate: moment()
     }, 
     function(start, end) {
-  $('#reportrange_singlebyurl span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+  $('#reportrange_singlebyurl span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
     }
   );
 });

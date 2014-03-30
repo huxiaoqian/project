@@ -2505,30 +2505,3 @@ def url_mid():
     else:
         return json.dumps('Wrong')
     return str(mid)
-
-
-def target_whole_xapian_weibo(start_date=XAPIAN_FIRST_DATE, end_date=XAPIAN_LAST_DATE):
-    datelist = []
-    start_ts = int(time.mktime(time.strptime(start_date, '%Y%m%d')))
-    end_ts = int(time.mktime(time.strptime(end_date, '%Y%m%d'))) + 24 * 3600
-
-    during = (end_ts - start_ts) / (24 * 3600)
-    for i in range(0, during):
-        now_date = time.strftime('%Y%m%d', time.localtime(start_ts + i * 24 * 3600))
-        datelist.append(now_date)
-
-    xapian_weibo = getXapianWeiboByDuration(datelist)
-
-    return xapian_weibo
-
-whole_xapian_weibo = target_whole_xapian_weibo('20130901', '20130921')
-
-
-def getWeiboRetweetedStatus(mid):
-    weibo = whole_xapian_weibo.search_by_id(int(mid), fields=['retweeted_mid'])
-    retweeted_mid = None
-    if weibo:
-        retweeted_mid = weibo['retweeted_mid']
-
-    return retweeted_mid
-

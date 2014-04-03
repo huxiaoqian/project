@@ -31,12 +31,11 @@ from get_result import readPropagateTopic, readPropagateTrend, readPropagateWeib
                        readPropagateTrendSinglePart, readPropagateWeiboSinglePart, \
                        readPropagateSpatialSinglePart, readIndexSinglePart, \
                        readPropagateUserSinglePart, getMaterial, getMaterialTopic
+from demo import search_status_by_mid_ts, search_status_by_mid
 
 XAPIAN_FIRST_DATE = '20130901'
 XAPIAN_LAST_DATE = '20130930'
 
-#sys.path.append('./weibo/profile')
-#from utils import *
 
 path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
@@ -2485,15 +2484,15 @@ def weibo_submit():
     time = _utf_encode(time)
 
     start_ts, end_ts = _time_zone(time)
-    start_ts = date2ts(start_ts)
-    end_ts = date2ts(end_ts)
-    statuses_search = getXapianweiboByTs(start_ts, end_ts)
-    count,get_results = statuses_search.search(query={'_id': mid},fields=['timestamp'])
+    start_ts = int(date2ts(start_ts))
+    end_ts = int(date2ts(end_ts))
 
-    if count == 0:
+    flag, data = search_status_by_mid_ts(mid, str(start_ts), str(end_ts))
+
+    if flag == 'false':
         return json.dumps('wrong')
-    for r in get_results():
-        postDate = datetime.fromtimestamp(r['timestamp'])
+
+    postDate = datetime.fromtimestamp(data['timestamp'])
     status , item = _add_history_weibo(-1, mid, postDate, timestamp)
     return json.dumps('success')
 

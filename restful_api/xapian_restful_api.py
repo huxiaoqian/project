@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import json
 from flask import Flask, request
 from optparse import OptionParser
 from dynamic_xapian_weibo import target_whole_xapian_weibo, getXapianWeiboByDuration
@@ -12,6 +13,11 @@ TODOS = {
     'todo2': {'task': '?????'},
     'todo3': {'task': 'profit!'},
 }
+
+XAPIAN_WEIBO_FIELDS = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', \
+                       'text', 'timestamp', 'reposts_count', \
+                       'bmiddle_pic', 'geo', 'comments_count', \
+                       'sentiment', 'terms']
 
 
 def abort_if_todo_doesnt_exist(todo_id):
@@ -98,15 +104,18 @@ class StatusExist(Resource):
                 datelist.append(ts2datetimestr(ts))
 
             xapian_weibo = getXapianWeiboByDuration(datelist)
-            status = xapian_weibo.search_by_id(int(mid))
+            status = xapian_weibo.search_by_id(int(mid), fields=XAPIAN_WEIBO_FIELDS)
 
         else:
-            status = whole_xapian_weibo.search_by_id(int(mid))
+            status = whole_xapian_weibo.search_by_id(int(mid), fields=XAPIAN_WEIBO_FIELDS)
 
         if status:
-            return True
+            weibo = {}
+            for field in XAPIAN_WEIBO_FIELDS:
+                weibo[field] = status[field]
+            return {'status': 'true', 'data': weibo}
         else:
-            return False
+            return {'status': 'false', 'data': ''}
 
 
 if __name__ == '__main__':

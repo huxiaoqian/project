@@ -51,9 +51,7 @@ def _time_yuan(stri):
 @mod.route('/show_graph/<int:mid>/<module>/')
 @mod.route('/show_graph/<int:mid>/<int:page>/<module>/')
 def show_graph_index(mid, module, page=None):
-
     if page is None:
-        per_page = 200
         # weibo
         weibo = getWeiboByMid(mid)
         try:
@@ -66,9 +64,6 @@ def show_graph_index(mid, module, page=None):
         if retweeted_mid != 0:
             source_weibo = getWeiboByMid(retweeted_mid)
 
-        #reposts_count = source_weibo['reposts_count']
-        #total_page = int(math.ceil(reposts_count * 1.0 / per_page))
-        #page = total_page
         page = 0
 
         return redirect('/gexf/show_graph/%s/%s/%s'%(mid, page, module))#{url_for(graph.show_graph(mid, page))})

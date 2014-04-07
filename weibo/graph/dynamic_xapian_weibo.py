@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from config import DYNAMIC_XAPIAN_WEIBO_STUB_PATH, DYNAMIC_XAPIAN_WEIBO_STUB_FOLDER_PATH, XAPIAN_USER_DATA_PATH
+from weibo.global_config import DYNAMIC_XAPIAN_WEIBO_STUB_PATH, DYNAMIC_XAPIAN_WEIBO_STUB_FOLDER_PATH, XAPIAN_USER_DATA_PATH
 from xapian_weibo.xapian_backend import XapianSearch
 
 path = DYNAMIC_XAPIAN_WEIBO_STUB_PATH

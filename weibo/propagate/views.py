@@ -17,7 +17,6 @@ from weibo.model import *
 from weibo.extensions import db
 from url2mid import get_mid
 from datetime import datetime, date
-from xapian_weibo.xapian_backend import XapianSearch
 from history import _all_history, _add_history, _search_history
 from history_weibo import _all_history_weibo, _add_history_weibo, _search_history_weibo
 from xapian_config import beg_y,beg_m,beg_d,end_y,end_m,end_d
@@ -33,11 +32,6 @@ from get_result import readPropagateTopic, readPropagateTrend, readPropagateWeib
                        readPropagateUserSinglePart, getMaterial, getMaterialTopic
 from demo import search_status_by_mid_ts, search_status_by_mid
 
-XAPIAN_FIRST_DATE = '20130901'
-XAPIAN_LAST_DATE = '20130930'
-
-
-path = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
 
 fields_value = ['culture', 'education', 'entertainment', 'fashion', 'finance', 'media', 'sports', 'technology','aboard','university', 'homeadmin', 'abroadadmin', 'homemedia', 'abroadmedia', 'folkorg', 'lawyer', 'politician', 'mediaworker', 'activer', 'grassroot', 'other']
 fields_id = {'culture':1, 'education':2, 'entertainment':3, 'fashion':4, 'finance':5, 'media':6, 'sports':7, 'technology':8,'aboard':9,'university':10, 'homeadmin':11, 'abroadadmin':12, 'homemedia':13, 'abroadmedia':14, 'folkorg':15, 'lawyer':16, 'politician':17, 'mediaworker':18, 'activer':19, 'grassroot':20}
@@ -139,33 +133,6 @@ def _time_yuan(stri):
 
     return start_ts, end_ts
 
-
-def getXapianWeiboByDuration(datestr_list):
-    stub_file_list = []
-
-    for datestr in datestr_list:
-        stub_file = path + datestr
-        if os.path.exists(stub_file):
-            stub_file_list.append(stub_file)
-
-    if len(stub_file_list):
-        xapian_search_weibo = XapianSearch(stub=stub_file_list, include_remote=True, schema_version=5)
-        return xapian_search_weibo 
-
-    else:
-        return None
-
-def getXapianweiboByTs(start_time, end_time):
-    xapian_date_list =[]
-    Day = 24*3600
-    days = (int(end_time) - int(start_time)) / Day
-
-    for i in range(0, days):
-        _ts = start_time + i * Day
-        xapian_date_list.append(ts2datetimestr(_ts))
-
-    statuses_search = getXapianWeiboByDuration(xapian_date_list)
-    return statuses_search
 
 def timechange(time_str):
     year,month,day = time_str.split('-')

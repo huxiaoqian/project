@@ -14,10 +14,9 @@ TODOS = {
     'todo3': {'task': 'profit!'},
 }
 
-XAPIAN_WEIBO_FIELDS = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', \
-                       'text', 'timestamp', 'reposts_count', \
-                       'bmiddle_pic', 'geo', 'comments_count', \
-                       'sentiment', 'terms']
+XAPIAN_WEIBO_FIELDS = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', \
+                       'timestamp', 'reposts_count', 'source', 'bmiddle_pic', 'geo', \
+                       'attitudes_count', 'comments_count', 'sentiment']
 
 
 def abort_if_todo_doesnt_exist(todo_id):

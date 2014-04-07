@@ -38,6 +38,10 @@ if IS_PROD == 1:
     ELEVATOR_PORT = 4141
     SSDB_PORT = 8888
     SSDB_HOST = '192.168.2.30'
+    DYNAMIC_XAPIAN_WEIBO_STUB_PATH = '/home/ubuntu12/dev/data/stub/master_timeline_weibo_'
+    DYNAMIC_XAPIAN_WEIBO_STUB_FOLDER_PATH = '/home/ubuntu12/dev/data/stub/'
+    XAPIAN_RESTFUL_HOST = '192.168.2.31'
+    XAPIAN_RESTFUL_PORT = 9004
 elif IS_PROD == 0:
     # 192.168.2.30
     XAPIAN_USER_DATA_PATH = '/media/sdh/data/'

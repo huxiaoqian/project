@@ -21,7 +21,7 @@ from flask import Blueprint, session, redirect, url_for
 from weibo.global_config import XAPIAN_RESTFUL_HOST, XAPIAN_RESTFUL_PORT
 
 weibo_fields = ['_id', 'user', 'retweeted_uid', 'retweeted_mid', 'text', 'timestamp', \
-                'reposts_count', 'source', 'bmiddle_pic', 'geo', 'attitudes_count', \
+                'reposts_count', 'bmiddle_pic', 'geo', 'attitudes_count', \
                 'comments_count', 'sentiment']
 user_fields = ['_id', 'province', 'city', 'verified', 'name', 'friends_count', \
                'gender', 'profile_image_url', 'verified_type', 'followers_count', \

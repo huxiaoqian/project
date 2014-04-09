@@ -67,8 +67,8 @@
 	</ul>
       </div>
 	  <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp时间:</b></font>
-      <div class="input-append date" id="burst_window_size_choosen">
-      <input type="text" class="span2" name="burst_time" value="{{burst_time}}"><span class="add-on"><i class="icon-th"></i></span>
+      <div class="input-append date" id="burst_window_size_choosen" >
+      <input type="text" class="span2" name="burst_time" value="{{burst_time}}" ><span class="add-on"><i class="icon-th"></i></span>
       </div>
       <font color="#003366" face="Georgia, Times New Roman, Times, serif"><b>&nbsp&nbsp&nbsp前</b></font>
       <div class="btn dropdown-toggle" style="position:relative;">
@@ -328,10 +328,14 @@ function choose_window(range, window) {
   var whole_time = $('#whole_date').html();
   document.getElementById('whole_window_size').value = whole_time;
   
+
   $('#burst_window_size_choosen').datepicker({
-    format: "m月 d日,yyyy",
+    //format: "m月 d日,yyyy",
     language: "zh-CN",
-    forceParse: false
+    forceParse: false,
+    startDate: new Date('01/01/2014'),
+    endDate: new Date('04/01/2014'),
+    format: "m月 d日,yyyy"
   });
 
   $('#whole_window_size_choosen').daterangepicker({
@@ -341,8 +345,10 @@ function choose_window(range, window) {
          '1个月': [moment().startOf('month'), moment().endOf('month')],
          '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
       },
-      startDate: moment().subtract('days', 29),
-      endDate: moment()
+      //startDate: moment().subtract('days', 29),
+      //endDate: moment()
+      startDate: '2013-01-01',
+      endDate: '2013-12-31'
     }, 
     
     function(start, end) {

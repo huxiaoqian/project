@@ -971,7 +971,10 @@
                 x: 0,
                 y: -2,
                 borderWidth: 1,
-                enabled: true,
+                //enabled: true,
+                //itemHiddenStyle: {
+                    //color: 'white'
+                //}
             },
             exporting: {
                 enabled: true
@@ -1036,7 +1039,8 @@
                 shape : 'circlepin',
                 width : 2,
                 color: '#006600',
-                visible:false
+                //visible:false
+                showInLegend: false
             },{
                 name: '绝对拐点(愤怒)',
                 type : 'flags',
@@ -1046,7 +1050,8 @@
                 shape : 'circlepin',
                 width : 2,
                 color: '#FF0000',
-                visible:false
+                //visible:false
+                showInLegend: false
             },{
                 name: '绝对拐点(悲伤)',
                 type : 'flags',
@@ -1056,9 +1061,12 @@
                 shape : 'circlepin',
                 width : 2,
                 color: '#000099',
-                visible:false
+                //visible:false
+                showInLegend: false
             }]
         });
+
+        
     }
 
     function load_absolute(){ 
@@ -1073,13 +1081,34 @@
             chart.series[2].update({
                 data : sad_absolute
             });
+
+            chart.series[3].update({
+                showInLegend: false
+            });
+            chart.series[4].update({
+                showInLegend: false
+            });
+            chart.series[5].update({
+                showInLegend: false
+            });
+            chart.series[6].update({
+                showInLegend: true
+            });
+            chart.series[7].update({
+                showInLegend: true
+            });
+            chart.series[8].update({
+                showInLegend: true
+            });
             chart.series[3].hide();
             chart.series[4].hide();
             chart.series[5].hide();
             chart.series[6].show();
             chart.series[7].show();
             chart.series[8].show();
+
             status_flag = 'absolute';
+
         }
         else{
             alert("请等待相对曲线加载完毕！");
@@ -1096,6 +1125,24 @@
         chart.series[2].update({
             data : sad_ratio
         });
+            chart.series[6].update({
+                showInLegend: false
+            });
+            chart.series[7].update({
+                showInLegend: false
+            });
+            chart.series[8].update({
+                showInLegend: false
+            });
+            chart.series[3].update({
+                showInLegend: true
+            });
+            chart.series[4].update({
+                showInLegend: true
+            });
+            chart.series[5].update({
+                showInLegend: true
+            });
         chart.series[6].hide();
         chart.series[7].hide();
         chart.series[8].hide();

@@ -75,6 +75,7 @@
   </div><!--container-fluid-->
 {% endblock content %}
 {% block script %}
+  <script src="{{ url_for('static', filename='js/date_parameter.js') }}"></script>
   <script>
     var start_ts = '{{ start_ts }}';
     var end_ts = '{{ end_ts }}';
@@ -162,13 +163,15 @@
     document.getElementById('during_time').value = field_time;
     $('#field_window_size_choosen').daterangepicker({
       ranges: {
-         '1天': [moment(), moment()],
-         '1周': [moment().subtract('days', 6), moment()],
-         '1个月': [moment().startOf('month'), moment().endOf('month')],
-         '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+         '1天': [all_startDate, all_startDate],
+         '1周': [week_ago, all_startDate],
+         //'1个月': [moment().startOf('month'), moment().endOf('month')],
+         //'3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
       },
-      startDate: moment().subtract('days', 29),
-      endDate: moment()
+      startDate: all_startDate,
+      endDate: all_endDate,
+      minDate: all_minDate,
+      maxDate: all_maxDate
     },  
       function(start, end) {
         $('#field_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));

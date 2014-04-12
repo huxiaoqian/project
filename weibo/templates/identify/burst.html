@@ -121,6 +121,7 @@
 {% endblock %}
 
 {% block script %}
+    <script src="{{ url_for('static', filename='js/date_parameter.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='fancybox/jquery.fancybox-1.3.4.pack.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
@@ -290,9 +291,11 @@
           alert("导出成功！");
         });
     $('#burst_window_size_choosen').datepicker({
-    format: "m月 d日,yyyy",
     language: "zh-CN",
-    forceParse: false
+    forceParse: false,
+    startDate: all_startDate,
+    endDate: all_endDate,
+    format: "m月 d日,yyyy"
     });
 
     //添加垃圾名单

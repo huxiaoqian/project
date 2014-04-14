@@ -110,6 +110,7 @@
 {% endblock %}
 
 {% block script %}
+  <script src="{{ url_for('static', filename='js/date_parameter.js') }}"></script>
   <script src="{{ url_for('static', filename='js/moodlens/moment.js') }}"></script>
   <script src="{{ url_for('static', filename='js/moodlens/datarangepiker.js') }}"></script>
   <script src="/static/js/bootstrap-alert.js"></script>
@@ -137,15 +138,17 @@
     //all_emotion
     $('#reportrange_1').daterangepicker({
         ranges: {
-           '今天': [moment(), moment()],
-           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
-           '最近7天': [moment().subtract('days', 6), moment()],
-           '最近30天': [moment().subtract('days', 29), moment()],
-           '本月内': [moment().startOf('month'), moment().endOf('month')],
-           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+           '今天': [all_endDate, all_endDate],
+           //'昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [week_ago, all_endDate],
+           //'最近30天': [moment().subtract('days', 29), moment()],
+           //'本月内': [moment().startOf('month'), moment().endOf('month')],
+           //'上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
         },
-        startDate: moment().subtract('days', 29),
-        endDate: moment()
+        startDate: all_startDate,
+        endDate: all_endDate,
+        minDate: all_minDate,
+        maxDate: all_maxDate
         }, 
         function(start, end) {
           $('#reportrange_1 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
@@ -155,15 +158,17 @@
     //field_emotion
     $('#reportrange_2').daterangepicker({
       ranges: {
-         '今天': [moment(), moment()],
-         '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
-         '最近7天': [moment().subtract('days', 6), moment()],
-         '最近30天': [moment().subtract('days', 29), moment()],
-         '本月内': [moment().startOf('month'), moment().endOf('month')],
-         '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+         '今天': [all_endDate, all_endDate],
+         //'昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+         '最近7天': [week_ago, all_endDate],
+         //'最近30天': [moment().subtract('days', 29), moment()],
+         //'本月内': [moment().startOf('month'), moment().endOf('month')],
+         //'上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
       },
-        startDate: moment().subtract('days', 29),
-        endDate: moment()
+        startDate: all_startDate,
+        endDate: all_endDate,
+        minDate: all_minDate,
+        maxDate: all_maxDate
      }, 
      function(start, end) {
         $('#reportrange_2 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));
@@ -173,15 +178,17 @@
     //topic_emotion
     $('#reportrange_3').daterangepicker({
         ranges: {
-           '今天': [moment(), moment()],
-           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
-           '最近7天': [moment().subtract('days', 6), moment()],
-           '最近30天': [moment().subtract('days', 29), moment()],
-           '本月内': [moment().startOf('month'), moment().endOf('month')],
-           '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+           '今天': [all_endDate, all_endDate],
+           //'昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
+           '最近7天': [week_ago, all_endDate],
+           //'最近30天': [moment().subtract('days', 29), moment()],
+           //'本月内': [moment().startOf('month'), moment().endOf('month')],
+           //'上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
         },
-        startDate: moment().subtract('days', 29),
-        endDate: moment()
+        startDate: all_startDate,
+        endDate: all_endDate,
+        minDate: all_minDate,
+        maxDate: all_maxDate
       }, 
       function(start, end) {
         $('#reportrange_3 span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));

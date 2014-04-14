@@ -121,6 +121,7 @@
 {% endblock %}
 
 {% block script %}
+    <script src="{{ url_for('static', filename='js/date_parameter.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/choose.js') }}"></script>
     <script src="{{ url_for('static', filename='js/identify/jquery.bootpag.js') }}"></script>
     
@@ -289,13 +290,15 @@
   
   $('#whole_window_size_choosen').daterangepicker({
       ranges: {
-         '1天': [moment(), moment()],
-         '1周': [moment().subtract('days', 6), moment()],
-         '1个月': [moment().startOf('month'), moment().endOf('month')],
-         '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+         '1天': [all_endDate, all_endDate],
+         '1周': [week_ago, all_endDate],
+         //'1个月': [moment().startOf('month'), moment().endOf('month')],
+         //'3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
       },
-      startDate: moment().subtract('days', 29),
-      endDate: moment()
+      startDate: all_startDate,
+      endDate: all_endDate,
+      minDate: all_minDate,
+      maxDate: all_maxDate
     }, 
     
     function(start, end) {

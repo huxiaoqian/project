@@ -217,6 +217,7 @@
 {% endblock %}
 
 {% block script %}
+  <script src="{{ url_for('static', filename='js/date_parameter.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/topic_selector.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/burst.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/moment.js') }}"></script>
@@ -224,6 +225,7 @@
   <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.js') }}"></script>
   <script src="{{ url_for('static', filename='js/identify/bootstrap-datepicker.zh-CN.js') }}"></script>
   <script type="text/javascript" charset="utf-8">
+
   function choose_method(range, method) {
     $("#"+range+"_rank_method").val(method);
     cn_method = '';
@@ -333,22 +335,24 @@ function choose_window(range, window) {
     //format: "m月 d日,yyyy",
     language: "zh-CN",
     forceParse: false,
-    startDate: new Date('01/01/2014'),
-    endDate: new Date('04/01/2014'),
+    startDate: all_startDate,
+    endDate: all_endDate,
     format: "m月 d日,yyyy"
   });
 
   $('#whole_window_size_choosen').daterangepicker({
       ranges: {
-         '1天': [moment(), moment()],
-         '1周': [moment().subtract('days', 6), moment()],
-         '1个月': [moment().startOf('month'), moment().endOf('month')],
-         '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+         '1天': [all_endDate, all_endDate],
+         '1周': [week_ago, all_endDate],
+         //'1个月': [month_ago, all_endDate],
+         //'3个月': [3month_ago,, all_endDate]
       },
       //startDate: moment().subtract('days', 29),
       //endDate: moment()
-      startDate: '2013-01-01',
-      endDate: '2013-12-31'
+      startDate: all_startDate,
+      endDate: all_endDate,
+      minDate: all_minDate,
+      maxDate: all_maxDate
     }, 
     
     function(start, end) {
@@ -363,13 +367,14 @@ function choose_window(range, window) {
   
   $('#area_window_size_choosen').daterangepicker({
       ranges: {
-         '1天': [moment(), moment()],
-         '1周': [moment().subtract('days', 6), moment()],
-         '1个月': [moment().startOf('month'), moment().endOf('month')],
-         '3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
+         '1天': [all_endDate, all_endDate],
+         '1个月': [week_ago, all_endDate],
+         //'3个月': [moment().subtract('month', 3).startOf('month'), moment().subtract('month', 3).endOf('month')]
       },
-      startDate: moment().subtract('days', 29),
-      endDate: moment()
+      startDate: all_startDate,
+      endDate: all_endDate,
+      minDate: all_minDate,
+      maxDate: all_maxDate
     }, 
     
     function(start, end) {
@@ -385,15 +390,17 @@ function choose_window(range, window) {
 
     $('#topic_window_size_choosen').daterangepicker({
         ranges: {
-           '今天 ': [moment(), moment()],
-           '昨天': [moment().subtract('days', 1), moment().subtract('days', 1)],
-           '最近7天': [moment().subtract('days', 6), moment()],
-           '最近30天': [moment().subtract('days', 29), moment()],
+           '今天 ': [all_endDate, all_endDate],
+           //'昨天': [all_endDate.subtract('days', 1), all_endDate.subtract('days', 1)],
+           //'最近7天': [all_endDate.subtract('days', 6), all_endDate],
+           '最近30天': [week_ago, all_endDate],
            '本月内': [moment().startOf('month'), moment().endOf('month')],
            '上个月': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
         },
-        startDate: moment().subtract('days', 29),
-        endDate: moment()
+        startDate: all_startDate,
+        endDate: all_endDate,
+        minDate: all_minDate,
+        maxDate: all_maxDate
       }, 
       function(start, end) {
         $('#topic_window_size_choosen span').html(start.format('MMMM D日, YYYY') + ' - ' + end.format('MMMM D日, YYYY'));

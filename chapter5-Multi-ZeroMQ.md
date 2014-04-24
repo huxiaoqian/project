@@ -4,6 +4,14 @@
 
 ![image](https://raw.githubusercontent.com/linhaobuaa/project/master/snapshot/MultiZeroMQ.png?token=1652264__eyJzY29wZSI6IlJhd0Jsb2I6bGluaGFvYnVhYS9wcm9qZWN0L21hc3Rlci9zbmFwc2hvdC9NdWx0aVplcm9NUS5wbmciLCJleHBpcmVzIjoxMzk4OTIzNDY2fQ%3D%3D--d4d2364d43e028bcb40fb9919f415697ddebf3f0)
 
+## 测试性能
+
+1、8个索引构建进程速度为8000条/秒，单进程速度1200条/秒；
+
+2、3个情绪增量计算进程速度为3000条/秒；
+
+3、3个画像增量计算进程速度为3000条/秒。
+
 ## 部署
 
 1、原始csv存储机器：

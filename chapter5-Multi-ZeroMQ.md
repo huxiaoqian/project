@@ -1,5 +1,9 @@
 # Multi-ZeroMQ
 
+## 流数据框架拓扑图
+
+![image](https://github.com/linhaobuaa/project/blob/master/snapshot/MultiZeroMQ.png)
+
 ## 部署
 
 1、原始csv存储机器：
@@ -37,7 +41,7 @@
 2、数据缓冲及分发机器：
    ```
    ubuntu8@192.168.2.34
-   
+   ```
 
    CSV数据缓存位置：
    ```

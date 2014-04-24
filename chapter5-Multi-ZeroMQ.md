@@ -2,7 +2,7 @@
 
 ## 流数据框架拓扑图
 
-![image](https://github.com/linhaobuaa/project/blob/master/snapshot/MultiZeroMQ.png)
+![image](https://raw.githubusercontent.com/linhaobuaa/project/master/snapshot/MultiZeroMQ.png?token=1652264__eyJzY29wZSI6IlJhd0Jsb2I6bGluaGFvYnVhYS9wcm9qZWN0L21hc3Rlci9zbmFwc2hvdC9NdWx0aVplcm9NUS5wbmciLCJleHBpcmVzIjoxMzk4OTIzNDY2fQ%3D%3D--d4d2364d43e028bcb40fb9919f415697ddebf3f0)
 
 ## 部署
 

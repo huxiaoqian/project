@@ -146,6 +146,8 @@ def test_write_batch(batch=10000):
 
 
 if __name__ == '__main__':
+	  # 1 node: 202.108.211.5
+
     # 20 sec per 10000, 500 per second
     # test_write_single()
     

@@ -11,7 +11,7 @@ def test_search(stub_file):
     xapian_weibo = XapianSearch(stub=stub_file, schema_version=5, multi_processing=False)
     count, get_results = xapian_weibo.search(query={'text': u'中国'}, fields=['text', 'terms'])
     print "Working in Process #%d, %d" % (os.getpid(), count)
-    return get_results
+    yield get_results
 
 
 def mp_map():
@@ -23,14 +23,14 @@ def mp_map():
 
 
 def mp_map_async():
-	  po = multiprocessing.Pool(8)
-	  pool_outputs = po.map_async(test_search, stub_files)
-	  print pool_outputs.get()
+    po = multiprocessing.Pool(8)
+    pool_outputs = po.map_async(test_search, stub_files)
+    print pool_outputs.get()
 
 
 results = []
 def collect_results(result):
-	  results.append(result)
+    results.append(result)
 
 
 def mp_apply_async():

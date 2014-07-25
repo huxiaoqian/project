@@ -4,7 +4,7 @@ import time
 from weibo.extensions import db
 from weibo.model import TopicStatus as History
 
-
+#对topic操作的历史进行遍历、查询已经添加的历史，添加历史
 def _all_history(status, module='sentiment'):
 	histories = History.query.filter_by(status=status, module=module).all()
 	if histories:

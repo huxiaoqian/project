@@ -33,21 +33,21 @@ TOP_WEIBOS_LIMIT = 50
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
-def timeit(method):
-    def timed(*args, **kw):
+def timeit(method):    
+    def timed(*args, **kw):  #表示构建字典不使用键值，键值为标示符？！！
         ts = time.time()
         result = method(*args, **kw)
-        te = time.time()
-        print '%r %2.2f sec' % (method.__name__, te - ts)
+        te = time.time()                 
+        print '%r %2.2f sec' % (method.__name__, te - ts)  #计算时间间隔？！
         return result
-    return timed
+    return timed   #这个函数好像没有被调用？
 
 
 def ts2HourlyTime(ts, interval):
     # interval 取 Minite、Hour
 
     ts = ts - ts % interval
-    return ts
+    return ts        #分别截取出minute和hour部分的值
 
 
 def read_count_results(sentiment, start_ts, over_ts, during=Hour):
@@ -59,13 +59,13 @@ def read_count_results(sentiment, start_ts, over_ts, during=Hour):
             return item_exist.count
         else:
             return 0
-    else:
+    else:   #对sentimentcount表按照filter条件查询，并对查询结果的count进行求和
         count = db.session.query(func.sum(SentimentCount.count)).filter(SentimentCount.ts > start_ts, \
                                                                         SentimentCount.ts < over_ts, \
                                                                         SentimentCount.sentiment==sentiment, \
                                                                         SentimentCount.range==MinInterval)
         if count and count[0] and count[0][0]:
-            return int(count[0][0])
+            return int(count[0][0])   #？？？count的结构？！
         else:
             return 0
 
@@ -80,7 +80,7 @@ def read_kcount_results(sentiment, start_ts, over_ts, during=Hour):
         else:
             return {}
     else:
-        kcounts_dict = {}
+        kcounts_dict = {}#查询结果返回的是一个字典对象组成的序列
         kcounts = SentimentKeywords.query.filter(SentimentKeywords.ts>start_ts, \
                                                  SentimentKeywords.ts<over_ts, \
                                                  SentimentKeywords.sentiment==sentiment, \
@@ -103,7 +103,7 @@ def read_weibo_results(sentiment, start_ts, over_ts, during=Hour):
                                                sentiment=sentiment, \
                                                range=MinInterval).all()
         for item in item_exist:
-            weibos.extend(json.loads(item.weibos))
+            weibos.extend(json.loads(item.weibos))  #将json格式转化为字典形式，并将其加入weibos的序列中
 
         return weibos
 
@@ -251,7 +251,7 @@ def url_to_mid(url):
     3491700092079471L
     >>> url_to_mid('yAt1n2xRa')
     3486913690606804L
-    '''
+    '''      #将url做转码？！为什么要做？
     url = str(url)[::-1]
     size = len(url) / 4 if len(url) % 4 == 0 else len(url) / 4 + 1
     result = []
@@ -310,10 +310,10 @@ def save_rt_results(calc, query, results, during, klimit=TOP_KEYWORDS_LIMIT, wli
         for k, v in results.iteritems():
             sentiment = k
             ts, count = v
-            item = SentimentTopicCount(query, during, ts, sentiment, count)
+            item = SentimentTopicCount(query, during, ts, sentiment, count)  #item是初始化的sentimenttopcount类
             item_exist = SentimentTopicCount(query=query, range=during, end=ts, sentiment=sentiment).first()
             if item_exist:
-                db.session.delete(item_exist)
+                db.session.delete(item_exist)   #当item的查询是有结果的，就将这个类存入database
             db.session.add(item)
         
         db.session.commit()

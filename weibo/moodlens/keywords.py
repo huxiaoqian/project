@@ -23,7 +23,7 @@ MinInterval = Fifteenminutes
 
 def parseKcount(kcount):
     kcount_dict = {}
-    kcount = json.loads(kcount)
+    kcount = json.loads(kcount)  #将kcount这个json文件转化为字典
 
     for k, v in kcount:
     	kcount_dict[k] = v
@@ -34,7 +34,7 @@ def parseKcount(kcount):
 def _top_keywords(kcount_dict, top=TOP_READ):
     results_dict = {}
 
-    if kcount_dict != {}:
+    if kcount_dict != {}:  #排序，key为选择元素的哪一项进行排序，reverse默认false为升序排列
         results = sorted(kcount_dict.iteritems(), key=operator.itemgetter(1), reverse=False)
         results = results[len(results) - top:]
 
@@ -58,15 +58,15 @@ def search_global_keywords(end_ts, during, sentiment, unit=MinInterval, top=TOP_
     else:
         start_ts = end_ts - during
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
-        lowbound = (start_ts / unit) * unit
+        lowbound = (start_ts / unit) * unit   #将查询时间转换到15分钟的倍数
         items = SentimentKeywords.query.filter(SentimentKeywords.ts>lowbound, \
                                                SentimentKeywords.ts<=upbound, \
                                                SentimentKeywords.sentiment==sentiment, \
                                                SentimentKeywords.range==unit, \
                                                SentimentKeywords.limit==limit).all()
-
+#？？？！！query.filter的返回值是什么类型？
         for item in items:
-            kcount_dict = parseKcount(item.kcount)
+            kcount_dict = parseKcount(item.kcount) 
             for k, v in kcount_dict.iteritems():
                 try:
                     kcounts_dict[k] += v

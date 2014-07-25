@@ -20,11 +20,11 @@ MinInterval = Fifteenminutes
 
 def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None, customized='1'):
     if during <= unit:
-    	upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
+    	upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)  #将end_ts转化为15的整数倍
     	item = SentimentCount.query.filter(SentimentCount.ts==upbound, \
                                            SentimentCount.sentiment==sentiment, \
                                            SentimentCount.range==unit).first()
-        if item:
+    	if item:
         	count = [end_ts * 1000, item.count]
         else:
         	count = [end_ts * 1000, 0]
@@ -36,7 +36,7 @@ def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None
         count = db.session.query(func.sum(SentimentCount.count)).filter(SentimentCount.ts>lowbound, \
                                             SentimentCount.ts<=upbound, \
                                             SentimentCount.sentiment==sentiment, \
-                                            SentimentCount.range==unit).all()
+                                            SentimentCount.range==unit).all()#使用SQLA方式查询表sentimentcounts中满足条件的记录的总数
         
         if count and count[0] and count[0][0]:
             count = [end_ts * 1000, int(count[0][0])]
@@ -49,7 +49,7 @@ def search_global_counts(end_ts, during, sentiment, unit=MinInterval, query=None
 def search_topic_counts(end_ts, during, sentiment, unit=MinInterval, query=None, domain=None, customized='1'):
     if during <= unit:
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
-        if customized == '0':
+        if customized == '0':  #customized这个参数的含义？！
             item = db.session.query(SentimentRtTopicCount).filter(SentimentRtTopicCount.end==upbound, \
                                               SentimentRtTopicCount.sentiment==sentiment, \
                                               SentimentRtTopicCount.range==unit, \
@@ -105,7 +105,7 @@ def search_domain_counts(end_ts, during, sentiment, unit=MinInterval, query=None
     else:
         start_ts = end_ts - during
         upbound = int(math.ceil(end_ts / (unit * 1.0)) * unit)
-        lowbound = (start_ts / unit) * unit
+        lowbound = (start_ts / unit) * unit   #func.sum是求和？！
         count = db.session.query(func.sum(SentimentDomainCount.count)).filter(SentimentDomainCount.ts>lowbound, \
                                                                               SentimentDomainCount.ts<=upbound, \
                                                                               SentimentDomainCount.sentiment==sentiment, \

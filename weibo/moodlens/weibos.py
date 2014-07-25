@@ -30,14 +30,15 @@ def _top_weibos(weibos_dict, top=TOP_READ):
         for k, v in results:
             results_list.append(v[1])
 
-    return results_list
+    return results_list   
 
 
 def _json_loads(weibos):
   try:
-    return json.loads(weibos)
+    return json.loads(weibos)  #将json文件转换为python形式的数据
   except ValueError:
-    if isinstance(weibos, unicode):
+    if isinstance(weibos, unicode):#如果weibos本来就是unicode的数据，就将其先转化为json类型，
+        #然后再转化回来。看似什么都没做，实际上是存在区别的。e.这样的处理将元组格式的内容转化为list，而str最终都是unicode格式。
       return json.loads(json.dumps(weibos))
     else:
       return None

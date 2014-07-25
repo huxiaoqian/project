@@ -40,9 +40,9 @@ def get_default_timerange():
     return u'9月 22日,2013 - 9月 22日,2013'
 
 
-def get_default_field_dict():
+def get_default_field_dict():  #获取默认字段字典
     field_dict = {}
-    for idx, field_en in enumerate(DOMAIN_LIST[9:20]):
+    for idx, field_en in enumerate(DOMAIN_LIST[9:20]):  #enumerate既要遍历索引又要遍历元素
         field_dict[field_en] = DOMAIN_ZH_LIST[idx+9]
 
     return field_dict
@@ -52,25 +52,25 @@ def get_default_field_name():
     return 'activer', u'活跃人士'
 
 
-def _utf_encode(s):
+def _utf_encode(s):     #解码，用于输出显示
     if isinstance(s, str):
         return s
     else:
         return s.encode('utf-8')
 
 
-def _utf_decode(s):
+def _utf_decode(s):     #转码，用于存储
     if isinstance(s, str):
         return s.decode('utf-8')
     else:
         return s
 
 
-def str2ts(s):
+def str2ts(s):           
     '''
     返回以秒为单位的时间间隔
     '''
-    temp_during = _utf_encode(s)
+    temp_during = _utf_encode(s)  #临时文件的存在时间
     if re.match(r'\d+分钟', temp_during):
         pattern=re.compile(r'分钟')
         temp_during=int(pattern.split(temp_during)[0])*60
@@ -83,7 +83,7 @@ def str2ts(s):
     return temp_during
 
 @mod.route('/log_in', methods=['GET','POST'])
-def log_in():
+def log_in():   #判断是否登陆成功
     session['logged_in'] = request.form['log_in']
     session['user'] = request.form['user']
     if 'logged_in' in session and session['logged_in']:
@@ -92,7 +92,7 @@ def log_in():
         return json.dumps('Wrong')
 
 @mod.route('/', methods=['GET','POST'])
-def index():
+def index():  #对moodlens的index页面进行渲染
     default_timerange = get_default_timerange()
     default_field_dict = get_default_field_dict()
     default_field_enname, default_field_zhname = get_default_field_name()
@@ -105,7 +105,7 @@ def index():
             if pas != []:
                 for pa in pas:
                     identy = pa.moodlens
-                    if identy == 1:
+                    if identy == 1:     #为了渲染模板，使用render_template,需要传入模板名以及模板变量列表，返回一个所有变量被替换的渲染模板
                         return render_template('moodlens/index.html', time_range=default_timerange, field_en=default_field_enname, \
                                                field_zh=default_field_zhname, field_dict=default_field_dict)
                     else:
@@ -130,7 +130,7 @@ def _time_zone(stri):
     dates = stri.split(' - ')
     tslist = []
 
-    for date in dates:
+    for date in dates:   #将时间str转化为时间戳，并构成序列
         month_day, year = date.split(',')
         month, day = month_day.split('月 ')
         year = int(year)
@@ -144,7 +144,7 @@ def _time_zone(stri):
     start_ts = tslist[0]
     end_ts = tslist[1]
 
-    return int(start_ts), int(end_ts) + 24 * 3600
+    return int(start_ts), int(end_ts) + 24 * 3600   #？？？为什么要加24*3600？？？
 
 
 @mod.route('/all/', methods=['GET','POST'])
@@ -157,12 +157,12 @@ def all_emotion():
             else:
                 during = str2ts(during)
             
-            dur_time = request.args.get('time', None)
+            dur_time = request.args.get('time', None)  #获取url上传来的参数
             dur_time = _utf_encode(dur_time)
             if not dur_time or dur_time == '':
                 start_ts, end_ts = _default_time_zone()
             else:
-                start_ts, end_ts = _time_zone(dur_time)
+                start_ts, end_ts = _time_zone(dur_time)    #？？？during和dur_time这是在干嘛？
 
             return render_template('moodlens/all_emotion.html', start_ts=start_ts, end_ts=end_ts, during=during)
             
@@ -200,8 +200,8 @@ def field():
             else:
                 print field_name
                 field_en = DOMAIN_LIST[DOMAIN_ZH_LIST.index(field_name)]
-                print field_en
-
+                print field_en           
+                                   #对field_emtion页面进行渲染
             return render_template('moodlens/field_emotion.html', start_ts=start_ts, end_ts=end_ts, during=during,field_en=field_en)
             
         else:
@@ -252,7 +252,7 @@ def data(area='global'):
     """分类情感数据
     """
     
-    customized = request.args.get('customized', '1')
+    customized = request.args.get('customized', '1')  
     query = request.args.get('query', None)
     if query:
         query = query.strip()
@@ -274,13 +274,13 @@ def data(area='global'):
         area = None
     else:
         search_method = 'domain'
-        area = FIELDS2ID[area]
+        area = FIELDS2ID[area]   #将字段转化为对应的索引
    
     search_func = getattr(countsModule, 'search_%s_counts' % search_method, None)
     
     if search_func:
         if emotion == 'global':
-            for k, v in emotions_kv.iteritems():
+            for k, v in emotions_kv.iteritems():  #工厂模式下分别对三种情感计数
                 results[k] = search_func(end_ts, during, v, query=query, domain=area, customized=customized)
         else:
             results[emotion] = search_func(end_ts, during, emotions_kv[emotion], query=query, domain=area, customized=customized)
@@ -458,7 +458,7 @@ def topic_submit():
                 during = MinInterval
             else:
                 during = str2ts(during)
-            status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp, during)
+            status , item = _add_history(-1, keyword, start_ts, end_ts, timestamp, during) #添加提交topic的历史
             return render_template('moodlens/topic_emotion.html', active='moodlens', temp_keyword=keyword, temp_during=during)
         else:
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
@@ -489,7 +489,7 @@ def history():
             else:
                 return render_template('moodlens/topic_emotion.html', active='moodlens')
             return render_template('moodlens/topic_emotion.html', active='moodlens') 
-        else:
+        else:   #如果登陆者不是管理员做的处理，主要什么意思？！
             pas = db.session.query(UserList).filter(UserList.username==session['user']).all()
             if pas != []:
                 for pa in pas:
@@ -505,7 +505,7 @@ def history():
 
 @mod.route('/topics.json', methods=['GET','POST'])
 def topics_customized():
-    if request.method == 'GET':
+    if request.method == 'GET':  #通过keyword获取topic以及对应的时间戳形成的序列
         keyword = request.args.get('keyword',None)
         if keyword:
             topics = _search_topic(keyword,True)
@@ -520,7 +520,7 @@ def topics_customized():
                 topics_names.append([topic.topic, datestr])
         return json.dumps(topics_names)
 
-    else:
+    else:    #对topic进行操作---添加或者删除
         operator = request.form.get('operator', 'add')
         topic = request.form.get('topic', '')
 
@@ -538,11 +538,11 @@ def topics_customized():
 
 @mod.route('/history.json', methods=['GET','POST'])
 def search_history():
-    if request.method == 'GET':
+    if request.method == 'GET':  #显示查询历史
         keyword = request.args.get('keyword',None)
         now1 = request.args.get('now1', None)
         now2 = request.args.get('now2', None)
-        now = request.args.get('now', None)
+        now = request.args.get('now', None) 
         timestamp_end = request.args.get('timestamp', None)
         if timestamp_end:
             timestamp_end = int(timestamp_end)
@@ -551,7 +551,7 @@ def search_history():
         if now2:
             now2 = int(now2)
         if now:
-            now = int(now)
+            now = int(now)   #三个变量的含义？？
         histories1 = None
         histories2 = None
         histories = None
@@ -608,7 +608,7 @@ def search_history():
                 datestr  = str(start) + ' - ' + str(end)
                 histories_names.append([history.topic, datestr])
         return json.dumps(histories_names)
-    else:
+    else:   #添加历史？！
         operator = request.form.get('operator', 'add')
         keyword = request.form.get('keyword', '')
         start = request.form.get('start', '')

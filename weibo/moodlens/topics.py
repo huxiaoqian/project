@@ -24,7 +24,7 @@ def _drop_topic(topic, user='admin', iscustom=True, expire_date=int(time.time())
         item = Topics(user, topic, False, expire_date)
         exist_item = Topics.query.filter_by(topic=topic).first()
         
-        if exist_item and exist_item.iscustom:
+        if exist_item and exist_item.iscustom:   #exist_item的类型？！
             db.session.delete(exist_item)
             db.session.add(item)
             db.session.commit()
